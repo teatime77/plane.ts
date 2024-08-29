@@ -71,7 +71,7 @@ export function lineArcIntersection(line:Line, arc:CircleArc) : Vec2[] {
 
     // 線分の単位方向ベクトル
     line.setVecs();
-    let e = line.e!;
+    let e = line.e;
     
     // 交点の座標
     let p1 = foot.add(e.mul(t));

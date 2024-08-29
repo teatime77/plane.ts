@@ -5,6 +5,8 @@ export abstract class Shape {
     id : number;
     color : string = "black";
     isOver : boolean = false;
+    selected : boolean = false;
+
     depends : Shape[] = [];
 
     abstract draw(view : View) : void;
@@ -24,6 +26,14 @@ export abstract class Shape {
 
     getAllShapes(shapes : Shape[]){
         shapes.push(this);
+    }
+
+    select(){
+        this.selected = true;
+    }
+
+    unselect(){
+        this.selected = false;
     }
 }
 
@@ -88,16 +98,20 @@ export class Point extends Shape {
 }
 
 export abstract class Line extends Shape {
-    p1: Point;
-    p2: Point;
-    p12: Vec2 | undefined;
-    e: Vec2 | undefined;
+    p1   : Point;
+    p2   : Point;
+    p12! : Vec2;
+    e!   : Vec2;
 
     constructor(p1: Point, p2: Point, color : string = "black"){
         super(color);
         this.p1 = p1;
         this.p2 = p2;
+
+        this.setVecs();
     }
+
+    abstract copy() : Line;
 
     setVecs(){
         this.p12 = this.p2.sub(this.p1);
@@ -145,7 +159,7 @@ export class LineSegment extends Line {
         ctx.moveTo(p1.x, p1.y);
         ctx.lineTo(p2.x, p2.y);
         ctx.strokeStyle = color;
-        ctx.lineWidth = 1;
+        ctx.lineWidth = (this.selected ? 3 : 1);
         ctx.stroke();   
     }
 }
@@ -189,7 +203,7 @@ export abstract class Circle extends CircleArc {
         ctx.arc(pix.x, pix.y, view.toPix(this.radius()), 0, 2 * Math.PI, false);
         // ctx.fillStyle = color;
         // ctx.fill();
-        ctx.lineWidth = 1;
+        ctx.lineWidth = (this.selected ? 3 : 1);
         ctx.strokeStyle = color;
         ctx.stroke();
     }
@@ -278,6 +292,53 @@ export class Triangle extends Polygon {
     constructor(points3d:Vec2[], color : string = "black"){
         super(points3d, color);
     }
+}
+
+export class Angle extends Shape {
+    static radius1 = 10;
+
+    line1 : Line;
+    dir1  : number;
+
+    line2 : Line;
+    dir2  : number;
+
+    inter : Vec2;
+
+    constructor(line1 : Line, dir1 : number, line2 : Line, dir2 : number, inter : Vec2, color : string = "black"){
+        super(color);
+        this.line1 = line1;
+        this.dir1  = dir1;
+
+        this.line2 = line2;
+        this.dir2  = dir2;
+        
+        this.inter = inter;
+    }
+
+    draw(view : View) : void {
+        const e1 = this.line1.e.mul(this.dir1);
+        const e2 = this.line2.e.mul(this.dir2);
+
+        const th1 = Math.atan2(-e1.y, e1.x);
+        const th2 = Math.atan2(-e2.y, e2.x);
+
+        const deg1 = toDegree(th1);
+        const deg2 = toDegree(th2);
+
+        const ctx = view.ctx;
+
+        const pix = view.toPixPos(this.inter);
+
+        const color = (this.isOver ? "red" : this.color);
+
+        ctx.beginPath();
+        ctx.arc(pix.x, pix.y, Angle.radius1, th1, th2, true);
+        ctx.lineWidth = (this.selected ? 3 : 1);
+        ctx.strokeStyle = color;
+        ctx.stroke();
+    }
+
 }
 
 export class Graph extends Shape {

@@ -26,7 +26,7 @@ export abstract class Builder {
             case "Perpendicular": return new PerpendicularBuilder()
             // case "ParallelLine":  return new ParallelLine()
             case "Intersection":  return new IntersectionBuilder();
-            // case "Angle":         return new Angle();
+            case "Angle":         return new AngleBuilder();
             // case "Image":         return new Image({fileName:"./img/teatime77.png"});
             // case "FuncLine":      return new FuncLine();
         }
@@ -210,10 +210,10 @@ class IntersectionBuilder extends Builder {
         if(shape instanceof Line || shape instanceof CircleArc){
             if(this.shape1 == undefined){
                 this.shape1 = shape;
-                this.shape1.color = "blue";
+                this.shape1.select();
             }
             else{
-                this.shape1.color = "black";
+                this.shape1.unselect();
 
                 let poss : Vec2[];
                 if(this.shape1 instanceof Line && shape instanceof Line){
@@ -249,6 +249,37 @@ class IntersectionBuilder extends Builder {
         }
 
     }
+}
+
+class AngleBuilder extends Builder {
+    line1 : Line | undefined;
+    pos1  : Vec2 | undefined;
+
+    click(view : View, pos : Vec2, shape : Shape | undefined){
+        if(shape instanceof Line){
+            if(this.line1 == undefined){
+                this.line1 = shape;
+                this.pos1  = pos;
+            }
+            else{
+                const [line1, pos1, line2, pos2] = [this.line1, this.pos1!, shape, pos];
+
+                line1.setVecs();
+                line2.setVecs();
+
+                const inter = linesIntersection(line1, line2);
+
+                const dir1 = Math.sign(pos1.sub(inter).dot(line1.e));
+                const dir2 = Math.sign(pos2.sub(inter).dot(line2.e));
+
+                const angle = new Angle(line1, dir1, line2, dir2, inter);
+                view.addShape(angle);
+
+                this.line1 = undefined;
+            }
+        }
+    }
+
 }
 
 }
