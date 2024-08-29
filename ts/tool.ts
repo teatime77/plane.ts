@@ -9,9 +9,10 @@ export abstract class Builder {
 
     static makeToolByType(tool_name: string): Builder | undefined {    
         switch(tool_name){
+            case "select":        return new SelectTool();
             // case "Distance":      return new Distance();
             case "Point":         return new PointBuilder();
-            // case "LineSegment":   return new LineSegment();
+            case "LineSegment":   return new LineSegmentBuilder();
             // case "StraightLine":  return new StraightLine();
             // case "HalfLine":      return new HalfLine();
             // case "BSpline":       return new BSpline();
@@ -34,76 +35,160 @@ export abstract class Builder {
         // throw new MyError();
     }
 
-    click(view : View, pos : Vec2){        
+    click(view : View, pos : Vec2, point : Point | undefined){        
     }
 
-    pointermove(view : View, pos : Vec2){
+    pointerdown(view : View, pos : Vec2){
+    }
+
+    pointermove(view : View, pos : Vec2, point : Point | undefined){
+    }
+}
+
+export class SelectTool extends Builder {
+    downPos : Map<Point, Vec2> = new Map<Point, Vec2>();
+
+    pointerdown(view : View, pos : Vec2){
+        this.downPos.clear();
+
+        const pts = view.selections.filter(x => x instanceof Point) as Point[];
+        for(const pt of pts){
+            this.downPos.set(pt, pt.pos.copy());
+        }
+    }
+
+    pointermove(view : View, pos : Vec2, point : Point | undefined){
+        if(view.downPos != undefined){
+            const diff = pos.sub(view.downPos);
+
+            for(const [pt, down_pos] of this.downPos.entries()){
+                pt.pos = down_pos.add(diff)
+            }
+        }
     }
 }
 
 class PointBuilder extends Builder {
-    click(view : View, pos : Vec2){   
-        const point = new Point(pos);
-        view.addShape(point);
-        msg(`add point`);
+    click(view : View, pos : Vec2, point : Point | undefined){  
+        if(point == undefined){
+
+            const new_point = new Point(pos);
+            view.addShape(new_point);
+        }
     }
 }
 
 class Circle1Builder extends Builder {
     circle : Circle1 | undefined;
 
-    click(view : View, pos : Vec2){   
+    click(view : View, pos : Vec2, point : Point | undefined){   
         if(this.circle == undefined){
 
-            const center = new Point(pos);
+            if(point == undefined){
+                point = new Point(pos);
+            }
+
             const p = new Point(pos);
-            this.circle = new Circle1(center, p);
+            this.circle = new Circle1(point, p);
 
-
-            view.addShape(center);
-            view.addShape(p);
             view.addShape(this.circle);
-            msg(`add circle1`);
         }
         else{
+            if(point != undefined){
+
+                this.circle.p = point;
+            }
+            else{
+
+                this.circle.p.pos = pos;
+            }
+
             this.circle = undefined;
         }
     }
 
-    pointermove(view : View, pos : Vec2){
+    pointermove(view : View, pos : Vec2, point : Point | undefined){
         if(this.circle != undefined){
-            this.circle.p.pos = pos;
+            if(point != undefined && point != this.circle.center){
+
+                this.circle.p = point;
+            }
+            else{
+
+                this.circle.p.pos = pos;
+            }
         }
     }
-
 }
 
 
 class Circle2Builder extends Builder {
     circle : Circle2 | undefined;
 
-    click(view : View, pos : Vec2){   
+    click(view : View, pos : Vec2, point : Point | undefined){   
         if(this.circle == undefined){
 
-            const center = new Point(pos);
-            this.circle = new Circle2(center, 0);
+            if(point == undefined){
+                point = new Point(pos);
+            }
 
+            this.circle = new Circle2(point, 0);
 
-            view.addShape(center);
             view.addShape(this.circle);
-            msg(`add circle2`);
         }
         else{
             this.circle = undefined;
         }
     }
 
-    pointermove(view : View, pos : Vec2){
+    pointermove(view : View, pos : Vec2, point : Point | undefined){
         if(this.circle != undefined){
             this.circle.setRadius( pos.dist(this.circle.center.pos) );
         }
     }
+}
+
+
+class LineSegmentBuilder extends Builder {
+    line : LineSegment | undefined;
+
+    click(view : View, pos : Vec2, point : Point | undefined){   
+        if(this.line == undefined){
+
+            if(point == undefined){
+                point = new Point(pos);
+            }
+
+            const p2 = new Point(pos);
+            this.line = new LineSegment(point, p2);
+
+
+            view.addShape(this.line);
+        }
+        else{
+            if(point != undefined){
+                this.line.p2 = point;
+            }
+
+            this.line = undefined;
+        }
+    }
+
+    pointermove(view : View, pos : Vec2, point : Point | undefined){
+        if(this.line != undefined){
+            if(point != undefined && point != this.line.p1){
+
+                this.line.p2 = point;
+            }
+            else{
+
+                this.line.p2.pos = pos;
+            }
+        }
+    }
 
 }
+
+
 
 }

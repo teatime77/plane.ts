@@ -7,11 +7,11 @@ export class View {
 
 
     shapes : Shape[] = [];
+    selections : Shape[] = [];
 
     realToPix : number;
 
-    lastMouseX : number = NaN;
-    lastMouseY : number = NaN;
+    downPos : Vec2 | undefined;
 
     min : Vec2;
     max : Vec2;
@@ -34,8 +34,6 @@ export class View {
         this.min = new Vec2(-max_x, -max_y);
 
         this.realToPix = canvas.width / (2 * max_x);
-
-        msg(`canvas:${canvas.width} ${canvas.height}`)
     }
 
     evPos(ev : MouseEvent) : Vec2 {
@@ -60,6 +58,13 @@ export class View {
         return new Vec2(x, flipped_y);
     }
 
+    allShapes() : Shape[] {
+        const shapes : Shape[] = [];
+        this.shapes.forEach(x => x.getAllShapes(shapes));
+
+        return unique(shapes);
+    }
+
     drawShapes(){
         this.clear();
 
@@ -69,7 +74,8 @@ export class View {
         if($inp("show-grid").checked){
         }        
 
-        this.shapes.forEach(c => c.draw(this));    
+        const shapes = this.allShapes();
+        shapes.forEach(c => c.draw(this));    
 
         window.requestAnimationFrame(this.drawShapes.bind(this));
     }
@@ -80,26 +86,31 @@ export class View {
     }
 
     click(ev : MouseEvent){
-        // const rc = this.canvas.getBoundingClientRect();
-        // const y1 = rc.height - ev.offsetY;
-        // const y2 = this.canvas.offsetHeight - ev.offsetY;
-        // const y3 = this.canvas.clientHeight - ev.offsetY;
-        // msg(`click:(${ev.clientX}, ${ev.clientY}) (${ev.offsetX}, ${ev.offsetY}, ${y1}, ${y2}, ${y3})`);
         const pos = this.evPos(ev);
-        msg(`click: ${pos.x} ${pos.y}`);
 
         if(Builder.tool != undefined){
-            Builder.tool.click(this, pos);
+            const point = this.getPoint(pos);
+            Builder.tool.click(this, pos, point);
         }
     }
 
 
     pointerdown(ev : PointerEvent){
         const pos = this.evPos(ev);
-        msg(`down: pos:${pos.x} ${pos.y}`);
 
-        this.lastMouseX = ev.clientX;
-        this.lastMouseY = ev.clientY;
+        this.downPos = pos;
+
+        this.selections = [];
+        if(Builder.tool != undefined){
+            if(Builder.tool instanceof SelectTool){
+                const pt = this.getPoint(pos);
+                if(pt != undefined){
+                    this.selections.push(pt);
+                }
+            }
+
+            Builder.tool.pointerdown(this, pos);
+        }
     }
 
     pointermove(ev : PointerEvent){
@@ -107,23 +118,19 @@ export class View {
         ev.preventDefault(); 
 
         const pos = this.evPos(ev);
-        this.shapes.forEach(x => x.isOver = x.isNear(this, pos));    
+
+        const shapes = this.allShapes();
+        shapes.forEach(x => x.isOver = x.isNear(this, pos));    
 
         if(Builder.tool != undefined){
-            Builder.tool.pointermove(this, pos);
+            const point = this.getPoint(pos);
+            Builder.tool.pointermove(this, pos, point);
         }
-
-        if(ev.buttons == 0 || isNaN(this.lastMouseX)){
-            return;
-        }
-
-        var newX = ev.clientX;
-        var newY = ev.clientY;
     }
 
     pointerup(ev : PointerEvent){
-        this.lastMouseX = NaN;
-        this.lastMouseY = NaN;
+        this.downPos = undefined;
+        this.selections = [];
     }
 
     wheel(ev : WheelEvent){
@@ -131,6 +138,11 @@ export class View {
 
     addShape(shape : Shape){
         this.shapes.push(shape);
+    }
+
+    getPoint(pos : Vec2) : Point | undefined {
+        const shapes = this.allShapes();
+        return shapes.filter(x => x instanceof Point).find(x => x.isNear(this, pos)) as Point;
     }
 }
 

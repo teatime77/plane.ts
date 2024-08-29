@@ -5,6 +5,7 @@ export abstract class Shape {
     id : number;
     color : string = "black";
     isOver : boolean = false;
+    depends : Shape[] = [];
 
     abstract draw(view : View) : void;
 
@@ -19,6 +20,10 @@ export abstract class Shape {
 
     isNear(view : View, pos : Vec2) : boolean {        
         return false;
+    }
+
+    getAllShapes(shapes : Shape[]){
+        shapes.push(this);
     }
 }
 
@@ -54,19 +59,33 @@ export class Point extends Shape {
         ctx.lineWidth = 1;
         ctx.strokeStyle = color;
         ctx.stroke();
+        
+        if(this.isOver){
+            ctx.beginPath();
+            ctx.arc(pix.x, pix.y, 3 * Point.radius, 0, 2 * Math.PI, false);
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = "gray";
+            ctx.stroke();    
+        }
+    }
+
+    sub(p : Point) : Vec2 {
+        return this.pos.sub(p.pos);
+    }
+
+    dot(p : Point) : number {
+        return this.pos.dot(p.pos);
     }
 }
 
 
 export class LineSegment extends Shape {    
-    p1: Vec2;
-    p2: Vec2;
-    p1p!: Vec2;
-    p2p!: Vec2;
+    p1: Point;
+    p2: Point;
     // p12: Vec2;
     // e: Vec2;
 
-    constructor(p1: Vec2, p2: Vec2, color : string = "black"){
+    constructor(p1: Point, p2: Point, color : string = "black"){
         super(color);
         this.p1 = p1;
         this.p2 = p2;
@@ -76,15 +95,42 @@ export class LineSegment extends Shape {
         return new LineSegment(this.p1.copy(), this.p2.copy(), this.color);
     }
 
+    getAllShapes(shapes : Shape[]){
+        super.getAllShapes(shapes);
+        shapes.push(this.p1, this.p2);
+    }
+
+    isNear(view : View, pos : Vec2) : boolean {
+        const foot = calcFootOfPerpendicular(this, pos);        
+        const d = pos.dist(foot);
+        if(view.isNear(d)){
+
+            const p1 = this.p1.pos;
+            const p2 = this.p2.pos;
+            const p12 = p2.sub(p1);
+            const n = p12.dot( foot.sub(p1) );
+            if(0 <= n && n <= p12.len2()){
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     draw(view : View) : void {
         const ctx = view.ctx;
 
+        const p1 = view.toPixPos(this.p1.pos);
+        const p2 = view.toPixPos(this.p2.pos);
+
+        const color = (this.isOver ? "red" : this.color);
+
         ctx.beginPath();
-        ctx.moveTo(this.p1p.x, this.p1p.y);
-        ctx.lineTo(this.p2p.x, this.p2p.y);
-        ctx.strokeStyle = this.color;
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.strokeStyle = color;
         ctx.lineWidth = 1;
-        ctx.stroke();        
+        ctx.stroke();   
     }
 }
 
@@ -99,6 +145,11 @@ export abstract class Circle extends Shape {
     }
 
     abstract radius() : number;
+
+    getAllShapes(shapes : Shape[]){
+        super.getAllShapes(shapes);
+        shapes.push(this.center);
+    }
 
     isNear(view : View, pos : Vec2) : boolean {
         const r = pos.dist(this.center.pos);
@@ -133,6 +184,11 @@ export class Circle1 extends Circle {
 
     copy(): Circle1 {
         return new Circle1(this.center.copy(), this.p.copy(), this.color);
+    }
+
+    getAllShapes(shapes : Shape[]){
+        super.getAllShapes(shapes);
+        shapes.push(this.p);
     }
 
     radius() : number {
