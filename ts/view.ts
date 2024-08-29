@@ -89,8 +89,8 @@ export class View {
         const pos = this.evPos(ev);
 
         if(Builder.tool != undefined){
-            const point = this.getPoint(pos);
-            Builder.tool.click(this, pos, point);
+            const shape = this.getShape(pos);
+            Builder.tool.click(this, pos, shape);
         }
     }
 
@@ -103,9 +103,9 @@ export class View {
         this.selections = [];
         if(Builder.tool != undefined){
             if(Builder.tool instanceof SelectTool){
-                const pt = this.getPoint(pos);
-                if(pt != undefined){
-                    this.selections.push(pt);
+                const shape = this.getShape(pos);
+                if(shape != undefined){
+                    this.selections.push(shape);
                 }
             }
 
@@ -123,8 +123,8 @@ export class View {
         shapes.forEach(x => x.isOver = x.isNear(this, pos));    
 
         if(Builder.tool != undefined){
-            const point = this.getPoint(pos);
-            Builder.tool.pointermove(this, pos, point);
+            const shape = this.getShape(pos);
+            Builder.tool.pointermove(this, pos, shape);
         }
     }
 
@@ -140,9 +140,20 @@ export class View {
         this.shapes.push(shape);
     }
 
-    getPoint(pos : Vec2) : Point | undefined {
+    getShape(pos : Vec2) : Shape | undefined {
         const shapes = this.allShapes();
-        return shapes.filter(x => x instanceof Point).find(x => x.isNear(this, pos)) as Point;
+        const point = shapes.filter(x => x instanceof Point).find(x => x.isNear(this, pos));
+        if(point != undefined){
+            return point;
+        }
+
+        const line = shapes.filter(x => x instanceof LineSegment).find(x => x.isNear(this, pos));
+        if(line != undefined){
+            return line;
+        }
+        
+        const circle = shapes.filter(x => x instanceof Circle).find(x => x.isNear(this, pos));
+        return circle;
     }
 }
 

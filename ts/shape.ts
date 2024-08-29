@@ -31,10 +31,19 @@ export class Point extends Shape {
     static radius = 4;
 
     pos : Vec2;
+    bound : LineSegment | Circle | undefined;
 
-    constructor(pos : Vec2){
+    constructor(pos : Vec2, bound : LineSegment | Circle | undefined = undefined){
         super();
-        this.pos = pos;
+        this.bound = bound;
+        if(bound instanceof LineSegment){
+
+            this.pos = calcFootOfPerpendicular(bound, pos);
+        }
+        else{
+
+            this.pos = pos;
+        }
     }
 
     copy() : Point {

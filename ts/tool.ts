@@ -23,7 +23,7 @@ export abstract class Builder {
             // case "DimensionLine": return new DimensionLine();
             // case "Triangle":      return new Triangle();
             // case "Midpoint":      return new Midpoint();
-            // case "Perpendicular": return new Perpendicular()
+            case "Perpendicular": return new PerpendicularBuilder()
             // case "ParallelLine":  return new ParallelLine()
             // case "Intersection":  return new Intersection();
             // case "Angle":         return new Angle();
@@ -35,13 +35,13 @@ export abstract class Builder {
         // throw new MyError();
     }
 
-    click(view : View, pos : Vec2, point : Point | undefined){        
+    click(view : View, pos : Vec2, shape : Shape | undefined){        
     }
 
     pointerdown(view : View, pos : Vec2){
     }
 
-    pointermove(view : View, pos : Vec2, point : Point | undefined){
+    pointermove(view : View, pos : Vec2, shape : Shape | undefined){
     }
 }
 
@@ -57,22 +57,32 @@ export class SelectTool extends Builder {
         }
     }
 
-    pointermove(view : View, pos : Vec2, point : Point | undefined){
+    pointermove(view : View, pos : Vec2, shape : Shape | undefined){
         if(view.downPos != undefined){
             const diff = pos.sub(view.downPos);
 
             for(const [pt, down_pos] of this.downPos.entries()){
-                pt.pos = down_pos.add(diff)
+                if(pt.bound instanceof LineSegment){
+
+                    pt.pos = calcFootOfPerpendicular(pt.bound, pos);
+                }
+                else if(pt.bound instanceof Circle){
+                    
+                }
+                else{
+
+                    pt.pos = down_pos.add(diff)
+                }
             }
         }
     }
 }
 
 class PointBuilder extends Builder {
-    click(view : View, pos : Vec2, point : Point | undefined){  
-        if(point == undefined){
+    click(view : View, pos : Vec2, shape : Shape | undefined){  
+        if(shape == undefined || shape instanceof LineSegment || shape instanceof Circle){
 
-            const new_point = new Point(pos);
+            const new_point = new Point(pos, shape);
             view.addShape(new_point);
         }
     }
@@ -81,22 +91,22 @@ class PointBuilder extends Builder {
 class Circle1Builder extends Builder {
     circle : Circle1 | undefined;
 
-    click(view : View, pos : Vec2, point : Point | undefined){   
+    click(view : View, pos : Vec2, shape : Shape | undefined){   
         if(this.circle == undefined){
 
-            if(point == undefined){
-                point = new Point(pos);
+            if(shape == undefined || !(shape instanceof Point)){
+                shape = new Point(pos);
             }
 
             const p = new Point(pos);
-            this.circle = new Circle1(point, p);
+            this.circle = new Circle1(shape as Point, p);
 
             view.addShape(this.circle);
         }
         else{
-            if(point != undefined){
+            if(shape instanceof Point){
 
-                this.circle.p = point;
+                this.circle.p = shape;
             }
             else{
 
@@ -107,11 +117,11 @@ class Circle1Builder extends Builder {
         }
     }
 
-    pointermove(view : View, pos : Vec2, point : Point | undefined){
+    pointermove(view : View, pos : Vec2, shape : Shape | undefined){
         if(this.circle != undefined){
-            if(point != undefined && point != this.circle.center){
+            if(shape instanceof Point && shape != this.circle.center){
 
-                this.circle.p = point;
+                this.circle.p = shape;
             }
             else{
 
@@ -125,14 +135,14 @@ class Circle1Builder extends Builder {
 class Circle2Builder extends Builder {
     circle : Circle2 | undefined;
 
-    click(view : View, pos : Vec2, point : Point | undefined){   
+    click(view : View, pos : Vec2, shape : Shape | undefined){   
         if(this.circle == undefined){
 
-            if(point == undefined){
-                point = new Point(pos);
+            if(shape == undefined || !(shape instanceof Point)){
+                shape = new Point(pos);
             }
 
-            this.circle = new Circle2(point, 0);
+            this.circle = new Circle2(shape as Point, 0);
 
             view.addShape(this.circle);
         }
@@ -141,7 +151,7 @@ class Circle2Builder extends Builder {
         }
     }
 
-    pointermove(view : View, pos : Vec2, point : Point | undefined){
+    pointermove(view : View, pos : Vec2, point : Shape | undefined){
         if(this.circle != undefined){
             this.circle.setRadius( pos.dist(this.circle.center.pos) );
         }
@@ -152,33 +162,33 @@ class Circle2Builder extends Builder {
 class LineSegmentBuilder extends Builder {
     line : LineSegment | undefined;
 
-    click(view : View, pos : Vec2, point : Point | undefined){   
+    click(view : View, pos : Vec2, shape : Shape | undefined){   
         if(this.line == undefined){
 
-            if(point == undefined){
-                point = new Point(pos);
+            if(shape == undefined || !(shape instanceof Point)){
+                shape = new Point(pos);
             }
 
             const p2 = new Point(pos);
-            this.line = new LineSegment(point, p2);
+            this.line = new LineSegment(shape as Point, p2);
 
 
             view.addShape(this.line);
         }
         else{
-            if(point != undefined){
-                this.line.p2 = point;
+            if(shape instanceof Point){
+                this.line.p2 = shape;
             }
 
             this.line = undefined;
         }
     }
 
-    pointermove(view : View, pos : Vec2, point : Point | undefined){
+    pointermove(view : View, pos : Vec2, shape : Shape | undefined){
         if(this.line != undefined){
-            if(point != undefined && point != this.line.p1){
+            if(shape instanceof Point && shape != this.line.p1){
 
-                this.line.p2 = point;
+                this.line.p2 = shape;
             }
             else{
 
@@ -189,6 +199,8 @@ class LineSegmentBuilder extends Builder {
 
 }
 
+class PerpendicularBuilder extends Builder {
 
+}
 
 }
