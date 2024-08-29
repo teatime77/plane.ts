@@ -38,7 +38,7 @@ export class Point extends Shape {
         this.bound = bound;
         if(bound instanceof LineSegment){
 
-            this.pos = calcFootOfPerpendicular(bound, pos);
+            this.pos = calcFootOfPerpendicular(pos, bound);
         }
         else{
 
@@ -87,18 +87,25 @@ export class Point extends Shape {
     }
 }
 
-
-export class LineSegment extends Shape {    
+export abstract class Line extends Shape {
     p1: Point;
     p2: Point;
-    // p12: Vec2;
-    // e: Vec2;
+    p12: Vec2 | undefined;
+    e: Vec2 | undefined;
 
     constructor(p1: Point, p2: Point, color : string = "black"){
         super(color);
         this.p1 = p1;
         this.p2 = p2;
     }
+
+    setVecs(){
+        this.p12 = this.p2.sub(this.p1);
+        this.e = this.p12.unit();
+    }
+}
+
+export class LineSegment extends Line {    
 
     copy() : LineSegment {
         return new LineSegment(this.p1.copy(), this.p2.copy(), this.color);
@@ -110,7 +117,7 @@ export class LineSegment extends Shape {
     }
 
     isNear(view : View, pos : Vec2) : boolean {
-        const foot = calcFootOfPerpendicular(this, pos);        
+        const foot = calcFootOfPerpendicular(pos, this);        
         const d = pos.dist(foot);
         if(view.isNear(d)){
 
@@ -143,7 +150,7 @@ export class LineSegment extends Shape {
     }
 }
 
-export abstract class Circle extends Shape {
+export abstract class CircleArc extends Shape {
     center : Point;
     color : string;
 
@@ -154,6 +161,12 @@ export abstract class Circle extends Shape {
     }
 
     abstract radius() : number;
+}
+
+export abstract class Circle extends CircleArc {
+    constructor(center : Point, color : string = "black"){
+        super(center, color);
+    }
 
     getAllShapes(shapes : Shape[]){
         super.getAllShapes(shapes);

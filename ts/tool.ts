@@ -25,7 +25,7 @@ export abstract class Builder {
             // case "Midpoint":      return new Midpoint();
             case "Perpendicular": return new PerpendicularBuilder()
             // case "ParallelLine":  return new ParallelLine()
-            // case "Intersection":  return new Intersection();
+            case "Intersection":  return new IntersectionBuilder();
             // case "Angle":         return new Angle();
             // case "Image":         return new Image({fileName:"./img/teatime77.png"});
             // case "FuncLine":      return new FuncLine();
@@ -64,7 +64,7 @@ export class SelectTool extends Builder {
             for(const [pt, down_pos] of this.downPos.entries()){
                 if(pt.bound instanceof LineSegment){
 
-                    pt.pos = calcFootOfPerpendicular(pt.bound, pos);
+                    pt.pos = calcFootOfPerpendicular(pos, pt.bound);
                 }
                 else if(pt.bound instanceof Circle){
                     
@@ -201,6 +201,54 @@ class LineSegmentBuilder extends Builder {
 
 class PerpendicularBuilder extends Builder {
 
+}
+
+class IntersectionBuilder extends Builder {
+    shape1 : Line | CircleArc | undefined;
+
+    click(view : View, pos : Vec2, shape : Shape | undefined){
+        if(shape instanceof Line || shape instanceof CircleArc){
+            if(this.shape1 == undefined){
+                this.shape1 = shape;
+                this.shape1.color = "blue";
+            }
+            else{
+                this.shape1.color = "black";
+
+                let poss : Vec2[];
+                if(this.shape1 instanceof Line && shape instanceof Line){
+                    const pos1 = linesIntersection(this.shape1, shape);
+                    poss = [pos1];
+                }
+                else if(this.shape1 instanceof CircleArc && shape instanceof CircleArc){
+                    poss = ArcArcIntersection(this.shape1, shape);
+                }
+                else{
+                    let line : Line;
+                    let circle : CircleArc;
+
+                    if(this.shape1 instanceof Line){
+                        line = this.shape1;
+                        circle = shape as CircleArc;
+                    }
+                    else{
+                        circle = this.shape1;
+                        line = shape as Line;
+                    }
+                    poss = lineArcIntersection(line, circle);
+                }
+
+                for(const inter of poss){
+                    const pt = new Point(inter);
+                    view.addShape(pt);
+                }
+
+                this.shape1 = undefined;
+            }
+
+        }
+
+    }
 }
 
 }
