@@ -1,18 +1,20 @@
 namespace planets {
 
-export function calcFootOfPerpendicular(pos:Vec2, line: Line) : Vec2 {
-    const p1 = line.p1.pos;
-    const p2 = line.p2.pos;
+export function calcFootFrom2Pos(pos : Vec2, pos1 : Vec2, pos2 : Vec2) : Vec2 {
 
     // unit vector from p1 to p2
-    const e = p2.sub(p1).unit();
+    const e = pos2.sub(pos1).unit();
 
-    const v = pos.sub(p1);
+    const v = pos.sub(pos1);
     const h = e.dot(v);
 
-    const foot = p1.add(e.mul(h));
+    const foot = pos1.add(e.mul(h));
 
     return foot;
+
+}
+export function calcFootOfPerpendicular(pos:Vec2, line: Line) : Vec2 {
+    return calcFootFrom2Pos(pos, line.p1.pos, line.p2.pos);
 }
     
 

@@ -20,7 +20,7 @@ export abstract class Builder {
             case "Circle.1":        return new Circle1Builder();
             case "Circle.2":        return new Circle2Builder();
             // case "Arc":           return new Arc();
-            // case "DimensionLine": return new DimensionLine();
+            case "DimensionLine": return new DimensionLineBuilder();
             // case "Triangle":      return new Triangle();
             // case "Midpoint":      return new Midpoint();
             case "Perpendicular": return new PerpendicularBuilder()
@@ -279,7 +279,40 @@ class AngleBuilder extends Builder {
             }
         }
     }
+}
 
+class DimensionLineBuilder extends Builder {
+    p1 : Point | undefined;
+    p2 : Point | undefined;
+    dimLine : DimensionLine | undefined;
+
+    click(view : View, pos : Vec2, shape : Shape | undefined){
+        if(this.p1 == undefined){
+            if(shape instanceof Point){
+                this.p1 = shape;
+            }
+        }
+        else if(this.p2 == undefined && shape instanceof Point){
+            this.p2 = shape;
+
+            const foot   = calcFootFrom2Pos(pos, this.p1.pos, this.p2.pos);
+            const shift  = pos.sub(foot);
+            this.dimLine = new DimensionLine(this.p1, this.p2, shift);
+            view.addShape(this.dimLine);
+        }
+        else if(this.dimLine != undefined){
+            this.p1      = undefined;
+            this.p2      = undefined;
+            this.dimLine = undefined;
+        }
+    }
+
+    pointermove(view : View, pos : Vec2, shape : Shape | undefined){
+        if(this.p1 != undefined && this.p2 != undefined && this.dimLine != undefined){
+            const foot = calcFootFrom2Pos(pos, this.p1.pos, this.p2.pos);
+            this.dimLine.shift = pos.sub(foot);
+        }
+    }
 }
 
 }

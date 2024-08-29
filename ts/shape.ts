@@ -35,6 +35,22 @@ export abstract class Shape {
     unselect(){
         this.selected = false;
     }
+
+    drawLine(view : View, p1 : Vec2, p2 : Vec2){
+        const color = (this.isOver ? "red" : this.color);
+
+        const pix1 = view.toPixPos(p1);
+        const pix2 = view.toPixPos(p2);
+
+        const ctx = view.ctx;
+        ctx.beginPath();
+        ctx.moveTo(pix1.x, pix1.y);
+        ctx.lineTo(pix2.x, pix2.y);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = (this.selected ? 3 : 1);
+        ctx.stroke();   
+    }
+    
 }
 
 export class Point extends Shape {
@@ -338,7 +354,46 @@ export class Angle extends Shape {
         ctx.strokeStyle = color;
         ctx.stroke();
     }
+}
 
+
+export class DimensionLine extends Shape {
+    p1 : Point;
+    p2 : Point;
+    shift : Vec2;
+
+    constructor(p1 : Point, p2 : Point, shift : Vec2, color : string = "black"){
+        super(color);
+        this.p1    = p1;
+        this.p2    = p2;
+        this.shift = shift;
+
+    }
+
+    draw(view : View) : void {
+        const p1 = this.p1.pos;
+        const p2 = this.p2.pos;
+
+        const p1a = this.p1.pos.add(this.shift);
+        const p2a = this.p2.pos.add(this.shift);
+
+        const shift_pix_len = view.toPix(this.shift.len());
+        const ratio = (shift_pix_len + 5) / shift_pix_len;
+        const shift_plus = this.shift.mul(ratio);
+        const p1b = this.p1.pos.add(shift_plus);
+        const p2b = this.p2.pos.add(shift_plus);
+
+        const p12 = p2.sub(p1);
+        const p1c = p1a.add(p12.mul( 1/3));
+        const p2c = p2a.add(p12.mul(-1/3));
+
+        this.drawLine(view, p1, p1b);
+        this.drawLine(view, p2, p2b);
+
+        this.drawLine(view, p1a, p1c);
+        this.drawLine(view, p2a, p2c);
+    }
+    
 }
 
 export class Graph extends Shape {
@@ -382,6 +437,5 @@ export class Arrow extends Polygon {
         this.vec = vec;
     }
 }
-
 
 }
