@@ -24,6 +24,10 @@ export class Vec2 {
         this.y = y;
     }
 
+    toString() : string {
+        return `(${this.x.toFixed(1)}, ${this.y.toFixed(1)})`;
+    }
+
 /*+++
     app() : App {
         return new App(operator("vec"), [new ConstNum(this.x), new ConstNum(this.y)]);
@@ -46,8 +50,12 @@ export class Vec2 {
         return new Vec2(this.x - pt.x, this.y - pt.y);
     }
 
-    mul(c: number) : Vec2 {
-        return new Vec2(c * this.x, c * this.y);
+    mul(cx: number, cy : number | undefined = undefined) : Vec2 {
+        if(cy == undefined){
+            cy = cx;
+        }
+
+        return new Vec2(cx * this.x, cy * this.y);
     }
 
     len2(): number {

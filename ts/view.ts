@@ -26,14 +26,17 @@ export class View {
         this.ctx = canvas.getContext("2d")!;
         assert(this.ctx != null);
 
-        const aspect = canvas.clientWidth / canvas.clientHeight;
+        const aspect = this.canvas.clientWidth / this.canvas.clientHeight;
         const max_y = 6;
         const max_x = aspect * max_y;
 
         this.max = new Vec2( max_x,  max_y)
         this.min = new Vec2(-max_x, -max_y);
 
-        this.realToPix = canvas.width / (2 * max_x);
+        this.canvas.width  = this.canvas.clientWidth;
+        this.canvas.height = this.canvas.clientHeight;
+
+        this.realToPix = this.canvas.width / (2 * this.max.x);
     }
 
     evPos(ev : MouseEvent) : Vec2 {
@@ -134,6 +137,22 @@ export class View {
     }
 
     wheel(ev : WheelEvent){
+    }
+
+    resize(ev : UIEvent){
+        const [w, h] = [ this.canvas.width, this.canvas.height ];        
+
+        this.canvas.width  = this.canvas.clientWidth;
+        this.canvas.height = this.canvas.clientHeight;
+
+        const [rx, ry] = [ this.canvas.width / w, this.canvas.height / h ];
+
+        this.max = this.max.mul(rx, ry);
+        this.min = this.min.mul(rx, ry);
+
+        this.realToPix = this.canvas.width / (2 * this.max.x);
+
+        msg(`resize: w:${w} ${this.canvas.width} h:${h} ${this.canvas.height} max:${this.max}`);
     }
 
     addShape(shape : Shape){

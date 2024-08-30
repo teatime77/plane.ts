@@ -24,6 +24,8 @@ function viewEvent(view : View){
     view.canvas.addEventListener("pointerup"  , view.pointerup.bind(view));   
     view.canvas.addEventListener("click"      , view.click.bind(view));   
 
+    window.addEventListener("resize", view.resize.bind(view));
+
     // Passive event listeners
     // https://github.com/WICG/EventListenerOptions/blob/gh-pages/explainer.md
     view.canvas.addEventListener("wheel"      , view.wheel.bind(view), {"passive" : true } );
