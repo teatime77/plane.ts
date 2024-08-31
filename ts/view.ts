@@ -78,7 +78,7 @@ export class View {
         }        
 
         const shapes = this.allShapes();
-        shapes.forEach(c => c.draw(this));    
+        shapes.forEach(c => c.draw());    
 
         window.requestAnimationFrame(this.drawShapes.bind(this));
     }
@@ -123,7 +123,7 @@ export class View {
         const pos = this.evPos(ev);
 
         const shapes = this.allShapes();
-        shapes.forEach(x => x.isOver = x.isNear(this, pos));    
+        shapes.forEach(x => x.isOver = x.isNear(pos));    
 
         if(Builder.tool != undefined){
             const shape = this.getShape(pos);
@@ -161,18 +161,28 @@ export class View {
 
     getShape(pos : Vec2) : Shape | undefined {
         const shapes = this.allShapes();
-        const point = shapes.filter(x => x instanceof Point).find(x => x.isNear(this, pos));
+        const point = shapes.filter(x => x instanceof Point).find(x => x.isNear(pos));
         if(point != undefined){
             return point;
         }
 
-        const line = shapes.filter(x => x instanceof LineSegment).find(x => x.isNear(this, pos));
+        const line = shapes.filter(x => x instanceof LineSegment).find(x => x.isNear(pos));
         if(line != undefined){
             return line;
         }
         
-        const circle = shapes.filter(x => x instanceof Circle).find(x => x.isNear(this, pos));
+        const circle = shapes.filter(x => x instanceof Circle).find(x => x.isNear(pos));
         return circle;
+    }
+
+    showProperties(shape : Shape){
+        const properties : [string, string][] = [];
+
+        shape.getProperties(properties);
+        for(const [name, type] of properties){
+
+        }
+
     }
 }
 

@@ -1,17 +1,21 @@
 namespace planets {
 //
+
 export abstract class Shape {
     static maxId = 0;
+    view : View;
     id : number;
+    name : string = "";
     color : string = "black";
     isOver : boolean = false;
     selected : boolean = false;
 
     depends : Shape[] = [];
 
-    abstract draw(view : View) : void;
+    abstract draw() : void;
 
-    constructor(color : string = "black"){
+    constructor(view : View, color : string = "black"){
+        this.view = view;
         this.id = Shape.maxId++;
         this.color = color;
     }
@@ -20,7 +24,22 @@ export abstract class Shape {
         throw new MyError();
     }
 
-    isNear(view : View, pos : Vec2) : boolean {        
+    showProperty(){
+        const div = $("property-list");
+
+        const name = document.createElement("span");
+
+
+    }
+
+    getProperties(properties : [string, string][]){
+        properties.push(
+            ["name", "string"],
+            ["color", "color"]
+        );
+    }
+
+    isNear(pos : Vec2) : boolean {        
         return false;
     }
 
@@ -36,13 +55,13 @@ export abstract class Shape {
         this.selected = false;
     }
 
-    drawLine(view : View, p1 : Vec2, p2 : Vec2){
+    drawLine(p1 : Vec2, p2 : Vec2){
         const color = (this.isOver ? "red" : this.color);
 
-        const pix1 = view.toPixPos(p1);
-        const pix2 = view.toPixPos(p2);
+        const pix1 = this.view.toPixPos(p1);
+        const pix2 = this.view.toPixPos(p2);
 
-        const ctx = view.ctx;
+        const ctx = this.view.ctx;
         ctx.beginPath();
         ctx.moveTo(pix1.x, pix1.y);
         ctx.lineTo(pix2.x, pix2.y);
@@ -59,8 +78,8 @@ export class Point extends Shape {
     pos : Vec2;
     bound : LineSegment | Circle | undefined;
 
-    constructor(pos : Vec2, bound : LineSegment | Circle | undefined = undefined){
-        super();
+    constructor(view : View, pos : Vec2, bound : LineSegment | Circle | undefined = undefined){
+        super(view);
         this.bound = bound;
         if(bound instanceof LineSegment){
 
@@ -70,20 +89,30 @@ export class Point extends Shape {
 
             this.pos = pos;
         }
+
+
     }
 
     copy() : Point {
-        return new Point(this.pos.copy());
+        return new Point(this.view, this.pos.copy());
     }
 
-    isNear(view : View, pos : Vec2) : boolean {
-        return view.isNear(pos.dist(this.pos));
+    getProperties(properties : [string, string][]){
+        super.getProperties(properties);
+
+        properties.push(
+            ["pos", "Vec2"],
+        );
     }
 
-    draw(view : View) : void {
-        const ctx = view.ctx;
+    isNear(pos : Vec2) : boolean {
+        return this.view.isNear(pos.dist(this.pos));
+    }
 
-        const pix = view.toPixPos(this.pos);
+    draw() : void {
+        const ctx = this.view.ctx;
+
+        const pix = this.view.toPixPos(this.pos);
 
         const color = (this.isOver ? "red" : this.color);
 
@@ -119,8 +148,8 @@ export abstract class Line extends Shape {
     p12! : Vec2;
     e!   : Vec2;
 
-    constructor(p1: Point, p2: Point, color : string = "black"){
-        super(color);
+    constructor(view : View, p1: Point, p2: Point, color : string = "black"){
+        super(view, color);
         this.p1 = p1;
         this.p2 = p2;
 
@@ -138,7 +167,7 @@ export abstract class Line extends Shape {
 export class LineSegment extends Line {    
 
     copy() : LineSegment {
-        return new LineSegment(this.p1.copy(), this.p2.copy(), this.color);
+        return new LineSegment(this.view, this.p1.copy(), this.p2.copy(), this.color);
     }
 
     getAllShapes(shapes : Shape[]){
@@ -146,10 +175,10 @@ export class LineSegment extends Line {
         shapes.push(this.p1, this.p2);
     }
 
-    isNear(view : View, pos : Vec2) : boolean {
+    isNear(pos : Vec2) : boolean {
         const foot = calcFootOfPerpendicular(pos, this);        
         const d = pos.dist(foot);
-        if(view.isNear(d)){
+        if(this.view.isNear(d)){
 
             const p1 = this.p1.pos;
             const p2 = this.p2.pos;
@@ -163,11 +192,11 @@ export class LineSegment extends Line {
         return false;
     }
 
-    draw(view : View) : void {
-        const ctx = view.ctx;
+    draw() : void {
+        const ctx = this.view.ctx;
 
-        const p1 = view.toPixPos(this.p1.pos);
-        const p2 = view.toPixPos(this.p2.pos);
+        const p1 = this.view.toPixPos(this.p1.pos);
+        const p2 = this.view.toPixPos(this.p2.pos);
 
         const color = (this.isOver ? "red" : this.color);
 
@@ -184,8 +213,8 @@ export abstract class CircleArc extends Shape {
     center : Point;
     color : string;
 
-    constructor(center : Point, color : string = "black"){
-        super();
+    constructor(view : View, center : Point, color : string = "black"){
+        super(view);
         this.center = center;
         this.color = color;
     }
@@ -194,8 +223,8 @@ export abstract class CircleArc extends Shape {
 }
 
 export abstract class Circle extends CircleArc {
-    constructor(center : Point, color : string = "black"){
-        super(center, color);
+    constructor(view : View, center : Point, color : string = "black"){
+        super(view, center, color);
     }
 
     getAllShapes(shapes : Shape[]){
@@ -203,20 +232,20 @@ export abstract class Circle extends CircleArc {
         shapes.push(this.center);
     }
 
-    isNear(view : View, pos : Vec2) : boolean {
+    isNear(pos : Vec2) : boolean {
         const r = pos.dist(this.center.pos);
-        return view.isNear( Math.abs(r - this.radius()) );
+        return this.view.isNear( Math.abs(r - this.radius()) );
     }
 
-    draw(view : View) : void {
-        const ctx = view.ctx;
+    draw() : void {
+        const ctx = this.view.ctx;
 
-        const pix = view.toPixPos(this.center.pos);
+        const pix = this.view.toPixPos(this.center.pos);
 
         const color = (this.isOver ? "red" : this.color);
 
         ctx.beginPath();
-        ctx.arc(pix.x, pix.y, view.toPix(this.radius()), 0, 2 * Math.PI, false);
+        ctx.arc(pix.x, pix.y, this.view.toPix(this.radius()), 0, 2 * Math.PI, false);
         // ctx.fillStyle = color;
         // ctx.fill();
         ctx.lineWidth = (this.selected ? 3 : 1);
@@ -229,13 +258,13 @@ export abstract class Circle extends CircleArc {
 export class Circle1 extends Circle {
     p : Point;
 
-    constructor(center : Point, p : Point, color : string = "black"){
-        super(center, color);
+    constructor(view : View, center : Point, p : Point, color : string = "black"){
+        super(view, center, color);
         this.p = p;
     }
 
     copy(): Circle1 {
-        return new Circle1(this.center.copy(), this.p.copy(), this.color);
+        return new Circle1(this.view, this.center.copy(), this.p.copy(), this.color);
     }
 
     getAllShapes(shapes : Shape[]){
@@ -251,13 +280,13 @@ export class Circle1 extends Circle {
 export class Circle2 extends Circle {
     private radius_ : number;
 
-    constructor(center : Point, radius : number, color : string = "black"){
-        super(center, color);
+    constructor(view : View, center : Point, radius : number, color : string = "black"){
+        super(view, center, color);
         this.radius_ = radius;
     }
 
     copy(): Circle2 {
-        return new Circle2(this.center.copy(), this.radius_, this.color);
+        return new Circle2(this.view, this.center.copy(), this.radius_, this.color);
     }
 
     radius() : number {
@@ -275,14 +304,14 @@ class Polygon extends Shape {
     material : [number, number, number] = [0, 0, 0];
     color : string = "black";
 
-    constructor(points3d : Vec2[], color : string = "black"){
-        super();
+    constructor(view : View, points3d : Vec2[], color : string = "black"){
+        super(view);
         this.points3D = points3d.slice();
         this.color = color;
     }
 
-    draw(view : View) : void {
-        const ctx = view.ctx;
+    draw() : void {
+        const ctx = this.view.ctx;
 
         ctx.beginPath();
         for(const [i, p] of this.points2D.entries()){
@@ -305,8 +334,8 @@ class Polygon extends Shape {
 }
 
 export class Triangle extends Polygon {
-    constructor(points3d:Vec2[], color : string = "black"){
-        super(points3d, color);
+    constructor(view : View, points3d:Vec2[], color : string = "black"){
+        super(view, points3d, color);
     }
 }
 
@@ -321,8 +350,8 @@ export class Angle extends Shape {
 
     inter : Vec2;
 
-    constructor(line1 : Line, dir1 : number, line2 : Line, dir2 : number, inter : Vec2, color : string = "black"){
-        super(color);
+    constructor(view : View, line1 : Line, dir1 : number, line2 : Line, dir2 : number, inter : Vec2, color : string = "black"){
+        super(view, color);
         this.line1 = line1;
         this.dir1  = dir1;
 
@@ -332,7 +361,7 @@ export class Angle extends Shape {
         this.inter = inter;
     }
 
-    draw(view : View) : void {
+    draw() : void {
         const e1 = this.line1.e.mul(this.dir1);
         const e2 = this.line2.e.mul(this.dir2);
 
@@ -342,9 +371,9 @@ export class Angle extends Shape {
         const deg1 = toDegree(th1);
         const deg2 = toDegree(th2);
 
-        const ctx = view.ctx;
+        const ctx = this.view.ctx;
 
-        const pix = view.toPixPos(this.inter);
+        const pix = this.view.toPixPos(this.inter);
 
         const color = (this.isOver ? "red" : this.color);
 
@@ -360,24 +389,42 @@ export class Angle extends Shape {
 export class DimensionLine extends Shape {
     p1 : Point;
     p2 : Point;
+    center! : Vec2;
     shift : Vec2;
+    text : string = "";
+    div : HTMLDivElement;
 
-    constructor(p1 : Point, p2 : Point, shift : Vec2, color : string = "black"){
-        super(color);
+    constructor(view : View, p1 : Point, p2 : Point, shift : Vec2, color : string = "black"){
+        super(view, color);
         this.p1    = p1;
         this.p2    = p2;
         this.shift = shift;
+        
+        this.div   = document.createElement("div");
+        this.div.style.position = "absolute";
+        this.div.style.display  = "inline-block";
+        this.div.style.backgroundColor = "cornsilk";
 
+        document.body.append(this.div);
+        renderKatexSub(this.div, "\\int \\frac{1}{2}");
     }
 
-    draw(view : View) : void {
+    getProperties(properties : [string, string][]){
+        super.getProperties(properties);
+        
+        properties.push(
+            ["text", "string"]
+        );
+    }
+
+    draw() : void {
         const p1 = this.p1.pos;
         const p2 = this.p2.pos;
 
         const p1a = this.p1.pos.add(this.shift);
         const p2a = this.p2.pos.add(this.shift);
 
-        const shift_pix_len = view.toPix(this.shift.len());
+        const shift_pix_len = this.view.toPix(this.shift.len());
         const ratio = (shift_pix_len + 5) / shift_pix_len;
         const shift_plus = this.shift.mul(ratio);
         const p1b = this.p1.pos.add(shift_plus);
@@ -387,11 +434,22 @@ export class DimensionLine extends Shape {
         const p1c = p1a.add(p12.mul( 1/3));
         const p2c = p2a.add(p12.mul(-1/3));
 
-        this.drawLine(view, p1, p1b);
-        this.drawLine(view, p2, p2b);
+        this.center = this.view.toPixPos(p1a.add(p12.mul(0.5)));
 
-        this.drawLine(view, p1a, p1c);
-        this.drawLine(view, p2a, p2c);
+        const x = this.view.canvas.offsetLeft + this.center.x - 0.5 * this.div.offsetWidth;
+        const y = this.view.canvas.offsetTop  + this.center.y - 0.5 * this.div.offsetHeight;
+
+        this.div.style.left = `${x}px`;
+        this.div.style.top  = `${y}px`;
+
+        const deg = toDegree( Math.atan2(-p12.y, p12.x) );
+        this.div.style.transform = `rotate(${deg}deg)`;
+
+        this.drawLine(p1, p1b);
+        this.drawLine(p2, p2b);
+
+        this.drawLine(p1a, p1c);
+        this.drawLine(p2a, p2c);
     }
     
 }
@@ -400,8 +458,8 @@ export class Graph extends Shape {
     xs : Float32Array = new Float32Array();
     
 
-    constructor(){
-        super();
+    constructor(view : View){
+        super(view);
     }
 
     setMinMax(){
@@ -418,8 +476,8 @@ export class Axis extends Shape {
     min : number = NaN;
     max : number = NaN;
 
-    constructor(){
-        super();
+    constructor(view : View){
+        super(view);
     }
 
     draw() : void {
@@ -431,8 +489,8 @@ export class Arrow extends Polygon {
     pos : Vec2 = Vec2.nan();
     vec : Vec2 = Vec2.nan();
 
-    constructor(pos : Vec2, vec : Vec2, color : string){
-        super([], color);
+    constructor(view : View, pos : Vec2, vec : Vec2, color : string){
+        super(view, [], color);
         this.pos = pos;
         this.vec = vec;
     }

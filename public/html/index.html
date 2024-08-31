@@ -26,10 +26,11 @@
     <script type="text/javascript" src="../js/plane.js?ver=0"></script>
 
 <style type="text/css">
-/* html,
-body {
-    height: 100%
-} */
+html,
+test {
+    display: inline-block;
+    background-color: cornsilk;
+}
 
 html {
   height: 100%;
@@ -46,6 +47,11 @@ body {
     grid-template-rows: 30px 2px 1fr 2px; 
     background-color:brown; 
     height: 100%;
+}
+
+.property {
+    display: grid;
+    grid-template-columns: 100px 1fr; 
 }
 </style>
 
@@ -90,14 +96,7 @@ body {
         <canvas id="canvas"
             style="grid-row: 3; grid-column: 3; width: 100%; height: 100%; background-color:bisque;"></canvas>
 
-        <div style="grid-row: 3; grid-column: 5; background-color: white;">
-            <div id="tex" style="transform: rotate(45deg); display: inline-block;">
-                $$
-                \int \frac{1}{2}
-                $$
-            </div>
-
-        </div>
+        <div id="property-list" class="property" style="grid-row: 3; grid-column: 5; background-color: white;"></div>
     </div>
 </body>
 

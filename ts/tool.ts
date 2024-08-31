@@ -82,8 +82,10 @@ class PointBuilder extends Builder {
     click(view : View, pos : Vec2, shape : Shape | undefined){  
         if(shape == undefined || shape instanceof LineSegment || shape instanceof Circle){
 
-            const new_point = new Point(pos, shape);
+            const new_point = new Point(view, pos, shape);
             view.addShape(new_point);
+
+            new_point.showProperty();
         }
     }
 }
@@ -95,11 +97,11 @@ class Circle1Builder extends Builder {
         if(this.circle == undefined){
 
             if(shape == undefined || !(shape instanceof Point)){
-                shape = new Point(pos);
+                shape = new Point(view, pos);
             }
 
-            const p = new Point(pos);
-            this.circle = new Circle1(shape as Point, p);
+            const p = new Point(view, pos);
+            this.circle = new Circle1(view, shape as Point, p);
 
             view.addShape(this.circle);
         }
@@ -139,10 +141,10 @@ class Circle2Builder extends Builder {
         if(this.circle == undefined){
 
             if(shape == undefined || !(shape instanceof Point)){
-                shape = new Point(pos);
+                shape = new Point(view, pos);
             }
 
-            this.circle = new Circle2(shape as Point, 0);
+            this.circle = new Circle2(view, shape as Point, 0);
 
             view.addShape(this.circle);
         }
@@ -166,11 +168,11 @@ class LineSegmentBuilder extends Builder {
         if(this.line == undefined){
 
             if(shape == undefined || !(shape instanceof Point)){
-                shape = new Point(pos);
+                shape = new Point(view, pos);
             }
 
-            const p2 = new Point(pos);
-            this.line = new LineSegment(shape as Point, p2);
+            const p2 = new Point(view, pos);
+            this.line = new LineSegment(view, shape as Point, p2);
 
 
             view.addShape(this.line);
@@ -239,7 +241,7 @@ class IntersectionBuilder extends Builder {
                 }
 
                 for(const inter of poss){
-                    const pt = new Point(inter);
+                    const pt = new Point(view, inter);
                     view.addShape(pt);
                 }
 
@@ -272,7 +274,7 @@ class AngleBuilder extends Builder {
                 const dir1 = Math.sign(pos1.sub(inter).dot(line1.e));
                 const dir2 = Math.sign(pos2.sub(inter).dot(line2.e));
 
-                const angle = new Angle(line1, dir1, line2, dir2, inter);
+                const angle = new Angle(view, line1, dir1, line2, dir2, inter);
                 view.addShape(angle);
 
                 this.line1 = undefined;
@@ -297,7 +299,7 @@ class DimensionLineBuilder extends Builder {
 
             const foot   = calcFootFrom2Pos(pos, this.p1.pos, this.p2.pos);
             const shift  = pos.sub(foot);
-            this.dimLine = new DimensionLine(this.p1, this.p2, shift);
+            this.dimLine = new DimensionLine(view, this.p1, this.p2, shift);
             view.addShape(this.dimLine);
         }
         else if(this.dimLine != undefined){
