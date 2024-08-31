@@ -64,14 +64,14 @@ export class SelectTool extends Builder {
             for(const [pt, down_pos] of this.downPos.entries()){
                 if(pt.bound instanceof LineSegment){
 
-                    pt.pos = calcFootOfPerpendicular(pos, pt.bound);
+                    pt.setPos(calcFootOfPerpendicular(pos, pt.bound));
                 }
                 else if(pt.bound instanceof Circle){
                     
                 }
                 else{
 
-                    pt.pos = down_pos.add(diff)
+                    pt.setPos(down_pos.add(diff));
                 }
             }
         }
@@ -112,7 +112,7 @@ class Circle1Builder extends Builder {
             }
             else{
 
-                this.circle.p.pos = pos;
+                this.circle.p.setPos(pos);
             }
 
             this.circle = undefined;
@@ -127,7 +127,7 @@ class Circle1Builder extends Builder {
             }
             else{
 
-                this.circle.p.pos = pos;
+                this.circle.p.setPos(pos);
             }
         }
     }
@@ -174,7 +174,6 @@ class LineSegmentBuilder extends Builder {
             const p2 = new Point(view, pos);
             this.line = new LineSegment(view, shape as Point, p2);
 
-
             view.addShape(this.line);
         }
         else{
@@ -194,7 +193,7 @@ class LineSegmentBuilder extends Builder {
             }
             else{
 
-                this.line.p2.pos = pos;
+                this.line.p2.setPos(pos);
             }
         }
     }

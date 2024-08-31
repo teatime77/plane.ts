@@ -5,7 +5,13 @@ export abstract class Shape {
     static maxId = 0;
     view : View;
     id : number;
-    name : string = "";
+
+    name      : string = "";
+    caption   : string = "";
+
+    div       : HTMLDivElement | undefined;
+    divOffset : Vec2 | undefined;
+
     color : string = "black";
     isOver : boolean = false;
     selected : boolean = false;
@@ -22,6 +28,15 @@ export abstract class Shape {
 
     copy() : Shape {
         throw new MyError();
+    }
+
+    makeDiv(){
+        this.div   = document.createElement("div");
+        this.div.style.position = "absolute";
+        this.div.style.display  = "inline-block";
+        this.div.style.backgroundColor = "cornsilk";
+
+        document.body.append(this.div);
     }
 
     showProperty(){
@@ -69,32 +84,72 @@ export abstract class Shape {
         ctx.lineWidth = (this.selected ? 3 : 1);
         ctx.stroke();   
     }
-    
 }
 
 export class Point extends Shape {
     static radius = 4;
 
-    pos : Vec2;
+    pos! : Vec2;
     bound : LineSegment | Circle | undefined;
 
     constructor(view : View, pos : Vec2, bound : LineSegment | Circle | undefined = undefined){
         super(view);
         this.bound = bound;
+
+        const idxes = view.allShapes().filter(x => x instanceof Point).map(x => upperLatinLetters.indexOf(x.name));
+        if(idxes.length == 0){
+            this.name = upperLatinLetters[0];
+        }
+        else{
+            const max_idx = Math.max(...idxes);
+            if(max_idx == -1){
+                this.name = upperLatinLetters[0];
+            }
+            else if(max_idx + 1 < upperLatinLetters.length){
+                this.name = upperLatinLetters[max_idx + 1];
+            }
+            else{
+                throw new MyError();
+            }
+        }
+
+        this.makeDiv();
+        if(this.div == undefined){
+            throw new MyError();
+        }
+
+        this.div.innerText = this.name;
+
         if(bound instanceof LineSegment){
 
-            this.pos = calcFootOfPerpendicular(pos, bound);
+            this.setPos(calcFootOfPerpendicular(pos, bound));
         }
         else{
 
-            this.pos = pos;
+            this.setPos(pos);
         }
 
-
+        msg(`point:${this.name}`);
     }
 
     copy() : Point {
         return new Point(this.view, this.pos.copy());
+    }
+
+    setPos(pos : Vec2){
+        this.pos = pos;
+
+        this.setDivPos();
+    }
+
+    setDivPos(){
+        const div_pos = this.view.toPixPos(this.pos);
+
+        const x = this.view.canvas.offsetLeft + div_pos.x + 10;
+        const y = this.view.canvas.offsetTop  + div_pos.y - 20;
+
+        this.div!.style.left = `${x}px`;
+        this.div!.style.top  = `${y}px`;
     }
 
     getProperties(properties : [string, string][]){
@@ -392,21 +447,15 @@ export class DimensionLine extends Shape {
     center! : Vec2;
     shift : Vec2;
     text : string = "";
-    div : HTMLDivElement;
 
     constructor(view : View, p1 : Point, p2 : Point, shift : Vec2, color : string = "black"){
         super(view, color);
         this.p1    = p1;
         this.p2    = p2;
         this.shift = shift;
-        
-        this.div   = document.createElement("div");
-        this.div.style.position = "absolute";
-        this.div.style.display  = "inline-block";
-        this.div.style.backgroundColor = "cornsilk";
 
-        document.body.append(this.div);
-        renderKatexSub(this.div, "\\int \\frac{1}{2}");
+        this.makeDiv();
+        renderKatexSub(this.div!, "\\int \\frac{1}{2}");
     }
 
     getProperties(properties : [string, string][]){
@@ -418,6 +467,10 @@ export class DimensionLine extends Shape {
     }
 
     draw() : void {
+        if(this.div == undefined){
+            throw new MyError();
+        }
+
         const p1 = this.p1.pos;
         const p2 = this.p2.pos;
 
