@@ -59,6 +59,12 @@ function viewEvent(view : View){
     view.canvas.addEventListener("wheel"      , view.wheel.bind(view), {"passive" : true } );
 }
 
+export function setCaptionEvent(caption : TextBlock){
+    caption.div.addEventListener("pointerdown", caption.captionPointerdown.bind(caption));
+    caption.div.addEventListener("pointermove", caption.captionPointermove.bind(caption));
+    caption.div.addEventListener("pointerup", caption.captionPointerup.bind(caption));
+
+}
 
 
 }

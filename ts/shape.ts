@@ -1,42 +1,20 @@
 namespace planets {
 //
+let captionDownPos : Vec2 | undefined;
+let offsetDown : Vec2;
 
-export abstract class Shape {
-    static maxId = 0;
-    view : View;
-    id : number;
+abstract class AbstractShape {
+    abstract showProperty(tbl : HTMLTableElement | undefined) : void;
 
-    name      : string = "";
-    caption   : string = "";
+    appendTitle(tbl : HTMLTableElement, title : string){
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
 
-    div       : HTMLDivElement | undefined;
-    divOffset : Vec2 | undefined;
+        cell.colSpan = 2;
+        cell.innerText = title;
+        row.append(cell);    
 
-    color : string = "black";
-    isOver : boolean = false;
-    selected : boolean = false;
-
-    depends : Shape[] = [];
-
-    abstract draw() : void;
-
-    constructor(view : View, color : string = "black"){
-        this.view = view;
-        this.id = Shape.maxId++;
-        this.color = color;
-    }
-
-    copy() : Shape {
-        throw new MyError();
-    }
-
-    makeDiv(){
-        this.div   = document.createElement("div");
-        this.div.style.position = "absolute";
-        this.div.style.display  = "inline-block";
-        this.div.style.backgroundColor = "cornsilk";
-
-        document.body.append(this.div);
+        tbl.append(row);
     }
 
     appendRow(tbl : HTMLTableElement, name : string, value: HTMLElement){
@@ -76,15 +54,142 @@ export abstract class Shape {
 
         this.appendRow(tbl, name, input);
     }
+}
 
-    showProperty(){
-        const tbl = $("property-list") as HTMLTableElement;
-        tbl.innerHTML = "";
+export class TextBlock extends AbstractShape {
+    x! : number;
+    y! : number;
+    text : string;
+    isTex : boolean;
+    div       : HTMLDivElement;
 
+    shape : Shape | undefined;
+    offset : Vec2 = new Vec2(0, 0);
+
+    constructor(text : string, is_tex : boolean, shape : Shape | undefined){
+        super();
+        this.text  = text;
+        this.isTex = is_tex;
+        this.shape = shape;
+
+        this.div   = document.createElement("div");
+        this.div.className = "tex_div";
+        if(is_tex){
+
+            renderKatexSub(this.div, text);
+        }
+        else{
+
+            this.div.innerText = text;
+        }
+
+        document.body.append(this.div);
+    }
+
+    showProperty(tbl : HTMLTableElement | undefined) : void {
+        if(tbl == undefined){
+
+            tbl = $("property-list") as HTMLTableElement;
+            tbl.innerHTML = "";
+        }
+
+        this.appendTitle(tbl, this.constructor.name);
+        this.makeTextProperty(tbl, "text", this.text);
+    }
+
+    setTextPos(x : number, y : number){
+        this.x = x;
+        this.y = y;
+
+        this.div.style.left = `${x + this.offset.x}px`;
+        this.div.style.top  = `${y + this.offset.y}px`;
+    }
+
+    setRotation(degree : number){
+        this.div.style.transform = `rotate(${degree}deg)`;
+    }
+
+    getSize() : [number, number] {
+        return [ this.div.offsetWidth, this.div.offsetHeight ];
+    }
+
+    captionPointerdown(ev : PointerEvent){
+        this.div.setPointerCapture(ev.pointerId);
+
+        captionDownPos = new Vec2(ev.screenX, ev.screenY);
+        offsetDown = this.offset.copy();
+        const x = this.div.style.left;
+        const y = this.div.style.top;
+        const [x2, y2] = [this.div.offsetLeft, this.div.offsetTop];
+        msg(`caption : ${x} ${y} ${x2} ${y2}`);
+
+    }
+
+    captionPointermove(ev : PointerEvent){
+        if(captionDownPos == undefined){
+            return;
+        }
+        const diff = new Vec2(ev.screenX, ev.screenY).sub(captionDownPos);
+        this.offset = offsetDown.add(diff);
+        
+        this.div.style.left = `${this.x + this.offset.x}px`;
+        this.div.style.top  = `${this.y + this.offset.y}px`;
+    }
+
+    captionPointerup(ev : PointerEvent){
+        this.div.releasePointerCapture(ev.pointerId);
+        captionDownPos = undefined;
+    }
+
+}
+
+export abstract class Shape extends AbstractShape {
+    static maxId = 0;
+    view : View;
+    id : number;
+
+    name      : string = "";
+    caption   : TextBlock | undefined;
+
+    divOffset : Vec2 | undefined;
+
+    color : string = "black";
+    isOver : boolean = false;
+    selected : boolean = false;
+
+    depends : Shape[] = [];
+
+    abstract draw() : void;
+
+    constructor(view : View, color : string = "black"){
+        super();
+        this.view = view;
+        this.id = Shape.maxId++;
+        this.color = color;
+    }
+
+    copy() : Shape {
+        throw new MyError();
+    }
+
+
+    showProperty(tbl : HTMLTableElement | undefined = undefined) : void {
+        if(tbl == undefined){
+
+            tbl = $("property-list") as HTMLTableElement;
+            tbl.innerHTML = "";
+        }
+
+        this.appendTitle(tbl, this.constructor.name);
         this.makeConstProperty(tbl, "id", `${this.id}`);
         this.makeTextProperty(tbl, "name", this.name);
-        this.makeTextProperty(tbl, "caption", this.caption);
+        // this.makeTextProperty(tbl, "caption", this.caption);
         this.makeColorProperty(tbl, "color", this.color);
+
+        if(this.caption != undefined){
+
+            this.caption.showProperty(tbl);
+        }
     }
 
     getProperties(properties : [string, string][]){
@@ -153,12 +258,9 @@ export class Point extends Shape {
             }
         }
 
-        this.makeDiv();
-        if(this.div == undefined){
-            throw new MyError();
-        }
-
-        this.div.innerText = this.name;
+        this.caption = new TextBlock(this.name, false, this);
+        this.caption.offset = new Vec2(10, -20);
+        setCaptionEvent(this.caption);
 
         if(bound instanceof LineSegment){
 
@@ -185,11 +287,10 @@ export class Point extends Shape {
     setDivPos(){
         const div_pos = this.view.toPixPos(this.pos);
 
-        const x = this.view.canvas.offsetLeft + div_pos.x + 10;
-        const y = this.view.canvas.offsetTop  + div_pos.y - 20;
+        const x = this.view.canvas.offsetLeft + div_pos.x;
+        const y = this.view.canvas.offsetTop  + div_pos.y;
 
-        this.div!.style.left = `${x}px`;
-        this.div!.style.top  = `${y}px`;
+        this.caption!.setTextPos(x, y);
     }
 
     getProperties(properties : [string, string][]){
@@ -494,8 +595,7 @@ export class DimensionLine extends Shape {
         this.p2    = p2;
         this.shift = shift;
 
-        this.makeDiv();
-        renderKatexSub(this.div!, "\\int \\frac{1}{2}");
+        this.caption = new TextBlock("\\int \\frac{1}{2}", true, this);
     }
 
     getProperties(properties : [string, string][]){
@@ -507,7 +607,7 @@ export class DimensionLine extends Shape {
     }
 
     draw() : void {
-        if(this.div == undefined){
+        if(this.caption == undefined){
             throw new MyError();
         }
 
@@ -529,14 +629,14 @@ export class DimensionLine extends Shape {
 
         this.center = this.view.toPixPos(p1a.add(p12.mul(0.5)));
 
-        const x = this.view.canvas.offsetLeft + this.center.x - 0.5 * this.div.offsetWidth;
-        const y = this.view.canvas.offsetTop  + this.center.y - 0.5 * this.div.offsetHeight;
+        const [text_width, text_height] = this.caption.getSize();
+        const x = this.view.canvas.offsetLeft + this.center.x - 0.5 * text_width;
+        const y = this.view.canvas.offsetTop  + this.center.y - 0.5 * text_height;
 
-        this.div.style.left = `${x}px`;
-        this.div.style.top  = `${y}px`;
+        this.caption.setTextPos(x, y);
 
-        const deg = toDegree( Math.atan2(-p12.y, p12.x) );
-        this.div.style.transform = `rotate(${deg}deg)`;
+        const degree = toDegree( Math.atan2(-p12.y, p12.x) );
+        this.caption.setRotation(degree);
 
         this.drawLine(p1, p1b);
         this.drawLine(p2, p2b);
