@@ -15,6 +15,10 @@ export function $(id : string) : HTMLElement {
     return ele;
 }
 
+export function $div(id : string) : HTMLDivElement {
+    return $(id) as HTMLDivElement;
+}
+
 export function $inp(id : string) : HTMLInputElement {
     return $(id) as HTMLInputElement;
 }

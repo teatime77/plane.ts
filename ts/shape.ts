@@ -39,12 +39,52 @@ export abstract class Shape {
         document.body.append(this.div);
     }
 
+    appendRow(tbl : HTMLTableElement, name : string, value: HTMLElement){
+        const row = document.createElement("tr");
+
+        const span = document.createElement("span");
+        span.innerText = name;
+        
+        for(const ele of [span, value]){
+            const cell = document.createElement("td");
+            cell.append(ele);
+            row.append(cell);    
+        }
+
+        tbl.append(row);
+    }
+
+    makeConstProperty(tbl : HTMLTableElement, name : string, value : string){
+        const span = document.createElement("span");
+        span.innerText = value;
+
+        this.appendRow(tbl, name, span);
+    }
+
+    makeTextProperty(tbl : HTMLTableElement, name : string, value : string){
+        const input = document.createElement("input");
+        input.type = "text";
+        input.value = value;
+
+        this.appendRow(tbl, name, input);
+    }
+
+    makeColorProperty(tbl : HTMLTableElement, name : string, value : string){
+        const input = document.createElement("input");
+        input.type = "color";
+        input.value = value;
+
+        this.appendRow(tbl, name, input);
+    }
+
     showProperty(){
-        const div = $("property-list");
+        const tbl = $("property-list") as HTMLTableElement;
+        tbl.innerHTML = "";
 
-        const name = document.createElement("span");
-
-
+        this.makeConstProperty(tbl, "id", `${this.id}`);
+        this.makeTextProperty(tbl, "name", this.name);
+        this.makeTextProperty(tbl, "caption", this.caption);
+        this.makeColorProperty(tbl, "color", this.color);
     }
 
     getProperties(properties : [string, string][]){
