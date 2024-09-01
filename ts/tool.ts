@@ -216,13 +216,12 @@ class IntersectionBuilder extends Builder {
             else{
                 this.shape1.unselect();
 
-                let poss : Vec2[];
+                let new_shape : Shape;
                 if(this.shape1 instanceof Line && shape instanceof Line){
-                    const pos1 = linesIntersection(this.shape1, shape);
-                    poss = [pos1];
+                    new_shape = new LinesIntersection(view, this.shape1, shape);
                 }
                 else if(this.shape1 instanceof CircleArc && shape instanceof CircleArc){
-                    poss = ArcArcIntersection(this.shape1, shape);
+                    new_shape = new ArcArcIntersection(view, this.shape1, shape);
                 }
                 else{
                     let line : Line;
@@ -236,13 +235,11 @@ class IntersectionBuilder extends Builder {
                         circle = this.shape1;
                         line = shape as Line;
                     }
-                    poss = lineArcIntersection(line, circle);
+
+                    new_shape = new LineArcIntersection(view, line, circle);
                 }
 
-                for(const inter of poss){
-                    const pt = new Point(view, inter);
-                    view.addShape(pt);
-                }
+                view.addShape(new_shape);
 
                 this.shape1 = undefined;
             }
@@ -268,12 +265,13 @@ class AngleBuilder extends Builder {
                 line1.setVecs();
                 line2.setVecs();
 
-                const inter = linesIntersection(line1, line2);
+                const inter = new LinesIntersection(view, line1, line2);
+                view.addShape(inter);
 
-                const dir1 = Math.sign(pos1.sub(inter).dot(line1.e));
-                const dir2 = Math.sign(pos2.sub(inter).dot(line2.e));
+                const dir1 = Math.sign(pos1.sub(inter.point.pos).dot(line1.e));
+                const dir2 = Math.sign(pos2.sub(inter.point.pos).dot(line2.e));
 
-                const angle = new Angle(view, line1, dir1, line2, dir2, inter);
+                const angle = new Angle(view, line1, dir1, line2, dir2, inter.point.pos);
                 view.addShape(angle);
 
                 this.line1 = undefined;
