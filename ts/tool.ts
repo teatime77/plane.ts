@@ -61,19 +61,31 @@ export class SelectTool extends Builder {
         if(view.downPos != undefined){
             const diff = pos.sub(view.downPos);
 
+            view.changed.clear();
+            
             for(const [pt, down_pos] of this.downPos.entries()){
                 if(pt.bound instanceof LineSegment){
 
                     pt.setPos(calcFootOfPerpendicular(pos, pt.bound));
                 }
                 else if(pt.bound instanceof Circle){
+                    const circle = pt.bound;
+
+                    const v = pos.sub(circle.center.pos);
+                    const theta = Math.atan2(v.y, v.x);
+                    const x = circle.radius() * Math.cos(theta);
+                    const y = circle.radius() * Math.sin(theta);
                     
+                    const new_pos = circle.center.pos.add( new Vec2(x, y) );
+                    pt.setPos(new_pos);
                 }
                 else{
 
                     pt.setPos(down_pos.add(diff));
                 }
             }
+
+            view.updateShapes();
         }
     }
 }

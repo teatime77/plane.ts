@@ -207,6 +207,13 @@ export abstract class Shape extends AbstractShape {
         shapes.push(this);
     }
 
+    dependencies() : Shape[] {
+        return [];
+    }
+
+    calc(){        
+    }
+
     select(){
         this.selected = true;
     }
@@ -282,6 +289,8 @@ export class Point extends Shape {
         this.pos = pos;
 
         this.setDivPos();
+
+        this.view.changed.add(this);
     }
 
     setDivPos(){
@@ -354,6 +363,14 @@ export abstract class Line extends Shape {
 
     abstract copy() : Line;
 
+    dependencies() : Shape[] {
+        return [ this.p1, this.p2 ];
+    }
+
+    calc(){     
+        this.setVecs();
+    }
+
     setVecs(){
         this.p12 = this.p2.sub(this.p1);
         this.e = this.p12.unit();
@@ -415,6 +432,10 @@ export abstract class CircleArc extends Shape {
         this.color = color;
     }
 
+    dependencies() : Shape[] {
+        return [ this.center ];
+    }
+
     abstract radius() : number;
 }
 
@@ -468,6 +489,13 @@ export class Circle1 extends Circle {
         shapes.push(this.p);
     }
 
+    dependencies() : Shape[] {
+        return super.dependencies().concat([ this.p ]);
+    }
+
+    calc(){        
+    }
+
     radius() : number {
         return this.center.pos.dist(this.p.pos);
     }
@@ -483,6 +511,9 @@ export class Circle2 extends Circle {
 
     copy(): Circle2 {
         return new Circle2(this.view, this.center.copy(), this.radius_, this.color);
+    }
+
+    calc(){        
     }
 
     radius() : number {
@@ -557,6 +588,13 @@ export class Angle extends Shape {
         this.inter = inter;
     }
 
+    dependencies() : Shape[] {
+        return [ this.line1, this.line2 ];
+    }
+
+    calc(){        
+    }
+
     draw() : void {
         const e1 = this.line1.e.mul(this.dir1);
         const e2 = this.line2.e.mul(this.dir2);
@@ -606,6 +644,13 @@ export class DimensionLine extends Shape {
         );
     }
 
+    dependencies() : Shape[] {
+        return [ this.p1, this.p2 ];
+    }
+
+    calc(){        
+    }
+
     draw() : void {
         if(this.caption == undefined){
             throw new MyError();
@@ -644,7 +689,6 @@ export class DimensionLine extends Shape {
         this.drawLine(p1a, p1c);
         this.drawLine(p2a, p2c);
     }
-    
 }
 
 export class Graph extends Shape {

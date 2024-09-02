@@ -26,10 +26,31 @@ export function DistanceFromLine(line : Line, pos : Vec2) : number {
 }
 
 export class LinesIntersection extends Shape {
+    l1 : Line;
+    l2 : Line;
     point : Point;
 
     constructor(view : View, l1:Line, l2:Line) {
         super(view)
+        this.l1 = l1;
+        this.l2 = l2;
+
+        this.point = new Point(view, Vec2.zero());
+        this.calc();
+    }
+
+    getAllShapes(shapes : Shape[]){
+        super.getAllShapes(shapes);
+        shapes.push(this.point);
+    }
+
+    dependencies() : Shape[] {
+        return [ this.l1, this.l2 ];
+    }
+
+    calc(){        
+        const [l1, l2] = [ this.l1, this.l2 ];
+
         l1.setVecs();
         l2.setVecs();
         if(l1.p12 == undefined || l2.p12 == undefined){
@@ -53,12 +74,7 @@ export class LinesIntersection extends Shape {
         const u = uv.x;
 
         const pos = l1.p1.pos.add(l1.p12.mul(u));
-        this.point = new Point(view, pos);
-    }
-
-    getAllShapes(shapes : Shape[]){
-        super.getAllShapes(shapes);
-        shapes.push(this.point);
+        this.point.setPos(pos);
     }
 
     draw() : void {
@@ -67,23 +83,44 @@ export class LinesIntersection extends Shape {
 }
 
 export class LineArcIntersection extends Shape {
+    line : Line;
+    arc  : CircleArc;
     p1 : Point;
     p2 : Point;
 
     constructor(view : View, line:Line, arc:CircleArc){
         super(view);
 
+        this.line = line;
+        this.arc  = arc;
+
+        this.p1 = new Point(view, Vec2.zero());
+        this.p2 = new Point(view, Vec2.zero());
+        this.calc();
+    }
+
+    getAllShapes(shapes : Shape[]){
+        super.getAllShapes(shapes);
+        shapes.push(this.p1, this.p2);
+    }
+
+    dependencies() : Shape[] {
+        return [ this.line, this.arc ];
+    }
+
+    calc(){        
+
         // 円/弧の中心
-        const center = arc.center;
+        const center = this.arc.center;
 
         // 円/弧の中心から線分に垂線をおろして、その足をfootとする。
-        const foot = calcFootOfPerpendicular(center.pos, line);
+        const foot = calcFootOfPerpendicular(center.pos, this.line);
 
         // 円/弧の中心から垂線の足までの距離。
         const h = foot.sub(center.pos).len();
 
         // 円/弧の半径
-        let r = arc.radius();
+        let r = this.arc.radius();
 
         if(r < h ){
             // 半径が垂線の足までの距離より小さい場合
@@ -95,20 +132,15 @@ export class LineArcIntersection extends Shape {
         let t = Math.sqrt(r*r - h * h);
 
         // 線分の単位方向ベクトル
-        line.setVecs();
-        let e = line.e;
+        this.line.setVecs();
+        let e = this.line.e;
         
         // 交点の座標
         let p1 = foot.add(e.mul(t));
         let p2 = foot.add(e.mul(-t));
 
-        this.p1 = new Point(view, p1);
-        this.p2 = new Point(view, p2);
-    }
-
-    getAllShapes(shapes : Shape[]){
-        super.getAllShapes(shapes);
-        shapes.push(this.p1, this.p2);
+        this.p1.setPos(p1);
+        this.p2.setPos(p2);
     }
 
     draw() : void {
@@ -118,19 +150,40 @@ export class LineArcIntersection extends Shape {
 }
 
 export class ArcArcIntersection extends Shape {
+    arc1 : CircleArc;
+    arc2 : CircleArc;
     p1 : Point;
     p2 : Point;
 
     constructor(view : View, arc1:CircleArc, arc2:CircleArc){
         super(view);
 
+        this.arc1 = arc1;
+        this.arc2 = arc2;
+
+        this.p1 = new Point(view, Vec2.zero())
+        this.p2 = new Point(view, Vec2.zero())
+
+        this.calc();
+    }
+
+    getAllShapes(shapes : Shape[]){
+        super.getAllShapes(shapes);
+        shapes.push(this.p1, this.p2);
+    }
+
+    dependencies() : Shape[] {
+        return [ this.arc1, this.arc2 ];
+    }
+
+    calc(){        
         // 円/弧の中心
-        const c1 = arc1.center;
-        const c2 = arc2.center;
+        const c1 = this.arc1.center;
+        const c2 = this.arc2.center;
 
         // 円/弧の半径
-        const r1 = arc1.radius();
-        const r2 = arc2.radius();
+        const r1 = this.arc1.radius();
+        const r2 = this.arc2.radius();
 
         // 円/弧の中心の距離
         const L = c1.pos.dist(c2.pos);
@@ -161,13 +214,8 @@ export class ArcArcIntersection extends Shape {
         let p1 = foot.add(e2.mul(h));
         let p2 = foot.add(e2.mul(-h));
 
-        this.p1 = new Point(view, p1);
-        this.p2 = new Point(view, p2);
-    }
-
-    getAllShapes(shapes : Shape[]){
-        super.getAllShapes(shapes);
-        shapes.push(this.p1, this.p2);
+        this.p1.setPos(p1);
+        this.p2.setPos(p2);
     }
 
     draw() : void {

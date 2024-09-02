@@ -8,6 +8,7 @@ export class View {
 
     shapes : Shape[] = [];
     selections : Shape[] = [];
+    changed : Set<Shape> = new Set<Shape>();
 
     realToPix : number;
 
@@ -182,7 +183,16 @@ export class View {
         for(const [name, type] of properties){
 
         }
+    }
 
+    updateShapes(){
+        for(const shape of this.shapes){
+            if( shape.dependencies().some(x => this.changed.has(x)) ){
+                shape.calc();
+
+                this.changed.add(shape);
+            }
+        }
     }
 }
 
