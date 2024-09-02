@@ -62,7 +62,7 @@ export class SelectTool extends Builder {
             const diff = pos.sub(view.downPos);
 
             view.changed.clear();
-            
+
             for(const [pt, down_pos] of this.downPos.entries()){
                 if(pt.bound instanceof LineSegment){
 
@@ -213,7 +213,24 @@ class LineSegmentBuilder extends Builder {
 }
 
 class PerpendicularBuilder extends Builder {
+    point : Point | undefined;
 
+    click(view : View, pos : Vec2, shape : Shape | undefined){
+        if(this.point == undefined){
+            if(shape instanceof Point){
+
+                this.point = shape;
+            }
+        }
+        else{
+            if(shape instanceof Line){
+                const foot = new FootOfPerpendicular(view, this.point, shape);
+                view.addShape(foot);
+
+                this.point = undefined;
+            }
+        }
+    }
 }
 
 class IntersectionBuilder extends Builder {

@@ -25,6 +25,41 @@ export function DistanceFromLine(line : Line, pos : Vec2) : number {
     return pos.dist(foot);
 }
 
+export class FootOfPerpendicular extends Shape {
+    point:Point;
+    line: Line;
+    foot : Point;
+
+    constructor(view : View, point:Point, line: Line){
+        super(view);
+        this.point = point;
+        this.line  = line;
+
+        this.foot = new Point(view, Vec2.zero());
+        this.calc();
+    }
+
+    getAllShapes(shapes : Shape[]){
+        super.getAllShapes(shapes);
+        shapes.push(this.point, this.line, this.foot);
+    }
+
+    dependencies() : Shape[] {
+        return [ this.point, this.line ];
+    }
+
+    draw() : void {
+        this.point.draw();
+        this.line.draw();
+        this.foot.draw();
+    }
+
+    calc(){
+        const foot_pos = calcFootOfPerpendicular(this.point.pos, this.line);
+        this.foot.setPos(foot_pos);
+    }
+}
+
 export class LinesIntersection extends Shape {
     l1 : Line;
     l2 : Line;
