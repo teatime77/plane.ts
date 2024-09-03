@@ -13,8 +13,8 @@ export function calcFootFrom2Pos(pos : Vec2, pos1 : Vec2, pos2 : Vec2) : Vec2 {
     const foot = pos1.add(e.mul(h));
 
     return foot;
-
 }
+
 export function calcFootOfPerpendicular(pos:Vec2, line: Line) : Vec2 {
     return calcFootFrom2Pos(pos, line.p1.pos, line.p2.pos);
 }

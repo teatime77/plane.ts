@@ -19,6 +19,7 @@ export abstract class Builder {
             // case "Rect":          return new Rect().make({isSquare:(arg == "2")}) as Shape;
             case "Circle.1":        return new Circle1Builder();
             case "Circle.2":        return new Circle2Builder();
+            case "Ellipse":           return new EllipseBuilder();
             // case "Arc":           return new Arc();
             case "DimensionLine": return new DimensionLineBuilder();
             // case "Triangle":      return new Triangle();
@@ -42,6 +43,23 @@ export abstract class Builder {
     }
 
     pointermove(view : View, pos : Vec2, shape : Shape | undefined){
+    }
+
+    makePointOnClick(view : View, pos : Vec2, shape : Shape | undefined) : Point {
+        if(shape instanceof Point){
+            return shape;
+        }
+        else{
+            if(shape instanceof Line || shape instanceof CircleArc){
+
+                return new Point(view, pos, shape);
+            }
+            else{
+
+                return new Point(view, pos);
+            }
+        }
+
     }
 }
 
@@ -169,6 +187,48 @@ class Circle2Builder extends Builder {
         if(this.circle != undefined){
             this.circle.setRadius( pos.dist(this.circle.center.pos) );
         }
+    }
+}
+
+class EllipseBuilder extends Builder {
+    ellipse : Ellipse | undefined;
+    center : Point | undefined;
+    xPoint : Point | undefined;
+
+    click(view : View, pos : Vec2, shape : Shape | undefined){   
+        if(this.center == undefined){
+            this.center = this.makePointOnClick(view, pos, shape);
+        }
+        else if(this.xPoint == undefined){
+            this.xPoint = this.makePointOnClick(view, pos, shape);
+
+            this.ellipse = new Ellipse(view, this.center, this.xPoint, 0);
+            view.addShape(this.ellipse);
+        }
+        else{
+            this.ellipse!.radiusY = this.getRadiusY(pos);
+
+            this.ellipse = undefined;
+            this.center = undefined;
+            this.xPoint = undefined;
+        }
+    }
+
+    pointermove(view : View, pos : Vec2, shape : Shape | undefined){
+        if(this.ellipse != undefined && this.center != undefined && this.xPoint != undefined){
+            this.ellipse.radiusY = this.getRadiusY(pos);
+        }
+    }
+
+    getRadiusY(pos : Vec2) : number {
+        if(this.center == undefined || this.xPoint == undefined){
+            throw new MyError();
+        }
+
+        const foot = calcFootFrom2Pos(pos, this.center.pos, this.xPoint.pos);
+        const radius_y = foot.dist(pos);
+
+        return radius_y;
     }
 }
 

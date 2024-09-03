@@ -525,6 +525,53 @@ export class Circle2 extends Circle {
     }
 }
 
+export class Ellipse extends Shape {
+    center : Point;
+    color : string;
+
+    xPoint  : Point;
+    radiusY : number;
+
+    constructor(view : View, center : Point, x_point : Point, radius_y : number, color : string = "black"){
+        super(view);
+        this.center  = center;        
+        this.xPoint  = x_point;
+        this.radiusY = radius_y;
+        this.color   = color;
+    }
+
+    getAllShapes(shapes : Shape[]){
+        super.getAllShapes(shapes);
+        shapes.push(this.center, this.xPoint);
+    }
+
+    dependencies() : Shape[] {
+        return super.dependencies().concat([ this.center, this.xPoint ]);
+    }
+
+    draw() : void {
+        const ctx = this.view.ctx;
+
+        const center_pix = this.view.toPixPos(this.center.pos);
+
+        const radius_x = this.xPoint.pos.dist(this.center.pos);
+
+        const radius_x_pix = this.view.toPix(radius_x);
+        const radius_y_pix = this.view.toPix(this.radiusY);
+
+        const center_to_x = this.xPoint.sub(this.center)
+        const rotation = Math.atan2(- center_to_x.y, center_to_x.x);
+
+        const color = (this.isOver ? "red" : this.color);
+
+        ctx.beginPath();
+        ctx.ellipse(center_pix.x, center_pix.y, radius_x_pix, radius_y_pix, rotation, 0, 2 * Math.PI);
+        ctx.lineWidth = (this.selected ? 3 : 1);
+        ctx.strokeStyle = color;
+        ctx.stroke();
+    }
+}
+
 class Polygon extends Shape {
     points3D : Vec2[];
     points2D : Vec2[] = [];
