@@ -345,8 +345,18 @@ class TangentBuilder extends Builder {
     point  : Point  | undefined;
 
     click(view : View, pos : Vec2, shape : Shape | undefined){
-        if(this.circle == undefined && shape instanceof Circle){
-            this.circle = shape;
+        if(shape instanceof Circle){
+
+            if(this.circle == undefined){
+                this.circle = shape;
+            }
+            else{
+                const tangent = new CircleCircleTangent(view, this.circle, shape);
+                view.addShape(tangent);
+    
+                this.circle = undefined;
+                this.point  = undefined;
+            }
         }
 
         if(this.point == undefined && shape instanceof Point){

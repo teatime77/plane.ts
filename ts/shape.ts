@@ -86,6 +86,18 @@ export class TextBlock extends AbstractShape {
         document.body.append(this.div);
     }
 
+    setText(text : string){
+        this.text = text;
+        if(this.isTex){
+
+            renderKatexSub(this.div, text);
+        }
+        else{
+
+            this.div.innerText = text;
+        }
+    }
+
     showProperty(tbl : HTMLTableElement | undefined) : void {
         if(tbl == undefined){
 
@@ -291,6 +303,11 @@ export class Point extends Shape {
         this.setDivPos();
 
         this.view.changed.add(this);
+    }
+
+    setName(name : string){
+        this.name = name;
+        this.caption!.setText(name);
     }
 
     setDivPos(){

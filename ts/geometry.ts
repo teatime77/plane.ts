@@ -267,7 +267,8 @@ export abstract class Tangent extends Shape {
 export class CircleCircleTangent extends Tangent {
     circle1 : Circle;
     circle2 : Circle;    
-    lines   : (Line | undefined)[] = Array(5).fill(undefined);
+    points  : Point[] = [];
+    lines   : Line[] = [];
 
     constructor(view : View, circle1 : Circle, circle2 : Circle){
         super(view);
@@ -281,15 +282,13 @@ export class CircleCircleTangent extends Tangent {
             this.circle1 = circle2;
             this.circle2 = circle1;
         }
-    }
 
-    validLines() : Line[] {
-        return this.lines.filter(x => x != undefined) as Line[];
+        this.calc();
     }
 
     getAllShapes(shapes : Shape[]){
         super.getAllShapes(shapes);
-        shapes.push(...this.validLines());
+        shapes.push(...this.points, ...this.lines);
     }
 
     dependencies() : Shape[] {
@@ -297,22 +296,55 @@ export class CircleCircleTangent extends Tangent {
     }
 
     draw() : void {
-        this.validLines().forEach(x => x.draw());
+        this.points.forEach(x => x.draw());
+        this.lines.forEach(x => x.draw());
     }
 
     calc(): void {
-        const c1to2 = this.circle2.center.sub(this.circle1.center);
+        const c1to2 = this.circle1.center.sub(this.circle2.center);
         const dist  = c1to2.len();
         const radius1 = this.circle1.radius();
         const radius2 = this.circle2.radius();
 
+        this.points = [];
+        this.lines  = [];
         if(radius2 < dist + radius1){
             const d = (radius1 / (radius2 - radius1)) * dist;
 
-            const p = this.circle1.center.pos.add( c1to2.unit().mul(d) );
+            const pos = this.circle1.center.pos.add( c1to2.unit().mul(d) );
+            const point = new Point(this.view, pos);
+            point.setName("点");
+            this.points.push(point);
+
+            const tangent_poss = calcCirclePointTangent(this.circle2.center.pos, this.circle2.radius(), pos);
+
+            const tan_points = tangent_poss.map(pos => new Point(this.view, pos));
+            this.points.push(...tan_points);
+
+            this.lines      = tan_points.map(pt => new LineSegment(this.view, point, pt));
         }
         
     }
+}
+
+function calcCirclePointTangent(center : Vec2, radius : number, point : Vec2) : [Vec2, Vec2] {
+    const center2point = center.dist(point);
+    const tangent2point = Math.sqrt(center2point * center2point - radius * radius);
+
+    const [a, b, c] = [ radius, tangent2point, center2point ];
+    const cos_theta = (b*b + c*c - a*a) / (2 * b * c );
+    const theta  = Math.acos(cos_theta);
+
+    const pc = center.sub(point);
+    const tangent_poss : Vec2[] = [];
+    for(const th of [theta, -theta]){
+        const v = pc.rot(th).unit().mul(tangent2point);
+
+        const tan_pos = point.add(v);
+        tangent_poss.push(tan_pos);
+    }
+
+    return tangent_poss as [Vec2, Vec2];
 }
 
 export class CirclePointTangent extends Tangent {
@@ -344,27 +376,10 @@ export class CirclePointTangent extends Tangent {
     }
 
     calc(): void {
-        const center2point = this.circle.center.pos.dist(this.point.pos);
-        const radius = this.circle.radius();
-        const tangent2point = Math.sqrt(center2point * center2point - radius * radius);
+        const tangent_poss = calcCirclePointTangent(this.circle.center.pos, this.circle.radius(), this.point.pos);
 
-        const [a, b, c] = [ radius, tangent2point, center2point ];
-        const cos_theta = (b*b + c*c - a*a) / (2 * b * c );
-        const theta  = Math.acos(cos_theta);
-
-        this.tan_points = [];
-        this.lines = [];
-        const pc = this.circle.center.sub(this.point);
-        for(const th of [theta, -theta]){
-            const v = pc.rot(th).unit().mul(tangent2point);
-
-            const tan_pos = this.point.pos.add(v);
-            const tan_point = new Point(this.view, tan_pos);
-            this.tan_points.push(tan_point);
-
-            const line = new LineSegment(this.view, this.point, tan_point);
-            this.lines.push(line);
-        }        
+        this.tan_points = tangent_poss.map(pos => new Point(this.view, pos));
+        this.lines      = this.tan_points.map(pt => new LineSegment(this.view, this.point, pt))
     }
 }
 
