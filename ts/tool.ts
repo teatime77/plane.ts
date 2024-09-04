@@ -27,6 +27,7 @@ export abstract class Builder {
             case "Perpendicular": return new PerpendicularBuilder()
             // case "ParallelLine":  return new ParallelLine()
             case "Intersection":  return new IntersectionBuilder();
+            case "Tangent":       return new TangentBuilder();
             case "Angle":         return new AngleBuilder();
             // case "Image":         return new Image({fileName:"./img/teatime77.png"});
             // case "FuncLine":      return new FuncLine();
@@ -337,6 +338,32 @@ class IntersectionBuilder extends Builder {
 
     }
 }
+
+
+class TangentBuilder extends Builder {
+    circle : Circle | undefined;
+    point  : Point  | undefined;
+
+    click(view : View, pos : Vec2, shape : Shape | undefined){
+        if(this.circle == undefined && shape instanceof Circle){
+            this.circle = shape;
+        }
+
+        if(this.point == undefined && shape instanceof Point){
+            this.point = shape;
+        }
+
+        if(this.circle != undefined && this.point != undefined){
+
+            const tangent = new CirclePointTangent(view, this.circle, this.point);
+            view.addShape(tangent);
+
+            this.circle = undefined;
+            this.point  = undefined;
+        }
+    }
+}
+
 
 class AngleBuilder extends Builder {
     line1 : Line | undefined;

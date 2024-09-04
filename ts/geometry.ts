@@ -259,5 +259,114 @@ export class ArcArcIntersection extends Shape {
     }
 }
 
+export abstract class Tangent extends Shape {
+
+}
+
+
+export class CircleCircleTangent extends Tangent {
+    circle1 : Circle;
+    circle2 : Circle;    
+    lines   : (Line | undefined)[] = Array(5).fill(undefined);
+
+    constructor(view : View, circle1 : Circle, circle2 : Circle){
+        super(view);
+        if(circle1.radius() <= circle2.radius()){
+
+            this.circle1 = circle1;
+            this.circle2 = circle2;
+        }
+        else{
+
+            this.circle1 = circle2;
+            this.circle2 = circle1;
+        }
+    }
+
+    validLines() : Line[] {
+        return this.lines.filter(x => x != undefined) as Line[];
+    }
+
+    getAllShapes(shapes : Shape[]){
+        super.getAllShapes(shapes);
+        shapes.push(...this.validLines());
+    }
+
+    dependencies() : Shape[] {
+        return super.dependencies().concat([ this.circle1, this.circle2 ]);
+    }
+
+    draw() : void {
+        this.validLines().forEach(x => x.draw());
+    }
+
+    calc(): void {
+        const c1to2 = this.circle2.center.sub(this.circle1.center);
+        const dist  = c1to2.len();
+        const radius1 = this.circle1.radius();
+        const radius2 = this.circle2.radius();
+
+        if(radius2 < dist + radius1){
+            const d = (radius1 / (radius2 - radius1)) * dist;
+
+            const p = this.circle1.center.pos.add( c1to2.unit().mul(d) );
+        }
+        
+    }
+}
+
+export class CirclePointTangent extends Tangent {
+    circle : Circle;
+    point  : Point;
+    tan_points : Point[] = [];
+    lines   : Line[] = [];
+
+    constructor(view : View, circle : Circle, point : Point){
+        super(view);
+        this.circle = circle;
+        this.point  = point;
+
+        this.calc();
+    }
+
+    getAllShapes(shapes : Shape[]){
+        super.getAllShapes(shapes);
+        shapes.push(this.circle, this.point, ...this.tan_points, ...this.lines);
+    }
+
+    dependencies() : Shape[] {
+        return super.dependencies().concat([ this.circle, this.point ]);
+    }
+
+    draw() : void {
+        this.tan_points.forEach(x => x.draw());
+        this.lines.forEach(x => x.draw());
+    }
+
+    calc(): void {
+        const center2point = this.circle.center.pos.dist(this.point.pos);
+        const radius = this.circle.radius();
+        const tangent2point = Math.sqrt(center2point * center2point - radius * radius);
+
+        const [a, b, c] = [ radius, tangent2point, center2point ];
+        const cos_theta = (b*b + c*c - a*a) / (2 * b * c );
+        const theta  = Math.acos(cos_theta);
+
+        this.tan_points = [];
+        this.lines = [];
+        const pc = this.circle.center.sub(this.point);
+        for(const th of [theta, -theta]){
+            const v = pc.rot(th).unit().mul(tangent2point);
+
+            const tan_pos = this.point.pos.add(v);
+            const tan_point = new Point(this.view, tan_pos);
+            this.tan_points.push(tan_point);
+
+            const line = new LineSegment(this.view, this.point, tan_point);
+            this.lines.push(line);
+        }        
+    }
+}
+
 
 }
