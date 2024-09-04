@@ -248,6 +248,41 @@ export abstract class Shape extends AbstractShape {
         ctx.lineWidth = (this.selected ? 3 : 1);
         ctx.stroke();   
     }
+
+    drawArc(center : Vec2, radius : number, 
+            fill_style : string | null, stroke_style : string | null, line_width : number, 
+            start_angle : number, end_angle : number){
+        const ctx = this.view.ctx;
+        const pix = this.view.toPixPos(center);
+
+        let radius_pix : number;
+        if(this instanceof Point || this instanceof Angle){
+            radius_pix = radius;
+        }
+        else{
+            radius_pix = this.view.toPix(radius);
+        }
+
+        ctx.beginPath();
+        ctx.arc(pix.x, pix.y, radius_pix, start_angle, end_angle, true);
+
+        if(fill_style != null){
+
+            ctx.fillStyle = fill_style;
+            ctx.fill();
+        }
+
+        if(stroke_style != null){
+
+            ctx.lineWidth   = line_width;
+            ctx.strokeStyle = stroke_style;
+            ctx.stroke();
+        }
+    }
+
+    drawCircle(center : Vec2, radius : number, fill_style : string | null, stroke_style : string | null, line_width : number){
+        this.drawArc(center, radius, fill_style, stroke_style, line_width, 0, 2 * Math.PI)
+    }
 }
 
 export class Point extends Shape {
@@ -255,6 +290,8 @@ export class Point extends Shape {
 
     pos! : Vec2;
     bound : LineSegment | Circle | undefined;
+
+    origin : Point | undefined;
 
     constructor(view : View, pos : Vec2, bound : LineSegment | Circle | undefined = undefined){
         super(view);
@@ -332,26 +369,13 @@ export class Point extends Shape {
     }
 
     draw() : void {
-        const ctx = this.view.ctx;
-
-        const pix = this.view.toPixPos(this.pos);
-
         const color = (this.isOver ? "red" : this.color);
 
-        ctx.beginPath();
-        ctx.arc(pix.x, pix.y, Point.radius, 0, 2 * Math.PI, false);
-        ctx.fillStyle = color;
-        ctx.fill();
-        ctx.lineWidth = 1;
-        ctx.strokeStyle = color;
-        ctx.stroke();
+        this.drawCircle(this.pos, Point.radius, color, null, 0);
         
         if(this.isOver){
-            ctx.beginPath();
-            ctx.arc(pix.x, pix.y, 3 * Point.radius, 0, 2 * Math.PI, false);
-            ctx.lineWidth = 1;
-            ctx.strokeStyle = "gray";
-            ctx.stroke();    
+
+            this.drawCircle(this.pos, 3 * Point.radius, null, "gray", 1);
         }
     }
 
@@ -423,19 +447,7 @@ export class LineSegment extends Line {
     }
 
     draw() : void {
-        const ctx = this.view.ctx;
-
-        const p1 = this.view.toPixPos(this.p1.pos);
-        const p2 = this.view.toPixPos(this.p2.pos);
-
-        const color = (this.isOver ? "red" : this.color);
-
-        ctx.beginPath();
-        ctx.moveTo(p1.x, p1.y);
-        ctx.lineTo(p2.x, p2.y);
-        ctx.strokeStyle = color;
-        ctx.lineWidth = (this.selected ? 3 : 1);
-        ctx.stroke();   
+        this.drawLine(this.p1.pos, this.p2.pos);
     }
 }
 
@@ -472,19 +484,9 @@ export abstract class Circle extends CircleArc {
     }
 
     draw() : void {
-        const ctx = this.view.ctx;
-
-        const pix = this.view.toPixPos(this.center.pos);
-
-        const color = (this.isOver ? "red" : this.color);
-
-        ctx.beginPath();
-        ctx.arc(pix.x, pix.y, this.view.toPix(this.radius()), 0, 2 * Math.PI, false);
-        // ctx.fillStyle = color;
-        // ctx.fill();
-        ctx.lineWidth = (this.selected ? 3 : 1);
-        ctx.strokeStyle = color;
-        ctx.stroke();
+        const stroke_color = (this.isOver ? "red" : this.color);
+        const line_width = (this.selected ? 3 : 1)
+        this.drawCircle(this.center.pos, this.radius(), null, stroke_color, line_width)
     }
 }
 
@@ -666,20 +668,10 @@ export class Angle extends Shape {
         const th1 = Math.atan2(-e1.y, e1.x);
         const th2 = Math.atan2(-e2.y, e2.x);
 
-        const deg1 = toDegree(th1);
-        const deg2 = toDegree(th2);
-
-        const ctx = this.view.ctx;
-
-        const pix = this.view.toPixPos(this.inter);
-
         const color = (this.isOver ? "red" : this.color);
+        const line_width = (this.selected ? 3 : 1);
 
-        ctx.beginPath();
-        ctx.arc(pix.x, pix.y, Angle.radius1, th1, th2, true);
-        ctx.lineWidth = (this.selected ? 3 : 1);
-        ctx.strokeStyle = color;
-        ctx.stroke();
+        this.drawArc(this.inter, Angle.radius1, null, color, line_width, th1, th2);
     }
 }
 
