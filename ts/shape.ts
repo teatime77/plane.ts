@@ -113,8 +113,8 @@ export class TextBlock extends AbstractShape {
         this.x = x;
         this.y = y;
 
-        this.div.style.left = `${x + this.offset.x}px`;
-        this.div.style.top  = `${y + this.offset.y}px`;
+        this.div.style.left = `${this.x + this.offset.x}px`;
+        this.div.style.top  = `${this.y + this.offset.y}px`;
     }
 
     setRotation(degree : number){
@@ -184,7 +184,6 @@ export abstract class Shape extends AbstractShape {
         throw new MyError();
     }
 
-
     showProperty(tbl : HTMLTableElement | undefined = undefined) : void {
         if(tbl == undefined){
 
@@ -224,6 +223,9 @@ export abstract class Shape extends AbstractShape {
     }
 
     calc(){        
+    }
+
+    updateCaption(){ 
     }
 
     select(){
@@ -283,12 +285,23 @@ export abstract class Shape extends AbstractShape {
     drawCircle(center : Vec2, radius : number, fill_style : string | null, stroke_style : string | null, line_width : number){
         this.drawArc(center, radius, fill_style, stroke_style, line_width, 0, 2 * Math.PI)
     }
+
+    shapePointerdown(pos : Vec2){
+    }
+
+    shapePointermove(pos : Vec2, diff : Vec2){
+    }
+
+    shapePointerup(pos : Vec2){
+    }
+
 }
 
 export class Point extends Shape {
     static radius = 4;
 
     pos! : Vec2;
+    posSave : Vec2 | undefined;
     bound : LineSegment | Circle | undefined;
 
     origin : Point | undefined;
@@ -337,7 +350,7 @@ export class Point extends Shape {
     setPos(pos : Vec2){
         this.pos = pos;
 
-        this.setDivPos();
+        this.updateCaption();
 
         this.view.changed.add(this);
     }
@@ -347,7 +360,7 @@ export class Point extends Shape {
         this.caption!.setText(name);
     }
 
-    setDivPos(){
+    updateCaption(){
         const div_pos = this.view.toPixPos(this.pos);
 
         const x = this.view.canvas.offsetLeft + div_pos.x;
@@ -385,6 +398,39 @@ export class Point extends Shape {
 
     dot(p : Point) : number {
         return this.pos.dot(p.pos);
+    }
+
+    shapePointerdown(pos : Vec2){
+        this.posSave = this.pos.copy();
+    }
+
+    shapePointermove(pos : Vec2, diff : Vec2){
+        if(this.bound instanceof LineSegment){
+
+            this.setPos(calcFootOfPerpendicular(pos, this.bound));
+        }
+        else if(this.bound instanceof Circle){
+            const circle = this.bound;
+
+            const v = pos.sub(circle.center.pos);
+            const theta = Math.atan2(v.y, v.x);
+            const x = circle.radius() * Math.cos(theta);
+            const y = circle.radius() * Math.sin(theta);
+            
+            const new_pos = circle.center.pos.add( new Vec2(x, y) );
+            this.setPos(new_pos);
+        }
+        else{
+
+            if(this.posSave != undefined){
+
+                this.setPos(this.posSave.add(diff));
+            }
+        }
+    }
+
+    shapePointerup(pos : Vec2){
+        this.posSave = undefined;
     }
 }
 
@@ -707,6 +753,16 @@ export class DimensionLine extends Shape {
     calc(){        
     }
 
+    updateCaption(){ 
+        const center_pix = this.view.toPixPos(this.center);
+
+        const [text_width, text_height] = this.caption!.getSize();
+        const x = this.view.canvas.offsetLeft + center_pix.x - 0.5 * text_width;
+        const y = this.view.canvas.offsetTop  + center_pix.y - 0.5 * text_height;
+
+        this.caption!.setTextPos(x, y);
+    }
+
     draw() : void {
         if(this.caption == undefined){
             throw new MyError();
@@ -728,13 +784,8 @@ export class DimensionLine extends Shape {
         const p1c = p1a.add(p12.mul( 1/3));
         const p2c = p2a.add(p12.mul(-1/3));
 
-        this.center = this.view.toPixPos(p1a.add(p12.mul(0.5)));
-
-        const [text_width, text_height] = this.caption.getSize();
-        const x = this.view.canvas.offsetLeft + this.center.x - 0.5 * text_width;
-        const y = this.view.canvas.offsetTop  + this.center.y - 0.5 * text_height;
-
-        this.caption.setTextPos(x, y);
+        this.center = p1a.add(p12.mul(0.5));
+        this.updateCaption();
 
         const degree = toDegree( Math.atan2(-p12.y, p12.x) );
         this.caption.setRotation(degree);

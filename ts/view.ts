@@ -7,7 +7,6 @@ export class View {
 
 
     shapes : Shape[] = [];
-    selections : Shape[] = [];
     changed : Set<Shape> = new Set<Shape>();
 
     realToPix : number;
@@ -49,17 +48,39 @@ export class View {
         return new Vec2(x, y);
     }
 
+    fromXPix(pix : number) : number {
+        return(this.max.x - this.min.x) * (pix / this.canvas.clientWidth);
+    }
+
+    fromYPix(pix : number) : number {
+        return(this.max.y - this.min.y) * (pix / this.canvas.clientHeight);
+    }
+
+    fromPix(p : Vec2) : Vec2 {
+        return new Vec2(this.fromXPix(p.x), this.fromYPix(p.y));
+    }
+
     toPix(n : number) : number {
         return this.canvas.clientWidth * n / (this.max.x - this.min.x);
     }
 
+    toXPix(x : number) : number {
+        const x_pix = linear(this.min.x, x, this.max.x, 0, this.canvas.clientWidth);
+        return x_pix;
+    }
+
+    toYPix(y : number) : number {
+        const pix_y = linear(this.min.y, y, this.max.y, 0, this.canvas.clientHeight);
+
+        const flipped_y = this.canvas.clientHeight - pix_y;
+        return flipped_y;
+    }
+
     toPixPos(p:Vec2) : Vec2 {
-        const x = linear(this.min.x, p.x, this.max.x, 0, this.canvas.clientWidth);
-        const y = linear(this.min.y, p.y, this.max.y, 0, this.canvas.clientHeight);
+        const x_pix = this.toXPix(p.x);
+        const y_pix = this.toYPix(p.y);
 
-        const flipped_y = this.canvas.clientHeight - y;
-
-        return new Vec2(x, flipped_y);
+        return new Vec2(x_pix, y_pix);
     }
 
     allShapes() : Shape[] {
@@ -76,6 +97,7 @@ export class View {
         }
 
         if($inp("show-grid").checked){
+            this.showGrid();
         }        
 
         const shapes = this.allShapes();
@@ -94,7 +116,7 @@ export class View {
 
         if(Builder.tool != undefined){
             const shape = this.getShape(pos);
-            Builder.tool.click(this, pos, shape);
+            Builder.tool.click(ev, this, pos, shape);
         }
     }
 
@@ -104,16 +126,10 @@ export class View {
 
         this.downPos = pos;
 
-        this.selections = [];
         if(Builder.tool != undefined){
-            if(Builder.tool instanceof SelectTool){
-                const shape = this.getShape(pos);
-                if(shape != undefined){
-                    this.selections.push(shape);
-                }
-            }
+            const shape = this.getShape(pos);
 
-            Builder.tool.pointerdown(this, pos);
+            Builder.tool.pointerdown(ev, this, pos, shape);
         }
     }
 
@@ -128,13 +144,20 @@ export class View {
 
         if(Builder.tool != undefined){
             const shape = this.getShape(pos);
-            Builder.tool.pointermove(this, pos, shape);
+            Builder.tool.pointermove(ev, this, pos, shape);
         }
     }
 
     pointerup(ev : PointerEvent){
+        if(Builder.tool != undefined){
+
+            const pos = this.evPos(ev);
+            const shape = this.getShape(pos);
+            Builder.tool.pointerup(ev, this, pos, shape);
+        }
+
+
         this.downPos = undefined;
-        this.selections = [];
     }
 
     wheel(ev : WheelEvent){
@@ -193,6 +216,68 @@ export class View {
                 this.changed.add(shape);
             }
         }
+    }
+
+    drawGridLine(axis : string, min : number, max : number){
+        let min_pix : number;
+        let max_pix : number;
+        let size : number;
+
+        if(axis == "X"){
+            min_pix = this.toYPix(this.min.y);
+            max_pix = this.toYPix(this.max.y);
+
+            size = this.fromXPix(50);
+        }
+        else{
+            min_pix = this.toXPix(this.min.x);
+            max_pix = this.toXPix(this.max.x);
+
+            size = this.fromYPix(50);
+        }
+
+        const p = Math.floor( Math.log10(size) );
+        const span1 = 10 ** p;
+        const span2 = span1 / 5;
+
+        const n1 = Math.floor(min / span2);
+        const n2 = Math.ceil(max / span2);
+
+        const ctx = this.ctx;
+
+        ctx.strokeStyle = "gray";
+
+        for(let n = n1; n <= n2; n++){
+            if(n % 5 == 0){
+
+                ctx.lineWidth   = 0.5;
+            }
+            else{
+
+                ctx.lineWidth   = 0.2;
+            }
+
+            ctx.beginPath();
+            const a = n * span1;
+            if(axis == "X"){
+
+                const x_pix = this.toXPix(a);
+                ctx.moveTo(x_pix, min_pix);
+                ctx.lineTo(x_pix, max_pix);
+            }
+            else{
+
+                const y_pix = this.toYPix(a);
+                ctx.moveTo(min_pix, y_pix);
+                ctx.lineTo(max_pix, y_pix);
+            }
+            ctx.stroke();
+        }
+    }
+
+    showGrid(){
+        this.drawGridLine("X", this.min.x, this.max.x);
+        this.drawGridLine("Y", this.min.y, this.max.y);
     }
 }
 

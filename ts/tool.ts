@@ -37,13 +37,16 @@ export abstract class Builder {
         // throw new MyError();
     }
 
-    click(view : View, pos : Vec2, shape : Shape | undefined){        
+    click(ev : MouseEvent, view : View, pos : Vec2, shape : Shape | undefined){        
     }
 
-    pointerdown(view : View, pos : Vec2){
+    pointerdown(ev : PointerEvent, view : View, pos : Vec2, shape : Shape | undefined){
     }
 
-    pointermove(view : View, pos : Vec2, shape : Shape | undefined){
+    pointermove(ev : PointerEvent, view : View, pos : Vec2, shape : Shape | undefined){
+    }
+
+    pointerup(ev : PointerEvent, view : View, pos : Vec2, shape : Shape | undefined){
     }
 
     makePointOnClick(view : View, pos : Vec2, shape : Shape | undefined) : Point {
@@ -65,52 +68,61 @@ export abstract class Builder {
 }
 
 export class SelectTool extends Builder {
-    downPos : Map<Point, Vec2> = new Map<Point, Vec2>();
+    downOffset : Vec2 | undefined;
 
-    pointerdown(view : View, pos : Vec2){
-        this.downPos.clear();
+    selectedShape : Shape | undefined;
+    minSave : Vec2 | undefined;
+    maxSave : Vec2 | undefined;
 
-        const pts = view.selections.filter(x => x instanceof Point) as Point[];
-        for(const pt of pts){
-            this.downPos.set(pt, pt.pos.copy());
+    pointerdown(ev : PointerEvent, view : View, pos : Vec2, shape : Shape | undefined){
+        this.downOffset = new Vec2(ev.offsetX, ev.offsetY);
+
+        this.selectedShape = shape;
+        this.minSave = view.min.copy();
+        this.maxSave = view.max.copy();
+
+        if(shape != undefined){
+
+            shape.shapePointerdown(pos);
         }
     }
 
-    pointermove(view : View, pos : Vec2, shape : Shape | undefined){
-        if(view.downPos != undefined){
-            const diff = pos.sub(view.downPos);
+    pointermove(ev : PointerEvent, view : View, pos : Vec2, shape : Shape | undefined){
 
-            view.changed.clear();
+        if(this.downOffset != undefined){
+            const offset = new Vec2(ev.offsetX, ev.offsetY);
+            const diff   = view.fromPix(offset.sub(this.downOffset));
 
-            for(const [pt, down_pos] of this.downPos.entries()){
-                if(pt.bound instanceof LineSegment){
+            diff.y *= -1;
 
-                    pt.setPos(calcFootOfPerpendicular(pos, pt.bound));
-                }
-                else if(pt.bound instanceof Circle){
-                    const circle = pt.bound;
+            if(this.selectedShape == undefined){
 
-                    const v = pos.sub(circle.center.pos);
-                    const theta = Math.atan2(v.y, v.x);
-                    const x = circle.radius() * Math.cos(theta);
-                    const y = circle.radius() * Math.sin(theta);
-                    
-                    const new_pos = circle.center.pos.add( new Vec2(x, y) );
-                    pt.setPos(new_pos);
-                }
-                else{
+                view.min = this.minSave!.sub(diff);
+                view.max = this.maxSave!.sub(diff);
 
-                    pt.setPos(down_pos.add(diff));
-                }
+                view.allShapes().forEach(x => x.updateCaption());
             }
+            else{
 
-            view.updateShapes();
+                view.changed.clear();
+
+                this.selectedShape.shapePointermove(pos, diff);
+
+                view.updateShapes();
+            }
         }
     }
+
+    pointerup(ev : PointerEvent, view : View, pos : Vec2, shape : Shape | undefined){
+        this.downOffset    = undefined;
+        this.selectedShape = undefined;
+        this.minSave = undefined;
+        this.maxSave = undefined;
+}
 }
 
 class PointBuilder extends Builder {
-    click(view : View, pos : Vec2, shape : Shape | undefined){  
+    click(ev : MouseEvent, view : View, pos : Vec2, shape : Shape | undefined){  
         if(shape == undefined || shape instanceof LineSegment || shape instanceof Circle){
 
             const new_point = new Point(view, pos, shape);
@@ -124,7 +136,7 @@ class PointBuilder extends Builder {
 class Circle1Builder extends Builder {
     circle : Circle1 | undefined;
 
-    click(view : View, pos : Vec2, shape : Shape | undefined){   
+    click(ev : MouseEvent, view : View, pos : Vec2, shape : Shape | undefined){   
         if(this.circle == undefined){
 
             if(shape == undefined || !(shape instanceof Point)){
@@ -150,7 +162,7 @@ class Circle1Builder extends Builder {
         }
     }
 
-    pointermove(view : View, pos : Vec2, shape : Shape | undefined){
+    pointermove(ev : PointerEvent, view : View, pos : Vec2, shape : Shape | undefined){
         if(this.circle != undefined){
             if(shape instanceof Point && shape != this.circle.center){
 
@@ -168,7 +180,7 @@ class Circle1Builder extends Builder {
 class Circle2Builder extends Builder {
     circle : Circle2 | undefined;
 
-    click(view : View, pos : Vec2, shape : Shape | undefined){   
+    click(ev : MouseEvent, view : View, pos : Vec2, shape : Shape | undefined){   
         if(this.circle == undefined){
 
             if(shape == undefined || !(shape instanceof Point)){
@@ -184,7 +196,7 @@ class Circle2Builder extends Builder {
         }
     }
 
-    pointermove(view : View, pos : Vec2, point : Shape | undefined){
+    pointermove(ev : PointerEvent, view : View, pos : Vec2, point : Shape | undefined){
         if(this.circle != undefined){
             this.circle.setRadius( pos.dist(this.circle.center.pos) );
         }
@@ -196,7 +208,7 @@ class EllipseBuilder extends Builder {
     center : Point | undefined;
     xPoint : Point | undefined;
 
-    click(view : View, pos : Vec2, shape : Shape | undefined){   
+    click(ev : MouseEvent, view : View, pos : Vec2, shape : Shape | undefined){   
         if(this.center == undefined){
             this.center = this.makePointOnClick(view, pos, shape);
         }
@@ -215,7 +227,7 @@ class EllipseBuilder extends Builder {
         }
     }
 
-    pointermove(view : View, pos : Vec2, shape : Shape | undefined){
+    pointermove(ev : PointerEvent, view : View, pos : Vec2, shape : Shape | undefined){
         if(this.ellipse != undefined && this.center != undefined && this.xPoint != undefined){
             this.ellipse.radiusY = this.getRadiusY(pos);
         }
@@ -237,7 +249,7 @@ class EllipseBuilder extends Builder {
 class LineSegmentBuilder extends Builder {
     line : LineSegment | undefined;
 
-    click(view : View, pos : Vec2, shape : Shape | undefined){   
+    click(ev : MouseEvent, view : View, pos : Vec2, shape : Shape | undefined){   
         if(this.line == undefined){
 
             if(shape == undefined || !(shape instanceof Point)){
@@ -258,7 +270,7 @@ class LineSegmentBuilder extends Builder {
         }
     }
 
-    pointermove(view : View, pos : Vec2, shape : Shape | undefined){
+    pointermove(ev : PointerEvent, view : View, pos : Vec2, shape : Shape | undefined){
         if(this.line != undefined){
             if(shape instanceof Point && shape != this.line.p1){
 
@@ -276,7 +288,7 @@ class LineSegmentBuilder extends Builder {
 class PerpendicularBuilder extends Builder {
     point : Point | undefined;
 
-    click(view : View, pos : Vec2, shape : Shape | undefined){
+    click(ev : MouseEvent, view : View, pos : Vec2, shape : Shape | undefined){
         if(this.point == undefined){
             if(shape instanceof Point){
 
@@ -297,7 +309,7 @@ class PerpendicularBuilder extends Builder {
 class IntersectionBuilder extends Builder {
     shape1 : Line | CircleArc | undefined;
 
-    click(view : View, pos : Vec2, shape : Shape | undefined){
+    click(ev : MouseEvent, view : View, pos : Vec2, shape : Shape | undefined){
         if(shape instanceof Line || shape instanceof CircleArc){
             if(this.shape1 == undefined){
                 this.shape1 = shape;
@@ -344,7 +356,7 @@ class TangentBuilder extends Builder {
     circle : Circle | undefined;
     point  : Point  | undefined;
 
-    click(view : View, pos : Vec2, shape : Shape | undefined){
+    click(ev : MouseEvent, view : View, pos : Vec2, shape : Shape | undefined){
         if(shape instanceof Circle){
 
             if(this.circle == undefined){
@@ -379,7 +391,7 @@ class AngleBuilder extends Builder {
     line1 : Line | undefined;
     pos1  : Vec2 | undefined;
 
-    click(view : View, pos : Vec2, shape : Shape | undefined){
+    click(ev : MouseEvent, view : View, pos : Vec2, shape : Shape | undefined){
         if(shape instanceof Line){
             if(this.line1 == undefined){
                 this.line1 = shape;
@@ -411,7 +423,7 @@ class DimensionLineBuilder extends Builder {
     p2 : Point | undefined;
     dimLine : DimensionLine | undefined;
 
-    click(view : View, pos : Vec2, shape : Shape | undefined){
+    click(ev : MouseEvent, view : View, pos : Vec2, shape : Shape | undefined){
         if(this.p1 == undefined){
             if(shape instanceof Point){
                 this.p1 = shape;
@@ -432,7 +444,7 @@ class DimensionLineBuilder extends Builder {
         }
     }
 
-    pointermove(view : View, pos : Vec2, shape : Shape | undefined){
+    pointermove(ev : PointerEvent, view : View, pos : Vec2, shape : Shape | undefined){
         if(this.p1 != undefined && this.p2 != undefined && this.dimLine != undefined){
             const foot = calcFootFrom2Pos(pos, this.p1.pos, this.p2.pos);
             this.dimLine.shift = pos.sub(foot);
