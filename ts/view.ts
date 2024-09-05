@@ -161,6 +161,16 @@ export class View {
     }
 
     wheel(ev : WheelEvent){
+        const pos = this.evPos(ev);
+
+        const ratio = 0.002 * ev.deltaY;
+        this.min.x -= (pos.x - this.min.x) * ratio;
+        this.min.y -= (pos.y - this.min.y) * ratio;
+
+        this.max.x += (this.max.x - pos.x) * ratio;
+        this.max.y += (this.max.y - pos.y) * ratio;
+
+        this.allShapes().forEach(x => x.updateCaption());
     }
 
     resize(ev : UIEvent){
