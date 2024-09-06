@@ -1,13 +1,13 @@
 namespace planets {
 //
 export abstract class Builder {
-    static tool : Builder | undefined;
+    static tool : Builder;
 
     static changeTool(tool_name : string){
         Builder.tool = this.makeToolByType(tool_name);
     }
 
-    static makeToolByType(tool_name: string): Builder | undefined {    
+    static makeToolByType(tool_name: string): Builder {    
         switch(tool_name){
             case "select":        return new SelectTool();
             // case "Distance":      return new Distance();
@@ -32,8 +32,7 @@ export abstract class Builder {
             // case "FuncLine":      return new FuncLine();
         }
 
-        return undefined;
-        // throw new MyError();
+        throw new MyError();
     }
 
     click(ev : MouseEvent, view : View, pos : Vec2, shape : Shape | undefined){        

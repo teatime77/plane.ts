@@ -35,6 +35,8 @@ export function bodyOnLoad(){
 
     viewEvent(view);
 
+    Builder.tool = new SelectTool();
+
     const tool_type_radios = Array.from(document.getElementsByName("tool-type")) as HTMLInputElement[];
     for(const radio of tool_type_radios){
         radio.addEventListener("change", (ev : Event)=>{

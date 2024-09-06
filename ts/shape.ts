@@ -566,13 +566,7 @@ export class Ellipse extends Shape {
     }
 
     draw() : void {
-
-        const center_pix = this.view.toPixPos(this.center.pos);
-
         const radius_x = this.xPoint.pos.dist(this.center.pos);
-
-        const radius_x_pix = this.view.toPix(radius_x);
-        const radius_y_pix = this.view.toPix(this.radiusY);
 
         const center_to_x = this.xPoint.sub(this.center)
         const rotation = Math.atan2(- center_to_x.y, center_to_x.x);
@@ -580,7 +574,7 @@ export class Ellipse extends Shape {
         const color = (this.isOver ? "red" : this.color);
         const line_width = (this.selected ? 3 : 1);
 
-        this.view.canvas.drawEllipse(center_pix.x, center_pix.y, radius_x_pix, radius_y_pix, rotation, color, line_width);
+        this.view.canvas.drawEllipse(this.center.pos, radius_x, this.radiusY, rotation, color, line_width);
     }
 }
 

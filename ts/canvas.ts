@@ -77,14 +77,28 @@ export class Canvas {
         this.drawArc(center, radius, fill_style, stroke_style, line_width, 0, 2 * Math.PI)
     }
 
-    drawEllipse(center_x_pix : number, center_y_pix : number, radius_x_pix : number, radius_y_pix : number, rotation : number, color : string, line_width : number){
+    drawEllipse(center : Vec2, radius_x : number, radius_y : number, rotation : number, color : string, line_width : number){
+
+        const center_pix = this.view.toPixPos(center);
+        const radius_x_pix = this.view.toPix(radius_x);
+        const radius_y_pix = this.view.toPix(radius_y);
+
         const ctx = this.ctx;
 
         ctx.beginPath();
-        ctx.ellipse(center_x_pix, center_y_pix, radius_x_pix, radius_y_pix, rotation, 0, 2 * Math.PI);
+        ctx.ellipse(center_pix.x, center_pix.y, radius_x_pix, radius_y_pix, rotation, 0, 2 * Math.PI);
         ctx.lineWidth = line_width;
         ctx.strokeStyle = color;
         ctx.stroke();
+    }
+
+    drawText(pos : Vec2, text : string, color : string){
+        const pos_pix = this.view.toPixPos(pos);
+        const ctx = this.ctx;
+        ctx.font = "16px serif";
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = color;
+        ctx.strokeText(text, pos_pix.x, pos_pix.y);
     }
 
 }
