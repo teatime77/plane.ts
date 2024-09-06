@@ -2,58 +2,60 @@ namespace planets {
 //
 export class View {
     static nearThreshold = 4;
-    canvas : HTMLCanvasElement;
-    ctx    : CanvasRenderingContext2D;
+    board : HTMLCanvasElement;
+    canvas : Canvas;
 
 
     shapes : Shape[] = [];
     changed : Set<Shape> = new Set<Shape>();
 
-    realToPix : number;
-
     downPos : Vec2 | undefined;
 
-    min : Vec2;
-    max : Vec2;
+    min! : Vec2;
+    max! : Vec2;
 
     isNear(real_distance : number) : boolean {
-        const pix_distance = this.realToPix * real_distance;
+        const pix_distance = this.toPix(real_distance);
         return pix_distance < View.nearThreshold;
     }
 
     constructor(canvas : HTMLCanvasElement){
-        this.canvas = canvas;
-        this.ctx = canvas.getContext("2d")!;
-        assert(this.ctx != null);
+        this.board = canvas;
+        this.canvas = new Canvas(this, canvas);
 
-        const aspect = this.canvas.clientWidth / this.canvas.clientHeight;
+        const aspect = this.board.clientWidth / this.board.clientHeight;
         const max_y = 6;
         const max_x = aspect * max_y;
 
-        this.max = new Vec2( max_x,  max_y)
-        this.min = new Vec2(-max_x, -max_y);
+        this.board.width  = this.board.clientWidth;
+        this.board.height = this.board.clientHeight;
 
-        this.canvas.width  = this.canvas.clientWidth;
-        this.canvas.height = this.canvas.clientHeight;
+        this.setMinMax(new Vec2(-max_x, -max_y), new Vec2( max_x,  max_y));
+    }
 
-        this.realToPix = this.canvas.width / (2 * this.max.x);
+    setMinMax(min : Vec2, max : Vec2){
+        this.min = min;
+        this.max = max;
+
+        Point.radius  = this.fromXPix(Point.radiusPix);
+        Angle.radius1 = this.fromXPix(Angle.radius1Pix);
     }
 
     evPos(ev : MouseEvent) : Vec2 {
-        const flipped_y = this.canvas.clientHeight - ev.offsetY;
+        const flipped_y = this.board.clientHeight - ev.offsetY;
 
-        const x = linear(0, ev.offsetX, this.canvas.clientWidth , this.min.x, this.max.x);
-        const y = linear(0, flipped_y , this.canvas.clientHeight, this.min.y, this.max.y);
+        const x = linear(0, ev.offsetX, this.board.clientWidth , this.min.x, this.max.x);
+        const y = linear(0, flipped_y , this.board.clientHeight, this.min.y, this.max.y);
 
         return new Vec2(x, y);
     }
 
     fromXPix(pix : number) : number {
-        return(this.max.x - this.min.x) * (pix / this.canvas.clientWidth);
+        return(this.max.x - this.min.x) * (pix / this.board.clientWidth);
     }
 
     fromYPix(pix : number) : number {
-        return(this.max.y - this.min.y) * (pix / this.canvas.clientHeight);
+        return(this.max.y - this.min.y) * (pix / this.board.clientHeight);
     }
 
     fromPix(p : Vec2) : Vec2 {
@@ -61,18 +63,18 @@ export class View {
     }
 
     toPix(n : number) : number {
-        return this.canvas.clientWidth * n / (this.max.x - this.min.x);
+        return this.board.clientWidth * n / (this.max.x - this.min.x);
     }
 
     toXPix(x : number) : number {
-        const x_pix = linear(this.min.x, x, this.max.x, 0, this.canvas.clientWidth);
+        const x_pix = linear(this.min.x, x, this.max.x, 0, this.board.clientWidth);
         return x_pix;
     }
 
     toYPix(y : number) : number {
-        const pix_y = linear(this.min.y, y, this.max.y, 0, this.canvas.clientHeight);
+        const pix_y = linear(this.min.y, y, this.max.y, 0, this.board.clientHeight);
 
-        const flipped_y = this.canvas.clientHeight - pix_y;
+        const flipped_y = this.board.clientHeight - pix_y;
         return flipped_y;
     }
 
@@ -91,7 +93,7 @@ export class View {
     }
 
     drawShapes(){
-        this.clear();
+        this.canvas.clear();
 
         if($inp("show-axis").checked){
         }
@@ -104,11 +106,6 @@ export class View {
         shapes.forEach(c => c.draw());    
 
         window.requestAnimationFrame(this.drawShapes.bind(this));
-    }
-
-    clear(){
-        const rc = this.canvas.getBoundingClientRect();
-        this.ctx.clearRect(0, 0, rc.width, rc.height);
     }
 
     click(ev : MouseEvent){
@@ -164,29 +161,28 @@ export class View {
         const pos = this.evPos(ev);
 
         const ratio = 0.002 * ev.deltaY;
-        this.min.x -= (pos.x - this.min.x) * ratio;
-        this.min.y -= (pos.y - this.min.y) * ratio;
+        const min_x = this.min.x - (pos.x - this.min.x) * ratio;
+        const min_y = this.min.y - (pos.y - this.min.y) * ratio;
 
-        this.max.x += (this.max.x - pos.x) * ratio;
-        this.max.y += (this.max.y - pos.y) * ratio;
+        const max_x = this.max.x + (this.max.x - pos.x) * ratio;
+        const max_y = this.max.y + (this.max.y - pos.y) * ratio;
+
+        this.setMinMax(new Vec2(min_x, min_y), new Vec2(max_x, max_y));
 
         this.allShapes().forEach(x => x.updateCaption());
     }
 
     resize(ev : UIEvent){
-        const [w, h] = [ this.canvas.width, this.canvas.height ];        
+        const [w, h] = [ this.board.width, this.board.height ];        
 
-        this.canvas.width  = this.canvas.clientWidth;
-        this.canvas.height = this.canvas.clientHeight;
+        this.board.width  = this.board.clientWidth;
+        this.board.height = this.board.clientHeight;
 
-        const [rx, ry] = [ this.canvas.width / w, this.canvas.height / h ];
+        const [rx, ry] = [ this.board.width / w, this.board.height / h ];
 
-        this.max = this.max.mul(rx, ry);
-        this.min = this.min.mul(rx, ry);
+        this.setMinMax(this.min.mul(rx, ry), this.max.mul(rx, ry));
 
-        this.realToPix = this.canvas.width / (2 * this.max.x);
-
-        msg(`resize: w:${w} ${this.canvas.width} h:${h} ${this.canvas.height} max:${this.max}`);
+        msg(`resize: w:${w} ${this.board.width} h:${h} ${this.board.height} max:${this.max}`);
     }
 
     addShape(shape : Shape){
@@ -229,19 +225,13 @@ export class View {
     }
 
     drawGridLine(axis : string, min : number, max : number){
-        let min_pix : number;
-        let max_pix : number;
         let size : number;
 
         if(axis == "X"){
-            min_pix = this.toYPix(this.min.y);
-            max_pix = this.toYPix(this.max.y);
 
             size = this.fromXPix(50);
         }
         else{
-            min_pix = this.toXPix(this.min.x);
-            max_pix = this.toXPix(this.max.x);
 
             size = this.fromYPix(50);
         }
@@ -253,36 +243,37 @@ export class View {
         const n1 = Math.floor(min / span2);
         const n2 = Math.ceil(max / span2);
 
-        const ctx = this.ctx;
-
-        ctx.strokeStyle = "gray";
+        const main_lines : [Vec2, Vec2][] = [];
+        const sub_lines : [Vec2, Vec2][] = [];
 
         for(let n = n1; n <= n2; n++){
-            if(n % 5 == 0){
 
-                ctx.lineWidth   = 0.5;
-            }
-            else{
-
-                ctx.lineWidth   = 0.2;
-            }
-
-            ctx.beginPath();
             const a = n * span1;
+            let p1 : Vec2;
+            let p2 : Vec2;
             if(axis == "X"){
 
-                const x_pix = this.toXPix(a);
-                ctx.moveTo(x_pix, min_pix);
-                ctx.lineTo(x_pix, max_pix);
+                p1 = new Vec2(a, this.min.y);
+                p2 = new Vec2(a, this.max.y);
             }
             else{
 
-                const y_pix = this.toYPix(a);
-                ctx.moveTo(min_pix, y_pix);
-                ctx.lineTo(max_pix, y_pix);
+                p1 = new Vec2(this.min.x, a);
+                p2 = new Vec2(this.max.x, a);
             }
-            ctx.stroke();
+
+            if(n % 5 == 0){
+
+                main_lines.push([p1, p2]);
+            }
+            else{
+
+                sub_lines.push([p1, p2]);
+            }
         }
+
+        this.canvas.drawLines(main_lines, "gray", 0.5);
+        this.canvas.drawLines(sub_lines , "gray", 0.2);
     }
 
     showGrid(){

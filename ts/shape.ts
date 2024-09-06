@@ -236,56 +236,6 @@ export abstract class Shape extends AbstractShape {
         this.selected = false;
     }
 
-    drawLine(p1 : Vec2, p2 : Vec2){
-        const color = (this.isOver ? "red" : this.color);
-
-        const pix1 = this.view.toPixPos(p1);
-        const pix2 = this.view.toPixPos(p2);
-
-        const ctx = this.view.ctx;
-        ctx.beginPath();
-        ctx.moveTo(pix1.x, pix1.y);
-        ctx.lineTo(pix2.x, pix2.y);
-        ctx.strokeStyle = color;
-        ctx.lineWidth = (this.selected ? 3 : 1);
-        ctx.stroke();   
-    }
-
-    drawArc(center : Vec2, radius : number, 
-            fill_style : string | null, stroke_style : string | null, line_width : number, 
-            start_angle : number, end_angle : number){
-        const ctx = this.view.ctx;
-        const pix = this.view.toPixPos(center);
-
-        let radius_pix : number;
-        if(this instanceof Point || this instanceof Angle){
-            radius_pix = radius;
-        }
-        else{
-            radius_pix = this.view.toPix(radius);
-        }
-
-        ctx.beginPath();
-        ctx.arc(pix.x, pix.y, radius_pix, start_angle, end_angle, true);
-
-        if(fill_style != null){
-
-            ctx.fillStyle = fill_style;
-            ctx.fill();
-        }
-
-        if(stroke_style != null){
-
-            ctx.lineWidth   = line_width;
-            ctx.strokeStyle = stroke_style;
-            ctx.stroke();
-        }
-    }
-
-    drawCircle(center : Vec2, radius : number, fill_style : string | null, stroke_style : string | null, line_width : number){
-        this.drawArc(center, radius, fill_style, stroke_style, line_width, 0, 2 * Math.PI)
-    }
-
     shapePointerdown(pos : Vec2){
     }
 
@@ -298,7 +248,8 @@ export abstract class Shape extends AbstractShape {
 }
 
 export class Point extends Shape {
-    static radius = 4;
+    static radiusPix = 4;
+    static radius : number;
 
     pos! : Vec2;
     posSave : Vec2 | undefined;
@@ -363,8 +314,8 @@ export class Point extends Shape {
     updateCaption(){
         const div_pos = this.view.toPixPos(this.pos);
 
-        const x = this.view.canvas.offsetLeft + div_pos.x;
-        const y = this.view.canvas.offsetTop  + div_pos.y;
+        const x = this.view.board.offsetLeft + div_pos.x;
+        const y = this.view.board.offsetTop  + div_pos.y;
 
         this.caption!.setTextPos(x, y);
     }
@@ -384,11 +335,11 @@ export class Point extends Shape {
     draw() : void {
         const color = (this.isOver ? "red" : this.color);
 
-        this.drawCircle(this.pos, Point.radius, color, null, 0);
+        this.view.canvas.drawCircle(this.pos, Point.radius, color, null, 0);
         
         if(this.isOver){
 
-            this.drawCircle(this.pos, 3 * Point.radius, null, "gray", 1);
+            this.view.canvas.drawCircle(this.pos, 3 * Point.radius, null, "gray", 1);
         }
     }
 
@@ -493,7 +444,7 @@ export class LineSegment extends Line {
     }
 
     draw() : void {
-        this.drawLine(this.p1.pos, this.p2.pos);
+        this.view.canvas.drawLine(this, this.p1.pos, this.p2.pos);
     }
 }
 
@@ -532,7 +483,7 @@ export abstract class Circle extends CircleArc {
     draw() : void {
         const stroke_color = (this.isOver ? "red" : this.color);
         const line_width = (this.selected ? 3 : 1)
-        this.drawCircle(this.center.pos, this.radius(), null, stroke_color, line_width)
+        this.view.canvas.drawCircle(this.center.pos, this.radius(), null, stroke_color, line_width)
     }
 }
 
@@ -615,7 +566,6 @@ export class Ellipse extends Shape {
     }
 
     draw() : void {
-        const ctx = this.view.ctx;
 
         const center_pix = this.view.toPixPos(this.center.pos);
 
@@ -628,58 +578,15 @@ export class Ellipse extends Shape {
         const rotation = Math.atan2(- center_to_x.y, center_to_x.x);
 
         const color = (this.isOver ? "red" : this.color);
+        const line_width = (this.selected ? 3 : 1);
 
-        ctx.beginPath();
-        ctx.ellipse(center_pix.x, center_pix.y, radius_x_pix, radius_y_pix, rotation, 0, 2 * Math.PI);
-        ctx.lineWidth = (this.selected ? 3 : 1);
-        ctx.strokeStyle = color;
-        ctx.stroke();
-    }
-}
-
-class Polygon extends Shape {
-    points3D : Vec2[];
-    points2D : Vec2[] = [];
-    material : [number, number, number] = [0, 0, 0];
-    color : string = "black";
-
-    constructor(view : View, points3d : Vec2[], color : string = "black"){
-        super(view);
-        this.points3D = points3d.slice();
-        this.color = color;
-    }
-
-    draw() : void {
-        const ctx = this.view.ctx;
-
-        ctx.beginPath();
-        for(const [i, p] of this.points2D.entries()){
-            if(i == 0){
-
-                ctx.moveTo(p.x, p.y);
-            }
-            else{
-
-                ctx.lineTo(p.x, p.y);
-            }
-        }
-        ctx.closePath();
-
-        ctx.fillStyle = this.color;
-        ctx.fill();
-        ctx.strokeStyle = this.color;
-        ctx.stroke();       
-    }
-}
-
-export class Triangle extends Polygon {
-    constructor(view : View, points3d:Vec2[], color : string = "black"){
-        super(view, points3d, color);
+        this.view.canvas.drawEllipse(center_pix.x, center_pix.y, radius_x_pix, radius_y_pix, rotation, color, line_width);
     }
 }
 
 export class Angle extends Shape {
-    static radius1 = 10;
+    static radius1Pix = 20;
+    static radius1 : number;
 
     line1 : Line;
     dir1  : number;
@@ -717,7 +624,7 @@ export class Angle extends Shape {
         const color = (this.isOver ? "red" : this.color);
         const line_width = (this.selected ? 3 : 1);
 
-        this.drawArc(this.inter, Angle.radius1, null, color, line_width, th1, th2);
+        this.view.canvas.drawArc(this.inter, Angle.radius1, null, color, line_width, th1, th2);
     }
 }
 
@@ -757,8 +664,8 @@ export class DimensionLine extends Shape {
         const center_pix = this.view.toPixPos(this.center);
 
         const [text_width, text_height] = this.caption!.getSize();
-        const x = this.view.canvas.offsetLeft + center_pix.x - 0.5 * text_width;
-        const y = this.view.canvas.offsetTop  + center_pix.y - 0.5 * text_height;
+        const x = this.view.board.offsetLeft + center_pix.x - 0.5 * text_width;
+        const y = this.view.board.offsetTop  + center_pix.y - 0.5 * text_height;
 
         this.caption!.setTextPos(x, y);
     }
@@ -790,11 +697,11 @@ export class DimensionLine extends Shape {
         const degree = toDegree( Math.atan2(-p12.y, p12.x) );
         this.caption.setRotation(degree);
 
-        this.drawLine(p1, p1b);
-        this.drawLine(p2, p2b);
+        this.view.canvas.drawLine(this, p1, p1b);
+        this.view.canvas.drawLine(this, p2, p2b);
 
-        this.drawLine(p1a, p1c);
-        this.drawLine(p2a, p2c);
+        this.view.canvas.drawLine(this, p1a, p1c);
+        this.view.canvas.drawLine(this, p2a, p2c);
     }
 }
 
@@ -804,10 +711,6 @@ export class Graph extends Shape {
 
     constructor(view : View){
         super(view);
-    }
-
-    setMinMax(){
-
     }
 
     draw() : void {
@@ -826,17 +729,6 @@ export class Axis extends Shape {
 
     draw() : void {
         throw new MyError();
-    }
-}
-
-export class Arrow extends Polygon {
-    pos : Vec2 = Vec2.nan();
-    vec : Vec2 = Vec2.nan();
-
-    constructor(view : View, pos : Vec2, vec : Vec2, color : string){
-        super(view, [], color);
-        this.pos = pos;
-        this.vec = vec;
     }
 }
 

@@ -22,7 +22,6 @@ export abstract class Builder {
             case "Ellipse":           return new EllipseBuilder();
             // case "Arc":           return new Arc();
             case "DimensionLine": return new DimensionLineBuilder();
-            // case "Triangle":      return new Triangle();
             // case "Midpoint":      return new Midpoint();
             case "Perpendicular": return new PerpendicularBuilder()
             // case "ParallelLine":  return new ParallelLine()

@@ -47,16 +47,16 @@ export function bodyOnLoad(){
 }
 
 function viewEvent(view : View){
-    view.canvas.addEventListener("pointerdown", view.pointerdown.bind(view));
-    view.canvas.addEventListener('pointermove', view.pointermove.bind(view));
-    view.canvas.addEventListener("pointerup"  , view.pointerup.bind(view));   
-    view.canvas.addEventListener("click"      , view.click.bind(view));   
+    view.board.addEventListener("pointerdown", view.pointerdown.bind(view));
+    view.board.addEventListener('pointermove', view.pointermove.bind(view));
+    view.board.addEventListener("pointerup"  , view.pointerup.bind(view));   
+    view.board.addEventListener("click"      , view.click.bind(view));   
 
     window.addEventListener("resize", view.resize.bind(view));
 
     // Passive event listeners
     // https://github.com/WICG/EventListenerOptions/blob/gh-pages/explainer.md
-    view.canvas.addEventListener("wheel"      , view.wheel.bind(view), {"passive" : true } );
+    view.board.addEventListener("wheel"      , view.wheel.bind(view), {"passive" : true } );
 }
 
 export function setCaptionEvent(caption : TextBlock){
