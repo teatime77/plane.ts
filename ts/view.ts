@@ -4,12 +4,13 @@ export class View {
     static nearThreshold = 4;
     board : HTMLCanvasElement;
     canvas : Canvas;
-
+    grid : Grid;
 
     shapes : Shape[] = [];
     changed : Set<Shape> = new Set<Shape>();
 
     downPos : Vec2 | undefined;
+    movePos : Vec2 | undefined;
 
     min! : Vec2;
     max! : Vec2;
@@ -22,6 +23,7 @@ export class View {
     constructor(canvas : HTMLCanvasElement){
         this.board = canvas;
         this.canvas = new Canvas(this, canvas);
+        this.grid   = new Grid(this);
 
         const aspect = this.board.clientWidth / this.board.clientHeight;
         const max_y = 6;
@@ -95,19 +97,23 @@ export class View {
     drawShapes(){
         this.canvas.clear();
 
-        if($inp("show-axis").checked || $inp("show-grid").checked){
-            this.drawGridAxis("X", this.min.x, this.max.x);
-            this.drawGridAxis("Y", this.min.y, this.max.y);
-        }        
+        this.grid.showGrid($inp("show-axis").checked, $inp("show-grid").checked);
 
         const shapes = this.allShapes();
-        shapes.forEach(c => c.draw());    
+        shapes.forEach(c => c.draw());
+
+        if($inp("snap-to-grid").checked){
+            this.grid.showPointer();
+        }
 
         window.requestAnimationFrame(this.drawShapes.bind(this));
     }
 
     click(ev : MouseEvent){
-        const pos = this.evPos(ev);
+        let pos = this.evPos(ev);
+        if($inp("snap-to-grid").checked){
+            pos = this.grid.snap(pos);
+        }
 
         const shape = this.getShape(pos);
         Builder.tool.click(ev, this, pos, shape);
@@ -115,7 +121,10 @@ export class View {
 
 
     pointerdown(ev : PointerEvent){
-        const pos = this.evPos(ev);
+        let pos = this.evPos(ev);
+        if($inp("snap-to-grid").checked){
+            pos = this.grid.snap(pos);
+        }
 
         this.downPos = pos;
 
@@ -128,17 +137,26 @@ export class View {
         // タッチによる画面スクロールを止める
         ev.preventDefault(); 
 
-        const pos = this.evPos(ev);
+        let pos = this.evPos(ev);
+        if($inp("snap-to-grid").checked){
+            pos = this.grid.snap(pos);
+        }
 
         const shapes = this.allShapes();
         shapes.forEach(x => x.isOver = x.isNear(pos));    
 
         const shape = this.getShape(pos);
         Builder.tool.pointermove(ev, this, pos, shape);
+
+        this.movePos = pos;
     }
 
     pointerup(ev : PointerEvent){
-        const pos = this.evPos(ev);
+        let pos = this.evPos(ev);
+        if($inp("snap-to-grid").checked){
+            pos = this.grid.snap(pos);
+        }
+
         const shape = this.getShape(pos);
         Builder.tool.pointerup(ev, this, pos, shape);
 
@@ -147,7 +165,10 @@ export class View {
     }
 
     wheel(ev : WheelEvent){
-        const pos = this.evPos(ev);
+        let pos = this.evPos(ev);
+        if($inp("snap-to-grid").checked){
+            pos = this.grid.snap(pos);
+        }
 
         const ratio = 0.002 * ev.deltaY;
         const min_x = this.min.x - (pos.x - this.min.x) * ratio;
@@ -212,17 +233,36 @@ export class View {
             }
         }
     }
+}
 
-    drawGridAxis(axis : string, min : number, max : number){
+class Grid {
+    view : View;
+    span2X : number | undefined;
+    span2Y : number | undefined;
+
+    constructor(view : View){
+        this.view = view;
+    }
+
+    drawGridAxis(axis : string, show_grid : boolean, show_axis : boolean){
         let size : number;
+        let min_a : number;
+        let max_a : number
+
+        let min_b : number;
+        let max_b : number
 
         if(axis == "X"){
 
-            size = this.fromXPix(75);
+            size = this.view.fromXPix(75);
+            [min_a, max_a] = [this.view.min.x, this.view.max.x];
+            [min_b, max_b] = [this.view.min.y, this.view.max.y];
         }
         else{
 
-            size = this.fromYPix(75);
+            size = this.view.fromYPix(75);
+            [min_a, max_a] = [this.view.min.y, this.view.max.y];
+            [min_b, max_b] = [this.view.min.x, this.view.max.x];
         }
 
         const p = Math.round( Math.log10(size) );
@@ -246,11 +286,10 @@ export class View {
 
         let span2 = span1 / 5;
 
-        if($inp("show-grid").checked){
+        if(show_grid){
 
-
-            const n1 = Math.floor(min / span2);
-            const n2 = Math.ceil(max / span2);
+            const n1 = Math.floor(min_a / span2);
+            const n2 = Math.ceil(max_a / span2);
 
             const main_lines : [Vec2, Vec2][] = [];
             const sub_lines : [Vec2, Vec2][] = [];
@@ -263,13 +302,13 @@ export class View {
                 let p2 : Vec2;
                 if(axis == "X"){
 
-                    p1 = new Vec2(a, this.min.y);
-                    p2 = new Vec2(a, this.max.y);
+                    p1 = new Vec2(a, min_b);
+                    p2 = new Vec2(a, max_b);
                 }
                 else{
 
-                    p1 = new Vec2(this.min.x, a);
-                    p2 = new Vec2(this.max.x, a);
+                    p1 = new Vec2(min_b, a);
+                    p2 = new Vec2(max_b, a);
                 }
 
                 if(n == 0){
@@ -286,31 +325,70 @@ export class View {
                 }
             }        
 
-            this.canvas.drawLines(axis_lines, "black", 1.0);
-            this.canvas.drawLines(main_lines, "gray", 0.5);
-            this.canvas.drawLines(sub_lines , "gray", 0.2);
+            this.view.canvas.drawLines(axis_lines, "black", 1.0);
+            this.view.canvas.drawLines(main_lines, "gray", 0.5);
+            this.view.canvas.drawLines(sub_lines , "gray", 0.2);
         }
 
-        if($inp("show-axis").checked){
-            const n1 = Math.floor(min / span1);
-            const n2 = Math.ceil(max / span1);
+        if(show_axis){
+            const n1 = Math.floor(min_a / span1);
+            const n2 = Math.ceil(max_a / span1);
 
             for(let n = n1; n <= n2; n++){
                 const a = n * span1;
 
                 const text = (n == 0 ? "0" : a.toFixed(fraction_digits));
                 if(axis == "X"){                    
-                    this.canvas.drawText(new Vec2(a, 0), text, "black");
+                    this.view.canvas.drawText(new Vec2(a, 0), text, "black");
                 }
                 else{
 
-                    this.canvas.drawText(new Vec2(0, a), text, "black");
+                    this.view.canvas.drawText(new Vec2(0, a), text, "black");
                 }
             }
         }
+
+        if(axis == "X"){
+            this.span2X = span2;
+        }
+        else{
+            this.span2Y = span2;
+        }
+    }
+
+    showGrid(show_grid : boolean, show_axis : boolean){
+        if(show_grid && show_axis){
+            this.drawGridAxis("X", show_grid, show_axis);
+            this.drawGridAxis("Y", show_grid, show_axis);
+        }
+    }
+
+    showPointer(){
+        if(this.view.movePos == undefined || this.span2X == undefined || this.span2Y == undefined){
+            return;
+        }
+
+        const pos = this.snap(this.view.movePos);
+
+        const lines : [Vec2, Vec2][] = [
+            [ new Vec2(pos.x - this.span2X, pos.y), new Vec2(pos.x + this.span2X, pos.y) ],
+            [ new Vec2(pos.x, pos.y - this.span2Y), new Vec2(pos.x, pos.y + this.span2Y) ]
+        ]
+
+        this.view.canvas.drawLines(lines, "blue", 1);
+    }
+
+    snap(pos : Vec2) : Vec2 {
+        if(this.span2X == undefined || this.span2Y == undefined){
+            return pos;
+        }
+
+        const x = Math.round(pos.x / this.span2X) * this.span2X;
+        const y = Math.round(pos.y / this.span2Y) * this.span2Y;
+
+        return new Vec2(x, y);
     }
 }
-
 
 
 
