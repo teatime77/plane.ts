@@ -54,11 +54,11 @@ export abstract class Builder {
         else{
             if(shape instanceof Line || shape instanceof CircleArc){
 
-                return new Point(view, pos, shape);
+                return Point.fromArgs(view, pos, shape);
             }
             else{
 
-                return new Point(view, pos);
+                return Point.fromArgs(view, pos);
             }
         }
 
@@ -123,7 +123,7 @@ class PointBuilder extends Builder {
     click(ev : MouseEvent, view : View, pos : Vec2, shape : Shape | undefined){  
         if(shape == undefined || shape instanceof LineSegment || shape instanceof Circle){
 
-            const new_point = new Point(view, pos, shape);
+            const new_point = Point.fromArgs(view, pos, shape);
             view.addShape(new_point);
 
             new_point.showProperty();
@@ -138,10 +138,10 @@ class Circle1Builder extends Builder {
         if(this.circle == undefined){
 
             if(shape == undefined || !(shape instanceof Point)){
-                shape = new Point(view, pos);
+                shape = Point.fromArgs(view, pos);
             }
 
-            const p = new Point(view, pos);
+            const p = Point.fromArgs(view, pos);
             this.circle = new Circle1(view, shape as Point, p);
 
             view.addShape(this.circle);
@@ -182,7 +182,7 @@ class Circle2Builder extends Builder {
         if(this.circle == undefined){
 
             if(shape == undefined || !(shape instanceof Point)){
-                shape = new Point(view, pos);
+                shape = Point.fromArgs(view, pos);
             }
 
             this.circle = new Circle2(view, shape as Point, 0);
@@ -251,10 +251,10 @@ class LineSegmentBuilder extends Builder {
         if(this.line == undefined){
 
             if(shape == undefined || !(shape instanceof Point)){
-                shape = new Point(view, pos);
+                shape = Point.fromArgs(view, pos);
             }
 
-            const p2 = new Point(view, pos);
+            const p2 = Point.fromArgs(view, pos);
             this.line = new LineSegment(view, shape as Point, p2);
 
             view.addShape(this.line);

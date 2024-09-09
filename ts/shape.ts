@@ -1,10 +1,18 @@
+///<reference path="json.ts" />
+
 namespace planets {
 //
+const fgColor = "black";
 let captionDownPos : Vec2 | undefined;
 let offsetDown : Vec2;
 
-abstract class AbstractShape {
+abstract class AbstractShape extends Widget {
+
     abstract showProperty(tbl : HTMLTableElement | undefined) : void;
+
+    constructor(){
+        super();
+    }
 
     appendTitle(tbl : HTMLTableElement, title : string){
         const row = document.createElement("tr");
@@ -156,32 +164,46 @@ export class TextBlock extends AbstractShape {
 }
 
 export abstract class Shape extends AbstractShape {
-    static maxId = 0;
     view : View;
-    id : number;
 
     name      : string = "";
+    color     : string = fgColor;
     caption   : TextBlock | undefined;
+    depends   : Shape[] = [];
 
-    divOffset : Vec2 | undefined;
-
-    color : string = "black";
     isOver : boolean = false;
     selected : boolean = false;
-
-    depends : Shape[] = [];
 
     abstract draw() : void;
 
     constructor(view : View, color : string = "black"){
         super();
         this.view = view;
-        this.id = Shape.maxId++;
         this.color = color;
     }
 
     copy() : Shape {
         throw new MyError();
+    }
+
+    makeObj() : any {
+        let obj = Object.assign(super.makeObj(), {
+            name : this.name
+        });
+
+        if(this.color != fgColor){
+            obj.color = this.color;
+        }
+
+        if(this.caption != undefined){
+            obj.caption = this.caption.makeObj();
+        }
+
+        if(this.depends.length != 0){
+            obj.depends = this.depends.map(x => x.id);
+        }
+
+        return obj;
     }
 
     showProperty(tbl : HTMLTableElement | undefined = undefined) : void {
@@ -257,11 +279,15 @@ export class Point extends Shape {
 
     origin : Point | undefined;
 
-    constructor(view : View, pos : Vec2, bound : LineSegment | Circle | undefined = undefined){
-        super(view);
-        this.bound = bound;
+    static fromArgs(view : View, pos : Vec2, bound : LineSegment | Circle | undefined = undefined){
+        return new Point( {view : view, pos : pos, bound : bound} );
+    }
 
-        const idxes = view.allShapes().filter(x => x instanceof Point).map(x => upperLatinLetters.indexOf(x.name));
+    constructor(obj : { view : View, pos : Vec2, bound : LineSegment | Circle | undefined }){
+        super(obj.view);
+        this.bound = obj.bound;
+
+        const idxes = obj.view.allShapes().filter(x => x instanceof Point).map(x => upperLatinLetters.indexOf(x.name));
         if(idxes.length == 0){
             this.name = upperLatinLetters[0];
         }
@@ -282,20 +308,28 @@ export class Point extends Shape {
         this.caption.offset = new Vec2(10, -20);
         setCaptionEvent(this.caption);
 
-        if(bound instanceof LineSegment){
+        if(obj.bound instanceof LineSegment){
 
-            this.setPos(calcFootOfPerpendicular(pos, bound));
+            this.setPos(calcFootOfPerpendicular(obj.pos, obj.bound));
         }
         else{
 
-            this.setPos(pos);
+            this.setPos(obj.pos);
         }
 
         msg(`point:${this.name}`);
     }
 
     copy() : Point {
-        return new Point(this.view, this.pos.copy());
+        return Point.fromArgs(this.view, this.pos.copy());
+    }
+
+    makeObj() : any {
+        let obj = Object.assign(super.makeObj(), {
+            pos : this.pos.makeJson()
+        });
+
+        return obj;
     }
 
     setPos(pos : Vec2){
@@ -419,6 +453,15 @@ export class LineSegment extends Line {
 
     copy() : LineSegment {
         return new LineSegment(this.view, this.p1.copy(), this.p2.copy(), this.color);
+    }
+
+    makeObj() : any {
+        let obj = Object.assign(super.makeObj(), {
+            p1 : this.p1.makeObj(),
+            p2 : this.p2.makeObj()
+        });
+
+        return obj;
     }
 
     getAllShapes(shapes : Shape[]){

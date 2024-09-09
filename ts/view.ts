@@ -1,6 +1,6 @@
 namespace planets {
 //
-export class View {
+export class View extends Widget {
     static nearThreshold = 4;
     board : HTMLCanvasElement;
     canvas : Canvas;
@@ -21,6 +21,7 @@ export class View {
     }
 
     constructor(canvas : HTMLCanvasElement){
+        super();
         this.board = canvas;
         this.canvas = new Canvas(this, canvas);
         this.grid   = new Grid(this);

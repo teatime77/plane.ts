@@ -35,7 +35,7 @@ export class FootOfPerpendicular extends Shape {
         this.point = point;
         this.line  = line;
 
-        this.foot = new Point(view, Vec2.zero());
+        this.foot = Point.fromArgs(view, Vec2.zero());
         this.calc();
     }
 
@@ -70,7 +70,7 @@ export class LinesIntersection extends Shape {
         this.l1 = l1;
         this.l2 = l2;
 
-        this.point = new Point(view, Vec2.zero());
+        this.point = Point.fromArgs(view, Vec2.zero());
         this.calc();
     }
 
@@ -129,8 +129,8 @@ export class LineArcIntersection extends Shape {
         this.line = line;
         this.arc  = arc;
 
-        this.p1 = new Point(view, Vec2.zero());
-        this.p2 = new Point(view, Vec2.zero());
+        this.p1 = Point.fromArgs(view, Vec2.zero());
+        this.p2 = Point.fromArgs(view, Vec2.zero());
         this.calc();
     }
 
@@ -196,8 +196,8 @@ export class ArcArcIntersection extends Shape {
         this.arc1 = arc1;
         this.arc2 = arc2;
 
-        this.p1 = new Point(view, Vec2.zero())
-        this.p2 = new Point(view, Vec2.zero())
+        this.p1 = Point.fromArgs(view, Vec2.zero())
+        this.p2 = Point.fromArgs(view, Vec2.zero())
 
         this.calc();
     }
@@ -312,13 +312,13 @@ export class CircleCircleTangent extends Tangent {
             const d = (radius1 / (radius2 - radius1)) * dist;
 
             const pos = this.circle1.center.pos.add( c1to2.unit().mul(d) );
-            const point = new Point(this.view, pos);
+            const point = Point.fromArgs(this.view, pos);
             point.setName("点");
             this.points.push(point);
 
             const tangent_poss = calcCirclePointTangent(this.circle2.center.pos, this.circle2.radius(), pos);
 
-            const tan_points = tangent_poss.map(pos => new Point(this.view, pos));
+            const tan_points = tangent_poss.map(pos => Point.fromArgs(this.view, pos));
             this.points.push(...tan_points);
 
             this.lines      = tan_points.map(pt => new LineSegment(this.view, point, pt));
@@ -378,7 +378,7 @@ export class CirclePointTangent extends Tangent {
     calc(): void {
         const tangent_poss = calcCirclePointTangent(this.circle.center.pos, this.circle.radius(), this.point.pos);
 
-        this.tan_points = tangent_poss.map(pos => new Point(this.view, pos));
+        this.tan_points = tangent_poss.map(pos => Point.fromArgs(this.view, pos));
         this.lines      = this.tan_points.map(pt => new LineSegment(this.view, this.point, pt))
     }
 }
