@@ -176,10 +176,12 @@ export abstract class Shape extends AbstractShape {
 
     abstract draw() : void;
 
-    constructor(view : View, color : string = "black"){
+    constructor(obj : { view : View, color : string | undefined }){
         super();
-        this.view = view;
-        this.color = color;
+        this.view = obj.view;
+        if(obj.color != undefined){
+            this.color = obj.color;
+        }
     }
 
     copy() : Shape {
@@ -280,11 +282,11 @@ export class Point extends Shape {
     origin : Point | undefined;
 
     static fromArgs(view : View, pos : Vec2, bound : LineSegment | Circle | undefined = undefined){
-        return new Point( {view : view, pos : pos, bound : bound} );
+        return new Point( {view : view, color : fgColor, pos : pos, bound : bound} );
     }
 
-    constructor(obj : { view : View, pos : Vec2, bound : LineSegment | Circle | undefined }){
-        super(obj.view);
+    constructor(obj : { view : View, color : string, pos : Vec2, bound : LineSegment | Circle | undefined }){
+        super(obj);
         this.bound = obj.bound;
 
         const idxes = obj.view.allShapes().filter(x => x instanceof Point).map(x => upperLatinLetters.indexOf(x.name));
@@ -425,15 +427,13 @@ export abstract class Line extends Shape {
     p12! : Vec2;
     e!   : Vec2;
 
-    constructor(view : View, p1: Point, p2: Point, color : string = "black"){
-        super(view, color);
-        this.p1 = p1;
-        this.p2 = p2;
+    constructor(obj : { view : View, p1: Point, p2: Point, color : string | undefined }){
+        super(obj);
+        this.p1 = obj.p1;
+        this.p2 = obj.p2;
 
         this.setVecs();
     }
-
-    abstract copy() : Line;
 
     dependencies() : Shape[] {
         return [ this.p1, this.p2 ];
@@ -450,10 +450,6 @@ export abstract class Line extends Shape {
 }
 
 export class LineSegment extends Line {    
-
-    copy() : LineSegment {
-        return new LineSegment(this.view, this.p1.copy(), this.p2.copy(), this.color);
-    }
 
     makeObj() : any {
         let obj = Object.assign(super.makeObj(), {
@@ -493,12 +489,10 @@ export class LineSegment extends Line {
 
 export abstract class CircleArc extends Shape {
     center : Point;
-    color : string;
 
-    constructor(view : View, center : Point, color : string = "black"){
-        super(view);
-        this.center = center;
-        this.color = color;
+    constructor(obj : { view : View, center : Point, color : string | undefined }){
+        super(obj);
+        this.center = obj.center;
     }
 
     dependencies() : Shape[] {
@@ -509,8 +503,8 @@ export abstract class CircleArc extends Shape {
 }
 
 export abstract class Circle extends CircleArc {
-    constructor(view : View, center : Point, color : string = "black"){
-        super(view, center, color);
+    constructor(obj : { view : View, center : Point, color : string | undefined }){
+        super(obj);
     }
 
     getAllShapes(shapes : Shape[]){
@@ -534,13 +528,13 @@ export abstract class Circle extends CircleArc {
 export class Circle1 extends Circle {
     p : Point;
 
-    constructor(view : View, center : Point, p : Point, color : string = "black"){
-        super(view, center, color);
-        this.p = p;
+    constructor(obj : { view : View, center : Point, p : Point, color : string }){
+        super(obj);
+        this.p = obj.p;
     }
 
-    copy(): Circle1 {
-        return new Circle1(this.view, this.center.copy(), this.p.copy(), this.color);
+    static fromArgs(view : View, center : Point, p : Point, color : string = fgColor){
+        return new Circle1({ view : view, center : center, p : p, color : color })
     }
 
     getAllShapes(shapes : Shape[]){
@@ -563,13 +557,9 @@ export class Circle1 extends Circle {
 export class Circle2 extends Circle {
     private radius_ : number;
 
-    constructor(view : View, center : Point, radius : number, color : string = "black"){
-        super(view, center, color);
-        this.radius_ = radius;
-    }
-
-    copy(): Circle2 {
-        return new Circle2(this.view, this.center.copy(), this.radius_, this.color);
+    constructor(obj : { view : View, center : Point, radius : number, color : (string | undefined) }){
+        super(obj);
+        this.radius_ = obj.radius;
     }
 
     calc(){        
@@ -586,17 +576,15 @@ export class Circle2 extends Circle {
 
 export class Ellipse extends Shape {
     center : Point;
-    color : string;
 
     xPoint  : Point;
     radiusY : number;
 
-    constructor(view : View, center : Point, x_point : Point, radius_y : number, color : string = "black"){
-        super(view);
-        this.center  = center;        
-        this.xPoint  = x_point;
-        this.radiusY = radius_y;
-        this.color   = color;
+    constructor(obj : { view : View, center : Point, x_point : Point, radius_y : number, color : string | undefined }){
+        super(obj);
+        this.center  = obj.center;        
+        this.xPoint  = obj.x_point;
+        this.radiusY = obj.radius_y;
     }
 
     getAllShapes(shapes : Shape[]){
@@ -633,15 +621,15 @@ export class Angle extends Shape {
 
     inter : Vec2;
 
-    constructor(view : View, line1 : Line, dir1 : number, line2 : Line, dir2 : number, inter : Vec2, color : string = "black"){
-        super(view, color);
-        this.line1 = line1;
-        this.dir1  = dir1;
+    constructor(obj : { view : View, line1 : Line, dir1 : number, line2 : Line, dir2 : number, inter : Vec2, color : string | undefined }){
+        super(obj);
+        this.line1 = obj.line1;
+        this.dir1  = obj.dir1;
 
-        this.line2 = line2;
-        this.dir2  = dir2;
+        this.line2 = obj.line2;
+        this.dir2  = obj.dir2;
         
-        this.inter = inter;
+        this.inter = obj.inter;
     }
 
     dependencies() : Shape[] {
@@ -673,11 +661,11 @@ export class DimensionLine extends Shape {
     shift : Vec2;
     text : string = "";
 
-    constructor(view : View, p1 : Point, p2 : Point, shift : Vec2, color : string = "black"){
-        super(view, color);
-        this.p1    = p1;
-        this.p2    = p2;
-        this.shift = shift;
+    constructor(obj : { view : View, p1 : Point, p2 : Point, shift : Vec2, color : string | undefined }){
+        super(obj);
+        this.p1    = obj.p1;
+        this.p2    = obj.p2;
+        this.shift = obj.shift;
 
         this.caption = new TextBlock("\\int \\frac{1}{2}", true, this);
     }
@@ -739,33 +727,6 @@ export class DimensionLine extends Shape {
 
         this.view.canvas.drawLine(this, p1a, p1c);
         this.view.canvas.drawLine(this, p2a, p2c);
-    }
-}
-
-export class Graph extends Shape {
-    xs : Float32Array = new Float32Array();
-    
-
-    constructor(view : View){
-        super(view);
-    }
-
-    draw() : void {
-        throw new MyError();
-    }
-
-}
-
-export class Axis extends Shape {
-    min : number = NaN;
-    max : number = NaN;
-
-    constructor(view : View){
-        super(view);
-    }
-
-    draw() : void {
-        throw new MyError();
     }
 }
 

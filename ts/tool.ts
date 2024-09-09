@@ -142,7 +142,7 @@ class Circle1Builder extends Builder {
             }
 
             const p = Point.fromArgs(view, pos);
-            this.circle = new Circle1(view, shape as Point, p);
+            this.circle = Circle1.fromArgs(view, shape as Point, p);
 
             view.addShape(this.circle);
         }
@@ -185,7 +185,7 @@ class Circle2Builder extends Builder {
                 shape = Point.fromArgs(view, pos);
             }
 
-            this.circle = new Circle2(view, shape as Point, 0);
+            this.circle = new Circle2({ view : view, center : (shape as Point) , radius : 0, color : undefined});
 
             view.addShape(this.circle);
         }
@@ -213,7 +213,7 @@ class EllipseBuilder extends Builder {
         else if(this.xPoint == undefined){
             this.xPoint = this.makePointOnClick(view, pos, shape);
 
-            this.ellipse = new Ellipse(view, this.center, this.xPoint, 0);
+            this.ellipse = new Ellipse({ view : view, center : this.center, x_point : this.xPoint, radius_y : 0, color : undefined });
             view.addShape(this.ellipse);
         }
         else{
@@ -255,7 +255,7 @@ class LineSegmentBuilder extends Builder {
             }
 
             const p2 = Point.fromArgs(view, pos);
-            this.line = new LineSegment(view, shape as Point, p2);
+            this.line = new LineSegment({ view : view, p1: shape as Point, p2: p2, color : undefined });
 
             view.addShape(this.line);
         }
@@ -295,7 +295,7 @@ class PerpendicularBuilder extends Builder {
         }
         else{
             if(shape instanceof Line){
-                const foot = new FootOfPerpendicular(view, this.point, shape);
+                const foot = new FootOfPerpendicular({ view, point : this.point, line : shape, color : undefined });
                 view.addShape(foot);
 
                 this.point = undefined;
@@ -318,10 +318,10 @@ class IntersectionBuilder extends Builder {
 
                 let new_shape : Shape;
                 if(this.shape1 instanceof Line && shape instanceof Line){
-                    new_shape = new LinesIntersection(view, this.shape1, shape);
+                    new_shape = new LinesIntersection({ view, l1 : this.shape1, l2 : shape, color : undefined });
                 }
                 else if(this.shape1 instanceof CircleArc && shape instanceof CircleArc){
-                    new_shape = new ArcArcIntersection(view, this.shape1, shape);
+                    new_shape = new ArcArcIntersection({ view, arc1 : this.shape1, arc2 : shape, color : undefined });
                 }
                 else{
                     let line : Line;
@@ -336,7 +336,7 @@ class IntersectionBuilder extends Builder {
                         line = shape as Line;
                     }
 
-                    new_shape = new LineArcIntersection(view, line, circle);
+                    new_shape = new LineArcIntersection( { view, line, arc : circle, color : undefined });
                 }
 
                 view.addShape(new_shape);
@@ -361,7 +361,7 @@ class TangentBuilder extends Builder {
                 this.circle = shape;
             }
             else{
-                const tangent = new CircleCircleTangent(view, this.circle, shape);
+                const tangent = new CircleCircleTangent( { view, circle1 : this.circle, circle2 : shape, color : undefined });
                 view.addShape(tangent);
     
                 this.circle = undefined;
@@ -375,7 +375,7 @@ class TangentBuilder extends Builder {
 
         if(this.circle != undefined && this.point != undefined){
 
-            const tangent = new CirclePointTangent(view, this.circle, this.point);
+            const tangent = new CirclePointTangent( { view : view, circle : this.circle, point : this.point, color : undefined });
             view.addShape(tangent);
 
             this.circle = undefined;
@@ -401,13 +401,13 @@ class AngleBuilder extends Builder {
                 line1.setVecs();
                 line2.setVecs();
 
-                const inter = new LinesIntersection(view, line1, line2);
+                const inter = new LinesIntersection({ view, l1 : line1, l2 : line2, color : undefined });
                 view.addShape(inter);
 
                 const dir1 = Math.sign(pos1.sub(inter.point.pos).dot(line1.e));
                 const dir2 = Math.sign(pos2.sub(inter.point.pos).dot(line2.e));
 
-                const angle = new Angle(view, line1, dir1, line2, dir2, inter.point.pos);
+                const angle = new Angle({ view, line1, dir1, line2, dir2, inter : inter.point.pos, color : undefined });
                 view.addShape(angle);
 
                 this.line1 = undefined;
@@ -432,7 +432,7 @@ class DimensionLineBuilder extends Builder {
 
             const foot   = calcFootFrom2Pos(pos, this.p1.pos, this.p2.pos);
             const shift  = pos.sub(foot);
-            this.dimLine = new DimensionLine(view, this.p1, this.p2, shift);
+            this.dimLine = new DimensionLine({ view : view, p1: this.p1, p2: this.p2, shift : shift, color : undefined });
             view.addShape(this.dimLine);
         }
         else if(this.dimLine != undefined){

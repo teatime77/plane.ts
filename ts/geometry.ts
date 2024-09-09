@@ -30,12 +30,12 @@ export class FootOfPerpendicular extends Shape {
     line: Line;
     foot : Point;
 
-    constructor(view : View, point:Point, line: Line){
-        super(view);
-        this.point = point;
-        this.line  = line;
+    constructor(obj : { view : View, point:Point, line: Line, color : string | undefined }){
+        super(obj);
+        this.point = obj.point;
+        this.line  = obj.line;
 
-        this.foot = Point.fromArgs(view, Vec2.zero());
+        this.foot = Point.fromArgs(obj.view, Vec2.zero());
         this.calc();
     }
 
@@ -65,12 +65,12 @@ export class LinesIntersection extends Shape {
     l2 : Line;
     point : Point;
 
-    constructor(view : View, l1:Line, l2:Line) {
-        super(view)
-        this.l1 = l1;
-        this.l2 = l2;
+    constructor(obj : {view : View, l1:Line, l2:Line, color : string | undefined }) {
+        super(obj)
+        this.l1 = obj.l1;
+        this.l2 = obj.l2;
 
-        this.point = Point.fromArgs(view, Vec2.zero());
+        this.point = Point.fromArgs(obj.view, Vec2.zero());
         this.calc();
     }
 
@@ -123,14 +123,14 @@ export class LineArcIntersection extends Shape {
     p1 : Point;
     p2 : Point;
 
-    constructor(view : View, line:Line, arc:CircleArc){
-        super(view);
+    constructor(obj : { view : View, line:Line, arc:CircleArc, color : string | undefined }){
+        super(obj);
 
-        this.line = line;
-        this.arc  = arc;
+        this.line = obj.line;
+        this.arc  = obj.arc;
 
-        this.p1 = Point.fromArgs(view, Vec2.zero());
-        this.p2 = Point.fromArgs(view, Vec2.zero());
+        this.p1 = Point.fromArgs(obj.view, Vec2.zero());
+        this.p2 = Point.fromArgs(obj.view, Vec2.zero());
         this.calc();
     }
 
@@ -190,14 +190,14 @@ export class ArcArcIntersection extends Shape {
     p1 : Point;
     p2 : Point;
 
-    constructor(view : View, arc1:CircleArc, arc2:CircleArc){
-        super(view);
+    constructor(obj : { view : View, arc1:CircleArc, arc2:CircleArc, color : string | undefined }){
+        super(obj);
 
-        this.arc1 = arc1;
-        this.arc2 = arc2;
+        this.arc1 = obj.arc1;
+        this.arc2 = obj.arc2;
 
-        this.p1 = Point.fromArgs(view, Vec2.zero())
-        this.p2 = Point.fromArgs(view, Vec2.zero())
+        this.p1 = Point.fromArgs(obj.view, Vec2.zero())
+        this.p2 = Point.fromArgs(obj.view, Vec2.zero())
 
         this.calc();
     }
@@ -270,17 +270,17 @@ export class CircleCircleTangent extends Tangent {
     points  : Point[] = [];
     lines   : Line[] = [];
 
-    constructor(view : View, circle1 : Circle, circle2 : Circle){
-        super(view);
-        if(circle1.radius() <= circle2.radius()){
+    constructor(obj : { view : View, circle1 : Circle, circle2 : Circle, color : string | undefined }){
+        super(obj);
+        if(obj.circle1.radius() <= obj.circle2.radius()){
 
-            this.circle1 = circle1;
-            this.circle2 = circle2;
+            this.circle1 = obj.circle1;
+            this.circle2 = obj.circle2;
         }
         else{
 
-            this.circle1 = circle2;
-            this.circle2 = circle1;
+            this.circle1 = obj.circle2;
+            this.circle2 = obj.circle1;
         }
 
         this.calc();
@@ -321,7 +321,7 @@ export class CircleCircleTangent extends Tangent {
             const tan_points = tangent_poss.map(pos => Point.fromArgs(this.view, pos));
             this.points.push(...tan_points);
 
-            this.lines      = tan_points.map(pt => new LineSegment(this.view, point, pt));
+            this.lines      = tan_points.map(pt => new LineSegment({ view : this.view, p1 : point, p2 : pt, color : undefined}));
         }
         
     }
@@ -353,10 +353,10 @@ export class CirclePointTangent extends Tangent {
     tan_points : Point[] = [];
     lines   : Line[] = [];
 
-    constructor(view : View, circle : Circle, point : Point){
-        super(view);
-        this.circle = circle;
-        this.point  = point;
+    constructor( obj : { view : View, circle : Circle, point : Point, color : string | undefined }){
+        super(obj);
+        this.circle = obj.circle;
+        this.point  = obj.point;
 
         this.calc();
     }
@@ -379,7 +379,7 @@ export class CirclePointTangent extends Tangent {
         const tangent_poss = calcCirclePointTangent(this.circle.center.pos, this.circle.radius(), this.point.pos);
 
         this.tan_points = tangent_poss.map(pos => Point.fromArgs(this.view, pos));
-        this.lines      = this.tan_points.map(pt => new LineSegment(this.view, this.point, pt))
+        this.lines      = this.tan_points.map(pt => new LineSegment( { view : this.view, p1 : this.point, p2 : pt, color : undefined }));
     }
 }
 
