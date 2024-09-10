@@ -312,11 +312,11 @@ export class Point extends Shape {
 
         if(obj.bound instanceof LineSegment){
 
-            this.setPos(calcFootOfPerpendicular(obj.position, obj.bound));
+            this.setPosition(calcFootOfPerpendicular(obj.position, obj.bound));
         }
         else{
 
-            this.setPos(obj.position);
+            this.setPosition(obj.position);
         }
 
         msg(`point:${this.name}`);
@@ -334,7 +334,7 @@ export class Point extends Shape {
         return obj;
     }
 
-    setPos(position : Vec2){
+    setPosition(position : Vec2){
         this.position = position;
 
         this.updateCaption();
@@ -365,7 +365,7 @@ export class Point extends Shape {
     }
 
     isNear(position : Vec2) : boolean {
-        return this.view.isNear(position.dist(this.position));
+        return this.view.isNear(position.distance(this.position));
     }
 
     draw() : void {
@@ -379,12 +379,12 @@ export class Point extends Shape {
         }
     }
 
-    sub(p : Point) : Vec2 {
-        return this.position.sub(p.position);
+    sub(point : Point) : Vec2 {
+        return this.position.sub(point.position);
     }
 
-    dot(p : Point) : number {
-        return this.position.dot(p.position);
+    dot(point : Point) : number {
+        return this.position.dot(point.position);
     }
 
     shapePointerdown(position : Vec2){
@@ -394,7 +394,7 @@ export class Point extends Shape {
     shapePointermove(position : Vec2, diff : Vec2){
         if(this.bound instanceof LineSegment){
 
-            this.setPos(calcFootOfPerpendicular(position, this.bound));
+            this.setPosition(calcFootOfPerpendicular(position, this.bound));
         }
         else if(this.bound instanceof Circle){
             const circle = this.bound;
@@ -405,13 +405,13 @@ export class Point extends Shape {
             const y = circle.radius() * Math.sin(theta);
             
             const new_pos = circle.center.position.add( new Vec2(x, y) );
-            this.setPos(new_pos);
+            this.setPosition(new_pos);
         }
         else{
 
             if(this.positionSave != undefined){
 
-                this.setPos(this.positionSave.add(diff));
+                this.setPosition(this.positionSave.add(diff));
             }
         }
     }
@@ -422,21 +422,21 @@ export class Point extends Shape {
 }
 
 export abstract class Line extends Shape {
-    p1   : Point;
-    p2   : Point;
+    pointA   : Point;
+    pointB   : Point;
     p12! : Vec2;
     e!   : Vec2;
 
-    constructor(obj : { view : View, p1: Point, p2: Point }){
+    constructor(obj : { view : View, pointA: Point, pointB: Point }){
         super(obj);
-        this.p1 = obj.p1;
-        this.p2 = obj.p2;
+        this.pointA = obj.pointA;
+        this.pointB = obj.pointB;
 
         this.setVecs();
     }
 
     dependencies() : Shape[] {
-        return [ this.p1, this.p2 ];
+        return [ this.pointA, this.pointB ];
     }
 
     calc(){     
@@ -444,7 +444,7 @@ export abstract class Line extends Shape {
     }
 
     setVecs(){
-        this.p12 = this.p2.sub(this.p1);
+        this.p12 = this.pointB.sub(this.pointA);
         this.e = this.p12.unit();
     }
 }
@@ -453,8 +453,8 @@ export class LineSegment extends Line {
 
     makeObj() : any {
         let obj = Object.assign(super.makeObj(), {
-            p1 : this.p1.makeObj(),
-            p2 : this.p2.makeObj()
+            pointA : this.pointA.makeObj(),
+            pointB : this.pointB.makeObj()
         });
 
         return obj;
@@ -462,16 +462,16 @@ export class LineSegment extends Line {
 
     getAllShapes(shapes : Shape[]){
         super.getAllShapes(shapes);
-        shapes.push(this.p1, this.p2);
+        shapes.push(this.pointA, this.pointB);
     }
 
     isNear(position : Vec2) : boolean {
         const foot = calcFootOfPerpendicular(position, this);        
-        const d = position.dist(foot);
+        const d = position.distance(foot);
         if(this.view.isNear(d)){
 
-            const p1 = this.p1.position;
-            const p2 = this.p2.position;
+            const p1 = this.pointA.position;
+            const p2 = this.pointB.position;
             const p12 = p2.sub(p1);
             const n = p12.dot( foot.sub(p1) );
             if(0 <= n && n <= p12.len2()){
@@ -483,7 +483,7 @@ export class LineSegment extends Line {
     }
 
     draw() : void {
-        this.view.canvas.drawLine(this, this.p1.position, this.p2.position);
+        this.view.canvas.drawLine(this, this.pointA.position, this.pointB.position);
     }
 }
 
@@ -513,7 +513,7 @@ export abstract class Circle extends CircleArc {
     }
 
     isNear(position : Vec2) : boolean {
-        const r = position.dist(this.center.position);
+        const r = position.distance(this.center.position);
         return this.view.isNear( Math.abs(r - this.radius()) );
     }
 
@@ -525,36 +525,36 @@ export abstract class Circle extends CircleArc {
 }
 
 
-export class Circle1 extends Circle {
-    p : Point;
+export class CircleByPoint extends Circle {
+    point : Point;
 
-    constructor(obj : { view : View, center : Point, p : Point, color : string }){
+    constructor(obj : { view : View, center : Point, point : Point, color : string }){
         super(obj);
-        this.p = obj.p;
+        this.point = obj.point;
     }
 
-    static fromArgs(view : View, center : Point, p : Point, color : string = fgColor){
-        return new Circle1({ view : view, center : center, p : p, color : color })
+    static fromArgs(view : View, center : Point, point : Point, color : string = fgColor){
+        return new CircleByPoint({ view : view, center : center, point : point, color : color })
     }
 
     getAllShapes(shapes : Shape[]){
         super.getAllShapes(shapes);
-        shapes.push(this.p);
+        shapes.push(this.point);
     }
 
     dependencies() : Shape[] {
-        return super.dependencies().concat([ this.p ]);
+        return super.dependencies().concat([ this.point ]);
     }
 
     calc(){        
     }
 
     radius() : number {
-        return this.center.position.dist(this.p.position);
+        return this.center.position.distance(this.point.position);
     }
 }
 
-export class Circle2 extends Circle {
+export class CircleByRadius extends Circle {
     private radius_ : number;
 
     constructor(obj : { view : View, center : Point, radius : number }){
@@ -597,7 +597,7 @@ export class Ellipse extends Shape {
     }
 
     draw() : void {
-        const radius_x = this.xPoint.position.dist(this.center.position);
+        const radius_x = this.xPoint.position.distance(this.center.position);
 
         const center_to_x = this.xPoint.sub(this.center)
         const rotation = Math.atan2(- center_to_x.y, center_to_x.x);
@@ -613,35 +613,35 @@ export class Angle extends Shape {
     static radius1Pix = 20;
     static radius1 : number;
 
-    line1 : Line;
+    lineA : Line;
     dir1  : number;
 
-    line2 : Line;
+    lineB : Line;
     dir2  : number;
 
-    inter : Vec2;
+    intersection : Vec2;
 
-    constructor(obj : { view : View, line1 : Line, dir1 : number, line2 : Line, dir2 : number, inter : Vec2 }){
+    constructor(obj : { view : View, lineA : Line, dir1 : number, lineB : Line, dir2 : number, intersection : Vec2 }){
         super(obj);
-        this.line1 = obj.line1;
+        this.lineA = obj.lineA;
         this.dir1  = obj.dir1;
 
-        this.line2 = obj.line2;
+        this.lineB = obj.lineB;
         this.dir2  = obj.dir2;
         
-        this.inter = obj.inter;
+        this.intersection = obj.intersection;
     }
 
     dependencies() : Shape[] {
-        return [ this.line1, this.line2 ];
+        return [ this.lineA, this.lineB ];
     }
 
     calc(){        
     }
 
     draw() : void {
-        const e1 = this.line1.e.mul(this.dir1);
-        const e2 = this.line2.e.mul(this.dir2);
+        const e1 = this.lineA.e.mul(this.dir1);
+        const e2 = this.lineB.e.mul(this.dir2);
 
         const th1 = Math.atan2(-e1.y, e1.x);
         const th2 = Math.atan2(-e2.y, e2.x);
@@ -649,22 +649,22 @@ export class Angle extends Shape {
         const color = (this.isOver ? "red" : this.color);
         const line_width = (this.selected ? 3 : 1);
 
-        this.view.canvas.drawArc(this.inter, Angle.radius1, null, color, line_width, th1, th2);
+        this.view.canvas.drawArc(this.intersection, Angle.radius1, null, color, line_width, th1, th2);
     }
 }
 
 
 export class DimensionLine extends Shape {
-    p1 : Point;
-    p2 : Point;
+    pointA : Point;
+    pointB : Point;
     center! : Vec2;
     shift : Vec2;
     text : string = "";
 
-    constructor(obj : { view : View, p1 : Point, p2 : Point, shift : Vec2 }){
+    constructor(obj : { view : View, pointA : Point, pointB : Point, shift : Vec2 }){
         super(obj);
-        this.p1    = obj.p1;
-        this.p2    = obj.p2;
+        this.pointA    = obj.pointA;
+        this.pointB    = obj.pointB;
         this.shift = obj.shift;
 
         this.caption = new TextBlock("\\int \\frac{1}{2}", true, this);
@@ -679,7 +679,7 @@ export class DimensionLine extends Shape {
     }
 
     dependencies() : Shape[] {
-        return [ this.p1, this.p2 ];
+        return [ this.pointA, this.pointB ];
     }
 
     calc(){        
@@ -700,17 +700,17 @@ export class DimensionLine extends Shape {
             throw new MyError();
         }
 
-        const p1 = this.p1.position;
-        const p2 = this.p2.position;
+        const p1 = this.pointA.position;
+        const p2 = this.pointB.position;
 
-        const p1a = this.p1.position.add(this.shift);
-        const p2a = this.p2.position.add(this.shift);
+        const p1a = this.pointA.position.add(this.shift);
+        const p2a = this.pointB.position.add(this.shift);
 
         const shift_pix_len = this.view.toPix(this.shift.len());
         const ratio = (shift_pix_len + 5) / shift_pix_len;
         const shift_plus = this.shift.mul(ratio);
-        const p1b = this.p1.position.add(shift_plus);
-        const p2b = this.p2.position.add(shift_plus);
+        const p1b = this.pointA.position.add(shift_plus);
+        const p2b = this.pointB.position.add(shift_plus);
 
         const p12 = p2.sub(p1);
         const p1c = p1a.add(p12.mul( 1/3));

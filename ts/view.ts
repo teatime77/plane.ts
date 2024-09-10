@@ -61,8 +61,8 @@ export class View extends Widget {
         return(this.max.y - this.min.y) * (pix / this.board.clientHeight);
     }
 
-    fromPix(p : Vec2) : Vec2 {
-        return new Vec2(this.fromXPix(p.x), this.fromYPix(p.y));
+    fromPix(position : Vec2) : Vec2 {
+        return new Vec2(this.fromXPix(position.x), this.fromYPix(position.y));
     }
 
     toPix(n : number) : number {
@@ -81,9 +81,9 @@ export class View extends Widget {
         return flipped_y;
     }
 
-    toPixPosition(p:Vec2) : Vec2 {
-        const x_pix = this.toXPix(p.x);
-        const y_pix = this.toYPix(p.y);
+    toPixPosition(position:Vec2) : Vec2 {
+        const x_pix = this.toXPix(position.x);
+        const y_pix = this.toYPix(position.y);
 
         return new Vec2(x_pix, y_pix);
     }
@@ -266,12 +266,12 @@ class Grid {
             [min_b, max_b] = [this.view.min.x, this.view.max.x];
         }
 
-        const p = Math.round( Math.log10(size) );
+        const power = Math.round( Math.log10(size) );
 
         let fraction_digits : number;
-        fraction_digits = -p;
+        fraction_digits = -power;
 
-        let main_span = 10 ** p;
+        let main_span = 10 ** power;
         if(main_span < size){
             if(Math.abs(2 * main_span - size) < size - main_span){
                 main_span = 2 * main_span;

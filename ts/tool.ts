@@ -132,7 +132,7 @@ class PointBuilder extends Builder {
 }
 
 class Circle1Builder extends Builder {
-    circle : Circle1 | undefined;
+    circle : CircleByPoint | undefined;
 
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
         if(this.circle == undefined){
@@ -141,19 +141,19 @@ class Circle1Builder extends Builder {
                 shape = Point.fromArgs(view, position);
             }
 
-            const p = Point.fromArgs(view, position);
-            this.circle = Circle1.fromArgs(view, shape as Point, p);
+            const point = Point.fromArgs(view, position);
+            this.circle = CircleByPoint.fromArgs(view, shape as Point, point);
 
             view.addShape(this.circle);
         }
         else{
             if(shape instanceof Point){
 
-                this.circle.p = shape;
+                this.circle.point = shape;
             }
             else{
 
-                this.circle.p.setPos(position);
+                this.circle.point.setPosition(position);
             }
 
             this.circle = undefined;
@@ -164,11 +164,11 @@ class Circle1Builder extends Builder {
         if(this.circle != undefined){
             if(shape instanceof Point && shape != this.circle.center){
 
-                this.circle.p = shape;
+                this.circle.point = shape;
             }
             else{
 
-                this.circle.p.setPos(position);
+                this.circle.point.setPosition(position);
             }
         }
     }
@@ -176,7 +176,7 @@ class Circle1Builder extends Builder {
 
 
 class Circle2Builder extends Builder {
-    circle : Circle2 | undefined;
+    circle : CircleByRadius | undefined;
 
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
         if(this.circle == undefined){
@@ -185,7 +185,7 @@ class Circle2Builder extends Builder {
                 shape = Point.fromArgs(view, position);
             }
 
-            this.circle = new Circle2({ view : view, center : (shape as Point) , radius : 0 });
+            this.circle = new CircleByRadius({ view : view, center : (shape as Point) , radius : 0 });
 
             view.addShape(this.circle);
         }
@@ -196,7 +196,7 @@ class Circle2Builder extends Builder {
 
     pointermove(event : PointerEvent, view : View, position : Vec2, point : Shape | undefined){
         if(this.circle != undefined){
-            this.circle.setRadius( position.dist(this.circle.center.position) );
+            this.circle.setRadius( position.distance(this.circle.center.position) );
         }
     }
 }
@@ -237,7 +237,7 @@ class EllipseBuilder extends Builder {
         }
 
         const foot = calcFootFrom2Pos(position, this.center.position, this.xPoint.position);
-        const radius_y = foot.dist(position);
+        const radius_y = foot.distance(position);
 
         return radius_y;
     }
@@ -255,13 +255,13 @@ class LineSegmentBuilder extends Builder {
             }
 
             const p2 = Point.fromArgs(view, position);
-            this.line = new LineSegment({ view : view, p1: shape as Point, p2: p2 });
+            this.line = new LineSegment({ view : view, pointA: shape as Point, pointB: p2 });
 
             view.addShape(this.line);
         }
         else{
             if(shape instanceof Point){
-                this.line.p2 = shape;
+                this.line.pointB = shape;
             }
 
             this.line = undefined;
@@ -270,13 +270,13 @@ class LineSegmentBuilder extends Builder {
 
     pointermove(event : PointerEvent, view : View, position : Vec2, shape : Shape | undefined){
         if(this.line != undefined){
-            if(shape instanceof Point && shape != this.line.p1){
+            if(shape instanceof Point && shape != this.line.pointA){
 
-                this.line.p2 = shape;
+                this.line.pointB = shape;
             }
             else{
 
-                this.line.p2.setPos(position);
+                this.line.pointB.setPosition(position);
             }
         }
     }
@@ -318,7 +318,7 @@ class IntersectionBuilder extends Builder {
 
                 let new_shape : Shape;
                 if(this.shape1 instanceof Line && shape instanceof Line){
-                    new_shape = new LinesIntersection({ view, l1 : this.shape1, l2 : shape });
+                    new_shape = new LinesIntersection({ view, lineA : this.shape1, lineB : shape });
                 }
                 else if(this.shape1 instanceof CircleArc && shape instanceof CircleArc){
                     new_shape = new ArcArcIntersection({ view, arc1 : this.shape1, arc2 : shape });
@@ -401,13 +401,13 @@ class AngleBuilder extends Builder {
                 line1.setVecs();
                 line2.setVecs();
 
-                const inter = new LinesIntersection({ view, l1 : line1, l2 : line2 });
-                view.addShape(inter);
+                const intersection = new LinesIntersection({ view, lineA : line1, lineB : line2 });
+                view.addShape(intersection);
 
-                const dir1 = Math.sign(pos1.sub(inter.point.position).dot(line1.e));
-                const dir2 = Math.sign(pos2.sub(inter.point.position).dot(line2.e));
+                const dir1 = Math.sign(pos1.sub(intersection.point.position).dot(line1.e));
+                const dir2 = Math.sign(pos2.sub(intersection.point.position).dot(line2.e));
 
-                const angle = new Angle({ view, line1, dir1, line2, dir2, inter : inter.point.position });
+                const angle = new Angle({ view, lineA: line1, dir1, lineB: line2, dir2, intersection : intersection.point.position });
                 view.addShape(angle);
 
                 this.line1 = undefined;
@@ -432,7 +432,7 @@ class DimensionLineBuilder extends Builder {
 
             const foot   = calcFootFrom2Pos(position, this.p1.position, this.p2.position);
             const shift  = position.sub(foot);
-            this.dimLine = new DimensionLine({ view : view, p1: this.p1, p2: this.p2, shift : shift });
+            this.dimLine = new DimensionLine({ view : view, pointA: this.p1, pointB: this.p2, shift : shift });
             view.addShape(this.dimLine);
         }
         else if(this.dimLine != undefined){

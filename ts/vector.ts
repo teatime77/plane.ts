@@ -70,7 +70,7 @@ export class Vec2 {
         return Math.hypot(this.x, this.y);
     }
 
-    dist(pt:Vec2) : number {
+    distance(pt:Vec2) : number {
         return Math.hypot( pt.x - this.x, pt.y - this.y );
     }
 

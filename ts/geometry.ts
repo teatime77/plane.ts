@@ -16,13 +16,13 @@ export function calcFootFrom2Pos(position : Vec2, pos1 : Vec2, pos2 : Vec2) : Ve
 }
 
 export function calcFootOfPerpendicular(position:Vec2, line: Line) : Vec2 {
-    return calcFootFrom2Pos(position, line.p1.position, line.p2.position);
+    return calcFootFrom2Pos(position, line.pointA.position, line.pointB.position);
 }
     
 
 export function DistanceFromLine(line : Line, position : Vec2) : number {
     const foot = calcFootOfPerpendicular(position, line);
-    return position.dist(foot);
+    return position.distance(foot);
 }
 
 export class FootOfPerpendicular extends Shape {
@@ -56,19 +56,19 @@ export class FootOfPerpendicular extends Shape {
 
     calc(){
         const foot_pos = calcFootOfPerpendicular(this.point.position, this.line);
-        this.foot.setPos(foot_pos);
+        this.foot.setPosition(foot_pos);
     }
 }
 
 export class LinesIntersection extends Shape {
-    l1 : Line;
-    l2 : Line;
+    lineA : Line;
+    lineB : Line;
     point : Point;
 
-    constructor(obj : {view : View, l1:Line, l2:Line }) {
+    constructor(obj : {view : View, lineA:Line, lineB:Line }) {
         super(obj)
-        this.l1 = obj.l1;
-        this.l2 = obj.l2;
+        this.lineA = obj.lineA;
+        this.lineB = obj.lineB;
 
         this.point = Point.fromArgs(obj.view, Vec2.zero());
         this.calc();
@@ -80,11 +80,11 @@ export class LinesIntersection extends Shape {
     }
 
     dependencies() : Shape[] {
-        return [ this.l1, this.l2 ];
+        return [ this.lineA, this.lineB ];
     }
 
     calc(){        
-        const [l1, l2] = [ this.l1, this.l2 ];
+        const [l1, l2] = [ this.lineA, this.lineB ];
 
         l1.setVecs();
         l2.setVecs();
@@ -103,13 +103,13 @@ export class LinesIntersection extends Shape {
         
         */
         const m = new Mat2([[l1.p12.x, - l2.p12.x], [l1.p12.y, - l2.p12.y]]);
-        const v = new Vec2(l2.p1.position.x - l1.p1.position.x, l2.p1.position.y - l1.p1.position.y);
+        const v = new Vec2(l2.pointA.position.x - l1.pointA.position.x, l2.pointA.position.y - l1.pointA.position.y);
         const mi = m.inv();
         const uv = mi.dot(v);
         const u = uv.x;
 
-        const position = l1.p1.position.add(l1.p12.mul(u));
-        this.point.setPos(position);
+        const position = l1.pointA.position.add(l1.p12.mul(u));
+        this.point.setPosition(position);
     }
 
     draw() : void {
@@ -120,8 +120,8 @@ export class LinesIntersection extends Shape {
 export class LineArcIntersection extends Shape {
     line : Line;
     arc  : CircleArc;
-    p1 : Point;
-    p2 : Point;
+    pointA : Point;
+    pointB : Point;
 
     constructor(obj : { view : View, line:Line, arc:CircleArc }){
         super(obj);
@@ -129,14 +129,14 @@ export class LineArcIntersection extends Shape {
         this.line = obj.line;
         this.arc  = obj.arc;
 
-        this.p1 = Point.fromArgs(obj.view, Vec2.zero());
-        this.p2 = Point.fromArgs(obj.view, Vec2.zero());
+        this.pointA = Point.fromArgs(obj.view, Vec2.zero());
+        this.pointB = Point.fromArgs(obj.view, Vec2.zero());
         this.calc();
     }
 
     getAllShapes(shapes : Shape[]){
         super.getAllShapes(shapes);
-        shapes.push(this.p1, this.p2);
+        shapes.push(this.pointA, this.pointB);
     }
 
     dependencies() : Shape[] {
@@ -171,24 +171,24 @@ export class LineArcIntersection extends Shape {
         let e = this.line.e;
         
         // 交点の座標
-        let p1 = foot.add(e.mul(t));
-        let p2 = foot.add(e.mul(-t));
+        let positionA = foot.add(e.mul(t));
+        let positionB = foot.add(e.mul(-t));
 
-        this.p1.setPos(p1);
-        this.p2.setPos(p2);
+        this.pointA.setPosition(positionA);
+        this.pointB.setPosition(positionB);
     }
 
     draw() : void {
-        this.p1.draw();
-        this.p2.draw();
+        this.pointA.draw();
+        this.pointB.draw();
     }
 }
 
 export class ArcArcIntersection extends Shape {
     arc1 : CircleArc;
     arc2 : CircleArc;
-    p1 : Point;
-    p2 : Point;
+    pointA : Point;
+    pointB : Point;
 
     constructor(obj : { view : View, arc1:CircleArc, arc2:CircleArc }){
         super(obj);
@@ -196,15 +196,15 @@ export class ArcArcIntersection extends Shape {
         this.arc1 = obj.arc1;
         this.arc2 = obj.arc2;
 
-        this.p1 = Point.fromArgs(obj.view, Vec2.zero())
-        this.p2 = Point.fromArgs(obj.view, Vec2.zero())
+        this.pointA = Point.fromArgs(obj.view, Vec2.zero())
+        this.pointB = Point.fromArgs(obj.view, Vec2.zero())
 
         this.calc();
     }
 
     getAllShapes(shapes : Shape[]){
         super.getAllShapes(shapes);
-        shapes.push(this.p1, this.p2);
+        shapes.push(this.pointA, this.pointB);
     }
 
     dependencies() : Shape[] {
@@ -221,7 +221,7 @@ export class ArcArcIntersection extends Shape {
         const r2 = this.arc2.radius();
 
         // 円/弧の中心の距離
-        const L = c1.position.dist(c2.position);
+        const L = c1.position.distance(c2.position);
 
         // r1*r1 - t*t = r2*r2 - (L - t)*(L - t)
         //             = r2*r2 - L*L + 2Lt - t*t
@@ -246,16 +246,16 @@ export class ArcArcIntersection extends Shape {
         const foot = c1.position.add(e1.mul(t));
         
         // 交点の座標
-        let p1 = foot.add(e2.mul(h));
-        let p2 = foot.add(e2.mul(-h));
+        let positionA = foot.add(e2.mul(h));
+        let positionB = foot.add(e2.mul(-h));
 
-        this.p1.setPos(p1);
-        this.p2.setPos(p2);
+        this.pointA.setPosition(positionA);
+        this.pointB.setPosition(positionB);
     }
 
     draw() : void {
-        this.p1.draw();
-        this.p2.draw();
+        this.pointA.draw();
+        this.pointB.draw();
     }
 }
 
@@ -321,30 +321,30 @@ export class CircleCircleTangent extends Tangent {
             const tan_points = tangent_poss.map(position => Point.fromArgs(this.view, position));
             this.points.push(...tan_points);
 
-            this.lines      = tan_points.map(pt => new LineSegment({ view : this.view, p1 : point, p2 : pt}));
+            this.lines      = tan_points.map(pt => new LineSegment({ view : this.view, pointA : point, pointB : pt}));
         }
         
     }
 }
 
-function calcCirclePointTangent(center : Vec2, radius : number, point : Vec2) : [Vec2, Vec2] {
-    const center2point = center.dist(point);
-    const tangent2point = Math.sqrt(center2point * center2point - radius * radius);
+function calcCirclePointTangent(center : Vec2, radius : number, position : Vec2) : [Vec2, Vec2] {
+    const center_point_distance = center.distance(position);
+    const tangent_point_distance = Math.sqrt(center_point_distance * center_point_distance - radius * radius);
 
-    const [a, b, c] = [ radius, tangent2point, center2point ];
+    const [a, b, c] = [ radius, tangent_point_distance, center_point_distance ];
     const cos_theta = (b*b + c*c - a*a) / (2 * b * c );
     const theta  = Math.acos(cos_theta);
 
-    const pc = center.sub(point);
-    const tangent_poss : Vec2[] = [];
+    const pc = center.sub(position);
+    const tangent_positions : Vec2[] = [];
     for(const th of [theta, -theta]){
-        const v = pc.rot(th).unit().mul(tangent2point);
+        const v = pc.rot(th).unit().mul(tangent_point_distance);
 
-        const tan_pos = point.add(v);
-        tangent_poss.push(tan_pos);
+        const tangent_position = position.add(v);
+        tangent_positions.push(tangent_position);
     }
 
-    return tangent_poss as [Vec2, Vec2];
+    return tangent_positions as [Vec2, Vec2];
 }
 
 export class CirclePointTangent extends Tangent {
@@ -379,7 +379,7 @@ export class CirclePointTangent extends Tangent {
         const tangent_poss = calcCirclePointTangent(this.circle.center.position, this.circle.radius(), this.point.position);
 
         this.tan_points = tangent_poss.map(position => Point.fromArgs(this.view, position));
-        this.lines      = this.tan_points.map(pt => new LineSegment( { view : this.view, p1 : this.point, p2 : pt }));
+        this.lines      = this.tan_points.map(pt => new LineSegment( { view : this.view, pointA : this.point, pointB : pt }));
     }
 }
 
