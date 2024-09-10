@@ -44,6 +44,11 @@ export function bodyOnLoad(){
             Builder.changeTool(radio.value);
         })
     };
+
+    $("save").addEventListener("click", (ev : MouseEvent)=>{
+        saveJson(view);
+    }
+    );
     
     window.requestAnimationFrame(view.drawShapes.bind(view));
 }

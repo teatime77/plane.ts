@@ -108,6 +108,8 @@ export class SelectTool extends Builder {
 
                 view.updateShapes();
             }
+
+            view.dirty = true;
         }
     }
 
@@ -250,12 +252,17 @@ class LineSegmentBuilder extends Builder {
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
         if(this.line == undefined){
 
-            if(shape == undefined || !(shape instanceof Point)){
-                shape = Point.fromArgs(view, position);
+            let pointA : Point;
+            if(shape instanceof Point){
+
+                pointA = shape;
+            }
+            else{
+                pointA = Point.fromArgs(view, position);
             }
 
-            const p2 = Point.fromArgs(view, position);
-            this.line = new LineSegment({ view : view, pointA: shape as Point, pointB: p2 });
+            const pointB = Point.fromArgs(view, position);
+            this.line = new LineSegment({ view, pointA, pointB });
 
             view.addShape(this.line);
         }

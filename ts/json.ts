@@ -146,5 +146,12 @@ export function parseObject(obj: any) : any {
     }
 }
 
+export function saveJson(view : View){
+    Widget.processed = new Set<number>();
+    
+    const data = view.toObj();
+    const text = JSON.stringify(data, null, 4);
+    msg(`save:${text}`);
+}
 
 }

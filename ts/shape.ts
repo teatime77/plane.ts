@@ -7,11 +7,14 @@ let captionDownPos : Vec2 | undefined;
 let offsetDown : Vec2;
 
 abstract class AbstractShape extends Widget {
+    view : View;
 
     abstract showProperty(tbl : HTMLTableElement | undefined) : void;
 
-    constructor(){
+    constructor(obj : { view : View }){
         super();
+        this.view = obj.view;
+        this.view.dirty = true;
     }
 
     appendTitle(tbl : HTMLTableElement, title : string){
@@ -74,24 +77,24 @@ export class TextBlock extends AbstractShape {
     shape : Shape | undefined;
     offset : Vec2 = new Vec2(0, 0);
 
-    constructor(text : string, is_tex : boolean, shape : Shape | undefined){
-        super();
-        this.text  = text;
-        this.isTex = is_tex;
-        this.shape = shape;
+    constructor(obj : {view : View, text : string, is_tex : boolean, shape : Shape | undefined}){
+        super(obj);
+        this.text  = obj.text;
+        this.isTex = obj.is_tex;
+        this.shape = obj.shape;
 
         this.div   = document.createElement("div");
         this.div.className = "tex_div";
-        if(is_tex){
+        if(obj.is_tex){
 
-            renderKatexSub(this.div, text);
+            renderKatexSub(this.div, obj.text);
         }
         else{
 
-            this.div.innerText = text;
+            this.div.innerText = obj.text;
         }
 
-        document.body.append(this.div);
+        obj.view.board.append(this.div);
     }
 
     setText(text : string){
@@ -164,8 +167,6 @@ export class TextBlock extends AbstractShape {
 }
 
 export abstract class Shape extends AbstractShape {
-    view : View;
-
     name      : string = "";
     color     : string = fgColor;
     caption   : TextBlock | undefined;
@@ -177,8 +178,7 @@ export abstract class Shape extends AbstractShape {
     abstract draw() : void;
 
     constructor(obj : { view : View }){
-        super();
-        this.view = obj.view;
+        super(obj);
         const any_data = obj as any;
         if(any_data.color != undefined){
             this.color = any_data.color;
@@ -272,6 +272,8 @@ export abstract class Shape extends AbstractShape {
 }
 
 export class Point extends Shape {
+    static tempPoints : Point[] = [];
+
     static radiusPix = 4;
     static radius : number;
 
@@ -289,7 +291,8 @@ export class Point extends Shape {
         super(obj);
         this.bound = obj.bound;
 
-        const idxes = obj.view.allShapes().filter(x => x instanceof Point).map(x => upperLatinLetters.indexOf(x.name));
+        const points = obj.view.allShapes().filter(x => x instanceof Point).concat(Point.tempPoints);
+        const idxes = points.map(x => upperLatinLetters.indexOf(x.name));
         if(idxes.length == 0){
             this.name = upperLatinLetters[0];
         }
@@ -306,7 +309,9 @@ export class Point extends Shape {
             }
         }
 
-        this.caption = new TextBlock(this.name, false, this);
+        Point.tempPoints.push(this);
+
+        this.caption = new TextBlock( {view : obj.view, text : this.name, is_tex : false, shape : this });
         this.caption.offset = new Vec2(10, -20);
         setCaptionEvent(this.caption);
 
@@ -340,11 +345,13 @@ export class Point extends Shape {
         this.updateCaption();
 
         this.view.changed.add(this);
+        this.view.dirty = true;
     }
 
     setName(name : string){
         this.name = name;
         this.caption!.setText(name);
+        this.view.dirty = true;
     }
 
     updateCaption(){
@@ -453,8 +460,8 @@ export class LineSegment extends Line {
 
     makeObj() : any {
         let obj = Object.assign(super.makeObj(), {
-            pointA : this.pointA.makeObj(),
-            pointB : this.pointB.makeObj()
+            pointA : this.pointA.toObj(),
+            pointB : this.pointB.toObj()
         });
 
         return obj;
@@ -667,7 +674,7 @@ export class DimensionLine extends Shape {
         this.pointB    = obj.pointB;
         this.shift = obj.shift;
 
-        this.caption = new TextBlock("\\int \\frac{1}{2}", true, this);
+        this.caption = new TextBlock({ view : obj.view, text : "\\int \\frac{1}{2}", is_tex : true, shape : this });
     }
 
     getProperties(properties : [string, string][]){

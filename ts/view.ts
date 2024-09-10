@@ -15,6 +15,19 @@ export class View extends Widget {
     min! : Vec2;
     max! : Vec2;
 
+    dirty : boolean = false;
+    prevShape : Shape | undefined;
+
+    makeObj() : any {
+        let obj = Object.assign(super.makeObj(), {
+            min    : this.min.makeJson(),
+            max    : this.max.makeJson(),
+            shapes : this.shapes.map(x => x.toObj())
+        });
+
+        return obj;
+    }
+
     isNear(real_distance : number) : boolean {
         const pix_distance = this.toPix(real_distance);
         return pix_distance < View.nearThreshold;
@@ -95,16 +108,34 @@ export class View extends Widget {
         return unique(shapes);
     }
 
+    removeUnusedDivs(){
+        const used_divs = this.allShapes().filter(x => x.caption != undefined).map(x => x.caption!.div);
+        const used_divs_set = new Set<HTMLDivElement>(used_divs);
+        const canvas_divs = Array.from(this.board.getElementsByTagName("div"));
+        const unused_divs = canvas_divs.filter(x => !used_divs_set.has);
+        for(const div of unused_divs){
+            this.board.removeChild(div);
+        }
+    }
+
     drawShapes(){
-        this.canvas.clear();
+        if(this.dirty){
+            this.dirty = false;
+            this.removeUnusedDivs();
 
-        this.grid.showGrid($inp("show-axis").checked, $inp("show-grid").checked);
 
-        const shapes = this.allShapes();
-        shapes.forEach(c => c.draw());
+            msg("redraw");
 
-        if($inp("snap-to-grid").checked){
-            this.grid.showPointer();
+            this.canvas.clear();
+
+            this.grid.showGrid($inp("show-axis").checked, $inp("show-grid").checked);
+
+            const shapes = this.allShapes();
+            shapes.forEach(c => c.draw());
+
+            if($inp("snap-to-grid").checked){
+                this.grid.showPointer();
+            }
         }
 
         window.requestAnimationFrame(this.drawShapes.bind(this));
@@ -116,6 +147,7 @@ export class View extends Widget {
             position = this.grid.snap(position);
         }
 
+        Point.tempPoints = [];
         const shape = this.getShape(position);
         Builder.tool.click(event, this, position, shape);
     }
@@ -150,6 +182,11 @@ export class View extends Widget {
         Builder.tool.pointermove(event, this, position, shape);
 
         this.movePosition = position;
+
+        if(shape != this.prevShape){
+            this.prevShape = shape;
+            this.dirty = true;
+        }
     }
 
     pointerup(event : PointerEvent){
