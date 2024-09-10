@@ -9,8 +9,8 @@ export class View extends Widget {
     shapes : Shape[] = [];
     changed : Set<Shape> = new Set<Shape>();
 
-    downPos : Vec2 | undefined;
-    movePos : Vec2 | undefined;
+    downPosition : Vec2 | undefined;
+    movePosition : Vec2 | undefined;
 
     min! : Vec2;
     max! : Vec2;
@@ -44,10 +44,10 @@ export class View extends Widget {
         Angle.radius1 = this.fromXPix(Angle.radius1Pix);
     }
 
-    evPos(ev : MouseEvent) : Vec2 {
-        const flipped_y = this.board.clientHeight - ev.offsetY;
+    eventPosition(event : MouseEvent) : Vec2 {
+        const flipped_y = this.board.clientHeight - event.offsetY;
 
-        const x = linear(0, ev.offsetX, this.board.clientWidth , this.min.x, this.max.x);
+        const x = linear(0, event.offsetX, this.board.clientWidth , this.min.x, this.max.x);
         const y = linear(0, flipped_y , this.board.clientHeight, this.min.y, this.max.y);
 
         return new Vec2(x, y);
@@ -81,7 +81,7 @@ export class View extends Widget {
         return flipped_y;
     }
 
-    toPixPos(p:Vec2) : Vec2 {
+    toPixPosition(p:Vec2) : Vec2 {
         const x_pix = this.toXPix(p.x);
         const y_pix = this.toYPix(p.y);
 
@@ -110,80 +110,80 @@ export class View extends Widget {
         window.requestAnimationFrame(this.drawShapes.bind(this));
     }
 
-    click(ev : MouseEvent){
-        let pos = this.evPos(ev);
+    click(event : MouseEvent){
+        let position = this.eventPosition(event);
         if($inp("snap-to-grid").checked){
-            pos = this.grid.snap(pos);
+            position = this.grid.snap(position);
         }
 
-        const shape = this.getShape(pos);
-        Builder.tool.click(ev, this, pos, shape);
+        const shape = this.getShape(position);
+        Builder.tool.click(event, this, position, shape);
     }
 
 
-    pointerdown(ev : PointerEvent){
-        let pos = this.evPos(ev);
+    pointerdown(event : PointerEvent){
+        let position = this.eventPosition(event);
         if($inp("snap-to-grid").checked){
-            pos = this.grid.snap(pos);
+            position = this.grid.snap(position);
         }
 
-        this.downPos = pos;
+        this.downPosition = position;
 
-        const shape = this.getShape(pos);
+        const shape = this.getShape(position);
 
-        Builder.tool.pointerdown(ev, this, pos, shape);
+        Builder.tool.pointerdown(event, this, position, shape);
     }
 
-    pointermove(ev : PointerEvent){
+    pointermove(event : PointerEvent){
         // タッチによる画面スクロールを止める
-        ev.preventDefault(); 
+        event.preventDefault(); 
 
-        let pos = this.evPos(ev);
+        let position = this.eventPosition(event);
         if($inp("snap-to-grid").checked){
-            pos = this.grid.snap(pos);
+            position = this.grid.snap(position);
         }
 
         const shapes = this.allShapes();
-        shapes.forEach(x => x.isOver = x.isNear(pos));    
+        shapes.forEach(x => x.isOver = x.isNear(position));    
 
-        const shape = this.getShape(pos);
-        Builder.tool.pointermove(ev, this, pos, shape);
+        const shape = this.getShape(position);
+        Builder.tool.pointermove(event, this, position, shape);
 
-        this.movePos = pos;
+        this.movePosition = position;
     }
 
-    pointerup(ev : PointerEvent){
-        let pos = this.evPos(ev);
+    pointerup(event : PointerEvent){
+        let position = this.eventPosition(event);
         if($inp("snap-to-grid").checked){
-            pos = this.grid.snap(pos);
+            position = this.grid.snap(position);
         }
 
-        const shape = this.getShape(pos);
-        Builder.tool.pointerup(ev, this, pos, shape);
+        const shape = this.getShape(position);
+        Builder.tool.pointerup(event, this, position, shape);
 
 
-        this.downPos = undefined;
+        this.downPosition = undefined;
     }
 
-    wheel(ev : WheelEvent){
-        let pos = this.evPos(ev);
+    wheel(event : WheelEvent){
+        let position = this.eventPosition(event);
         if($inp("snap-to-grid").checked){
-            pos = this.grid.snap(pos);
+            position = this.grid.snap(position);
         }
 
-        const ratio = 0.002 * ev.deltaY;
-        const min_x = this.min.x - (pos.x - this.min.x) * ratio;
-        const min_y = this.min.y - (pos.y - this.min.y) * ratio;
+        const ratio = 0.002 * event.deltaY;
+        const min_x = this.min.x - (position.x - this.min.x) * ratio;
+        const min_y = this.min.y - (position.y - this.min.y) * ratio;
 
-        const max_x = this.max.x + (this.max.x - pos.x) * ratio;
-        const max_y = this.max.y + (this.max.y - pos.y) * ratio;
+        const max_x = this.max.x + (this.max.x - position.x) * ratio;
+        const max_y = this.max.y + (this.max.y - position.y) * ratio;
 
         this.setMinMax(new Vec2(min_x, min_y), new Vec2(max_x, max_y));
 
         this.allShapes().forEach(x => x.updateCaption());
     }
 
-    resize(ev : UIEvent){
+    resize(event : UIEvent){
         const [w, h] = [ this.board.width, this.board.height ];        
 
         this.board.width  = this.board.clientWidth;
@@ -200,19 +200,19 @@ export class View extends Widget {
         this.shapes.push(shape);
     }
 
-    getShape(pos : Vec2) : Shape | undefined {
+    getShape(position : Vec2) : Shape | undefined {
         const shapes = this.allShapes();
-        const point = shapes.filter(x => x instanceof Point).find(x => x.isNear(pos));
+        const point = shapes.filter(x => x instanceof Point).find(x => x.isNear(position));
         if(point != undefined){
             return point;
         }
 
-        const line = shapes.filter(x => x instanceof LineSegment).find(x => x.isNear(pos));
+        const line = shapes.filter(x => x instanceof LineSegment).find(x => x.isNear(position));
         if(line != undefined){
             return line;
         }
         
-        const circle = shapes.filter(x => x instanceof Circle).find(x => x.isNear(pos));
+        const circle = shapes.filter(x => x instanceof Circle).find(x => x.isNear(position));
         return circle;
     }
 
@@ -238,8 +238,8 @@ export class View extends Widget {
 
 class Grid {
     view : View;
-    span2X : number | undefined;
-    span2Y : number | undefined;
+    subSpanX : number | undefined;
+    subSpanY : number | undefined;
 
     constructor(view : View){
         this.view = view;
@@ -271,26 +271,26 @@ class Grid {
         let fraction_digits : number;
         fraction_digits = -p;
 
-        let span1 = 10 ** p;
-        if(span1 < size){
-            if(Math.abs(2 * span1 - size) < size - span1){
-                span1 = 2 * span1;
+        let main_span = 10 ** p;
+        if(main_span < size){
+            if(Math.abs(2 * main_span - size) < size - main_span){
+                main_span = 2 * main_span;
             }
         }
         else{
-            if(Math.abs(0.5 * span1 - size) < span1 - size){
-                span1 = 0.5 * span1;
+            if(Math.abs(0.5 * main_span - size) < main_span - size){
+                main_span = 0.5 * main_span;
                 fraction_digits++;
             }
         }
         fraction_digits = Math.max(0, fraction_digits);
 
-        let span2 = span1 / 5;
+        let sub_span = main_span / 5;
 
         if(show_grid){
 
-            const n1 = Math.floor(min_a / span2);
-            const n2 = Math.ceil(max_a / span2);
+            const n1 = Math.floor(min_a / sub_span);
+            const n2 = Math.ceil(max_a / sub_span);
 
             const main_lines : [Vec2, Vec2][] = [];
             const sub_lines : [Vec2, Vec2][] = [];
@@ -298,7 +298,7 @@ class Grid {
 
             for(let n = n1; n <= n2; n++){
 
-                const a = n * span2;
+                const a = n * sub_span;
                 let p1 : Vec2;
                 let p2 : Vec2;
                 if(axis == "X"){
@@ -332,11 +332,11 @@ class Grid {
         }
 
         if(show_axis){
-            const n1 = Math.floor(min_a / span1);
-            const n2 = Math.ceil(max_a / span1);
+            const n1 = Math.floor(min_a / main_span);
+            const n2 = Math.ceil(max_a / main_span);
 
             for(let n = n1; n <= n2; n++){
-                const a = n * span1;
+                const a = n * main_span;
 
                 const text = (n == 0 ? "0" : a.toFixed(fraction_digits));
                 if(axis == "X"){                    
@@ -350,10 +350,10 @@ class Grid {
         }
 
         if(axis == "X"){
-            this.span2X = span2;
+            this.subSpanX = sub_span;
         }
         else{
-            this.span2Y = span2;
+            this.subSpanY = sub_span;
         }
     }
 
@@ -365,27 +365,27 @@ class Grid {
     }
 
     showPointer(){
-        if(this.view.movePos == undefined || this.span2X == undefined || this.span2Y == undefined){
+        if(this.view.movePosition == undefined || this.subSpanX == undefined || this.subSpanY == undefined){
             return;
         }
 
-        const pos = this.snap(this.view.movePos);
+        const position = this.snap(this.view.movePosition);
 
         const lines : [Vec2, Vec2][] = [
-            [ new Vec2(pos.x - this.span2X, pos.y), new Vec2(pos.x + this.span2X, pos.y) ],
-            [ new Vec2(pos.x, pos.y - this.span2Y), new Vec2(pos.x, pos.y + this.span2Y) ]
+            [ new Vec2(position.x - this.subSpanX, position.y), new Vec2(position.x + this.subSpanX, position.y) ],
+            [ new Vec2(position.x, position.y - this.subSpanY), new Vec2(position.x, position.y + this.subSpanY) ]
         ]
 
         this.view.canvas.drawLines(lines, "blue", 1);
     }
 
-    snap(pos : Vec2) : Vec2 {
-        if(this.span2X == undefined || this.span2Y == undefined){
-            return pos;
+    snap(position : Vec2) : Vec2 {
+        if(this.subSpanX == undefined || this.subSpanY == undefined){
+            return position;
         }
 
-        const x = Math.round(pos.x / this.span2X) * this.span2X;
-        const y = Math.round(pos.y / this.span2Y) * this.span2Y;
+        const x = Math.round(position.x / this.subSpanX) * this.subSpanX;
+        const y = Math.round(position.y / this.subSpanY) * this.subSpanY;
 
         return new Vec2(x, y);
     }

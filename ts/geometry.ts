@@ -2,12 +2,12 @@
 
 namespace planets {
 
-export function calcFootFrom2Pos(pos : Vec2, pos1 : Vec2, pos2 : Vec2) : Vec2 {
+export function calcFootFrom2Pos(position : Vec2, pos1 : Vec2, pos2 : Vec2) : Vec2 {
 
     // unit vector from p1 to p2
     const e = pos2.sub(pos1).unit();
 
-    const v = pos.sub(pos1);
+    const v = position.sub(pos1);
     const h = e.dot(v);
 
     const foot = pos1.add(e.mul(h));
@@ -15,14 +15,14 @@ export function calcFootFrom2Pos(pos : Vec2, pos1 : Vec2, pos2 : Vec2) : Vec2 {
     return foot;
 }
 
-export function calcFootOfPerpendicular(pos:Vec2, line: Line) : Vec2 {
-    return calcFootFrom2Pos(pos, line.p1.pos, line.p2.pos);
+export function calcFootOfPerpendicular(position:Vec2, line: Line) : Vec2 {
+    return calcFootFrom2Pos(position, line.p1.position, line.p2.position);
 }
     
 
-export function DistanceFromLine(line : Line, pos : Vec2) : number {
-    const foot = calcFootOfPerpendicular(pos, line);
-    return pos.dist(foot);
+export function DistanceFromLine(line : Line, position : Vec2) : number {
+    const foot = calcFootOfPerpendicular(position, line);
+    return position.dist(foot);
 }
 
 export class FootOfPerpendicular extends Shape {
@@ -55,7 +55,7 @@ export class FootOfPerpendicular extends Shape {
     }
 
     calc(){
-        const foot_pos = calcFootOfPerpendicular(this.point.pos, this.line);
+        const foot_pos = calcFootOfPerpendicular(this.point.position, this.line);
         this.foot.setPos(foot_pos);
     }
 }
@@ -103,13 +103,13 @@ export class LinesIntersection extends Shape {
         
         */
         const m = new Mat2([[l1.p12.x, - l2.p12.x], [l1.p12.y, - l2.p12.y]]);
-        const v = new Vec2(l2.p1.pos.x - l1.p1.pos.x, l2.p1.pos.y - l1.p1.pos.y);
+        const v = new Vec2(l2.p1.position.x - l1.p1.position.x, l2.p1.position.y - l1.p1.position.y);
         const mi = m.inv();
         const uv = mi.dot(v);
         const u = uv.x;
 
-        const pos = l1.p1.pos.add(l1.p12.mul(u));
-        this.point.setPos(pos);
+        const position = l1.p1.position.add(l1.p12.mul(u));
+        this.point.setPos(position);
     }
 
     draw() : void {
@@ -149,10 +149,10 @@ export class LineArcIntersection extends Shape {
         const center = this.arc.center;
 
         // 円/弧の中心から線分に垂線をおろして、その足をfootとする。
-        const foot = calcFootOfPerpendicular(center.pos, this.line);
+        const foot = calcFootOfPerpendicular(center.position, this.line);
 
         // 円/弧の中心から垂線の足までの距離。
-        const h = foot.sub(center.pos).len();
+        const h = foot.sub(center.position).len();
 
         // 円/弧の半径
         let r = this.arc.radius();
@@ -221,7 +221,7 @@ export class ArcArcIntersection extends Shape {
         const r2 = this.arc2.radius();
 
         // 円/弧の中心の距離
-        const L = c1.pos.dist(c2.pos);
+        const L = c1.position.dist(c2.position);
 
         // r1*r1 - t*t = r2*r2 - (L - t)*(L - t)
         //             = r2*r2 - L*L + 2Lt - t*t
@@ -243,7 +243,7 @@ export class ArcArcIntersection extends Shape {
         const e2 = new Vec2(- e1.y, e1.x);
 
         // 円/弧の交点から、円/弧の中心を結ぶ直線におろした垂線の足
-        const foot = c1.pos.add(e1.mul(t));
+        const foot = c1.position.add(e1.mul(t));
         
         // 交点の座標
         let p1 = foot.add(e2.mul(h));
@@ -311,14 +311,14 @@ export class CircleCircleTangent extends Tangent {
         if(radius2 < dist + radius1){
             const d = (radius1 / (radius2 - radius1)) * dist;
 
-            const pos = this.circle1.center.pos.add( c1to2.unit().mul(d) );
-            const point = Point.fromArgs(this.view, pos);
+            const position = this.circle1.center.position.add( c1to2.unit().mul(d) );
+            const point = Point.fromArgs(this.view, position);
             point.setName("点");
             this.points.push(point);
 
-            const tangent_poss = calcCirclePointTangent(this.circle2.center.pos, this.circle2.radius(), pos);
+            const tangent_poss = calcCirclePointTangent(this.circle2.center.position, this.circle2.radius(), position);
 
-            const tan_points = tangent_poss.map(pos => Point.fromArgs(this.view, pos));
+            const tan_points = tangent_poss.map(position => Point.fromArgs(this.view, position));
             this.points.push(...tan_points);
 
             this.lines      = tan_points.map(pt => new LineSegment({ view : this.view, p1 : point, p2 : pt}));
@@ -376,9 +376,9 @@ export class CirclePointTangent extends Tangent {
     }
 
     calc(): void {
-        const tangent_poss = calcCirclePointTangent(this.circle.center.pos, this.circle.radius(), this.point.pos);
+        const tangent_poss = calcCirclePointTangent(this.circle.center.position, this.circle.radius(), this.point.position);
 
-        this.tan_points = tangent_poss.map(pos => Point.fromArgs(this.view, pos));
+        this.tan_points = tangent_poss.map(position => Point.fromArgs(this.view, position));
         this.lines      = this.tan_points.map(pt => new LineSegment( { view : this.view, p1 : this.point, p2 : pt }));
     }
 }

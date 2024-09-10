@@ -117,7 +117,7 @@ export class TextBlock extends AbstractShape {
         this.makeTextProperty(tbl, "text", this.text);
     }
 
-    setTextPos(x : number, y : number){
+    setTextPosition(x : number, y : number){
         this.x = x;
         this.y = y;
 
@@ -133,10 +133,10 @@ export class TextBlock extends AbstractShape {
         return [ this.div.offsetWidth, this.div.offsetHeight ];
     }
 
-    captionPointerdown(ev : PointerEvent){
-        this.div.setPointerCapture(ev.pointerId);
+    captionPointerdown(event : PointerEvent){
+        this.div.setPointerCapture(event.pointerId);
 
-        captionDownPos = new Vec2(ev.screenX, ev.screenY);
+        captionDownPos = new Vec2(event.screenX, event.screenY);
         offsetDown = this.offset.copy();
         const x = this.div.style.left;
         const y = this.div.style.top;
@@ -145,19 +145,19 @@ export class TextBlock extends AbstractShape {
 
     }
 
-    captionPointermove(ev : PointerEvent){
+    captionPointermove(event : PointerEvent){
         if(captionDownPos == undefined){
             return;
         }
-        const diff = new Vec2(ev.screenX, ev.screenY).sub(captionDownPos);
+        const diff = new Vec2(event.screenX, event.screenY).sub(captionDownPos);
         this.offset = offsetDown.add(diff);
         
         this.div.style.left = `${this.x + this.offset.x}px`;
         this.div.style.top  = `${this.y + this.offset.y}px`;
     }
 
-    captionPointerup(ev : PointerEvent){
-        this.div.releasePointerCapture(ev.pointerId);
+    captionPointerup(event : PointerEvent){
+        this.div.releasePointerCapture(event.pointerId);
         captionDownPos = undefined;
     }
 
@@ -235,7 +235,7 @@ export abstract class Shape extends AbstractShape {
         );
     }
 
-    isNear(pos : Vec2) : boolean {        
+    isNear(position : Vec2) : boolean {        
         return false;
     }
 
@@ -261,32 +261,31 @@ export abstract class Shape extends AbstractShape {
         this.selected = false;
     }
 
-    shapePointerdown(pos : Vec2){
+    shapePointerdown(position : Vec2){
     }
 
-    shapePointermove(pos : Vec2, diff : Vec2){
+    shapePointermove(position : Vec2, diff : Vec2){
     }
 
-    shapePointerup(pos : Vec2){
+    shapePointerup(position : Vec2){
     }
-
 }
 
 export class Point extends Shape {
     static radiusPix = 4;
     static radius : number;
 
-    pos! : Vec2;
-    posSave : Vec2 | undefined;
+    position! : Vec2;
+    positionSave : Vec2 | undefined;
     bound : LineSegment | Circle | undefined;
 
     origin : Point | undefined;
 
-    static fromArgs(view : View, pos : Vec2, bound : LineSegment | Circle | undefined = undefined){
-        return new Point( {view : view, color : fgColor, pos : pos, bound : bound} );
+    static fromArgs(view : View, position : Vec2, bound : LineSegment | Circle | undefined = undefined){
+        return new Point( {view : view, color : fgColor, position : position, bound : bound} );
     }
 
-    constructor(obj : { view : View, color : string, pos : Vec2, bound : LineSegment | Circle | undefined }){
+    constructor(obj : { view : View, color : string, position : Vec2, bound : LineSegment | Circle | undefined }){
         super(obj);
         this.bound = obj.bound;
 
@@ -313,30 +312,30 @@ export class Point extends Shape {
 
         if(obj.bound instanceof LineSegment){
 
-            this.setPos(calcFootOfPerpendicular(obj.pos, obj.bound));
+            this.setPos(calcFootOfPerpendicular(obj.position, obj.bound));
         }
         else{
 
-            this.setPos(obj.pos);
+            this.setPos(obj.position);
         }
 
         msg(`point:${this.name}`);
     }
 
     copy() : Point {
-        return Point.fromArgs(this.view, this.pos.copy());
+        return Point.fromArgs(this.view, this.position.copy());
     }
 
     makeObj() : any {
         let obj = Object.assign(super.makeObj(), {
-            pos : this.pos.makeJson()
+            position : this.position.makeJson()
         });
 
         return obj;
     }
 
-    setPos(pos : Vec2){
-        this.pos = pos;
+    setPos(position : Vec2){
+        this.position = position;
 
         this.updateCaption();
 
@@ -349,76 +348,76 @@ export class Point extends Shape {
     }
 
     updateCaption(){
-        const div_pos = this.view.toPixPos(this.pos);
+        const div_position = this.view.toPixPosition(this.position);
 
-        const x = this.view.board.offsetLeft + div_pos.x;
-        const y = this.view.board.offsetTop  + div_pos.y;
+        const x = this.view.board.offsetLeft + div_position.x;
+        const y = this.view.board.offsetTop  + div_position.y;
 
-        this.caption!.setTextPos(x, y);
+        this.caption!.setTextPosition(x, y);
     }
 
     getProperties(properties : [string, string][]){
         super.getProperties(properties);
 
         properties.push(
-            ["pos", "Vec2"],
+            ["position", "Vec2"],
         );
     }
 
-    isNear(pos : Vec2) : boolean {
-        return this.view.isNear(pos.dist(this.pos));
+    isNear(position : Vec2) : boolean {
+        return this.view.isNear(position.dist(this.position));
     }
 
     draw() : void {
         const color = (this.isOver ? "red" : this.color);
 
-        this.view.canvas.drawCircle(this.pos, Point.radius, color, null, 0);
+        this.view.canvas.drawCircle(this.position, Point.radius, color, null, 0);
         
         if(this.isOver){
 
-            this.view.canvas.drawCircle(this.pos, 3 * Point.radius, null, "gray", 1);
+            this.view.canvas.drawCircle(this.position, 3 * Point.radius, null, "gray", 1);
         }
     }
 
     sub(p : Point) : Vec2 {
-        return this.pos.sub(p.pos);
+        return this.position.sub(p.position);
     }
 
     dot(p : Point) : number {
-        return this.pos.dot(p.pos);
+        return this.position.dot(p.position);
     }
 
-    shapePointerdown(pos : Vec2){
-        this.posSave = this.pos.copy();
+    shapePointerdown(position : Vec2){
+        this.positionSave = this.position.copy();
     }
 
-    shapePointermove(pos : Vec2, diff : Vec2){
+    shapePointermove(position : Vec2, diff : Vec2){
         if(this.bound instanceof LineSegment){
 
-            this.setPos(calcFootOfPerpendicular(pos, this.bound));
+            this.setPos(calcFootOfPerpendicular(position, this.bound));
         }
         else if(this.bound instanceof Circle){
             const circle = this.bound;
 
-            const v = pos.sub(circle.center.pos);
+            const v = position.sub(circle.center.position);
             const theta = Math.atan2(v.y, v.x);
             const x = circle.radius() * Math.cos(theta);
             const y = circle.radius() * Math.sin(theta);
             
-            const new_pos = circle.center.pos.add( new Vec2(x, y) );
+            const new_pos = circle.center.position.add( new Vec2(x, y) );
             this.setPos(new_pos);
         }
         else{
 
-            if(this.posSave != undefined){
+            if(this.positionSave != undefined){
 
-                this.setPos(this.posSave.add(diff));
+                this.setPos(this.positionSave.add(diff));
             }
         }
     }
 
-    shapePointerup(pos : Vec2){
-        this.posSave = undefined;
+    shapePointerup(position : Vec2){
+        this.positionSave = undefined;
     }
 }
 
@@ -466,13 +465,13 @@ export class LineSegment extends Line {
         shapes.push(this.p1, this.p2);
     }
 
-    isNear(pos : Vec2) : boolean {
-        const foot = calcFootOfPerpendicular(pos, this);        
-        const d = pos.dist(foot);
+    isNear(position : Vec2) : boolean {
+        const foot = calcFootOfPerpendicular(position, this);        
+        const d = position.dist(foot);
         if(this.view.isNear(d)){
 
-            const p1 = this.p1.pos;
-            const p2 = this.p2.pos;
+            const p1 = this.p1.position;
+            const p2 = this.p2.position;
             const p12 = p2.sub(p1);
             const n = p12.dot( foot.sub(p1) );
             if(0 <= n && n <= p12.len2()){
@@ -484,7 +483,7 @@ export class LineSegment extends Line {
     }
 
     draw() : void {
-        this.view.canvas.drawLine(this, this.p1.pos, this.p2.pos);
+        this.view.canvas.drawLine(this, this.p1.position, this.p2.position);
     }
 }
 
@@ -513,15 +512,15 @@ export abstract class Circle extends CircleArc {
         shapes.push(this.center);
     }
 
-    isNear(pos : Vec2) : boolean {
-        const r = pos.dist(this.center.pos);
+    isNear(position : Vec2) : boolean {
+        const r = position.dist(this.center.position);
         return this.view.isNear( Math.abs(r - this.radius()) );
     }
 
     draw() : void {
         const stroke_color = (this.isOver ? "red" : this.color);
         const line_width = (this.selected ? 3 : 1)
-        this.view.canvas.drawCircle(this.center.pos, this.radius(), null, stroke_color, line_width)
+        this.view.canvas.drawCircle(this.center.position, this.radius(), null, stroke_color, line_width)
     }
 }
 
@@ -551,7 +550,7 @@ export class Circle1 extends Circle {
     }
 
     radius() : number {
-        return this.center.pos.dist(this.p.pos);
+        return this.center.position.dist(this.p.position);
     }
 }
 
@@ -598,7 +597,7 @@ export class Ellipse extends Shape {
     }
 
     draw() : void {
-        const radius_x = this.xPoint.pos.dist(this.center.pos);
+        const radius_x = this.xPoint.position.dist(this.center.position);
 
         const center_to_x = this.xPoint.sub(this.center)
         const rotation = Math.atan2(- center_to_x.y, center_to_x.x);
@@ -606,7 +605,7 @@ export class Ellipse extends Shape {
         const color = (this.isOver ? "red" : this.color);
         const line_width = (this.selected ? 3 : 1);
 
-        this.view.canvas.drawEllipse(this.center.pos, radius_x, this.radiusY, rotation, color, line_width);
+        this.view.canvas.drawEllipse(this.center.position, radius_x, this.radiusY, rotation, color, line_width);
     }
 }
 
@@ -687,13 +686,13 @@ export class DimensionLine extends Shape {
     }
 
     updateCaption(){ 
-        const center_pix = this.view.toPixPos(this.center);
+        const center_pix = this.view.toPixPosition(this.center);
 
         const [text_width, text_height] = this.caption!.getSize();
         const x = this.view.board.offsetLeft + center_pix.x - 0.5 * text_width;
         const y = this.view.board.offsetTop  + center_pix.y - 0.5 * text_height;
 
-        this.caption!.setTextPos(x, y);
+        this.caption!.setTextPosition(x, y);
     }
 
     draw() : void {
@@ -701,17 +700,17 @@ export class DimensionLine extends Shape {
             throw new MyError();
         }
 
-        const p1 = this.p1.pos;
-        const p2 = this.p2.pos;
+        const p1 = this.p1.position;
+        const p2 = this.p2.position;
 
-        const p1a = this.p1.pos.add(this.shift);
-        const p2a = this.p2.pos.add(this.shift);
+        const p1a = this.p1.position.add(this.shift);
+        const p2a = this.p2.position.add(this.shift);
 
         const shift_pix_len = this.view.toPix(this.shift.len());
         const ratio = (shift_pix_len + 5) / shift_pix_len;
         const shift_plus = this.shift.mul(ratio);
-        const p1b = this.p1.pos.add(shift_plus);
-        const p2b = this.p2.pos.add(shift_plus);
+        const p1b = this.p1.position.add(shift_plus);
+        const p2b = this.p2.position.add(shift_plus);
 
         const p12 = p2.sub(p1);
         const p1c = p1a.add(p12.mul( 1/3));

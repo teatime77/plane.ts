@@ -90,7 +90,7 @@ export function parseObject(obj: any) : any {
     //     return new Variable(obj);
     
     // case Point.name:
-    //     return Point.fromArgs(view, obj.pos, obj.bound);
+    //     return Point.fromArgs(view, obj.position, obj.bound);
 
     // case LineSegment.name:
     //     return new LineSegment().make(obj);

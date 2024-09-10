@@ -20,8 +20,8 @@ export class Canvas {
     drawLine(shape : Shape, p1 : Vec2, p2 : Vec2){
         const color = (shape.isOver ? "red" : shape.color);
 
-        const pix1 = this.view.toPixPos(p1);
-        const pix2 = this.view.toPixPos(p2);
+        const pix1 = this.view.toPixPosition(p1);
+        const pix2 = this.view.toPixPosition(p2);
 
         const ctx = this.ctx;
         ctx.beginPath();
@@ -36,8 +36,8 @@ export class Canvas {
         const ctx = this.ctx;
 
         for(const [p1, p2] of lines){
-            const pix1 = this.view.toPixPos(p1);
-            const pix2 = this.view.toPixPos(p2);
+            const pix1 = this.view.toPixPosition(p1);
+            const pix2 = this.view.toPixPosition(p2);
 
             ctx.beginPath();
             ctx.moveTo(pix1.x, pix1.y);
@@ -52,7 +52,7 @@ export class Canvas {
             fill_style : string | null, stroke_style : string | null, line_width : number, 
             start_angle : number, end_angle : number){
         const ctx = this.ctx;
-        const pix = this.view.toPixPos(center);
+        const pix = this.view.toPixPosition(center);
 
         const radius_pix = this.view.toPix(radius);
 
@@ -79,7 +79,7 @@ export class Canvas {
 
     drawEllipse(center : Vec2, radius_x : number, radius_y : number, rotation : number, color : string, line_width : number){
 
-        const center_pix = this.view.toPixPos(center);
+        const center_pix = this.view.toPixPosition(center);
         const radius_x_pix = this.view.toPix(radius_x);
         const radius_y_pix = this.view.toPix(radius_y);
 
@@ -92,8 +92,8 @@ export class Canvas {
         ctx.stroke();
     }
 
-    drawText(pos : Vec2, text : string, color : string){
-        const pos_pix = this.view.toPixPos(pos);
+    drawText(position : Vec2, text : string, color : string){
+        const pos_pix = this.view.toPixPosition(position);
         const ctx = this.ctx;
         ctx.font = "16px serif";
         ctx.lineWidth = 1;

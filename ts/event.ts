@@ -39,7 +39,7 @@ export function bodyOnLoad(){
 
     const tool_type_radios = Array.from(document.getElementsByName("tool-type")) as HTMLInputElement[];
     for(const radio of tool_type_radios){
-        radio.addEventListener("change", (ev : Event)=>{
+        radio.addEventListener("change", (event : Event)=>{
             msg(`tool:${radio.value}`);
             Builder.changeTool(radio.value);
         })
