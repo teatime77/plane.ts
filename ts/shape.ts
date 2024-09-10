@@ -176,11 +176,12 @@ export abstract class Shape extends AbstractShape {
 
     abstract draw() : void;
 
-    constructor(obj : { view : View, color : string | undefined }){
+    constructor(obj : { view : View }){
         super();
         this.view = obj.view;
-        if(obj.color != undefined){
-            this.color = obj.color;
+        const any_data = obj as any;
+        if(any_data.color != undefined){
+            this.color = any_data.color;
         }
     }
 
@@ -427,7 +428,7 @@ export abstract class Line extends Shape {
     p12! : Vec2;
     e!   : Vec2;
 
-    constructor(obj : { view : View, p1: Point, p2: Point, color : string | undefined }){
+    constructor(obj : { view : View, p1: Point, p2: Point }){
         super(obj);
         this.p1 = obj.p1;
         this.p2 = obj.p2;
@@ -490,7 +491,7 @@ export class LineSegment extends Line {
 export abstract class CircleArc extends Shape {
     center : Point;
 
-    constructor(obj : { view : View, center : Point, color : string | undefined }){
+    constructor(obj : { view : View, center : Point }){
         super(obj);
         this.center = obj.center;
     }
@@ -503,7 +504,7 @@ export abstract class CircleArc extends Shape {
 }
 
 export abstract class Circle extends CircleArc {
-    constructor(obj : { view : View, center : Point, color : string | undefined }){
+    constructor(obj : { view : View, center : Point }){
         super(obj);
     }
 
@@ -557,7 +558,7 @@ export class Circle1 extends Circle {
 export class Circle2 extends Circle {
     private radius_ : number;
 
-    constructor(obj : { view : View, center : Point, radius : number, color : (string | undefined) }){
+    constructor(obj : { view : View, center : Point, radius : number }){
         super(obj);
         this.radius_ = obj.radius;
     }
@@ -580,7 +581,7 @@ export class Ellipse extends Shape {
     xPoint  : Point;
     radiusY : number;
 
-    constructor(obj : { view : View, center : Point, x_point : Point, radius_y : number, color : string | undefined }){
+    constructor(obj : { view : View, center : Point, x_point : Point, radius_y : number }){
         super(obj);
         this.center  = obj.center;        
         this.xPoint  = obj.x_point;
@@ -621,7 +622,7 @@ export class Angle extends Shape {
 
     inter : Vec2;
 
-    constructor(obj : { view : View, line1 : Line, dir1 : number, line2 : Line, dir2 : number, inter : Vec2, color : string | undefined }){
+    constructor(obj : { view : View, line1 : Line, dir1 : number, line2 : Line, dir2 : number, inter : Vec2 }){
         super(obj);
         this.line1 = obj.line1;
         this.dir1  = obj.dir1;
@@ -661,7 +662,7 @@ export class DimensionLine extends Shape {
     shift : Vec2;
     text : string = "";
 
-    constructor(obj : { view : View, p1 : Point, p2 : Point, shift : Vec2, color : string | undefined }){
+    constructor(obj : { view : View, p1 : Point, p2 : Point, shift : Vec2 }){
         super(obj);
         this.p1    = obj.p1;
         this.p2    = obj.p2;
