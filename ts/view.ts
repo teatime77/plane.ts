@@ -259,15 +259,6 @@ export class View extends Widget {
         return circle;
     }
 
-    showProperties(shape : Shape){
-        const properties : [string, string][] = [];
-
-        shape.getProperties(properties);
-        for(const [name, type] of properties){
-
-        }
-    }
-
     updateShapes(){
         for(const shape of this.shapes){
             if( shape.dependencies().some(x => this.changed.has(x)) ){

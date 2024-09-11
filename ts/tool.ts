@@ -72,6 +72,12 @@ export class SelectTool extends Builder {
     minSave : Vec2 | undefined;
     maxSave : Vec2 | undefined;
 
+    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){        
+        if(shape != undefined){
+            showProperty(shape, 0);
+        }
+    }
+
     pointerdown(event : PointerEvent, view : View, position : Vec2, shape : Shape | undefined){
         this.downOffset = new Vec2(event.offsetX, event.offsetY);
 
@@ -128,7 +134,7 @@ class PointBuilder extends Builder {
             const new_point = Point.fromArgs(position, shape);
             view.addShape(new_point);
 
-            new_point.showProperty();
+            showProperty(new_point, 0);
         }
     }
 }

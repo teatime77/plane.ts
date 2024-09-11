@@ -28,7 +28,7 @@ export class Canvas {
         ctx.moveTo(pix1.x, pix1.y);
         ctx.lineTo(pix2.x, pix2.y);
         ctx.strokeStyle = color;
-        ctx.lineWidth = (shape.selected ? 3 : 1);
+        ctx.lineWidth = (shape.selected ? 3 : shape.lineWidth);
         ctx.stroke();   
     }
 

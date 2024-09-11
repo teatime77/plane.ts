@@ -80,5 +80,9 @@ export function setCaptionEvent(caption : TextBlock){
 
 }
 
+export function PropertyEvent(property : Property){
+    property.input.addEventListener("change", property.valueChanged.bind(property));
+}
+
 
 }

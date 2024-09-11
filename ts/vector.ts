@@ -24,6 +24,10 @@ export class Vec2 {
         this.y = y;
     }
 
+    getProperties(){
+        return [ "x", "y" ];
+    }
+
     toString() : string {
         return `(${this.x.toFixed(1)}, ${this.y.toFixed(1)})`;
     }

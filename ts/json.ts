@@ -20,6 +20,10 @@ export class Widget {
         }
     }
 
+    getProperties(){
+        return [ "id" ];
+    }
+
     makeObj() : any{
         return {
             id: this.id,

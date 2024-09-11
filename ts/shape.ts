@@ -7,61 +7,10 @@ let captionDownPos : Vec2 | undefined;
 let offsetDown : Vec2;
 
 abstract class AbstractShape extends Widget {
-    abstract showProperty(tbl : HTMLTableElement | undefined) : void;
-
     constructor(obj : any){
         super(obj);
         
         View.current.dirty = true;
-    }
-
-    appendTitle(tbl : HTMLTableElement, title : string){
-        const row = document.createElement("tr");
-        const cell = document.createElement("td");
-
-        cell.colSpan = 2;
-        cell.innerText = title;
-        row.append(cell);    
-
-        tbl.append(row);
-    }
-
-    appendRow(tbl : HTMLTableElement, name : string, value: HTMLElement){
-        const row = document.createElement("tr");
-
-        const span = document.createElement("span");
-        span.innerText = name;
-        
-        for(const ele of [span, value]){
-            const cell = document.createElement("td");
-            cell.append(ele);
-            row.append(cell);    
-        }
-
-        tbl.append(row);
-    }
-
-    makeConstProperty(tbl : HTMLTableElement, name : string, value : string){
-        const span = document.createElement("span");
-        span.innerText = value;
-
-        this.appendRow(tbl, name, span);
-    }
-
-    makeTextProperty(tbl : HTMLTableElement, name : string, value : string){
-        const input = document.createElement("input");
-        input.type = "text";
-        input.value = value;
-
-        this.appendRow(tbl, name, input);
-    }
-
-    makeColorProperty(tbl : HTMLTableElement, name : string, value : string){
-        const input = document.createElement("input");
-        input.type = "color";
-        input.value = value;
-
-        this.appendRow(tbl, name, input);
     }
 }
 
@@ -104,6 +53,12 @@ export class TextBlock extends AbstractShape {
         return obj;
     }
 
+    getProperties(){
+        return super.getProperties().concat([
+            "text", "isTex", "offset"
+        ]);
+    }
+
     setText(text : string){
         this.text = text;
         if(this.isTex){
@@ -114,17 +69,6 @@ export class TextBlock extends AbstractShape {
 
             this.div.innerText = text;
         }
-    }
-
-    showProperty(tbl : HTMLTableElement | undefined) : void {
-        if(tbl == undefined){
-
-            tbl = $("property-list") as HTMLTableElement;
-            tbl.innerHTML = "";
-        }
-
-        this.appendTitle(tbl, this.constructor.name);
-        this.makeTextProperty(tbl, "text", this.text);
     }
 
     setTextPosition(x : number, y : number){
@@ -176,6 +120,7 @@ export class TextBlock extends AbstractShape {
 export abstract class Shape extends AbstractShape {
     name      : string = "";
     color     : string = fgColor;
+    lineWidth : number = 1;
     caption   : TextBlock | undefined;
     depends   : Shape[] = [];
 
@@ -216,30 +161,10 @@ export abstract class Shape extends AbstractShape {
         return obj;
     }
 
-    showProperty(tbl : HTMLTableElement | undefined = undefined) : void {
-        if(tbl == undefined){
-
-            tbl = $("property-list") as HTMLTableElement;
-            tbl.innerHTML = "";
-        }
-
-        this.appendTitle(tbl, this.constructor.name);
-        this.makeConstProperty(tbl, "id", `${this.id}`);
-        this.makeTextProperty(tbl, "name", this.name);
-        // this.makeTextProperty(tbl, "caption", this.caption);
-        this.makeColorProperty(tbl, "color", this.color);
-
-        if(this.caption != undefined){
-
-            this.caption.showProperty(tbl);
-        }
-    }
-
-    getProperties(properties : [string, string][]){
-        properties.push(
-            ["name", "string"],
-            ["color", "color"]
-        );
+    getProperties(){
+        return super.getProperties().concat([
+            "name", "caption", "color", "lineWidth"
+        ]);
     }
 
     isNear(position : Vec2) : boolean {        
@@ -376,12 +301,10 @@ export class Point extends Shape {
         this.caption!.setTextPosition(x, y);
     }
 
-    getProperties(properties : [string, string][]){
-        super.getProperties(properties);
-
-        properties.push(
-            ["position", "Vec2"],
-        );
+    getProperties(){
+        return super.getProperties().concat([
+            "position"
+        ]);
     }
 
     isNear(position : Vec2) : boolean {
@@ -539,7 +462,7 @@ export abstract class Circle extends CircleArc {
 
     draw() : void {
         const stroke_color = (this.isOver ? "red" : this.color);
-        const line_width = (this.selected ? 3 : 1)
+        const line_width = (this.selected ? 3 : this.lineWidth)
         View.current.canvas.drawCircle(this.center.position, this.radius(), null, stroke_color, line_width)
     }
 }
@@ -690,12 +613,10 @@ export class DimensionLine extends Shape {
         this.caption = new TextBlock({ text : "\\int \\frac{1}{2}", is_tex : true, offset : Vec2.zero() });
     }
 
-    getProperties(properties : [string, string][]){
-        super.getProperties(properties);
-        
-        properties.push(
-            ["text", "string"]
-        );
+    getProperties(){
+        return super.getProperties().concat([
+            "text"
+        ])
     }
 
     dependencies() : Shape[] {
