@@ -7,14 +7,12 @@ let captionDownPos : Vec2 | undefined;
 let offsetDown : Vec2;
 
 abstract class AbstractShape extends Widget {
-    view : View;
-
     abstract showProperty(tbl : HTMLTableElement | undefined) : void;
 
-    constructor(obj : { view : View }){
-        super();
-        this.view = obj.view;
-        this.view.dirty = true;
+    constructor(obj : any){
+        super(obj);
+        
+        View.current.dirty = true;
     }
 
     appendTitle(tbl : HTMLTableElement, title : string){
@@ -74,14 +72,13 @@ export class TextBlock extends AbstractShape {
     isTex : boolean;
     div       : HTMLDivElement;
 
-    shape : Shape | undefined;
     offset : Vec2 = new Vec2(0, 0);
 
-    constructor(obj : {view : View, text : string, is_tex : boolean, shape : Shape | undefined}){
+    constructor(obj : { text : string, is_tex : boolean, offset : Vec2 }){
         super(obj);
         this.text  = obj.text;
         this.isTex = obj.is_tex;
-        this.shape = obj.shape;
+        this.offset = obj.offset;
 
         this.div   = document.createElement("div");
         this.div.className = "tex_div";
@@ -94,7 +91,17 @@ export class TextBlock extends AbstractShape {
             this.div.innerText = obj.text;
         }
 
-        obj.view.board.append(this.div);
+        View.current.board.append(this.div);
+    }
+
+    makeObj() : any {
+        let obj = Object.assign(super.makeObj(), {
+            text   : this.text,
+            isTex  : this.isTex,
+            offset : this.offset
+        });
+
+        return obj;
     }
 
     setText(text : string){
@@ -177,7 +184,7 @@ export abstract class Shape extends AbstractShape {
 
     abstract draw() : void;
 
-    constructor(obj : { view : View }){
+    constructor(obj : any){
         super(obj);
         const any_data = obj as any;
         if(any_data.color != undefined){
@@ -283,36 +290,42 @@ export class Point extends Shape {
 
     origin : Point | undefined;
 
-    static fromArgs(view : View, position : Vec2, bound : LineSegment | Circle | undefined = undefined){
-        return new Point( {view : view, color : fgColor, position : position, bound : bound} );
+    static fromArgs(position : Vec2, bound : LineSegment | Circle | undefined = undefined){
+        const caption = new TextBlock( { text : "", is_tex : false, offset : new Vec2(10, -20) });
+        return new Point( { name : undefined, color : fgColor, position : position, bound : bound, caption } );
     }
 
-    constructor(obj : { view : View, color : string, position : Vec2, bound : LineSegment | Circle | undefined }){
+    constructor(obj : { name : string | undefined, color : string, position : Vec2, bound : LineSegment | Circle | undefined, caption : TextBlock }){
         super(obj);
         this.bound = obj.bound;
 
-        const points = obj.view.allShapes().filter(x => x instanceof Point).concat(Point.tempPoints);
-        const idxes = points.map(x => upperLatinLetters.indexOf(x.name));
-        if(idxes.length == 0){
-            this.name = upperLatinLetters[0];
+        if(obj.name != undefined){
+            this.name = obj.name;
         }
         else{
-            const max_idx = Math.max(...idxes);
-            if(max_idx == -1){
+
+            const points = View.current.allShapes().filter(x => x instanceof Point).concat(Point.tempPoints);
+            const idxes = points.map(x => upperLatinLetters.indexOf(x.name));
+            if(idxes.length == 0){
                 this.name = upperLatinLetters[0];
             }
-            else if(max_idx + 1 < upperLatinLetters.length){
-                this.name = upperLatinLetters[max_idx + 1];
-            }
             else{
-                throw new MyError();
+                const max_idx = Math.max(...idxes);
+                if(max_idx == -1){
+                    this.name = upperLatinLetters[0];
+                }
+                else if(max_idx + 1 < upperLatinLetters.length){
+                    this.name = upperLatinLetters[max_idx + 1];
+                }
+                else{
+                    throw new MyError();
+                }
             }
         }
 
         Point.tempPoints.push(this);
 
-        this.caption = new TextBlock( {view : obj.view, text : this.name, is_tex : false, shape : this });
-        this.caption.offset = new Vec2(10, -20);
+        this.caption = obj.caption;
         setCaptionEvent(this.caption);
 
         if(obj.bound instanceof LineSegment){
@@ -328,12 +341,12 @@ export class Point extends Shape {
     }
 
     copy() : Point {
-        return Point.fromArgs(this.view, this.position.copy());
+        return Point.fromArgs(this.position.copy());
     }
 
     makeObj() : any {
         let obj = Object.assign(super.makeObj(), {
-            position : this.position.makeJson()
+            position : this.position
         });
 
         return obj;
@@ -344,21 +357,21 @@ export class Point extends Shape {
 
         this.updateCaption();
 
-        this.view.changed.add(this);
-        this.view.dirty = true;
+        View.current.changed.add(this);
+        View.current.dirty = true;
     }
 
     setName(name : string){
         this.name = name;
         this.caption!.setText(name);
-        this.view.dirty = true;
+        View.current.dirty = true;
     }
 
     updateCaption(){
-        const div_position = this.view.toPixPosition(this.position);
+        const position_pix = View.current.toPixPosition(this.position);
 
-        const x = this.view.board.offsetLeft + div_position.x;
-        const y = this.view.board.offsetTop  + div_position.y;
+        const x = View.current.board.offsetLeft + position_pix.x;
+        const y = View.current.board.offsetTop  + position_pix.y;
 
         this.caption!.setTextPosition(x, y);
     }
@@ -372,17 +385,17 @@ export class Point extends Shape {
     }
 
     isNear(position : Vec2) : boolean {
-        return this.view.isNear(position.distance(this.position));
+        return View.current.isNear(position.distance(this.position));
     }
 
     draw() : void {
         const color = (this.isOver ? "red" : this.color);
 
-        this.view.canvas.drawCircle(this.position, Point.radius, color, null, 0);
+        View.current.canvas.drawCircle(this.position, Point.radius, color, null, 0);
         
         if(this.isOver){
 
-            this.view.canvas.drawCircle(this.position, 3 * Point.radius, null, "gray", 1);
+            View.current.canvas.drawCircle(this.position, 3 * Point.radius, null, "gray", 1);
         }
     }
 
@@ -434,7 +447,7 @@ export abstract class Line extends Shape {
     p12! : Vec2;
     e!   : Vec2;
 
-    constructor(obj : { view : View, pointA: Point, pointB: Point }){
+    constructor(obj : { pointA: Point, pointB: Point }){
         super(obj);
         this.pointA = obj.pointA;
         this.pointB = obj.pointB;
@@ -475,7 +488,7 @@ export class LineSegment extends Line {
     isNear(position : Vec2) : boolean {
         const foot = calcFootOfPerpendicular(position, this);        
         const d = position.distance(foot);
-        if(this.view.isNear(d)){
+        if(View.current.isNear(d)){
 
             const p1 = this.pointA.position;
             const p2 = this.pointB.position;
@@ -490,14 +503,14 @@ export class LineSegment extends Line {
     }
 
     draw() : void {
-        this.view.canvas.drawLine(this, this.pointA.position, this.pointB.position);
+        View.current.canvas.drawLine(this, this.pointA.position, this.pointB.position);
     }
 }
 
 export abstract class CircleArc extends Shape {
     center : Point;
 
-    constructor(obj : { view : View, center : Point }){
+    constructor(obj : { center : Point }){
         super(obj);
         this.center = obj.center;
     }
@@ -510,7 +523,7 @@ export abstract class CircleArc extends Shape {
 }
 
 export abstract class Circle extends CircleArc {
-    constructor(obj : { view : View, center : Point }){
+    constructor(obj : { center : Point }){
         super(obj);
     }
 
@@ -521,13 +534,13 @@ export abstract class Circle extends CircleArc {
 
     isNear(position : Vec2) : boolean {
         const r = position.distance(this.center.position);
-        return this.view.isNear( Math.abs(r - this.radius()) );
+        return View.current.isNear( Math.abs(r - this.radius()) );
     }
 
     draw() : void {
         const stroke_color = (this.isOver ? "red" : this.color);
         const line_width = (this.selected ? 3 : 1)
-        this.view.canvas.drawCircle(this.center.position, this.radius(), null, stroke_color, line_width)
+        View.current.canvas.drawCircle(this.center.position, this.radius(), null, stroke_color, line_width)
     }
 }
 
@@ -535,13 +548,13 @@ export abstract class Circle extends CircleArc {
 export class CircleByPoint extends Circle {
     point : Point;
 
-    constructor(obj : { view : View, center : Point, point : Point, color : string }){
+    constructor(obj : { center : Point, point : Point, color : string }){
         super(obj);
         this.point = obj.point;
     }
 
-    static fromArgs(view : View, center : Point, point : Point, color : string = fgColor){
-        return new CircleByPoint({ view : view, center : center, point : point, color : color })
+    static fromArgs(center : Point, point : Point, color : string = fgColor){
+        return new CircleByPoint({ center : center, point : point, color : color })
     }
 
     getAllShapes(shapes : Shape[]){
@@ -564,7 +577,7 @@ export class CircleByPoint extends Circle {
 export class CircleByRadius extends Circle {
     private radius_ : number;
 
-    constructor(obj : { view : View, center : Point, radius : number }){
+    constructor(obj : { center : Point, radius : number }){
         super(obj);
         this.radius_ = obj.radius;
     }
@@ -587,7 +600,7 @@ export class Ellipse extends Shape {
     xPoint  : Point;
     radiusY : number;
 
-    constructor(obj : { view : View, center : Point, x_point : Point, radius_y : number }){
+    constructor(obj : { center : Point, x_point : Point, radius_y : number }){
         super(obj);
         this.center  = obj.center;        
         this.xPoint  = obj.x_point;
@@ -612,7 +625,7 @@ export class Ellipse extends Shape {
         const color = (this.isOver ? "red" : this.color);
         const line_width = (this.selected ? 3 : 1);
 
-        this.view.canvas.drawEllipse(this.center.position, radius_x, this.radiusY, rotation, color, line_width);
+        View.current.canvas.drawEllipse(this.center.position, radius_x, this.radiusY, rotation, color, line_width);
     }
 }
 
@@ -628,7 +641,7 @@ export class Angle extends Shape {
 
     intersection : Vec2;
 
-    constructor(obj : { view : View, lineA : Line, dir1 : number, lineB : Line, dir2 : number, intersection : Vec2 }){
+    constructor(obj : { lineA : Line, dir1 : number, lineB : Line, dir2 : number, intersection : Vec2 }){
         super(obj);
         this.lineA = obj.lineA;
         this.dir1  = obj.dir1;
@@ -656,7 +669,7 @@ export class Angle extends Shape {
         const color = (this.isOver ? "red" : this.color);
         const line_width = (this.selected ? 3 : 1);
 
-        this.view.canvas.drawArc(this.intersection, Angle.radius1, null, color, line_width, th1, th2);
+        View.current.canvas.drawArc(this.intersection, Angle.radius1, null, color, line_width, th1, th2);
     }
 }
 
@@ -668,13 +681,13 @@ export class DimensionLine extends Shape {
     shift : Vec2;
     text : string = "";
 
-    constructor(obj : { view : View, pointA : Point, pointB : Point, shift : Vec2 }){
+    constructor(obj : { pointA : Point, pointB : Point, shift : Vec2 }){
         super(obj);
         this.pointA    = obj.pointA;
         this.pointB    = obj.pointB;
         this.shift = obj.shift;
 
-        this.caption = new TextBlock({ view : obj.view, text : "\\int \\frac{1}{2}", is_tex : true, shape : this });
+        this.caption = new TextBlock({ text : "\\int \\frac{1}{2}", is_tex : true, offset : Vec2.zero() });
     }
 
     getProperties(properties : [string, string][]){
@@ -693,11 +706,11 @@ export class DimensionLine extends Shape {
     }
 
     updateCaption(){ 
-        const center_pix = this.view.toPixPosition(this.center);
+        const center_pix = View.current.toPixPosition(this.center);
 
         const [text_width, text_height] = this.caption!.getSize();
-        const x = this.view.board.offsetLeft + center_pix.x - 0.5 * text_width;
-        const y = this.view.board.offsetTop  + center_pix.y - 0.5 * text_height;
+        const x = View.current.board.offsetLeft + center_pix.x - 0.5 * text_width;
+        const y = View.current.board.offsetTop  + center_pix.y - 0.5 * text_height;
 
         this.caption!.setTextPosition(x, y);
     }
@@ -713,7 +726,7 @@ export class DimensionLine extends Shape {
         const p1a = this.pointA.position.add(this.shift);
         const p2a = this.pointB.position.add(this.shift);
 
-        const shift_pix_len = this.view.toPix(this.shift.len());
+        const shift_pix_len = View.current.toPix(this.shift.len());
         const ratio = (shift_pix_len + 5) / shift_pix_len;
         const shift_plus = this.shift.mul(ratio);
         const p1b = this.pointA.position.add(shift_plus);
@@ -729,11 +742,11 @@ export class DimensionLine extends Shape {
         const degree = toDegree( Math.atan2(-p12.y, p12.x) );
         this.caption.setRotation(degree);
 
-        this.view.canvas.drawLine(this, p1, p1b);
-        this.view.canvas.drawLine(this, p2, p2b);
+        View.current.canvas.drawLine(this, p1, p1b);
+        View.current.canvas.drawLine(this, p2, p2b);
 
-        this.view.canvas.drawLine(this, p1a, p1c);
-        this.view.canvas.drawLine(this, p2a, p2c);
+        View.current.canvas.drawLine(this, p1a, p1c);
+        View.current.canvas.drawLine(this, p2a, p2c);
     }
 }
 

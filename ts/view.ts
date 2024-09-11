@@ -2,6 +2,7 @@ namespace planets {
 //
 export class View extends Widget {
     static nearThreshold = 4;
+    static current : View;
     board : HTMLCanvasElement;
     canvas : Canvas;
     grid : Grid;
@@ -20,8 +21,7 @@ export class View extends Widget {
 
     makeObj() : any {
         let obj = Object.assign(super.makeObj(), {
-            min    : this.min.makeJson(),
-            max    : this.max.makeJson(),
+            scale  : this.board.clientWidth / (this.max.x - this.min.x),
             shapes : this.shapes.map(x => x.toObj())
         });
 
@@ -33,20 +33,24 @@ export class View extends Widget {
         return pix_distance < View.nearThreshold;
     }
 
-    constructor(canvas : HTMLCanvasElement){
-        super();
-        this.board = canvas;
-        this.canvas = new Canvas(this, canvas);
+    constructor(obj : { scale : number, shapes : Shape[] }){
+        super(obj);
+        this.board = $("canvas") as HTMLCanvasElement;
+        this.board.innerHTML = "";
+        
+        this.canvas = new Canvas(this, this.board);
         this.grid   = new Grid(this);
-
-        const aspect = this.board.clientWidth / this.board.clientHeight;
-        const max_y = 6;
-        const max_x = aspect * max_y;
 
         this.board.width  = this.board.clientWidth;
         this.board.height = this.board.clientHeight;
 
+        const max_x = 0.5 * (this.board.clientWidth  / obj.scale);
+        const max_y = 0.5 * (this.board.clientHeight / obj.scale);
+
         this.setMinMax(new Vec2(-max_x, -max_y), new Vec2( max_x,  max_y));
+
+        View.current = this;
+        this.shapes = obj.shapes;
     }
 
     setMinMax(min : Vec2, max : Vec2){
@@ -218,6 +222,8 @@ export class View extends Widget {
         this.setMinMax(new Vec2(min_x, min_y), new Vec2(max_x, max_y));
 
         this.allShapes().forEach(x => x.updateCaption());
+
+        View.current.dirty = true;
     }
 
     resize(event : UIEvent){

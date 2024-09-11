@@ -24,10 +24,6 @@ export class Vec2 {
         this.y = y;
     }
 
-    makeJson() : [ number, number ] {
-        return [ this.x, this.y ];
-    }
-
     toString() : string {
         return `(${this.x.toFixed(1)}, ${this.y.toFixed(1)})`;
     }

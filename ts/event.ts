@@ -30,8 +30,7 @@ function initLetters(){
 export function bodyOnLoad(){
     initLetters();
 
-    const canvas = $("canvas") as HTMLCanvasElement;
-    const view = new View(canvas);
+    const view = new View({ scale : 100, shapes : []});
 
     viewEvent(view);
 
@@ -44,16 +43,9 @@ export function bodyOnLoad(){
             Builder.changeTool(radio.value);
         })
     };
-
-    $("save").addEventListener("click", (ev : MouseEvent)=>{
-        saveJson(view);
-    }
-    );
-    
-    window.requestAnimationFrame(view.drawShapes.bind(view));
 }
 
-function viewEvent(view : View){
+export function viewEvent(view : View){
     view.board.addEventListener("pointerdown", view.pointerdown.bind(view));
     view.board.addEventListener('pointermove', view.pointermove.bind(view));
     view.board.addEventListener("pointerup"  , view.pointerup.bind(view));   
@@ -64,6 +56,21 @@ function viewEvent(view : View){
     // Passive event listeners
     // https://github.com/WICG/EventListenerOptions/blob/gh-pages/explainer.md
     view.board.addEventListener("wheel"      , view.wheel.bind(view), {"passive" : true } );
+
+    $("save").addEventListener("click", (ev : MouseEvent)=>{
+        saveJson(view);
+    }
+    );
+
+    dropEvent(view);
+    
+    window.requestAnimationFrame(view.drawShapes.bind(view));
+}
+
+function dropEvent(view : View){
+    view.board.addEventListener('dragover', handleDragOver, false);
+    view.board.addEventListener('drop', handleFileSelect, false);
+
 }
 
 export function setCaptionEvent(caption : TextBlock){
