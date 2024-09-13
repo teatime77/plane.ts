@@ -139,5 +139,8 @@ export function renderKatexSub(ele: HTMLElement, tex_text: string){
     });
 }
 
+export function pairKey(a : Widget, b : Widget) : string {
+    return a.id <= b.id ? `${a.id}:${b.id}` : `${b.id}:${a.id}`;
+}
 
 }

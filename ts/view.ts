@@ -19,6 +19,8 @@ export class View extends Widget {
     dirty : boolean = false;
     prevShape : Shape | undefined;
 
+    relation = new Relation();
+
     makeObj() : any {
         let obj = Object.assign(super.makeObj(), {
             scale  : this.board.clientWidth / (this.max.x - this.min.x),
@@ -208,7 +210,7 @@ export class View extends Widget {
 
     wheel(event : WheelEvent){
         event.preventDefault();
-        
+
         let position = this.eventPosition(event);
         if($inp("snap-to-grid").checked){
             position = this.grid.snap(position);

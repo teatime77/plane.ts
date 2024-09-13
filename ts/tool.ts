@@ -414,19 +414,21 @@ class AngleBuilder extends Builder {
                 this.pos1  = position;
             }
             else{
-                const [line1, pos1, line2, pos2] = [this.line1, this.pos1!, shape, position];
+                const [lineA, pos1, lineB, pos2] = [this.line1, this.pos1!, shape, position];
 
-                line1.setVecs();
-                line2.setVecs();
+                lineA.setVecs();
+                lineB.setVecs();
 
-                const point = Point.fromArgs(Vec2.zero());
-                const intersection = new LineLineIntersection({ lineA : line1, lineB : line2, point });
-                view.addShape(intersection);
+                const points = View.current.relation.getIntersections(lineA, lineB);
+                if(points.length != 1){
+                    throw new MyError();
+                }
+                const intersection_position = points[0].position;
 
-                const dir1 = Math.sign(pos1.sub(intersection.point.position).dot(line1.e));
-                const dir2 = Math.sign(pos2.sub(intersection.point.position).dot(line2.e));
+                const directionA = Math.sign(pos1.sub(intersection_position).dot(lineA.e));
+                const directionB = Math.sign(pos2.sub(intersection_position).dot(lineB.e));
 
-                const angle = new Angle({ lineA: line1, dir1, lineB: line2, dir2, intersection : intersection.point.position });
+                const angle = new Angle({ lineA, directionA, lineB, directionB });
                 view.addShape(angle);
 
                 this.line1 = undefined;

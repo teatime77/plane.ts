@@ -224,7 +224,7 @@ export class Point extends Shape {
     static zero() : Point {
         return Point.fromArgs(Vec2.zero());
     }
-    
+
     static fromArgs(position : Vec2, bound : LineSegment | Circle | undefined = undefined){
         const caption = new TextBlock( { text : "", isTex : false, offset : new Vec2(10, -20) });
         return new Point( { name : undefined, color : fgColor, position : position, bound : bound, caption } );
@@ -596,23 +596,37 @@ export class Angle extends Shape {
     static radius1Pix = 20;
     static radius1 : number;
 
-    lineA : Line;
-    dir1  : number;
+    lineA       : Line;
+    directionA  : number;
 
-    lineB : Line;
-    dir2  : number;
+    lineB       : Line;
+    directionB  : number;
 
-    intersection : Vec2;
+    intersection : Point;
 
-    constructor(obj : { lineA : Line, dir1 : number, lineB : Line, dir2 : number, intersection : Vec2 }){
+    constructor(obj : { lineA : Line, directionA : number, lineB : Line, directionB : number }){
         super(obj);
-        this.lineA = obj.lineA;
-        this.dir1  = obj.dir1;
+        this.lineA       = obj.lineA;
+        this.directionA  = obj.directionA;
 
-        this.lineB = obj.lineB;
-        this.dir2  = obj.dir2;
+        this.lineB       = obj.lineB;
+        this.directionB  = obj.directionB;
+
+        const points = View.current.relation.getIntersections(this.lineA, this.lineB);
+        assert(points.length == 1);
         
-        this.intersection = obj.intersection;
+        this.intersection = points[0];
+    }
+
+    makeObj() : any {
+        let obj = Object.assign(super.makeObj(), {
+            lineA      : this.lineA.toObj(),
+            directionA : this.directionA,
+            lineB      : this.lineB.toObj(),
+            directionB : this.directionB
+        });
+
+        return obj;
     }
 
     dependencies() : Shape[] {
@@ -623,8 +637,8 @@ export class Angle extends Shape {
     }
 
     draw() : void {
-        const e1 = this.lineA.e.mul(this.dir1);
-        const e2 = this.lineB.e.mul(this.dir2);
+        const e1 = this.lineA.e.mul(this.directionA);
+        const e2 = this.lineB.e.mul(this.directionB);
 
         const th1 = Math.atan2(-e1.y, e1.x);
         const th2 = Math.atan2(-e2.y, e2.x);
@@ -632,7 +646,7 @@ export class Angle extends Shape {
         const color = (this.isOver ? "red" : this.color);
         const line_width = (this.selected ? 3 : 1);
 
-        View.current.canvas.drawArc(this.intersection, Angle.radius1, null, color, line_width, th1, th2);
+        View.current.canvas.drawArc(this.intersection.position, Angle.radius1, null, color, line_width, th1, th2);
     }
 }
 

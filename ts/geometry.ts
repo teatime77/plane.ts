@@ -71,6 +71,8 @@ export class LineLineIntersection extends Shape {
         this.lineB = obj.lineB;
         this.point = obj.point;
 
+        View.current.relation.setIntersections(this.lineA, this.lineB, [this.point]);
+
         this.calc();
     }
 
@@ -478,5 +480,31 @@ export class CirclePointTangent extends Tangent {
     }
 }
 
+export class Relation {
+    lineLineIntersections = new Map<string, Point[]>();
+
+    setIntersections(a : Line | CircleArcEllipse, b : Line | CircleArcEllipse, points : Point[]){
+        const key = pairKey(a, b);
+        if(a instanceof Line && b instanceof Line){
+
+            this.lineLineIntersections.set(key, points);
+        }
+    }
+
+    getIntersections(a : Line | CircleArcEllipse, b : Line | CircleArcEllipse) : Point[] {
+        const key = pairKey(a, b);
+        if(a instanceof Line && b instanceof Line){
+
+            
+            const points = this.lineLineIntersections.get(key);
+            if(points != undefined){
+                return points;
+            }
+        }
+
+        return [];
+    }
+
+}
 
 }
