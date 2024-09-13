@@ -16,8 +16,9 @@ export class Widget {
         }
         else{
 
-            this.id = Widget.maxId++;
+            this.id = ++Widget.maxId;
         }
+        assert(this.id <= Widget.maxId);
     }
 
     getProperties(){
@@ -106,9 +107,15 @@ export function parseObject(obj: any) : any {
     // case Rect.name:
     //     return new Rect(obj);
 
-    // case Circle.name:
-    //     return new Circle(obj);
+    case CircleByPoint.name:
+        return new CircleByPoint(obj);
 
+    case Ellipse.name:
+        return new Ellipse(obj);
+
+    case DimensionLine.name:
+        return new DimensionLine(obj);
+    
     // case DimensionLine.name:
     //     return new DimensionLine(obj);
 
@@ -118,20 +125,32 @@ export function parseObject(obj: any) : any {
     // case Midpoint.name:
     //     return new Midpoint(obj);
 
-    // case Perpendicular.name:
-    //     return new Perpendicular(obj);
+    case FootOfPerpendicular.name:
+        return new FootOfPerpendicular(obj);
 
     // case ParallelLine.name:
     //     return new ParallelLine(obj);
 
-    // case Intersection.name:
-    //     return new Intersection(obj);
+    case LineLineIntersection.name:
+        return new LineLineIntersection(obj);
+
+    case ArcArcIntersection.name:
+        return new ArcArcIntersection(obj);
+
+    case LineArcIntersection.name:
+        return new LineArcIntersection(obj);
+
+    case CirclePointTangent.name:
+        return new CirclePointTangent(obj);
+
+    case CircleCircleTangent.name:
+        return new CircleCircleTangent(obj);
 
     // case Arc.name:
     //     return new Arc(obj);
 
-    // case Angle.name:
-    //     return new Angle(obj);
+    case Angle.name:
+        return new Angle(obj);
 
     // case Image.name:
     //     return new Image(obj);
@@ -164,16 +183,14 @@ export function saveJson(view : View){
      
     const anchor = $("blob") as HTMLAnchorElement;
      
-      // a 要素の href 属性に Object URL をセット
-      anchor.href = window.URL.createObjectURL(blob);
-     
-      // a 要素の download 属性にファイル名をセット
-      anchor.download = 'test.json';
-     
-      // 疑似的に a 要素をクリックさせる
-      anchor.click();
-
-    msg(`save:${json}`);
+    // a 要素の href 属性に Object URL をセット
+    anchor.href = window.URL.createObjectURL(blob);
+    
+    // a 要素の download 属性にファイル名をセット
+    anchor.download = 'test.json';
+    
+    // 疑似的に a 要素をクリックさせる
+    anchor.click();
 }
 
 export function handleFileSelect(ev: DragEvent) {
@@ -189,8 +206,7 @@ export function handleFileSelect(ev: DragEvent) {
 
         reader.onload = () => {
             const json = reader.result as string;
-            msg(`load: ${json}`);
-            const obj = JSON.parse(json);
+            const obj  = JSON.parse(json);
 
             Widget.maxId  = -1;
             Widget.refMap = new Map<number, any>()

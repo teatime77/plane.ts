@@ -1,8 +1,6 @@
 namespace planets {
 //
 export class Vec2 {
-    static maxId = 0;
-
     static nan() : Vec2 {
         return new Vec2(NaN, NaN);
     }
@@ -11,15 +9,11 @@ export class Vec2 {
         return new Vec2(0, 0);
     }
 
-
-
-    id : number;
     typeName: string = "Vec2";
     x: number;
     y: number;
 
     constructor(x:number, y: number){
-        this.id = Vec2.maxId++;
         this.x = x;
         this.y = y;
     }

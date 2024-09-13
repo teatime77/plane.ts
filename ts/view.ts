@@ -125,7 +125,7 @@ export class View extends Widget {
     drawShapes(){
         if(this.dirty){
             this.dirty = false;
-            this.removeUnusedDivs();
+            // this.removeUnusedDivs();
 
 
             msg("redraw");
@@ -207,6 +207,8 @@ export class View extends Widget {
     }
 
     wheel(event : WheelEvent){
+        event.preventDefault();
+        
         let position = this.eventPosition(event);
         if($inp("snap-to-grid").checked){
             position = this.grid.snap(position);

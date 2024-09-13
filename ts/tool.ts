@@ -221,7 +221,7 @@ class EllipseBuilder extends Builder {
         else if(this.xPoint == undefined){
             this.xPoint = this.makePointOnClick(view, position, shape);
 
-            this.ellipse = new Ellipse({ center : this.center, x_point : this.xPoint, radius_y : 0 });
+            this.ellipse = new Ellipse({ center : this.center, xPoint : this.xPoint, radiusY : 0 });
             view.addShape(this.ellipse);
         }
         else{
@@ -235,7 +235,7 @@ class EllipseBuilder extends Builder {
 
     pointermove(event : PointerEvent, view : View, position : Vec2, shape : Shape | undefined){
         if(this.ellipse != undefined && this.center != undefined && this.xPoint != undefined){
-            this.ellipse.radiusY = this.getRadiusY(position);
+            this.ellipse.setRadiusY(this.getRadiusY(position));
         }
     }
 
@@ -331,10 +331,13 @@ class IntersectionBuilder extends Builder {
 
                 let new_shape : Shape;
                 if(this.shape1 instanceof Line && shape instanceof Line){
-                    new_shape = new LinesIntersection({ lineA : this.shape1, lineB : shape });
+                    const point = Point.fromArgs(Vec2.zero());
+                    new_shape = new LineLineIntersection({ lineA : this.shape1, lineB : shape, point });
                 }
                 else if(this.shape1 instanceof CircleArc && shape instanceof CircleArc){
-                    new_shape = new ArcArcIntersection({ arc1 : this.shape1, arc2 : shape });
+                    const pointA = Point.fromArgs(Vec2.zero())
+                    const pointB = Point.fromArgs(Vec2.zero())
+                    new_shape = new ArcArcIntersection({ arc1 : this.shape1, arc2 : shape, pointA, pointB });
                 }
                 else{
                     let line : Line;
@@ -349,7 +352,9 @@ class IntersectionBuilder extends Builder {
                         line = shape as Line;
                     }
 
-                    new_shape = new LineArcIntersection( { line, arc : circle });
+                    const pointA = Point.fromArgs(Vec2.zero());
+                    const pointB = Point.fromArgs(Vec2.zero());
+                    new_shape = new LineArcIntersection( { line, arc : circle, pointA, pointB });
                 }
 
                 view.addShape(new_shape);
@@ -414,7 +419,8 @@ class AngleBuilder extends Builder {
                 line1.setVecs();
                 line2.setVecs();
 
-                const intersection = new LinesIntersection({ lineA : line1, lineB : line2 });
+                const point = Point.fromArgs(Vec2.zero());
+                const intersection = new LineLineIntersection({ lineA : line1, lineB : line2, point });
                 view.addShape(intersection);
 
                 const dir1 = Math.sign(pos1.sub(intersection.point.position).dot(line1.e));
@@ -445,7 +451,9 @@ class DimensionLineBuilder extends Builder {
 
             const foot   = calcFootFrom2Pos(position, this.p1.position, this.p2.position);
             const shift  = position.sub(foot);
-            this.dimLine = new DimensionLine({ pointA: this.p1, pointB: this.p2, shift : shift });
+            const caption = new TextBlock({ text : "\\int \\frac{1}{2}", isTex : true, offset : Vec2.zero() });
+
+            this.dimLine = new DimensionLine({ pointA: this.p1, pointB: this.p2, shift, caption });
             view.addShape(this.dimLine);
         }
         else if(this.dimLine != undefined){
@@ -458,7 +466,7 @@ class DimensionLineBuilder extends Builder {
     pointermove(event : PointerEvent, view : View, position : Vec2, shape : Shape | undefined){
         if(this.p1 != undefined && this.p2 != undefined && this.dimLine != undefined){
             const foot = calcFootFrom2Pos(position, this.p1.position, this.p2.position);
-            this.dimLine.shift = position.sub(foot);
+            this.dimLine.setShift( position.sub(foot) );
         }
     }
 }

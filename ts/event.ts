@@ -55,7 +55,7 @@ export function viewEvent(view : View){
 
     // Passive event listeners
     // https://github.com/WICG/EventListenerOptions/blob/gh-pages/explainer.md
-    view.board.addEventListener("wheel"      , view.wheel.bind(view), {"passive" : true } );
+    view.board.addEventListener("wheel"      , view.wheel.bind(view), {"passive" : false } );
 
     $("save").addEventListener("click", (ev : MouseEvent)=>{
         saveJson(view);

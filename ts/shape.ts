@@ -23,15 +23,15 @@ export class TextBlock extends AbstractShape {
 
     offset : Vec2 = new Vec2(0, 0);
 
-    constructor(obj : { text : string, is_tex : boolean, offset : Vec2 }){
+    constructor(obj : { text : string, isTex : boolean, offset : Vec2 }){
         super(obj);
         this.text  = obj.text;
-        this.isTex = obj.is_tex;
+        this.isTex = obj.isTex;
         this.offset = obj.offset;
 
         this.div   = document.createElement("div");
         this.div.className = "tex_div";
-        if(obj.is_tex){
+        if(obj.isTex){
 
             renderKatexSub(this.div, obj.text);
         }
@@ -40,7 +40,7 @@ export class TextBlock extends AbstractShape {
             this.div.innerText = obj.text;
         }
 
-        View.current.board.append(this.div);
+        View.current.board.parentElement!.append(this.div);
     }
 
     makeObj() : any {
@@ -131,9 +131,11 @@ export abstract class Shape extends AbstractShape {
 
     constructor(obj : any){
         super(obj);
-        const any_data = obj as any;
-        if(any_data.color != undefined){
-            this.color = any_data.color;
+        if(obj.color != undefined){
+            this.color = obj.color;
+        }
+        if(obj.lineWidth != undefined){
+            this.lineWidth = obj.lineWidth;
         }
     }
 
@@ -148,6 +150,10 @@ export abstract class Shape extends AbstractShape {
 
         if(this.color != fgColor){
             obj.color = this.color;
+        }
+
+        if(this.lineWidth != 1){
+            obj.lineWidth = this.lineWidth;
         }
 
         if(this.caption != undefined){
@@ -215,8 +221,12 @@ export class Point extends Shape {
 
     origin : Point | undefined;
 
+    static zero() : Point {
+        return Point.fromArgs(Vec2.zero());
+    }
+    
     static fromArgs(position : Vec2, bound : LineSegment | Circle | undefined = undefined){
-        const caption = new TextBlock( { text : "", is_tex : false, offset : new Vec2(10, -20) });
+        const caption = new TextBlock( { text : "", isTex : false, offset : new Vec2(10, -20) });
         return new Point( { name : undefined, color : fgColor, position : position, bound : bound, caption } );
     }
 
@@ -251,6 +261,7 @@ export class Point extends Shape {
         Point.tempPoints.push(this);
 
         this.caption = obj.caption;
+        this.caption.setText(this.name);
         setCaptionEvent(this.caption);
 
         if(obj.bound instanceof LineSegment){
@@ -430,7 +441,7 @@ export class LineSegment extends Line {
     }
 }
 
-export abstract class CircleArc extends Shape {
+export abstract class CircleArcEllipse extends Shape {
     center : Point;
 
     constructor(obj : { center : Point }){
@@ -438,10 +449,20 @@ export abstract class CircleArc extends Shape {
         this.center = obj.center;
     }
 
+    makeObj() : any {
+        let obj = Object.assign(super.makeObj(), {
+            center : this.center.toObj(),
+        });
+
+        return obj;
+    }
+
     dependencies() : Shape[] {
         return [ this.center ];
     }
+}
 
+export abstract class CircleArc extends CircleArcEllipse {
     abstract radius() : number;
 }
 
@@ -474,6 +495,14 @@ export class CircleByPoint extends Circle {
     constructor(obj : { center : Point, point : Point, color : string }){
         super(obj);
         this.point = obj.point;
+    }
+
+    makeObj() : any {
+        let obj = Object.assign(super.makeObj(), {
+            point : this.point.toObj(),
+        });
+
+        return obj;
     }
 
     static fromArgs(center : Point, point : Point, color : string = fgColor){
@@ -517,17 +546,28 @@ export class CircleByRadius extends Circle {
     }
 }
 
-export class Ellipse extends Shape {
-    center : Point;
-
+export class Ellipse extends CircleArcEllipse {
     xPoint  : Point;
     radiusY : number;
 
-    constructor(obj : { center : Point, x_point : Point, radius_y : number }){
+    constructor(obj : { center : Point, xPoint : Point, radiusY : number }){
         super(obj);
-        this.center  = obj.center;        
-        this.xPoint  = obj.x_point;
-        this.radiusY = obj.radius_y;
+        this.xPoint  = obj.xPoint;
+        this.radiusY = obj.radiusY;
+    }
+
+    makeObj() : any {
+        let obj = Object.assign(super.makeObj(), {
+            xPoint : this.xPoint.toObj(),
+            radiusY : this.radiusY
+        });
+
+        return obj;
+    }
+
+    setRadiusY(radiusY : number){
+        this.radiusY = radiusY;
+        View.current.dirty = true;
     }
 
     getAllShapes(shapes : Shape[]){
@@ -604,13 +644,28 @@ export class DimensionLine extends Shape {
     shift : Vec2;
     text : string = "";
 
-    constructor(obj : { pointA : Point, pointB : Point, shift : Vec2 }){
+    constructor(obj : { pointA : Point, pointB : Point, shift : Vec2, caption : TextBlock }){
         super(obj);
         this.pointA    = obj.pointA;
         this.pointB    = obj.pointB;
-        this.shift = obj.shift;
+        this.shift     = obj.shift;
 
-        this.caption = new TextBlock({ text : "\\int \\frac{1}{2}", is_tex : true, offset : Vec2.zero() });
+        this.caption = obj.caption;
+    }
+
+    makeObj() : any {
+        let obj = Object.assign(super.makeObj(), {
+            pointA : this.pointA.toObj(),
+            pointB : this.pointB.toObj(),
+            shift  : this.shift
+        });
+
+        return obj;
+    }
+
+    setShift(shift : Vec2){
+        this.shift = shift;
+        View.current.dirty = true;
     }
 
     getProperties(){

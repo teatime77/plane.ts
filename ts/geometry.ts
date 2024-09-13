@@ -60,18 +60,28 @@ export class FootOfPerpendicular extends Shape {
     }
 }
 
-export class LinesIntersection extends Shape {
+export class LineLineIntersection extends Shape {
     lineA : Line;
     lineB : Line;
     point : Point;
 
-    constructor(obj : {lineA:Line, lineB:Line }) {
+    constructor(obj : {lineA:Line, lineB:Line, point : Point }) {
         super(obj)
         this.lineA = obj.lineA;
         this.lineB = obj.lineB;
+        this.point = obj.point;
 
-        this.point = Point.fromArgs(Vec2.zero());
         this.calc();
+    }
+
+    makeObj() : any {
+        let obj = Object.assign(super.makeObj(), {
+            lineA : this.lineA.toObj(),
+            lineB : this.lineB.toObj(),
+            point : this.point.toObj()
+        });
+
+        return obj;
     }
 
     getAllShapes(shapes : Shape[]){
@@ -123,15 +133,26 @@ export class LineArcIntersection extends Shape {
     pointA : Point;
     pointB : Point;
 
-    constructor(obj : { line:Line, arc:CircleArc }){
+    constructor(obj : { line:Line, arc:CircleArc, pointA : Point, pointB : Point }){
         super(obj);
 
-        this.line = obj.line;
-        this.arc  = obj.arc;
+        this.line   = obj.line;
+        this.arc    = obj.arc;
+        this.pointA = obj.pointA;
+        this.pointB = obj.pointB;
 
-        this.pointA = Point.fromArgs(Vec2.zero());
-        this.pointB = Point.fromArgs(Vec2.zero());
         this.calc();
+    }
+
+    makeObj() : any {
+        let obj = Object.assign(super.makeObj(), {
+            line   : this.line.toObj(),
+            arc    : this.arc.toObj(),
+            pointA : this.pointA.toObj(),
+            pointB : this.pointB.toObj()
+        });
+
+        return obj;
     }
 
     getAllShapes(shapes : Shape[]){
@@ -190,16 +211,26 @@ export class ArcArcIntersection extends Shape {
     pointA : Point;
     pointB : Point;
 
-    constructor(obj : { arc1:CircleArc, arc2:CircleArc }){
+    constructor(obj : { arc1:CircleArc, arc2:CircleArc, pointA : Point, pointB : Point }){
         super(obj);
 
-        this.arc1 = obj.arc1;
-        this.arc2 = obj.arc2;
-
-        this.pointA = Point.fromArgs(Vec2.zero())
-        this.pointB = Point.fromArgs(Vec2.zero())
+        this.arc1   = obj.arc1;
+        this.arc2   = obj.arc2;
+        this.pointA = obj.pointA;
+        this.pointB = obj.pointB;
 
         this.calc();
+    }
+
+    makeObj() : any {
+        let obj = Object.assign(super.makeObj(), {
+            arc1   : this.arc1.toObj(),
+            arc2   : this.arc2.toObj(),
+            pointA : this.pointA.toObj(),
+            pointB : this.pointB.toObj()
+        });
+
+        return obj;
     }
 
     getAllShapes(shapes : Shape[]){
@@ -267,7 +298,8 @@ export abstract class Tangent extends Shape {
 export class CircleCircleTangent extends Tangent {
     circle1 : Circle;
     circle2 : Circle;    
-    points  : Point[] = [];
+
+    point   : Point;
     lines   : Line[] = [];
 
     constructor(obj : { circle1 : Circle, circle2 : Circle }){
@@ -283,12 +315,42 @@ export class CircleCircleTangent extends Tangent {
             this.circle2 = obj.circle1;
         }
 
+        const data = obj as any;
+
+        if(data.point != undefined){
+            this.point = data.point;
+        }
+        else{
+            this.point = Point.zero();
+        }
+
+        if(data.lines != undefined){
+            this.lines = data.lines;
+        }
+        else{
+            const line_a = new LineSegment( { pointA : Point.zero(), pointB : Point.zero() });
+            const line_b = new LineSegment( { pointA : Point.zero(), pointB : Point.zero() });
+            this.lines = [ line_a, line_b ];
+        }
+
         this.calc();
+    }
+
+    makeObj() : any {
+        let obj = Object.assign(super.makeObj(), {
+            circle1 : this.circle1.toObj(),
+            circle2 : this.circle2.toObj(),
+            point   : this.point.toObj(),
+            lines   : this.lines.map(x => x.toObj())
+        });
+
+        return obj;
     }
 
     getAllShapes(shapes : Shape[]){
         super.getAllShapes(shapes);
-        shapes.push(...this.points, ...this.lines);
+        shapes.push(this.point);
+        this.lines.forEach(line => line.getAllShapes(shapes));
     }
 
     dependencies() : Shape[] {
@@ -296,7 +358,7 @@ export class CircleCircleTangent extends Tangent {
     }
 
     draw() : void {
-        this.points.forEach(x => x.draw());
+        this.point.draw();
         this.lines.forEach(x => x.draw());
     }
 
@@ -306,24 +368,26 @@ export class CircleCircleTangent extends Tangent {
         const radius1 = this.circle1.radius();
         const radius2 = this.circle2.radius();
 
-        this.points = [];
-        this.lines  = [];
         if(radius2 < dist + radius1){
             const d = (radius1 / (radius2 - radius1)) * dist;
 
             const position = this.circle1.center.position.add( c1to2.unit().mul(d) );
-            const point = Point.fromArgs(position);
-            point.setName("点");
-            this.points.push(point);
+            this.point.setPosition(position);
+            this.point.setName("点");
 
-            const tangent_poss = calcCirclePointTangent(this.circle2.center.position, this.circle2.radius(), position);
+            const tangent_positions_list : Vec2[] = [];
+            for(const circle of [this.circle1, this.circle2]){
 
-            const tan_points = tangent_poss.map(position => Point.fromArgs(position));
-            this.points.push(...tan_points);
+                const tangent_positions = calcCirclePointTangent(circle.center.position, circle.radius(), position);
+                tangent_positions_list.push(...tangent_positions);
+            }
 
-            this.lines      = tan_points.map(pt => new LineSegment({ pointA : point, pointB : pt}));
+            this.lines[0].pointA.setPosition( tangent_positions_list[0] );
+            this.lines[0].pointB.setPosition( tangent_positions_list[2] );
+
+            this.lines[1].pointA.setPosition( tangent_positions_list[1] );
+            this.lines[1].pointB.setPosition( tangent_positions_list[3] );
         }
-        
     }
 }
 
@@ -350,7 +414,7 @@ function calcCirclePointTangent(center : Vec2, radius : number, position : Vec2)
 export class CirclePointTangent extends Tangent {
     circle : Circle;
     point  : Point;
-    tan_points : Point[] = [];
+    tangentPoints : Point[] = [];
     lines   : Line[] = [];
 
     constructor( obj : { circle : Circle, point : Point }){
@@ -358,12 +422,41 @@ export class CirclePointTangent extends Tangent {
         this.circle = obj.circle;
         this.point  = obj.point;
 
+        const data = obj as any;
+
+        if(data.tangentPoints != undefined){
+            this.tangentPoints = data.tangentPoints;
+        }
+        else{
+            this.tangentPoints = [ Point.zero(), Point.zero() ];
+        }
+
+        if(data.lines != undefined){
+            this.lines = data.lines;
+        }
+        else{
+            const line_a = new LineSegment( { pointA : this.point, pointB : Point.zero() });
+            const line_b = new LineSegment( { pointA : this.point, pointB : Point.zero() });
+            this.lines = [ line_a, line_b ];
+        }
+
         this.calc();
+    }
+
+    makeObj() : any {
+        let obj = Object.assign(super.makeObj(), {
+            circle   : this.circle.toObj(),
+            point   : this.point.toObj(),
+            tangentPoints : this.tangentPoints.map(x => x.toObj()),
+            lines : this.lines.map(x => x.toObj())
+        });
+
+        return obj;
     }
 
     getAllShapes(shapes : Shape[]){
         super.getAllShapes(shapes);
-        shapes.push(this.circle, this.point, ...this.tan_points, ...this.lines);
+        shapes.push(this.circle, this.point, ...this.tangentPoints, ...this.lines);
     }
 
     dependencies() : Shape[] {
@@ -371,15 +464,17 @@ export class CirclePointTangent extends Tangent {
     }
 
     draw() : void {
-        this.tan_points.forEach(x => x.draw());
+        this.tangentPoints.forEach(x => x.draw());
         this.lines.forEach(x => x.draw());
     }
 
     calc(): void {
-        const tangent_poss = calcCirclePointTangent(this.circle.center.position, this.circle.radius(), this.point.position);
+        const tangent_positions = calcCirclePointTangent(this.circle.center.position, this.circle.radius(), this.point.position);
 
-        this.tan_points = tangent_poss.map(position => Point.fromArgs(position));
-        this.lines      = this.tan_points.map(pt => new LineSegment( { pointA : this.point, pointB : pt }));
+        for(const [i, position] of tangent_positions.entries()){
+            this.tangentPoints[i].setPosition(position);
+            this.lines[i].pointB.setPosition(position);
+        }
     }
 }
 
