@@ -217,7 +217,7 @@ export class Point extends Shape {
 
     position! : Vec2;
     positionSave : Vec2 | undefined;
-    bound : LineSegment | Circle | undefined;
+    bound : LineSegment | CircleArc | undefined;
 
     origin : Point | undefined;
 
@@ -225,12 +225,12 @@ export class Point extends Shape {
         return Point.fromArgs(Vec2.zero());
     }
 
-    static fromArgs(position : Vec2, bound : LineSegment | Circle | undefined = undefined){
+    static fromArgs(position : Vec2, bound : LineSegment | CircleArc | undefined = undefined){
         const caption = new TextBlock( { text : "", isTex : false, offset : new Vec2(10, -20) });
         return new Point( { name : undefined, color : fgColor, position : position, bound : bound, caption } );
     }
 
-    constructor(obj : { name : string | undefined, color : string, position : Vec2, bound : LineSegment | Circle | undefined, caption : TextBlock }){
+    constructor(obj : { name : string | undefined, color : string, position : Vec2, bound : LineSegment | CircleArc | undefined, caption : TextBlock }){
         super(obj);
         this.bound = obj.bound;
 
@@ -350,16 +350,8 @@ export class Point extends Shape {
 
             this.setPosition(calcFootOfPerpendicular(position, this.bound));
         }
-        else if(this.bound instanceof Circle){
-            const circle = this.bound;
-
-            const v = position.sub(circle.center.position);
-            const theta = Math.atan2(v.y, v.x);
-            const x = circle.radius() * Math.cos(theta);
-            const y = circle.radius() * Math.sin(theta);
-            
-            const new_pos = circle.center.position.add( new Vec2(x, y) );
-            this.setPosition(new_pos);
+        else if(this.bound instanceof CircleArc){
+            this.bound.adjustPosition(this, position);
         }
         else{
 
@@ -461,6 +453,11 @@ export abstract class CircleArcEllipse extends Shape {
         return obj;
     }
 
+    getAllShapes(shapes : Shape[]){
+        super.getAllShapes(shapes);
+        shapes.push(this.center);
+    }
+
     dependencies() : Shape[] {
         return [ this.center ];
     }
@@ -468,16 +465,21 @@ export abstract class CircleArcEllipse extends Shape {
 
 export abstract class CircleArc extends CircleArcEllipse {
     abstract radius() : number;
+
+    adjustPosition(point : Point, position : Vec2){
+        const v = position.sub(this.center.position);
+        const theta = Math.atan2(v.y, v.x);
+        const x = this.radius() * Math.cos(theta);
+        const y = this.radius() * Math.sin(theta);
+        
+        const new_pos = this.center.position.add( new Vec2(x, y) );
+        point.setPosition(new_pos);
+    }
 }
 
 export abstract class Circle extends CircleArc {
     constructor(obj : { center : Point }){
         super(obj);
-    }
-
-    getAllShapes(shapes : Shape[]){
-        super.getAllShapes(shapes);
-        shapes.push(this.center);
     }
 
     isNear(position : Vec2) : boolean {
@@ -491,7 +493,6 @@ export abstract class Circle extends CircleArc {
         View.current.canvas.drawCircle(this.center.position, this.radius(), null, stroke_color, line_width)
     }
 }
-
 
 export class CircleByPoint extends Circle {
     point : Point;
@@ -576,7 +577,7 @@ export class Ellipse extends CircleArcEllipse {
 
     getAllShapes(shapes : Shape[]){
         super.getAllShapes(shapes);
-        shapes.push(this.center, this.xPoint);
+        shapes.push(this.xPoint);
     }
 
     dependencies() : Shape[] {
@@ -595,6 +596,75 @@ export class Ellipse extends CircleArcEllipse {
         View.current.canvas.drawEllipse(this.center.position, radius_x, this.radiusY, rotation, color, line_width);
     }
 }
+
+
+export class Arc extends CircleArc {
+    pointA : Point;
+    pointB : Point;
+
+    constructor(obj : { center : Point, pointA : Point, pointB : Point }){
+        super(obj);
+        this.pointA = obj.pointA;
+        this.pointB = obj.pointB;
+    }
+
+    makeObj() : any {
+        let obj = Object.assign(super.makeObj(), {
+            pointA : this.pointA.toObj(),
+            pointB : this.pointB.toObj()
+        });
+
+        return obj;
+    }
+
+    getAllShapes(shapes : Shape[]){
+        super.getAllShapes(shapes);
+        shapes.push(this.pointA, this.pointB);
+    }
+
+    dependencies() : Shape[] {
+        return super.dependencies().concat([ this.pointA, this.pointB ]);
+    }
+
+    calc(){        
+        this.adjustPosition(this.pointB, this.pointB.position);
+    }
+
+    isNear(position : Vec2) : boolean {
+        const r = position.distance(this.center.position);
+        if(View.current.isNear( Math.abs(r - this.radius()) )){
+
+            const v = position.sub(this.center.position);
+            const th = Math.atan2(v.y, v.x);
+
+            const [th1, th2] = this.angles();
+            return th1 <= th && th <= th2;
+        }
+
+        return false;
+    }
+
+    angles() : [number, number] {
+        const v1 = this.pointA.sub(this.center);
+        const th1 = Math.atan2(v1.y, v1.x);
+
+        const v2 = this.pointB.sub(this.center);
+        const th2 = Math.atan2(v2.y, v2.x);
+
+        return [th1, th2];
+    }
+
+    draw(): void {
+        const [th1, th2] = this.angles();
+        const color = (this.isOver ? "red" : this.color);
+        View.current.canvas.drawArc(this.center.position, this.radius(), null, color, this.lineWidth, th1, th2);
+    }
+
+    radius() : number {
+        return this.center.position.distance(this.pointA.position);
+    }
+}
+
 
 export class Angle extends Shape {
     static radius1Pix = 20;
@@ -644,8 +714,8 @@ export class Angle extends Shape {
         const e1 = this.lineA.e.mul(this.directionA);
         const e2 = this.lineB.e.mul(this.directionB);
 
-        const th1 = Math.atan2(-e1.y, e1.x);
-        const th2 = Math.atan2(-e2.y, e2.x);
+        const th1 = Math.atan2(e1.y, e1.x);
+        const th2 = Math.atan2(e2.y, e2.x);
 
         const color = (this.isOver ? "red" : this.color);
         const line_width = (this.selected ? 3 : 1);

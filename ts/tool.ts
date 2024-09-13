@@ -20,7 +20,7 @@ export abstract class Builder {
             case "Circle.1":        return new Circle1Builder();
             case "Circle.2":        return new Circle2Builder();
             case "Ellipse":           return new EllipseBuilder();
-            // case "Arc":           return new Arc();
+            case "Arc":           return new ArcBuilder();
             case "DimensionLine": return new DimensionLineBuilder();
             // case "Midpoint":      return new Midpoint();
             case "Perpendicular": return new PerpendicularBuilder()
@@ -124,7 +124,7 @@ export class SelectTool extends Builder {
         this.selectedShape = undefined;
         this.minSave = undefined;
         this.maxSave = undefined;
-}
+    }
 }
 
 class PointBuilder extends Builder {
@@ -251,6 +251,40 @@ class EllipseBuilder extends Builder {
     }
 }
 
+class ArcBuilder extends Builder {
+    arc    : Arc   | undefined;
+    center : Point | undefined;
+    pointA : Point | undefined;
+    pointB : Point | undefined;
+
+    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
+        if(this.center == undefined){
+            this.center = this.makePointOnClick(view, position, shape);
+        }
+        else if(this.pointA == undefined){
+            this.pointA = this.makePointOnClick(view, position, shape);
+            this.pointB = Point.fromArgs(position);
+
+            this.arc = new Arc({ center : this.center, pointA : this.pointA, pointB : this.pointB });
+            this.pointB.bound = this.arc;
+
+            view.addShape(this.arc);
+        }
+        else{
+
+            this.arc = undefined;
+            this.center = undefined;
+            this.pointA = undefined;
+            this.pointB = undefined;
+        }
+    }
+
+    pointermove(event : PointerEvent, view : View, position : Vec2, shape : Shape | undefined){
+        if(this.arc != undefined && this.pointB != undefined){
+            this.arc.adjustPosition(this.pointB, position);
+        }
+    }
+}
 
 class LineSegmentBuilder extends Builder {
     line : LineSegment | undefined;

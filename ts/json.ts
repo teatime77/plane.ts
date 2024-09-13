@@ -143,8 +143,8 @@ export function parseObject(obj: any) : any {
     case CircleCircleTangent.name:
         return new CircleCircleTangent(obj);
 
-    // case Arc.name:
-    //     return new Arc(obj);
+    case Arc.name:
+        return new Arc(obj);
 
     case Angle.name:
         return new Angle(obj);

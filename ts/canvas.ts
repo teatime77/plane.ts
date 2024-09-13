@@ -54,6 +54,10 @@ export class Canvas {
         const ctx = this.ctx;
         const pix = this.view.toPixPosition(center);
 
+        // flip Y
+        start_angle = 2 * Math.PI - start_angle;
+        end_angle   = 2 * Math.PI - end_angle;
+
         const radius_pix = this.view.toPix(radius);
 
         ctx.beginPath();

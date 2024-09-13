@@ -259,7 +259,7 @@ export class View extends Widget {
             return line;
         }
         
-        const circle = shapes.filter(x => x instanceof Circle).find(x => x.isNear(position));
+        const circle = shapes.filter(x => x instanceof CircleArcEllipse).find(x => x.isNear(position));
         return circle;
     }
 
