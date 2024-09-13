@@ -438,37 +438,39 @@ class AngleBuilder extends Builder {
 }
 
 class DimensionLineBuilder extends Builder {
-    p1 : Point | undefined;
-    p2 : Point | undefined;
+    pointA : Point | undefined;
+    pointB : Point | undefined;
     dimLine : DimensionLine | undefined;
 
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
-        if(this.p1 == undefined){
+        if(this.pointA == undefined){
             if(shape instanceof Point){
-                this.p1 = shape;
+                this.pointA = shape;
             }
         }
-        else if(this.p2 == undefined && shape instanceof Point){
-            this.p2 = shape;
+        else if(this.pointB == undefined && shape instanceof Point){
+            this.pointB = shape;
 
-            const foot   = calcFootFrom2Pos(position, this.p1.position, this.p2.position);
-            const shift  = position.sub(foot);
+            const normal = this.pointB.sub(this.pointA).rot90().unit();
+            const shift  = position.sub(this.pointB.position).dot(normal);
             const caption = new TextBlock({ text : "\\int \\frac{1}{2}", isTex : true, offset : Vec2.zero() });
 
-            this.dimLine = new DimensionLine({ pointA: this.p1, pointB: this.p2, shift, caption });
+            this.dimLine = new DimensionLine({ pointA: this.pointA, pointB: this.pointB, shift, caption });
             view.addShape(this.dimLine);
         }
         else if(this.dimLine != undefined){
-            this.p1      = undefined;
-            this.p2      = undefined;
+            this.pointA      = undefined;
+            this.pointB      = undefined;
             this.dimLine = undefined;
         }
     }
 
     pointermove(event : PointerEvent, view : View, position : Vec2, shape : Shape | undefined){
-        if(this.p1 != undefined && this.p2 != undefined && this.dimLine != undefined){
-            const foot = calcFootFrom2Pos(position, this.p1.position, this.p2.position);
-            this.dimLine.setShift( position.sub(foot) );
+        if(this.pointA != undefined && this.pointB != undefined && this.dimLine != undefined){
+
+            const normal = this.pointB.sub(this.pointA).rot90().unit();
+            const shift  = position.sub(this.pointB.position).dot(normal);
+            this.dimLine.setShift( shift );
         }
     }
 }

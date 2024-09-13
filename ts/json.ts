@@ -116,9 +116,6 @@ export function parseObject(obj: any) : any {
     case DimensionLine.name:
         return new DimensionLine(obj);
     
-    // case DimensionLine.name:
-    //     return new DimensionLine(obj);
-
     // case Triangle.name:
     //     return new Triangle(obj);
 

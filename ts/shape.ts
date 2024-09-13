@@ -401,6 +401,10 @@ export abstract class Line extends Shape {
         this.p12 = this.pointB.sub(this.pointA);
         this.e = this.p12.unit();
     }
+
+    normal() : Vec2 {
+        return this.pointB.sub(this.pointA).rot90().unit();
+    }
 }
 
 export class LineSegment extends Line {    
@@ -654,11 +658,11 @@ export class Angle extends Shape {
 export class DimensionLine extends Shape {
     pointA : Point;
     pointB : Point;
+    shift  : number;
     center! : Vec2;
-    shift : Vec2;
     text : string = "";
 
-    constructor(obj : { pointA : Point, pointB : Point, shift : Vec2, caption : TextBlock }){
+    constructor(obj : { pointA : Point, pointB : Point, shift : number, caption : TextBlock }){
         super(obj);
         this.pointA    = obj.pointA;
         this.pointB    = obj.pointB;
@@ -677,7 +681,7 @@ export class DimensionLine extends Shape {
         return obj;
     }
 
-    setShift(shift : Vec2){
+    setShift(shift : number){
         this.shift = shift;
         View.current.dirty = true;
     }
@@ -710,33 +714,36 @@ export class DimensionLine extends Shape {
             throw new MyError();
         }
 
-        const p1 = this.pointA.position;
-        const p2 = this.pointB.position;
+        const A = this.pointA.position;
+        const B = this.pointB.position;
 
-        const p1a = this.pointA.position.add(this.shift);
-        const p2a = this.pointB.position.add(this.shift);
+        const AB = B.sub(A);
+        const normal = AB.rot90().unit();
+        const shift_vec = normal.mul(this.shift);
 
-        const shift_pix_len = View.current.toPix(this.shift.len());
+        const A_shift = A.add(shift_vec);
+        const B_shift = B.add(shift_vec);
+
+        const shift_pix_len = View.current.toPix(Math.abs(this.shift));
         const ratio = (shift_pix_len + 5) / shift_pix_len;
-        const shift_plus = this.shift.mul(ratio);
-        const p1b = this.pointA.position.add(shift_plus);
-        const p2b = this.pointB.position.add(shift_plus);
+        const shift_plus = shift_vec.mul(ratio);
+        const A_shift_plus = A.add(shift_plus);
+        const B_shift_plus = B.add(shift_plus);
 
-        const p12 = p2.sub(p1);
-        const p1c = p1a.add(p12.mul( 1/3));
-        const p2c = p2a.add(p12.mul(-1/3));
+        const A_shift_inside = A_shift.add(AB.mul( 1/3));
+        const B_shift_inside = B_shift.add(AB.mul(-1/3));
 
-        this.center = p1a.add(p12.mul(0.5));
+        this.center = A.add(B).mul(0.5).add(shift_vec);
         this.updateCaption();
 
-        const degree = toDegree( Math.atan2(-p12.y, p12.x) );
+        const degree = toDegree( Math.atan2(-AB.y, AB.x) );
         this.caption.setRotation(degree);
 
-        View.current.canvas.drawLine(this, p1, p1b);
-        View.current.canvas.drawLine(this, p2, p2b);
+        View.current.canvas.drawLine(this, A, A_shift_plus);
+        View.current.canvas.drawLine(this, B, B_shift_plus);
 
-        View.current.canvas.drawLine(this, p1a, p1c);
-        View.current.canvas.drawLine(this, p2a, p2c);
+        View.current.canvas.drawLine(this, A_shift, A_shift_inside);
+        View.current.canvas.drawLine(this, B_shift, B_shift_inside);
     }
 }
 
