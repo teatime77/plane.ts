@@ -22,7 +22,7 @@ export abstract class Builder {
             case "Ellipse":           return new EllipseBuilder();
             case "Arc":           return new ArcBuilder();
             case "DimensionLine": return new DimensionLineBuilder();
-            // case "Midpoint":      return new Midpoint();
+            case "Midpoint":      return new MidpointBuilder();
             case "Perpendicular": return new PerpendicularBuilder()
             case "ParallelLine":  return new ParallelLineBuilder();
             case "Intersection":  return new IntersectionBuilder();
@@ -52,14 +52,12 @@ export abstract class Builder {
             return shape;
         }
         else{
+            const point = Point.fromArgs(position);
             if(shape instanceof AbstractLine || shape instanceof CircleArc){
 
-                return Point.fromArgs(position, shape);
+                point.setBound(shape);
             }
-            else{
-
-                return Point.fromArgs(position);
-            }
+            return point;
         }
 
     }
@@ -131,10 +129,28 @@ class PointBuilder extends Builder {
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){  
         if(shape == undefined || shape instanceof LineSegment || shape instanceof Circle){
 
-            const new_point = Point.fromArgs(position, shape);
+            const new_point = Point.fromArgs(position);
+            new_point.setBound(shape)
             view.addShape(new_point);
 
             showProperty(new_point, 0);
+        }
+    }
+}
+
+class MidpointBuilder extends Builder {
+    pointA : Point | undefined;
+
+    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
+        if(this.pointA == undefined){
+            if(shape instanceof Point){
+                this.pointA = shape;
+            }
+        }
+        else if(shape instanceof Point){
+            const mid_point = new Midpoint( { pointA : this.pointA, pointB : shape  } );
+            view.addShape(mid_point);
+            this.pointA      = undefined;
         }
     }
 }
@@ -328,7 +344,6 @@ class LineSegmentBuilder extends Builder {
             }
         }
     }
-
 }
 
 

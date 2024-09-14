@@ -21,6 +21,42 @@ export function DistanceFromLine(line : AbstractLine, position : Vec2) : number 
     return position.distance(foot);
 }
 
+export class Midpoint extends Point {
+    pointA   : Point;
+    pointB   : Point;
+
+    constructor(obj : { pointA: Point, pointB: Point }){
+        super({position:Vec2.zero()});
+        this.pointA = obj.pointA;
+        this.pointB = obj.pointB;
+
+        this.calc();
+    }
+
+    makeObj() : any {
+        let obj = Object.assign(super.makeObj(), {
+            pointA : this.pointA.toObj(),
+            pointB : this.pointB.toObj()
+        });
+
+        return obj;
+    }
+
+    dependencies() : Shape[] {
+        return super.dependencies().concat([ this.pointA, this.pointB ]);
+    }
+
+    getAllShapes(shapes : Shape[]){
+        super.getAllShapes(shapes);
+        shapes.push(this.pointA, this.pointB);
+    }
+
+    calc(){
+        const position = this.pointA.add(this.pointB).mul(0.5);
+        this.setPosition(position);
+    }
+}
+
 export class FootOfPerpendicular extends Shape {
     point:Point;
     line: AbstractLine;

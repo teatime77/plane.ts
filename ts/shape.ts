@@ -131,9 +131,14 @@ export abstract class Shape extends AbstractShape {
 
     constructor(obj : any){
         super(obj);
+        if(obj.name != undefined){
+            this.name = obj.name;
+        }
+
         if(obj.color != undefined){
             this.color = obj.color;
         }
+
         if(obj.lineWidth != undefined){
             this.lineWidth = obj.lineWidth;
         }
@@ -225,19 +230,14 @@ export class Point extends Shape {
         return Point.fromArgs(Vec2.zero());
     }
 
-    static fromArgs(position : Vec2, bound : AbstractLine | CircleArc | undefined = undefined){
-        const caption = new TextBlock( { text : "", isTex : false, offset : new Vec2(10, -20) });
-        return new Point( { name : undefined, color : fgColor, position : position, bound : bound, caption } );
+    static fromArgs(position : Vec2){
+        return new Point( { position } );
     }
 
-    constructor(obj : { name : string | undefined, color : string, position : Vec2, bound : AbstractLine | CircleArc | undefined, caption : TextBlock }){
+    constructor(obj : { position : Vec2 }){
         super(obj);
-        this.bound = obj.bound;
 
-        if(obj.name != undefined){
-            this.name = obj.name;
-        }
-        else{
+        if(this.name == ""){
 
             const points = View.current.allShapes().filter(x => x instanceof Point).concat(Point.tempPoints);
             const idxes = points.map(x => upperLatinLetters.indexOf(x.name));
@@ -260,18 +260,13 @@ export class Point extends Shape {
 
         Point.tempPoints.push(this);
 
-        this.caption = obj.caption;
-        this.caption.setText(this.name);
+        if(this.caption == undefined){
+            this.caption = new TextBlock( { text : this.name, isTex : false, offset : new Vec2(10, -20) });
+        }
+
         setCaptionEvent(this.caption);
 
-        if(obj.bound instanceof LineSegment){
-
-            this.setPosition(calcFootOfPerpendicular(obj.position, obj.bound));
-        }
-        else{
-
-            this.setPosition(obj.position);
-        }
+        this.setPosition(obj.position);
 
         msg(`point:${this.name}`);
     }
@@ -303,6 +298,16 @@ export class Point extends Shape {
         View.current.dirty = true;
     }
 
+    setBound(bound : AbstractLine | CircleArc | undefined){
+        this.bound = bound;
+
+        if(bound instanceof LineSegment){
+
+            const new_position = calcFootOfPerpendicular(this.position, bound);
+            this.setPosition(new_position);
+        }
+    }
+
     updateCaption(){
         const position_pix = View.current.toPixPosition(this.position);
 
@@ -331,6 +336,10 @@ export class Point extends Shape {
 
             View.current.canvas.drawCircle(this.position, 3 * Point.radius, null, "gray", 1);
         }
+    }
+
+    add(point : Point) : Vec2 {
+        return this.position.add(point.position);
     }
 
     sub(point : Point) : Vec2 {
@@ -472,7 +481,6 @@ export class ParallelLine extends Line {
 
     constructor(obj : { pointA: Point, line: AbstractLine }){
         super(obj);
-        this.e = obj.line.e.copy();
 
         this.line = obj.line;
 
@@ -499,7 +507,6 @@ export class ParallelLine extends Line {
     calc(){
         this.e = this.line.e.copy();
     }
-
 }
 
 

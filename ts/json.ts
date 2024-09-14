@@ -119,8 +119,8 @@ export function parseObject(obj: any) : any {
     // case Triangle.name:
     //     return new Triangle(obj);
 
-    // case Midpoint.name:
-    //     return new Midpoint(obj);
+    case Midpoint.name:
+        return new Midpoint(obj);
 
     case FootOfPerpendicular.name:
         return new FootOfPerpendicular(obj);
