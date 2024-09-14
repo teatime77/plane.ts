@@ -217,7 +217,7 @@ export class Point extends Shape {
 
     position! : Vec2;
     positionSave : Vec2 | undefined;
-    bound : LineSegment | CircleArc | undefined;
+    bound : AbstractLine | CircleArc | undefined;
 
     origin : Point | undefined;
 
@@ -225,12 +225,12 @@ export class Point extends Shape {
         return Point.fromArgs(Vec2.zero());
     }
 
-    static fromArgs(position : Vec2, bound : LineSegment | CircleArc | undefined = undefined){
+    static fromArgs(position : Vec2, bound : AbstractLine | CircleArc | undefined = undefined){
         const caption = new TextBlock( { text : "", isTex : false, offset : new Vec2(10, -20) });
         return new Point( { name : undefined, color : fgColor, position : position, bound : bound, caption } );
     }
 
-    constructor(obj : { name : string | undefined, color : string, position : Vec2, bound : LineSegment | CircleArc | undefined, caption : TextBlock }){
+    constructor(obj : { name : string | undefined, color : string, position : Vec2, bound : AbstractLine | CircleArc | undefined, caption : TextBlock }){
         super(obj);
         this.bound = obj.bound;
 
@@ -341,6 +341,15 @@ export class Point extends Shape {
         return this.position.dot(point.position);
     }
 
+    distance(p : Point | Vec2) : number {
+        if(p instanceof Point){
+            return this.position.distance(p.position);
+        }
+        else{
+            return this.position.distance(p);
+        }
+    }
+
     shapePointerdown(position : Vec2){
         this.positionSave = this.position.copy();
     }
@@ -367,47 +376,71 @@ export class Point extends Shape {
     }
 }
 
-export abstract class Line extends Shape {
-    pointA   : Point;
-    pointB   : Point;
-    p12! : Vec2;
-    e!   : Vec2;
+export abstract class AbstractLine extends Shape {
+    pointA : Point;
+    e!     : Vec2;
 
-    constructor(obj : { pointA: Point, pointB: Point }){
+    constructor(obj : { pointA: Point }){
         super(obj);
         this.pointA = obj.pointA;
-        this.pointB = obj.pointB;
-
-        this.setVecs();
     }
 
-    dependencies() : Shape[] {
-        return [ this.pointA, this.pointB ];
-    }
-
-    calc(){     
-        this.setVecs();
-    }
-
-    setVecs(){
-        this.p12 = this.pointB.sub(this.pointA);
-        this.e = this.p12.unit();
-    }
-
-    normal() : Vec2 {
-        return this.pointB.sub(this.pointA).rot90().unit();
-    }
-}
-
-export class LineSegment extends Line {    
 
     makeObj() : any {
         let obj = Object.assign(super.makeObj(), {
-            pointA : this.pointA.toObj(),
+            pointA : this.pointA.toObj()
+        });
+
+        return obj;
+    }    
+
+    dependencies() : Shape[] {
+        return super.dependencies().concat([ this.pointA ]);
+    }
+
+    normal() : Vec2 {
+        return this.e.rot90();
+    }
+
+    isNear(position : Vec2) : boolean {
+        const distance = Math.abs( this.normal().dot(position.sub(this.pointA.position)) );
+        return View.current.isNear(distance);
+    }
+}
+
+export class Line extends AbstractLine {
+    draw() : void {
+        const l = View.current.max.distance(View.current.min);
+        const p1 = this.pointA.position.add(this.e.mul(-l));
+        const p2 = this.pointA.position.add(this.e.mul( l));
+        View.current.canvas.drawLine(this, p1, p2);
+    }
+}
+
+export class LineSegment extends AbstractLine {    
+    pointB   : Point;
+
+    constructor(obj : { pointA: Point, pointB: Point }){
+        super(obj);
+        this.pointB = obj.pointB;
+
+        this.calc();
+    }
+
+    makeObj() : any {
+        let obj = Object.assign(super.makeObj(), {
             pointB : this.pointB.toObj()
         });
 
         return obj;
+    }
+
+    dependencies() : Shape[] {
+        return super.dependencies().concat([ this.pointB ]);
+    }
+
+    calc(){
+        this.e = this.pointB.sub(this.pointA).unit();
     }
 
     getAllShapes(shapes : Shape[]){
@@ -416,26 +449,60 @@ export class LineSegment extends Line {
     }
 
     isNear(position : Vec2) : boolean {
-        const foot = calcFootOfPerpendicular(position, this);        
-        const d = position.distance(foot);
-        if(View.current.isNear(d)){
-
-            const p1 = this.pointA.position;
-            const p2 = this.pointB.position;
-            const p12 = p2.sub(p1);
-            const n = p12.dot( foot.sub(p1) );
-            if(0 <= n && n <= p12.len2()){
-                return true;
-            }
+        if(!super.isNear(position)){
+            return false;
         }
 
-        return false;
+        const AB = this.pointA.distance(this.pointB);
+
+        const n = this.e.dot(position.sub(this.pointA.position));
+
+        return 0 <= n && n <= AB;
     }
 
     draw() : void {
         View.current.canvas.drawLine(this, this.pointA.position, this.pointB.position);
     }
 }
+
+
+
+export class ParallelLine extends Line {   
+    line : AbstractLine;
+
+    constructor(obj : { pointA: Point, line: AbstractLine }){
+        super(obj);
+        this.e = obj.line.e.copy();
+
+        this.line = obj.line;
+
+        this.calc();
+    }
+
+    makeObj() : any {
+        let obj = Object.assign(super.makeObj(), {
+            line : this.line.toObj()
+        });
+
+        return obj;
+    }
+
+    dependencies() : Shape[] {
+        return super.dependencies().concat([ this.line ]);
+    }
+
+    getAllShapes(shapes : Shape[]){
+        super.getAllShapes(shapes);
+        shapes.push(this.line);
+    }
+
+    calc(){
+        this.e = this.line.e.copy();
+    }
+
+}
+
+
 
 export abstract class CircleArcEllipse extends Shape {
     center : Point;
@@ -670,15 +737,15 @@ export class Angle extends Shape {
     static radius1Pix = 20;
     static radius1 : number;
 
-    lineA       : Line;
+    lineA       : AbstractLine;
     directionA  : number;
 
-    lineB       : Line;
+    lineB       : AbstractLine;
     directionB  : number;
 
     intersection : Point;
 
-    constructor(obj : { lineA : Line, directionA : number, lineB : Line, directionB : number }){
+    constructor(obj : { lineA : AbstractLine, directionA : number, lineB : AbstractLine, directionB : number }){
         super(obj);
         this.lineA       = obj.lineA;
         this.directionA  = obj.directionA;

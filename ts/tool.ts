@@ -24,7 +24,7 @@ export abstract class Builder {
             case "DimensionLine": return new DimensionLineBuilder();
             // case "Midpoint":      return new Midpoint();
             case "Perpendicular": return new PerpendicularBuilder()
-            // case "ParallelLine":  return new ParallelLine()
+            case "ParallelLine":  return new ParallelLineBuilder();
             case "Intersection":  return new IntersectionBuilder();
             case "Tangent":       return new TangentBuilder();
             case "Angle":         return new AngleBuilder();
@@ -52,7 +52,7 @@ export abstract class Builder {
             return shape;
         }
         else{
-            if(shape instanceof Line || shape instanceof CircleArc){
+            if(shape instanceof AbstractLine || shape instanceof CircleArc){
 
                 return Point.fromArgs(position, shape);
             }
@@ -324,10 +324,39 @@ class LineSegmentBuilder extends Builder {
             else{
 
                 this.line.pointB.setPosition(position);
+                this.line.calc();
             }
         }
     }
 
+}
+
+
+class ParallelLineBuilder extends Builder {
+    line  : AbstractLine | undefined;
+    point : Point | undefined;
+
+    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
+        if(shape instanceof Point){
+
+            this.point = shape;
+        }
+        else if(shape instanceof AbstractLine){
+            this.line = shape;
+        }
+
+        if(this.line != undefined && this.point != undefined){
+
+            const parallel_line = new ParallelLine( { pointA : this.point, line : this.line } );
+            view.addShape(parallel_line);
+
+            this.line  = undefined;
+            this.point = undefined;
+        }
+    }
+
+    pointermove(event : PointerEvent, view : View, position : Vec2, shape : Shape | undefined){
+    }
 }
 
 class PerpendicularBuilder extends Builder {
@@ -341,7 +370,7 @@ class PerpendicularBuilder extends Builder {
             }
         }
         else{
-            if(shape instanceof Line){
+            if(shape instanceof AbstractLine){
                 const foot = new FootOfPerpendicular({ point : this.point, line : shape });
                 view.addShape(foot);
 
@@ -352,10 +381,10 @@ class PerpendicularBuilder extends Builder {
 }
 
 class IntersectionBuilder extends Builder {
-    shape1 : Line | CircleArc | undefined;
+    shape1 : AbstractLine | CircleArc | undefined;
 
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
-        if(shape instanceof Line || shape instanceof CircleArc){
+        if(shape instanceof AbstractLine || shape instanceof CircleArc){
             if(this.shape1 == undefined){
                 this.shape1 = shape;
                 this.shape1.select();
@@ -364,7 +393,7 @@ class IntersectionBuilder extends Builder {
                 this.shape1.unselect();
 
                 let new_shape : Shape;
-                if(this.shape1 instanceof Line && shape instanceof Line){
+                if(this.shape1 instanceof AbstractLine && shape instanceof AbstractLine){
                     const point = Point.fromArgs(Vec2.zero());
                     new_shape = new LineLineIntersection({ lineA : this.shape1, lineB : shape, point });
                 }
@@ -374,16 +403,16 @@ class IntersectionBuilder extends Builder {
                     new_shape = new ArcArcIntersection({ arc1 : this.shape1, arc2 : shape, pointA, pointB });
                 }
                 else{
-                    let line : Line;
+                    let line : AbstractLine;
                     let circle : CircleArc;
 
-                    if(this.shape1 instanceof Line){
+                    if(this.shape1 instanceof AbstractLine){
                         line = this.shape1;
                         circle = shape as CircleArc;
                     }
                     else{
                         circle = this.shape1;
-                        line = shape as Line;
+                        line = shape as AbstractLine;
                     }
 
                     const pointA = Point.fromArgs(Vec2.zero());
@@ -438,11 +467,11 @@ class TangentBuilder extends Builder {
 
 
 class AngleBuilder extends Builder {
-    line1 : Line | undefined;
+    line1 : AbstractLine | undefined;
     pos1  : Vec2 | undefined;
 
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
-        if(shape instanceof Line){
+        if(shape instanceof AbstractLine){
             if(this.line1 == undefined){
                 this.line1 = shape;
                 this.pos1  = position;
@@ -450,8 +479,8 @@ class AngleBuilder extends Builder {
             else{
                 const [lineA, pos1, lineB, pos2] = [this.line1, this.pos1!, shape, position];
 
-                lineA.setVecs();
-                lineB.setVecs();
+                lineA.calc();
+                lineB.calc();
 
                 const points = View.current.relation.getIntersections(lineA, lineB);
                 if(points.length != 1){

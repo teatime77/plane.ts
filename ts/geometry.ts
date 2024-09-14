@@ -2,11 +2,7 @@
 
 namespace planets {
 
-export function calcFootFrom2Pos(position : Vec2, pos1 : Vec2, pos2 : Vec2) : Vec2 {
-
-    // unit vector from p1 to p2
-    const e = pos2.sub(pos1).unit();
-
+export function calcFootFrom2Pos(position : Vec2, pos1 : Vec2, e : Vec2) : Vec2 {
     const v = position.sub(pos1);
     const h = e.dot(v);
 
@@ -15,22 +11,22 @@ export function calcFootFrom2Pos(position : Vec2, pos1 : Vec2, pos2 : Vec2) : Ve
     return foot;
 }
 
-export function calcFootOfPerpendicular(position:Vec2, line: Line) : Vec2 {
-    return calcFootFrom2Pos(position, line.pointA.position, line.pointB.position);
+export function calcFootOfPerpendicular(position:Vec2, line: AbstractLine) : Vec2 {
+    return calcFootFrom2Pos(position, line.pointA.position, line.e);
 }
     
 
-export function DistanceFromLine(line : Line, position : Vec2) : number {
+export function DistanceFromLine(line : AbstractLine, position : Vec2) : number {
     const foot = calcFootOfPerpendicular(position, line);
     return position.distance(foot);
 }
 
 export class FootOfPerpendicular extends Shape {
     point:Point;
-    line: Line;
+    line: AbstractLine;
     foot : Point;
 
-    constructor(obj : { point:Point, line: Line }){
+    constructor(obj : { point:Point, line: AbstractLine }){
         super(obj);
         this.point = obj.point;
         this.line  = obj.line;
@@ -61,11 +57,11 @@ export class FootOfPerpendicular extends Shape {
 }
 
 export class LineLineIntersection extends Shape {
-    lineA : Line;
-    lineB : Line;
+    lineA : AbstractLine;
+    lineB : AbstractLine;
     point : Point;
 
-    constructor(obj : {lineA:Line, lineB:Line, point : Point }) {
+    constructor(obj : {lineA:AbstractLine, lineB:AbstractLine, point : Point }) {
         super(obj)
         this.lineA = obj.lineA;
         this.lineB = obj.lineB;
@@ -98,29 +94,29 @@ export class LineLineIntersection extends Shape {
     calc(){        
         const [l1, l2] = [ this.lineA, this.lineB ];
 
-        l1.setVecs();
-        l2.setVecs();
-        if(l1.p12 == undefined || l2.p12 == undefined){
+        l1.calc();
+        l2.calc();
+        if(l1.e == undefined || l2.e == undefined){
             throw new MyError();
         }
 
         /*
-        l1.p1 + u l1.p12 = l2.p1 + v l2.p12
+        l1.p1 + u l1.e = l2.p1 + v l2.e
 
-        l1.p1.x + u l1.p12.x = l2.p1.x + v l2.p12.x
-        l1.p1.y + u l1.p12.y = l2.p1.y + v l2.p12.y
+        l1.p1.x + u l1.e.x = l2.p1.x + v l2.e.x
+        l1.p1.y + u l1.e.y = l2.p1.y + v l2.e.y
 
-        l1.p12.x, - l2.p12.x   u = l2.p1.x - l1.p1.x
-        l1.p12.y, - l2.p12.y   v = l2.p1.y - l1.p1.y
+        l1.e.x, - l2.e.x   u = l2.p1.x - l1.p1.x
+        l1.e.y, - l2.e.y   v = l2.p1.y - l1.p1.y
         
         */
-        const m = new Mat2([[l1.p12.x, - l2.p12.x], [l1.p12.y, - l2.p12.y]]);
+        const m = new Mat2([[l1.e.x, - l2.e.x], [l1.e.y, - l2.e.y]]);
         const v = new Vec2(l2.pointA.position.x - l1.pointA.position.x, l2.pointA.position.y - l1.pointA.position.y);
         const mi = m.inv();
         const uv = mi.dot(v);
         const u = uv.x;
 
-        const position = l1.pointA.position.add(l1.p12.mul(u));
+        const position = l1.pointA.position.add(l1.e.mul(u));
         this.point.setPosition(position);
     }
 
@@ -130,12 +126,12 @@ export class LineLineIntersection extends Shape {
 }
 
 export class LineArcIntersection extends Shape {
-    line : Line;
+    line : AbstractLine;
     arc  : CircleArc;
     pointA : Point;
     pointB : Point;
 
-    constructor(obj : { line:Line, arc:CircleArc, pointA : Point, pointB : Point }){
+    constructor(obj : { line:AbstractLine, arc:CircleArc, pointA : Point, pointB : Point }){
         super(obj);
 
         this.line   = obj.line;
@@ -190,7 +186,7 @@ export class LineArcIntersection extends Shape {
         let t = Math.sqrt(r*r - h * h);
 
         // 線分の単位方向ベクトル
-        this.line.setVecs();
+        this.line.calc();
         let e = this.line.e;
         
         // 交点の座標
@@ -302,7 +298,7 @@ export class CircleCircleTangent extends Tangent {
     circle2 : Circle;    
 
     point   : Point;
-    lines   : Line[] = [];
+    lines   : LineSegment[] = [];
 
     constructor(obj : { circle1 : Circle, circle2 : Circle }){
         super(obj);
@@ -417,7 +413,7 @@ export class CirclePointTangent extends Tangent {
     circle : Circle;
     point  : Point;
     tangentPoints : Point[] = [];
-    lines   : Line[] = [];
+    lines   : LineSegment[] = [];
 
     constructor( obj : { circle : Circle, point : Point }){
         super(obj);
@@ -483,17 +479,17 @@ export class CirclePointTangent extends Tangent {
 export class Relation {
     lineLineIntersections = new Map<string, Point[]>();
 
-    setIntersections(a : Line | CircleArcEllipse, b : Line | CircleArcEllipse, points : Point[]){
+    setIntersections(a : AbstractLine | CircleArcEllipse, b : AbstractLine | CircleArcEllipse, points : Point[]){
         const key = pairKey(a, b);
-        if(a instanceof Line && b instanceof Line){
+        if(a instanceof AbstractLine && b instanceof AbstractLine){
 
             this.lineLineIntersections.set(key, points);
         }
     }
 
-    getIntersections(a : Line | CircleArcEllipse, b : Line | CircleArcEllipse) : Point[] {
+    getIntersections(a : AbstractLine | CircleArcEllipse, b : AbstractLine | CircleArcEllipse) : Point[] {
         const key = pairKey(a, b);
-        if(a instanceof Line && b instanceof Line){
+        if(a instanceof AbstractLine && b instanceof AbstractLine){
 
             
             const points = this.lineLineIntersections.get(key);
