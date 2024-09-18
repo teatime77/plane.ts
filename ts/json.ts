@@ -1,4 +1,4 @@
-namespace planets {
+namespace plane_ts {
 
 export class Widget {
     static refMap : Map<number, any> = new Map<number, any>();
@@ -84,7 +84,6 @@ export function parseObject(obj: any) : any {
             (View.current as any)[name] = val;
         }
         return View.current;
-        // return new View(obj);
 
     // case Simulation.name:
     //     return new Simulation(obj);
@@ -170,16 +169,14 @@ export function parseObject(obj: any) : any {
     }
 }
 
-export function saveJson(view : View){
+export function saveJson(view : View, anchor : HTMLAnchorElement){
     Widget.processed = new Set<number>();
 
     const data = view.toObj();
     const json = JSON.stringify(data, null, 4);
 
     const blob = new Blob([json], { type: 'application/json' });
-     
-    const anchor = $("blob") as HTMLAnchorElement;
-     
+          
     // a 要素の href 属性に Object URL をセット
     anchor.href = window.URL.createObjectURL(blob);
     

@@ -1,6 +1,6 @@
 ///<reference path="shape.ts" />
 
-namespace planets {
+namespace plane_ts {
 
 export function calcFootFrom2Pos(position : Vec2, pos1 : Vec2, e : Vec2) : Vec2 {
     const v = position.sub(pos1);
@@ -25,8 +25,8 @@ export class Midpoint extends Point {
     pointA   : Point;
     pointB   : Point;
 
-    constructor(obj : { pointA: Point, pointB: Point }){
-        super({position:Vec2.zero()});
+    constructor(obj : { position : Vec2, pointA: Point, pointB: Point }){
+        super(obj);
         this.pointA = obj.pointA;
         this.pointB = obj.pointB;
 

@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html>
-
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Pragma" content="no-cache">
@@ -21,7 +20,6 @@
     <script defer src="../katex/contrib/auto-render.min.js"
         integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"
         onload="renderMathInElement(document.body);"></script>
-
 
     <script type="text/javascript" src="../js/plane.js?ver=0"></script>
 
@@ -48,74 +46,15 @@ body {
     background-color:brown; 
     height: 100%;
 }
-
-.property {
-    background-color: white;
-    height:min-content;
-}
-
-.tex_div {
-    position: absolute;
-    display: inline-block;
-    background-color: cornsilk;
-    cursor: move;
-    user-select: none;
-}
 </style>
 
 </head>
-
-<body onload="planets.bodyOnLoad()">
+<body onload="plane_ts.bodyOnLoad()">
     <div id="main-grid" class="main">
-        <div style="grid-row: 1; grid-column: 1 / 6; background-color: white; ">
-            <input type="checkbox" id="show-axis">
-            <label for="show-axis">Axis</label>
-
-            <input type="checkbox" id="show-grid">
-            <label for="show-grid">Grid</label>
-
-            <input type="checkbox" id="snap-to-grid">
-            <label for="snap-to-grid">Snap to Grid</label>       
-            
-            <button id="save">Save</button>
-            <a id="blob"></a>
-        </div>
-
-        <div id="shape-tool"
-            style="display:grid; grid-template-columns: 1fr 1fr; grid-row: 3; grid-column: 1; height: 100%; background-color: white;">
-            <input type="radio" name="tool-type" value="select" checked />選択
-            <input type="radio" name="tool-type" value="Distance" />距離
-            <input type="radio" name="tool-type" value="Point" />点
-            <input type="radio" name="tool-type" value="LineSegment" />線分
-            <input type="radio" name="tool-type" value="StraightLine" />直線
-            <input type="radio" name="tool-type" value="HalfLine" />半直線
-            <input type="radio" name="tool-type" value="BSpline" />曲線
-            <input type="radio" name="tool-type" value="Rect.1" />長方形
-            <input type="radio" name="tool-type" value="Rect.2" />正方形
-            <input type="radio" name="tool-type" value="Circle.1" />円1
-            <input type="radio" name="tool-type" value="Circle.2" />円2
-            <input type="radio" name="tool-type" value="Ellipse" />楕円
-            <input type="radio" name="tool-type" value="Arc" />弧
-            <input type="radio" name="tool-type" value="Midpoint" />中点
-            <input type="radio" name="tool-type" value="Perpendicular" />垂線
-            <input type="radio" name="tool-type" value="ParallelLine" />平行線
-            <input type="radio" name="tool-type" value="Intersection" />交点
-            <input type="radio" name="tool-type" value="Tangent" />接線
-            <input type="radio" name="tool-type" value="Angle" />角度
-            <input type="radio" name="tool-type" value="Image" />画像
-            <input type="radio" name="tool-type" value="DimensionLine" />寸法線
-            <input type="radio" name="tool-type" value="FuncLine" />曲線
-            <input type="radio" name="tool-type" value="Surface" />曲面
-        </div>
-
-        <div style="grid-row: 3; grid-column: 3; " >
-            <canvas id="canvas"
-                style="width: 100%; height: 100%; background-color:bisque;"></canvas>
-
-        </div>
-
-        <table id="property-list" class="property" style="grid-row: 3; grid-column: 5;"></table>
+        <div id="menu-bar" style="grid-row: 1; grid-column: 1 / 6; background-color: white; "></div>
+        <div id="shape-tool" style="grid-row: 3; grid-column: 1; height: 100%; background-color: white;"></div>
+        <div id="canvas-div" style="grid-row: 3; grid-column: 3; " ></div>
+        <div id="property-div" style="grid-row: 3; grid-column: 5;"></div>
     </div>
 </body>
-
 </html>

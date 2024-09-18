@@ -1,4 +1,4 @@
-namespace planets {
+namespace plane_ts {
 //
 
 export let  upperLatinLetters : string;
@@ -27,22 +27,42 @@ function initLetters(){
     msg(lowerGreekLetters);
 }
 
-export function bodyOnLoad(){
+export function initPlane(menu_div : HTMLElement, tool_div : HTMLElement, canvas_div : HTMLElement, property_div : HTMLElement){
     initLetters();
+    makeCssClass();
 
-    const view = new View({ scale : 100, shapes : []});
+    const canvas = makeCanvas(canvas_div);
+    makeToolBox(tool_div);
+    makePropertyTable(property_div);
+    const [save_btn, anchor] = makeMenuBar(menu_div);
+
+    const view = new View(canvas);
 
     viewEvent(view);
 
-    Builder.tool = new SelectTool();
+    saveEvent(view, save_btn, anchor);
 
-    const tool_type_radios = Array.from(document.getElementsByName("tool-type")) as HTMLInputElement[];
+    Builder.tool = new SelectionTool();
+
+}
+
+export function bodyOnLoad(){
+    initPlane($div("menu-bar"), $div("shape-tool"), $div("canvas-div"), $div("property-div"));
+}
+
+export function toolBoxEvent(tool_type_radios : HTMLInputElement[]){
     for(const radio of tool_type_radios){
         radio.addEventListener("change", (event : Event)=>{
             msg(`tool:${radio.value}`);
             Builder.changeTool(radio.value);
         })
     };
+}
+
+export function saveEvent(view : View, save_btn : HTMLButtonElement, anchor : HTMLAnchorElement){
+    save_btn.addEventListener("click", (ev : MouseEvent)=>{
+        saveJson(view, anchor);
+    });
 }
 
 export function viewEvent(view : View){
@@ -56,11 +76,6 @@ export function viewEvent(view : View){
     // Passive event listeners
     // https://github.com/WICG/EventListenerOptions/blob/gh-pages/explainer.md
     view.board.addEventListener("wheel"      , view.wheel.bind(view), {"passive" : false } );
-
-    $("save").addEventListener("click", (ev : MouseEvent)=>{
-        saveJson(view);
-    }
-    );
 
     dropEvent(view);
     

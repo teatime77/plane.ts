@@ -1,4 +1,4 @@
-namespace planets {
+namespace plane_ts {
 //
 export class View extends Widget {
     static nearThreshold = 4;
@@ -35,9 +35,9 @@ export class View extends Widget {
         return pix_distance < View.nearThreshold;
     }
 
-    constructor(obj : { scale : number, shapes : Shape[] }){
-        super(obj);
-        this.board = $("canvas") as HTMLCanvasElement;
+    constructor(canvas : HTMLCanvasElement){
+        super({});
+        this.board = canvas;
         this.board.innerHTML = "";
         
         this.canvas = new Canvas(this, this.board);
@@ -46,13 +46,13 @@ export class View extends Widget {
         this.board.width  = this.board.clientWidth;
         this.board.height = this.board.clientHeight;
 
-        const max_x = 0.5 * (this.board.clientWidth  / obj.scale);
-        const max_y = 0.5 * (this.board.clientHeight / obj.scale);
+        const scale = 100;
+        const max_x = 0.5 * (this.board.clientWidth  / scale);
+        const max_y = 0.5 * (this.board.clientHeight / scale);
 
         this.setMinMax(new Vec2(-max_x, -max_y), new Vec2( max_x,  max_y));
 
         View.current = this;
-        this.shapes = obj.shapes;
     }
 
     setMinMax(min : Vec2, max : Vec2){

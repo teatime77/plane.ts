@@ -1,6 +1,6 @@
 ///<reference path="json.ts" />
 
-namespace planets {
+namespace plane_ts {
 //
 const fgColor = "black";
 let captionDownPos : Vec2 | undefined;
@@ -37,6 +37,9 @@ export class TextBlock extends AbstractShape {
         }
         else{
 
+            if(obj.text == "U"){
+                msg(``);
+            }
             this.div.innerText = obj.text;
         }
 
@@ -260,6 +263,7 @@ export class Point extends Shape {
 
         Point.tempPoints.push(this);
 
+        this.caption = (obj as any).caption;
         if(this.caption == undefined){
             this.caption = new TextBlock( { text : this.name, isTex : false, offset : new Vec2(10, -20) });
         }
@@ -268,7 +272,7 @@ export class Point extends Shape {
 
         this.setPosition(obj.position);
 
-        msg(`point:${this.name}`);
+        // msg(`point:${this.name}`);
     }
 
     copy() : Point {

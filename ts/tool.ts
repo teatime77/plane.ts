@@ -1,4 +1,4 @@
-namespace planets {
+namespace plane_ts {
 //
 export abstract class Builder {
     static tool : Builder;
@@ -9,7 +9,7 @@ export abstract class Builder {
 
     static makeToolByType(tool_name: string): Builder {    
         switch(tool_name){
-            case "select":        return new SelectTool();
+            case "Selection":        return new SelectionTool();
             // case "Distance":      return new Distance();
             case "Point":         return new PointBuilder();
             case "LineSegment":   return new LineSegmentBuilder();
@@ -63,7 +63,7 @@ export abstract class Builder {
     }
 }
 
-export class SelectTool extends Builder {
+export class SelectionTool extends Builder {
     downOffset : Vec2 | undefined;
 
     selectedShape : Shape | undefined;
@@ -148,7 +148,7 @@ class MidpointBuilder extends Builder {
             }
         }
         else if(shape instanceof Point){
-            const mid_point = new Midpoint( { pointA : this.pointA, pointB : shape  } );
+            const mid_point = new Midpoint( { position:Vec2.zero(), pointA : this.pointA, pointB : shape  } );
             view.addShape(mid_point);
             this.pointA      = undefined;
         }

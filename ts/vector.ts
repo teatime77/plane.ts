@@ -1,4 +1,4 @@
-namespace planets {
+namespace plane_ts {
 //
 export class Vec2 {
     static nan() : Vec2 {

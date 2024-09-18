@@ -1,6 +1,6 @@
 var katex : any;
 
-namespace planets {
+namespace plane_ts {
 //
 
 const $dic = new Map<string, HTMLElement>();

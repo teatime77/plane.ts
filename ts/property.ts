@@ -1,4 +1,4 @@
-namespace planets {
+namespace plane_ts {
 //
 function appendRow(tbl : HTMLTableElement, nest : number, name : string, value : HTMLElement){
     const row = document.createElement("tr");
