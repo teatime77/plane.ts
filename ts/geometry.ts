@@ -55,6 +55,10 @@ export class Midpoint extends Point {
         const position = this.pointA.add(this.pointB).mul(0.5);
         this.setPosition(position);
     }
+
+    reading() : Reading {
+        return new Reading("Let α be the midpoint between points β and γ.", [ this, this.pointA, this.pointB]);
+    }
 }
 
 export class FootOfPerpendicular extends Shape {
@@ -89,6 +93,10 @@ export class FootOfPerpendicular extends Shape {
     calc(){
         const foot_pos = calcFootOfPerpendicular(this.point.position, this.line);
         this.foot.setPosition(foot_pos);
+    }
+
+    reading() : Reading {
+        return new Reading("Let α be the foot of the perpendicular line drawn from point β to the line γ.", [ this.foot, this.point, this.line]);
     }
 }
 
@@ -158,6 +166,10 @@ export class LineLineIntersection extends Shape {
 
     draw() : void {
         this.point.draw();
+    }
+
+    reading(): Reading {
+        return new Reading("Let α be the intersection point of the two lines.", [this.point]);
     }
 }
 
@@ -236,6 +248,10 @@ export class LineArcIntersection extends Shape {
     draw() : void {
         this.pointA.draw();
         this.pointB.draw();
+    }
+
+    reading(): Reading {
+        return new Reading("Let points α and β be the intersections of the line and the circle.", [ this.pointA, this.pointB ]);
     }
 }
 
@@ -321,6 +337,10 @@ export class ArcArcIntersection extends Shape {
     draw() : void {
         this.pointA.draw();
         this.pointB.draw();
+    }
+
+    reading(): Reading {
+        return new Reading("Let points α and β be the intersections of the two circles.", [ this.pointA, this.pointB ]);
     }
 }
 
@@ -423,6 +443,10 @@ export class CircleCircleTangent extends Tangent {
             this.lines[1].pointB.setPosition( tangent_positions_list[3] );
         }
     }
+
+    reading(): Reading {
+        return new Reading("Draw tangents to the two circles.", []);
+    }
 }
 
 function calcCirclePointTangent(center : Vec2, radius : number, position : Vec2) : [Vec2, Vec2] {
@@ -509,6 +533,11 @@ export class CirclePointTangent extends Tangent {
             this.tangentPoints[i].setPosition(position);
             this.lines[i].pointB.setPosition(position);
         }
+    }
+
+    reading(): Reading {
+        return new Reading("Draw a tangent line from point α to the circle, and let the points of tangency be points β and γ.",
+            [this.point].concat(this.tangentPoints));
     }
 }
 

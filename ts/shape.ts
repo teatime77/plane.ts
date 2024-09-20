@@ -6,12 +6,14 @@ const fgColor = "black";
 let captionDownPos : Vec2 | undefined;
 let offsetDown : Vec2;
 
-abstract class AbstractShape extends Widget {
+export abstract class AbstractShape extends Widget {
     constructor(obj : any){
         super(obj);
         
         View.current.dirty = true;
     }
+
+    abstract reading() : Reading;
 }
 
 export class TextBlock extends AbstractShape {
@@ -118,6 +120,9 @@ export class TextBlock extends AbstractShape {
         captionDownPos = undefined;
     }
 
+    reading() : Reading {
+        throw new MyError();
+    }
 }
 
 export abstract class Shape extends AbstractShape {
@@ -214,6 +219,10 @@ export abstract class Shape extends AbstractShape {
     }
 
     shapePointerup(position : Vec2){
+    }
+
+    reading() : Reading {
+        return new Reading(this.name, []);
     }
 }
 
@@ -511,6 +520,10 @@ export class ParallelLine extends Line {
     calc(){
         this.e = this.line.e.copy();
     }
+
+    reading(): Reading {
+        return new Reading("Draw a line through point α that is parallel to line β.", []);
+    }
 }
 
 
@@ -606,6 +619,10 @@ export class CircleByPoint extends Circle {
 
     radius() : number {
         return this.center.position.distance(this.point.position);
+    }
+
+    reading(): Reading {
+        return new Reading("Draw a circle with point α as the center.", [ this.center ]);
     }
 }
 

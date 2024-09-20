@@ -1,6 +1,6 @@
 namespace plane_ts {
 
-export class Widget {
+export abstract class Widget {
     static refMap : Map<number, any> = new Map<number, any>();
     static maxId = 0;
     static processed : Set<number>;
@@ -41,7 +41,6 @@ export class Widget {
 
         return this.makeObj();
     }
-    
 }
 
 export function parseObject(obj: any) : any {
