@@ -92,11 +92,38 @@ export function setCaptionEvent(caption : TextBlock){
     caption.div.addEventListener("pointerdown", caption.captionPointerdown.bind(caption));
     caption.div.addEventListener("pointermove", caption.captionPointermove.bind(caption));
     caption.div.addEventListener("pointerup", caption.captionPointerup.bind(caption));
+    caption.div.addEventListener("click", (ev : MouseEvent)=>{
+        showProperty(caption, 0);
+    });
 
+    caption.div.addEventListener("dblclick", (ev : MouseEvent)=>{
+        caption.div.contentEditable = "true";
+        caption.div.style.cursor = "text";
+        caption.div.focus();
+
+    });
+
+    caption.div.addEventListener("blur", (ev : FocusEvent)=>{
+        caption.div.contentEditable = "false";
+        caption.div.style.cursor = "move";
+        caption.text = caption.div.innerText;
+
+        const text_area = document.getElementById("text-block-text-area") as HTMLTextAreaElement;
+        if(text_area != null){
+            text_area.value = caption.text;
+        }
+    });
 }
 
-export function PropertyEvent(property : Property){
-    property.input.addEventListener("change", property.valueChanged.bind(property));
+export function PropertyEvent(property : InputProperty | TextAreaProperty){
+    if(property instanceof InputProperty){
+
+        property.input.addEventListener("change", property.valueChanged.bind(property));
+    }
+    else{
+
+        property.textArea.addEventListener("input", property.valueChanged.bind(property));
+    }
 }
 
 

@@ -169,6 +169,12 @@ export function parseObject(obj: any) : any {
 }
 
 export function saveJson(view : View, anchor : HTMLAnchorElement){
+    const name = prompt("Enter the document name.", View.current.name);
+    if(name == null || name.trim() == ""){
+        return;
+    }
+    View.current.name = name.trim();
+
     Widget.processed = new Set<number>();
 
     const data = view.toObj();
@@ -180,7 +186,7 @@ export function saveJson(view : View, anchor : HTMLAnchorElement){
     anchor.href = window.URL.createObjectURL(blob);
     
     // a 要素の download 属性にファイル名をセット
-    anchor.download = 'test.json';
+    anchor.download = `${View.current.name}.json`;
     
     // 疑似的に a 要素をクリックさせる
     anchor.click();

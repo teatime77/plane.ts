@@ -3,8 +3,7 @@
 namespace plane_ts {
 //
 const fgColor = "black";
-let captionDownPos : Vec2 | undefined;
-let offsetDown : Vec2;
+let capturedShape : AbstractShape | undefined;
 
 export abstract class AbstractShape extends Widget {
     constructor(obj : any){
@@ -17,8 +16,6 @@ export abstract class AbstractShape extends Widget {
 }
 
 export class TextBlock extends AbstractShape {
-    x! : number;
-    y! : number;
     text : string;
     isTex : boolean;
     div       : HTMLDivElement;
@@ -39,13 +36,13 @@ export class TextBlock extends AbstractShape {
         }
         else{
 
-            if(obj.text == "U"){
-                msg(``);
-            }
             this.div.innerText = obj.text;
         }
 
         View.current.board.parentElement!.append(this.div);
+
+        setCaptionEvent(this);
+        this.setTextPosition(0, 0);
     }
 
     makeObj() : any {
@@ -77,11 +74,8 @@ export class TextBlock extends AbstractShape {
     }
 
     setTextPosition(x : number, y : number){
-        this.x = x;
-        this.y = y;
-
-        this.div.style.left = `${this.x + this.offset.x}px`;
-        this.div.style.top  = `${this.y + this.offset.y}px`;
+        this.div.style.left = `${x + this.offset.x}px`;
+        this.div.style.top  = `${y + this.offset.y}px`;
     }
 
     setRotation(degree : number){
@@ -94,30 +88,24 @@ export class TextBlock extends AbstractShape {
 
     captionPointerdown(event : PointerEvent){
         this.div.setPointerCapture(event.pointerId);
-
-        captionDownPos = new Vec2(event.screenX, event.screenY);
-        offsetDown = this.offset.copy();
-        const x = this.div.style.left;
-        const y = this.div.style.top;
-        const [x2, y2] = [this.div.offsetLeft, this.div.offsetTop];
-        msg(`caption : ${x} ${y} ${x2} ${y2}`);
-
+        capturedShape = this;
     }
 
     captionPointermove(event : PointerEvent){
-        if(captionDownPos == undefined){
+        if(capturedShape != this){
             return;
         }
-        const diff = new Vec2(event.screenX, event.screenY).sub(captionDownPos);
-        this.offset = offsetDown.add(diff);
+
+        this.offset.x += event.movementX;
+        this.offset.y += event.movementY;
         
-        this.div.style.left = `${this.x + this.offset.x}px`;
-        this.div.style.top  = `${this.y + this.offset.y}px`;
+        this.div.style.left = `${this.div.offsetLeft + event.movementX}px`;
+        this.div.style.top  = `${this.div.offsetTop  + event.movementY}px`;
     }
 
     captionPointerup(event : PointerEvent){
         this.div.releasePointerCapture(event.pointerId);
-        captionDownPos = undefined;
+        capturedShape = undefined;
     }
 
     reading() : Reading {
@@ -276,8 +264,6 @@ export class Point extends Shape {
         if(this.caption == undefined){
             this.caption = new TextBlock( { text : this.name, isTex : false, offset : new Vec2(10, -20) });
         }
-
-        setCaptionEvent(this.caption);
 
         this.setPosition(obj.position);
 

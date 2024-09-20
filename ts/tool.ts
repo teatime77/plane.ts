@@ -28,6 +28,7 @@ export abstract class Builder {
             case "Intersection":  return new IntersectionBuilder();
             case "Tangent":       return new TangentBuilder();
             case "Angle":         return new AngleBuilder();
+            case "Text":         return new TextBlockBuilder();
             // case "Image":         return new Image({fileName:"./img/teatime77.png"});
             // case "FuncLine":      return new FuncLine();
         }
@@ -552,5 +553,18 @@ class DimensionLineBuilder extends Builder {
         }
     }
 }
+
+
+class TextBlockBuilder extends Builder {
+    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
+        const offset = new Vec2(event.pageX, event.pageY);
+        const text_block = new TextBlock({ text : "Text", isTex : false, offset });
+        text_block.setTextPosition(0, 0);
+
+        view.addShape(text_block);
+
+    }
+}
+
 
 }

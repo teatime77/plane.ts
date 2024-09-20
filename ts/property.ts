@@ -17,14 +17,12 @@ function appendRow(tbl : HTMLTableElement, nest : number, name : string, value :
 }
 
 export abstract class Property {
-    input  : HTMLInputElement;
     widget : Widget;
     name   : string;
 
-    constructor(widget : Widget, name : string, input_type : string){
-        this.input = document.createElement("input");
-        this.input.type = input_type;
+    abstract valueChanged() : void;
 
+    constructor(widget : Widget, name : string){
         this.widget = widget;
         this.name   = name;
     }
@@ -46,20 +44,48 @@ export abstract class Property {
 
         View.current.dirty = true;
     }
+}
+
+export class TextAreaProperty extends Property {
+    textArea : HTMLTextAreaElement;
+
+    constructor(widget : Widget, name : string, value : string){
+        super(widget, name);
+        this.textArea = document.createElement("textarea");
+        this.textArea.id   = "text-block-text-area";
+        this.textArea.cols = 80;
+        this.textArea.rows = 10;
+        this.textArea.value = value;
+    }
+
+    valueChanged() : void {
+        this.setValue(this.textArea.value);
+        (this.widget as TextBlock).div.innerText = this.textArea.value;
+    }
+}
+
+export abstract class InputProperty extends Property {
+    input  : HTMLInputElement;
+
+    constructor(widget : Widget, name : string, input_type : string){
+        super(widget, name);
+        this.input = document.createElement("input");
+        this.input.type = input_type;
+    }
 
     valueChanged() : void {
         this.setValue(this.input.value);
     }
 }
 
-class StringProperty extends Property {
+class StringProperty extends InputProperty {
     constructor(widget : Widget, name : string, value : string){
         super(widget, name, "text");
         this.input.value = value;
     }
 }
 
-class NumberProperty extends Property {
+class NumberProperty extends InputProperty {
     constructor(widget : Widget, name : string, value : number){
         super(widget, name, "number");
         this.input.step  = "0.1";
@@ -72,7 +98,7 @@ class NumberProperty extends Property {
 }
 
 
-class BooleanProperty extends Property {
+class BooleanProperty extends InputProperty {
     constructor(widget : Widget, name : string, value : boolean){
         super(widget, name, "checkbox");
         this.input.checked = value;
@@ -83,7 +109,7 @@ class BooleanProperty extends Property {
     }
 }
 
-class ColorProperty extends Property {
+class ColorProperty extends InputProperty {
     constructor(widget : Widget, name : string, value : string){
         super(widget, name, "color");
         this.input.value = value;
@@ -120,8 +146,6 @@ export function showProperty(widget : Widget, nest : number){
     appendTitle(tbl, nest, widget.constructor.name);
     for(const property_name of properties){
 
-        let property : Property;
-
         if(typeof property_name == "string"){
             const name = property_name;
             const value = (widget as any)[name];
@@ -129,50 +153,60 @@ export function showProperty(widget : Widget, nest : number){
                 continue;
             }
 
-            switch(typeof value){
-            case "string":
-                if(name == "color"){
+            if(name == "text" && widget instanceof TextBlock){
 
-                    property = new ColorProperty(widget, name, value);
-                }
-                else{
+                const property = new TextAreaProperty(widget, name, value as string);
+                appendRow(tbl, nest + 1, property.name, property.textArea);
+                PropertyEvent(property!);
+            }
+            else{
+                let property : InputProperty;
 
-                    property = new StringProperty(widget, name, value);
-                }
-                break;
-                
-            case "number":
-                property = new NumberProperty(widget, name, value);
-                break;
-                
-            case "boolean":
-                property = new BooleanProperty(widget, name, value);
-                break;
-                
-            case "object":
-                if(value instanceof Widget){
-                    showProperty(value, nest + 1);
-                }
-                else if(value instanceof Vec2){
-                    const text = `x:${value.x.toFixed(1)} y:${value.y.toFixed(1)}`;
-                    makeConstantProperty(tbl, nest + 1, name, text);
-                }
-                else{
-                    msg(`unknown property:${value.constructor.name}`);
+                switch(typeof value){
+                case "string":
+                    if(name == "color"){
+
+                        property = new ColorProperty(widget, name, value);
+                    }
+                    else{
+
+                        property = new StringProperty(widget, name, value);
+                    }
+                    break;
+                    
+                case "number":
+                    property = new NumberProperty(widget, name, value);
+                    break;
+                    
+                case "boolean":
+                    property = new BooleanProperty(widget, name, value);
+                    break;
+                    
+                case "object":
+                    if(value instanceof Widget){
+                        showProperty(value, nest + 1);
+                    }
+                    else if(value instanceof Vec2){
+                        const text = `x:${value.x.toFixed(1)} y:${value.y.toFixed(1)}`;
+                        makeConstantProperty(tbl, nest + 1, name, text);
+                    }
+                    else{
+                        msg(`unknown property:${value.constructor.name}`);
+                    }
+
+                    continue;
+
+                default:
+                    throw new MyError();
                 }
 
-                continue;
-
-            default:
-                throw new MyError();
+                appendRow(tbl, nest + 1, property.name, property.input);
+                PropertyEvent(property!);
             }
         }
         else{
             throw new MyError();
         }
-
-        appendRow(tbl, nest + 1, property.name, property.input);
-        PropertyEvent(property!);
     }
 }
 }

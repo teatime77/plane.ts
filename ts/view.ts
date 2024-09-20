@@ -3,11 +3,12 @@ namespace plane_ts {
 export class View extends Widget {
     static nearThreshold = 4;
     static current : View;
+    name  : string = "";
     board : HTMLCanvasElement;
     canvas : Canvas;
     grid : Grid;
 
-    shapes : Shape[] = [];
+    shapes : AbstractShape[] = [];
     changed : Set<Shape> = new Set<Shape>();
 
     downPosition : Vec2 | undefined;
@@ -23,6 +24,7 @@ export class View extends Widget {
 
     makeObj() : any {
         let obj = Object.assign(super.makeObj(), {
+            name   : this.name,
             scale  : this.board.clientWidth / (this.max.x - this.min.x),
             shapes : this.shapes.map(x => x.toObj())
         });
@@ -107,9 +109,13 @@ export class View extends Widget {
         return new Vec2(x_pix, y_pix);
     }
 
+    getShapes() : Shape[] {
+        return this.shapes.filter(x => x instanceof Shape) as Shape[];
+    }
+
     allShapes() : Shape[] {
         const shapes : Shape[] = [];
-        this.shapes.forEach(x => x.getAllShapes(shapes));
+        this.getShapes().forEach(x => x.getAllShapes(shapes));
 
         return unique(shapes);
     }
@@ -243,7 +249,7 @@ export class View extends Widget {
         msg(`resize: w:${w} ${this.board.width} h:${h} ${this.board.height} max:${this.max}`);
     }
 
-    addShape(shape : Shape){
+    addShape(shape : AbstractShape){
         this.shapes.push(shape);
     }
 
@@ -264,7 +270,7 @@ export class View extends Widget {
     }
 
     updateShapes(){
-        for(const shape of this.shapes){
+        for(const shape of this.getShapes()){
             if( shape.dependencies().some(x => this.changed.has(x)) ){
                 shape.calc();
 
