@@ -2,3 +2,4 @@ public/js
 public/katex
 tmp
 debug.log
+.vscode/settings.json

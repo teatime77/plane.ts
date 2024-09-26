@@ -15,7 +15,7 @@ const toolBoxValueTexts : [string,string][] = [
     [ "Ellipse", "Ellipse" ],
     [ "Arc", "Arc" ],
     [ "Midpoint", "Midpoint" ],
-    [ "Perpendicular", "Midpoint" ],
+    [ "Perpendicular", "Perpendicular" ],
     [ "ParallelLine", "Parallel line" ],
     [ "Intersection", "Intersection" ],
     [ "Tangent", "Tangent" ],
