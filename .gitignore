@@ -3,3 +3,4 @@ public/katex
 tmp
 debug.log
 .vscode/settings.json
+public/lib/plane/js

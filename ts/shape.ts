@@ -6,6 +6,9 @@ const fgColor = "black";
 let capturedShape : AbstractShape | undefined;
 
 export abstract class AbstractShape extends Widget {
+    selected : boolean = false;
+    isOver : boolean = false;
+
     constructor(obj : any){
         super(obj);
         
@@ -13,6 +16,18 @@ export abstract class AbstractShape extends Widget {
     }
 
     abstract reading() : Reading;
+
+    dependencies() : Shape[] {
+        return [];
+    }
+
+    select(){
+        this.selected = true;
+    }
+
+    unselect(){
+        this.selected = false;
+    }
 }
 
 export class TextBlock extends AbstractShape {
@@ -120,9 +135,6 @@ export abstract class Shape extends AbstractShape {
     caption   : TextBlock | undefined;
     depends   : Shape[] = [];
 
-    isOver : boolean = false;
-    selected : boolean = false;
-
     abstract draw() : void;
 
     constructor(obj : any){
@@ -182,22 +194,10 @@ export abstract class Shape extends AbstractShape {
         shapes.push(this);
     }
 
-    dependencies() : Shape[] {
-        return [];
-    }
-
     calc(){        
     }
 
     updateCaption(){ 
-    }
-
-    select(){
-        this.selected = true;
-    }
-
-    unselect(){
-        this.selected = false;
     }
 
     shapePointerdown(position : Vec2){
