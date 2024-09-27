@@ -1,6 +1,6 @@
-public/js
 public/katex
 tmp
 debug.log
 .vscode/settings.json
-public/lib/plane/js
+public/lib/plane/plane.d.ts
+public/lib/plane/plane.js
