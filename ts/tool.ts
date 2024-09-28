@@ -17,8 +17,8 @@ export abstract class Builder {
             // case "HalfLine":      return new HalfLine();
             // case "BSpline":       return new BSpline();
             // case "Rect":          return new Rect();
-            case "Circle.1":        return new Circle1Builder();
-            case "Circle.2":        return new Circle2Builder();
+            case "Circle1":        return new Circle1Builder();
+            case "Circle2":        return new Circle2Builder();
             case "Ellipse":           return new EllipseBuilder();
             case "Arc":           return new ArcBuilder();
             case "DimensionLine": return new DimensionLineBuilder();

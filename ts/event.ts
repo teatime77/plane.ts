@@ -7,6 +7,8 @@ export let  lowerLatinLetters : string;
 export let  upperGreekLetters : string;
 export let  lowerGreekLetters : string;
 
+let selectedToolButton : HTMLButtonElement;
+
 function initLetters(){
     const A = "A".charCodeAt(0);
     const a = "a".charCodeAt(0);
@@ -31,8 +33,11 @@ export function initPlane(menu_div : HTMLElement, tool_div : HTMLElement, canvas
     initLetters();
     makeCssClass();
 
+    const buttons = makeToolBox(tool_div);
+    toolBoxEvent(buttons);
+
     const canvas = makeCanvas(canvas_div);
-    makeToolBox(tool_div);
+
     makePropertyTable(property_div);
     const [save_btn, anchor] = makeMenuBar(menu_div);
 
@@ -50,12 +55,25 @@ export function bodyOnLoad(){
     initPlane($div("menu-bar"), $div("shape-tool"), $div("canvas-div"), $div("property-div"));
 }
 
-export function toolBoxEvent(tool_type_radios : HTMLInputElement[]){
-    for(const radio of tool_type_radios){
-        radio.addEventListener("change", (event : Event)=>{
-            msg(`tool:${radio.value}`);
-            Builder.changeTool(radio.value);
-        })
+function selectButton(button : HTMLButtonElement){
+    selectedToolButton = button;
+    button.style.margin      = "1px";
+    button.style.borderWidth = "2px";
+}
+
+export function toolBoxEvent(buttons : HTMLButtonElement[]){
+    selectButton(buttons[0]);
+
+    for(const button of buttons){
+        button.addEventListener("click", (ev : MouseEvent)=>{
+            selectedToolButton.style.margin      = "2px";
+            selectedToolButton.style.borderWidth = "1px";
+
+            selectButton(button);                    
+
+            msg(`tool:${button.value}`);
+            Builder.changeTool(button.value);
+        });
     };
 }
 

@@ -1,53 +1,54 @@
 namespace plane_ts {
 //
-const toolBoxValueTexts : [string,string][] = [
-    [ "Selection", "Selection" ],
-    [ "Distance", "Distance" ],
-    [ "Point", "Point" ],
-    [ "LineSegment", "Line segment" ],
-    [ "StraightLine", "Straight line" ],
-    [ "HalfLine", "Half line" ],
-    [ "BSpline", "BSpline" ],
-    [ "Rect.1", "Rectangle" ],
-    [ "Rect.2", "Square" ],
-    [ "Circle.1", "Circle by point" ],
-    [ "Circle.2", "Circle by radius" ],
-    [ "Ellipse", "Ellipse" ],
-    [ "Arc", "Arc" ],
-    [ "Midpoint", "Midpoint" ],
-    [ "Perpendicular", "Perpendicular" ],
-    [ "ParallelLine", "Parallel line" ],
-    [ "Intersection", "Intersection" ],
-    [ "Tangent", "Tangent" ],
-    [ "Angle", "Angle" ],
-    [ "Image", "Image" ],
-    [ "DimensionLine", "Dimension line" ],
-    [ "FuncLine", "Curve" ],
-    [ "Surface", "Surface" ],
-    [ "Text", "Text" ],
-]
 
-export function makeToolBox(div : HTMLElement){
-    const tool_type_radios : HTMLInputElement[] = [];
+export function makeToolBox(div : HTMLElement): HTMLButtonElement[] {
+    const name_titles = [
+        [ "Selection", "selection", "selection" ],
+        [ "Point", "point", "point" ],
+        [ "Midpoint", "mid-point", "mid point" ],
+        [ "Intersection", "intersection", "intersection" ],
+        [ "LineSegment", "line-segment", "line segment" ],
+        [ "HalfLine", "half-line", "half line" ],
+        [ "StraightLine", "line", "line" ],
+        [ "Perpendicular", "perpendicular", "perpendicular" ],
+        [ "ParallelLine", "parallel-line", "parallel line" ],
+        [ "Circle1", "circle-by-point", "circle by point" ],
+        [ "Circle2", "circle-by-radius", "circle by radius" ],
+        [ "Arc", "arc", "arc" ],
+        [ "Ellipse", "ellipse", "ellipse" ],
+        [ "Angle", "angle", "angle" ],
+        [ "DimensionLine", "dimension-line", "dimension line" ],
+        [ "TangentCircles", "tangent-circles", "tangent circles" ],
+        [ "TangentPoint", "tangent-point", "tangent point" ],
+        [ "Text", "text", "text" ]
+    ];
 
-    for(const [value, text] of toolBoxValueTexts){
-        const inp = document.createElement("input");
-        inp.type = "radio";
-        inp.name = "tool-type";
-        inp.value = value;
-        div.append(inp);
+    const buttons : HTMLButtonElement[] = [];
+    for(const [value, name, title] of name_titles){
+        const button = document.createElement("button");
+        button.className = "tool-button";
+        button.id = `${name}-button`;
+        button.value = value;
+        button.title = title;
+        button.style.margin      = "2px";
+        button.style.borderWidth = "1px";
 
-        const label = document.createElement("label");
-        label.textContent = text;
-        div.append(label);
+        const img = document.createElement("img");
+        img.src = `../lib/plane/img/${name}.png`;
+        img.className = "tool-button-img";
+        img.style.width  = "24px";
+        img.style.height = "24px";
 
-        tool_type_radios.push(inp);
+        button.append(img);
+        div.append(button);
 
-        div.append(document.createElement("br"));
+        const br = document.createElement("br");
+        div.append(br);
+
+        buttons.push(button);
     }
-    tool_type_radios[0].checked = true;
 
-    toolBoxEvent(tool_type_radios);
+    return buttons;
 }
 
 function makeCheckbox(div : HTMLElement, id : string, text : string){
