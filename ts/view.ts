@@ -45,7 +45,11 @@ export class View extends Widget {
         this.canvas = new Canvas(this, this.board);
         this.grid   = new Grid(this);
 
+        this.board.style.height = `${this.board.clientWidth * 9 / 16}px`;
+
         this.board.width  = this.board.clientWidth;
+        // this.board.height = this.board.clientWidth * 9 / 16;
+
         this.board.height = this.board.clientHeight;
 
         const scale = 100;
@@ -239,12 +243,19 @@ export class View extends Widget {
     resize(event : UIEvent){
         const [w, h] = [ this.board.width, this.board.height ];        
 
+        const height = this.board.clientWidth * 9 / 16;
+
+        this.board.style.height = `${height}px`;
+
         this.board.width  = this.board.clientWidth;
-        this.board.height = this.board.clientHeight;
+        this.board.height = height;
 
-        const [rx, ry] = [ this.board.width / w, this.board.height / h ];
+        // const [rx, ry] = [ this.board.width / w, this.board.height / h ];
 
-        this.setMinMax(this.min.mul(rx, ry), this.max.mul(rx, ry));
+        // this.setMinMax(this.min.mul(rx, ry), this.max.mul(rx, ry));
+
+        this.updateTextBlockPositions();
+        this.dirty = true;
 
         msg(`resize: w:${w} ${this.board.width} h:${h} ${this.board.height} max:${this.max}`);
     }
@@ -277,6 +288,16 @@ export class View extends Widget {
                 this.changed.add(shape);
             }
         }
+    }
+
+    updateTextBlockPositions(){
+        const shapes = this.allShapes();
+
+        const parents = shapes.filter(x => (x instanceof Point || x instanceof DimensionLine) && x.caption != undefined) as (Point | DimensionLine)[];
+        parents.forEach(x => x.updateCaption());
+        // for(const shape of ){
+        //     shape.caption?.setTextPosition(x.)
+        // }
     }
 }
 

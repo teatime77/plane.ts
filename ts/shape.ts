@@ -31,9 +31,9 @@ export abstract class AbstractShape extends Widget {
 }
 
 export class TextBlock extends AbstractShape {
-    text : string;
+    text  : string;
     isTex : boolean;
-    div       : HTMLDivElement;
+    div   : HTMLDivElement;
 
     offset : Vec2 = new Vec2(0, 0);
 

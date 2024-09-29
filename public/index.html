@@ -8,106 +8,42 @@
 
     <title>Plane</title>
 
-    <link rel="stylesheet" href="../katex/katex.min.css"
+    <link rel="stylesheet" href="katex/katex.min.css"
         integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
 
     <!-- The loading of KaTeX is deferred to speed up page rendering -->
-    <script defer src="../katex/katex.min.js"
+    <script defer src="katex/katex.min.js"
         integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx"
         crossorigin="anonymous"></script>
 
     <!-- To automatically render math in text elements, include the auto-render extension: -->
-    <script defer src="../katex/contrib/auto-render.min.js"
+    <script defer src="katex/contrib/auto-render.min.js"
         integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"
         onload="renderMathInElement(document.body);"></script>
 
-    <script type="text/javascript" src="../js/plane.js?ver=0"></script>
+    <script type="text/javascript" src="lib/plane/plane.js"></script>
 
 <style type="text/css">
-html,
-test {
+html {
     display: inline-block;
     background-color: cornsilk;
-}
-
-html {
-  height: 100%;
+    height: 100%;
 }
 
 body {
   height: 100%;
   margin: 0;
 }
-
-.main {
-    display: grid; 
-    grid-template-columns: 100px 2px 1fr 2px 300px; 
-    grid-template-rows: 30px 2px 1fr 2px; 
-    background-color:brown; 
-    height: 100%;
-}
-
-/* HIDE RADIO */
-[type=radio] { 
-  position: absolute;
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-/* IMAGE STYLES */
-[type=radio] + img {
-  cursor: pointer;
-}
-
-/* CHECKED STYLES */
-[type=radio]:checked + img {
-  outline: 2px solid #f00;
-}
-
-
 </style>
 
 </head>
 <body onload="plane_ts.bodyOnLoad()">
-    <div style="background-color: white;" >
-        <label>
-            <input type="radio" name="test" value="small" checked>
-            <img src="../img/point.png" title="point" style="width: 24px; height: 24px;" />
-          </label>
-          
-          <label>
-            <input type="radio" name="test" value="big">
-            <img src="../img/mid-point.png" title="mid point" style="width: 24px; height: 24px;" />
-        </label>
 
-
-        <button style="padding: 0;">
-        </button>
-        
-        <img src="../img/intersection.png" title="point" style="width: 24px; height: 24px;" />
-        <img src="../img/line-segment.png" title="line segment" style="width: 24px; height: 24px;" />
-        <img src="../img/line.png" style="width: 24px; height: 24px;" />
-        <img src="../img/half-line.png" style="width: 24px; height: 24px;" />
-        <img src="../img/parallel-line.png" style="width: 24px; height: 24px;" />
-        <img src="../img/perpendicular.png" style="width: 24px; height: 24px;" />
-        <img src="../img/circle-by-point.png" style="width: 24px; height: 24px;" />
-        <img src="../img/circle-by-radius.png" style="width: 24px; height: 24px;" />
-        <img src="../img/ellipse.png" style="width: 24px; height: 24px;" />
-        <img src="../img/arc.png" style="width: 24px; height: 24px;" />
-        <img src="../img/tangent-point.png" style="width: 24px; height: 24px;" />
-        <img src="../img/tangent-circles.png" title="tangeycy points of two circles." style="width: 24px; height: 24px;" />
-        <img src="../img/angle.png" style="width: 24px; height: 24px;" />
-        <img src="../img/dimension-line.png" style="width: 24px; height: 24px;" />
-        <img src="../img/text.png" style="width: 24px; height: 24px;" />
-    </div>
- 
-
-    <div id="main-grid" class="main">
-        <div id="menu-bar" style="grid-row: 1; grid-column: 1 / 6; background-color: white; "></div>
-        <div id="shape-tool" style="grid-row: 3; grid-column: 1; height: 100%; background-color: white;"></div>
-        <div id="canvas-div" style="grid-row: 3; grid-column: 3; " ></div>
-        <div id="property-div" style="grid-row: 3; grid-column: 5;"></div>
-    </div>
+<div id="menu-bar" style="width: 100%;"></div>
+<div style="display: flex; width: 100%; height:max-content;">
+    <div id="shape-tool"   style="flex-grow: 0; "></div>
+    <div id="canvas-div"   style="flex-grow: 1; " ></div>
+    <div id="property-div" style="flex-grow: 0; width: 300px;"></div>
+</div>
 </body>
 </html>

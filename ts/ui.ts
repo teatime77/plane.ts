@@ -23,6 +23,10 @@ export function makeToolBox(div : HTMLElement): HTMLButtonElement[] {
         [ "Text", "text", "text" ]
     ];
 
+    const k = document.location.href.lastIndexOf("/");
+    const home = document.location.href.substring(0, k);
+    msg(`home:${home}`);
+
     const buttons : HTMLButtonElement[] = [];
     for(const [value, name, title] of name_titles){
         const button = document.createElement("button");
@@ -34,7 +38,7 @@ export function makeToolBox(div : HTMLElement): HTMLButtonElement[] {
         button.style.borderWidth = "1px";
 
         const img = document.createElement("img");
-        img.src = `../lib/plane/img/${name}.png`;
+        img.src = `${home}/lib/plane/img/${name}.png`;
         img.className = "tool-button-img";
         img.style.width  = "24px";
         img.style.height = "24px";
