@@ -22,6 +22,7 @@ export abstract class Builder {
             case "Ellipse":           return new EllipseBuilder();
             case "Arc":           return new ArcBuilder();
             case "DimensionLine": return new DimensionLineBuilder();
+            case "LengthSymbol":  return new LengthSymbolBuilder();
             case "Midpoint":      return new MidpointBuilder();
             case "Perpendicular": return new PerpendicularBuilder()
             case "ParallelLine":  return new ParallelLineBuilder();
@@ -551,6 +552,35 @@ class DimensionLineBuilder extends Builder {
             const shift  = position.sub(this.pointB.position).dot(normal);
             this.dimLine.setShift( shift );
         }
+    }
+}
+
+
+class LengthSymbolBuilder extends Builder {
+    pointA : Point | undefined;
+
+    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
+        if(shape instanceof LineByPoints){
+            const symbol = new LengthSymbol({line : shape, kind : 0});
+            view.addShape(symbol);
+        }
+        else if(shape instanceof Point){
+            if(this.pointA == undefined){
+                this.pointA = shape;
+            }
+            else{
+                const pointB = shape;
+
+                const line = new LineSegment({ pointA : this.pointA, pointB });
+                const symbol = new LengthSymbol({ line, kind : 0});
+                view.addShape(symbol);
+
+                this.pointA      = undefined;
+            }    
+        }
+    }
+
+    pointermove(event : PointerEvent, view : View, position : Vec2, shape : Shape | undefined){
     }
 }
 

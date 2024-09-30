@@ -1,7 +1,7 @@
 namespace plane_ts {
 //
 export class View extends Widget {
-    static nearThreshold = 4;
+    static nearThreshold = 8;
     static current : View;
     name  : string = "";
     board : HTMLCanvasElement;
@@ -196,14 +196,22 @@ export class View extends Widget {
         }
 
         const shapes = this.allShapes();
-        shapes.forEach(x => x.isOver = x.isNear(position));    
+
+        let is_over_changed = false;
+        for(const shape of shapes){
+            const is_over = shape.isNear(position);
+            if(shape.isOver != is_over){
+                shape.isOver = is_over;
+                is_over_changed = true;
+            }
+        }
 
         const shape = this.getShape(position);
         Builder.tool.pointermove(event, this, position, shape);
 
         this.movePosition = position;
 
-        if(shape != this.prevShape){
+        if(is_over_changed || shape != this.prevShape){
             this.prevShape = shape;
             this.dirty = true;
         }
@@ -273,6 +281,11 @@ export class View extends Widget {
         const point = shapes.filter(x => x instanceof Point).find(x => x.isNear(position));
         if(point != undefined){
             return point;
+        }
+
+        const symbol = shapes.filter(x => x instanceof LengthSymbol).find(x => x.isNear(position));
+        if(symbol != undefined){
+            return symbol;
         }
 
         const line = shapes.filter(x => x instanceof LineSegment).find(x => x.isNear(position));

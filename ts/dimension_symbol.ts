@@ -151,4 +151,67 @@ export class DimensionLine extends Shape {
     }
 }
 
+export class LengthSymbol extends Shape {
+    line : LineByPoints;
+    kind : number;
+
+    constructor(obj : { line : LineByPoints, kind : number }){
+        super(obj);
+        this.line = obj.line;
+        this.kind = obj.kind;
+    }
+
+    makeObj() : any {
+        let obj = Object.assign(super.makeObj(), {
+            line : this.line.toObj(),
+            kind : this.kind
+        });
+
+        return obj;
+    }
+
+    getProperties(){
+        return super.getProperties().concat([
+            "kind"
+        ])
+    }
+
+    dependencies() : Shape[] {
+        return [ this.line ];
+    }
+
+    center() : Vec2 {
+        const A = this.line.pointA.position;
+        const B = this.line.pointB.position;
+
+        return A.add(B).mul(0.5);
+    }
+
+    isNear(position : Vec2) : boolean {
+        const center = this.center();        
+        const real_distance = center.distance(position);
+        return View.current.isNear(real_distance);
+    }
+
+    draw() : void {
+        const A = this.line.pointA.position;
+        const B = this.line.pointB.position;
+        const AB = B.sub(A);
+
+        const normal = AB.rot90().unit();
+
+        const center = this.center();
+
+        const tick_half_length = fromXPixScale(10);
+
+        const tick_1 = center.add( normal.mul(- tick_half_length) );
+        const tick_2 = center.add( normal.mul(  tick_half_length) );
+
+        drawLine(this, tick_1, tick_2);
+    }
+}
+
+
+
+
 }

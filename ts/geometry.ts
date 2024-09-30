@@ -16,9 +16,8 @@ export function calcFootOfPerpendicular(position:Vec2, line: AbstractLine) : Vec
 }
     
 
-export function DistanceFromLine(line : AbstractLine, position : Vec2) : number {
-    const foot = calcFootOfPerpendicular(position, line);
-    return position.distance(foot);
+export function distanceFromLine(normal : Vec2, pointA : Vec2, position : Vec2) : number {
+    return Math.abs( normal.dot(position.sub(pointA)) );
 }
 
 export class Midpoint extends Point {

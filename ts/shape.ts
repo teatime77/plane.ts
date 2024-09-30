@@ -413,7 +413,7 @@ export abstract class AbstractLine extends Shape {
     }
 
     isNear(position : Vec2) : boolean {
-        const distance = Math.abs( this.normal().dot(position.sub(this.pointA.position)) );
+        const distance = distanceFromLine(this.normal(), this.pointA.position, position);
         return View.current.isNear(distance);
     }
 }
@@ -427,7 +427,7 @@ export class Line extends AbstractLine {
     }
 }
 
-export class LineSegment extends AbstractLine {    
+export abstract class LineByPoints extends AbstractLine {
     pointB   : Point;
 
     constructor(obj : { pointA: Point, pointB: Point }){
@@ -469,6 +469,9 @@ export class LineSegment extends AbstractLine {
 
         return 0 <= n && n <= AB;
     }
+}
+
+export class LineSegment extends LineByPoints {    
 
     draw() : void {
         View.current.canvas.drawLine(this, this.pointA.position, this.pointB.position);

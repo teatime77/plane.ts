@@ -18,6 +18,7 @@ export function makeToolBox(div : HTMLElement): HTMLButtonElement[] {
         [ "Ellipse", "ellipse", "ellipse" ],
         [ "Angle", "angle", "angle" ],
         [ "DimensionLine", "dimension-line", "dimension line" ],
+        [ "LengthSymbol", "length-symbol", "length symbol" ],
         [ "TangentCircles", "tangent-circles", "tangent circles" ],
         [ "TangentPoint", "tangent-point", "tangent point" ],
         [ "Text", "text", "text" ]
@@ -141,5 +142,8 @@ export function toYPixScale(n : number) : number {
     return View.current.toYPixScale(n);
 }
 
+export function drawLine(shape : Shape, p1 : Vec2, p2 : Vec2){
+    View.current.canvas.drawLine(shape, p1, p2);
+}
 
 }
