@@ -117,5 +117,29 @@ export function makeCssClass(){
     document.getElementsByTagName('head')[0].appendChild(tex_style);
 }
 
+export function fromXPixScale(pix : number) : number {
+    return View.current.fromXPixScale(pix);
+}
+
+export function fromYPixScale(pix : number) : number {
+    return View.current.fromYPixScale(pix);
+}
+
+export function toXPix(n : number) : number {
+    return View.current.toXPix(n);
+}
+
+export function toYPix(n : number) : number {
+    return View.current.toYPix(n);
+}
+
+export function toXPixScale(n : number) : number {
+    return View.current.toXPixScale(n);
+}
+
+export function toYPixScale(n : number) : number {
+    return View.current.toYPixScale(n);
+}
+
 
 }

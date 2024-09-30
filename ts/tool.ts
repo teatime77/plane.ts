@@ -557,9 +557,8 @@ class DimensionLineBuilder extends Builder {
 
 class TextBlockBuilder extends Builder {
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
-        const offset = new Vec2(event.pageX, event.pageY);
-        const text_block = new TextBlock({ text : "Text", isTex : false, offset });
-        text_block.setTextPosition(0, 0);
+        const text_block = new TextBlock({ text : "Text", isTex : false, offset : position });
+        text_block.updateTextPosition();
 
         view.addShape(text_block);
 

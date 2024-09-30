@@ -33,7 +33,7 @@ export class View extends Widget {
     }
 
     isNear(real_distance : number) : boolean {
-        const pix_distance = this.toPix(real_distance);
+        const pix_distance = this.toXPixScale(real_distance);
         return pix_distance < View.nearThreshold;
     }
 
@@ -65,8 +65,8 @@ export class View extends Widget {
         this.min = min;
         this.max = max;
 
-        Point.radius  = this.fromXPix(Point.radiusPix);
-        Angle.radius1 = this.fromXPix(Angle.radius1Pix);
+        Point.radius  = this.fromXPixScale(Point.radiusPix);
+        Angle.radius1 = this.fromXPixScale(Angle.radius1Pix);
     }
 
     eventPosition(event : MouseEvent) : Vec2 {
@@ -78,20 +78,24 @@ export class View extends Widget {
         return new Vec2(x, y);
     }
 
-    fromXPix(pix : number) : number {
+    fromXPixScale(pix : number) : number {
         return(this.max.x - this.min.x) * (pix / this.board.clientWidth);
     }
 
-    fromYPix(pix : number) : number {
+    fromYPixScale(pix : number) : number {
         return(this.max.y - this.min.y) * (pix / this.board.clientHeight);
     }
 
     fromPix(position : Vec2) : Vec2 {
-        return new Vec2(this.fromXPix(position.x), this.fromYPix(position.y));
+        return new Vec2(this.fromXPixScale(position.x), this.fromYPixScale(position.y));
     }
 
-    toPix(n : number) : number {
+    toXPixScale(n : number) : number {
         return this.board.clientWidth * n / (this.max.x - this.min.x);
+    }
+
+    toYPixScale(n : number) : number {
+        return this.board.clientHeight * n / (this.max.y - this.min.y);
     }
 
     toXPix(x : number) : number {
@@ -295,9 +299,9 @@ export class View extends Widget {
 
         const parents = shapes.filter(x => (x instanceof Point || x instanceof DimensionLine) && x.caption != undefined) as (Point | DimensionLine)[];
         parents.forEach(x => x.updateCaption());
-        // for(const shape of ){
-        //     shape.caption?.setTextPosition(x.)
-        // }
+
+        const text_blocks = this.shapes.filter(x => x instanceof TextBlock) as TextBlock[];
+        text_blocks.forEach(x => x.updateTextPosition());
     }
 }
 
@@ -320,13 +324,13 @@ class Grid {
 
         if(axis == "X"){
 
-            size = this.view.fromXPix(75);
+            size = this.view.fromXPixScale(75);
             [min_a, max_a] = [this.view.min.x, this.view.max.x];
             [min_b, max_b] = [this.view.min.y, this.view.max.y];
         }
         else{
 
-            size = this.view.fromYPix(75);
+            size = this.view.fromYPixScale(75);
             [min_a, max_a] = [this.view.min.y, this.view.max.y];
             [min_b, max_b] = [this.view.min.x, this.view.max.x];
         }

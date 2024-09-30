@@ -58,7 +58,7 @@ export class Canvas {
         start_angle = 2 * Math.PI - start_angle;
         end_angle   = 2 * Math.PI - end_angle;
 
-        const radius_pix = this.view.toPix(radius);
+        const radius_pix = this.view.toXPixScale(radius);
 
         ctx.beginPath();
         ctx.arc(pix.x, pix.y, radius_pix, start_angle, end_angle, true);
@@ -84,8 +84,8 @@ export class Canvas {
     drawEllipse(center : Vec2, radius_x : number, radius_y : number, rotation : number, color : string, line_width : number){
 
         const center_pix = this.view.toPixPosition(center);
-        const radius_x_pix = this.view.toPix(radius_x);
-        const radius_y_pix = this.view.toPix(radius_y);
+        const radius_x_pix = this.view.toXPixScale(radius_x);
+        const radius_y_pix = this.view.toXPixScale(radius_y);
 
         const ctx = this.ctx;
 

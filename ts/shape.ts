@@ -57,7 +57,7 @@ export class TextBlock extends AbstractShape {
         View.current.board.parentElement!.append(this.div);
 
         setCaptionEvent(this);
-        this.setTextPosition(0, 0);
+        this.updateTextPosition();
     }
 
     makeObj() : any {
@@ -89,8 +89,13 @@ export class TextBlock extends AbstractShape {
     }
 
     setTextPosition(x : number, y : number){
-        this.div.style.left = `${x + this.offset.x}px`;
-        this.div.style.top  = `${y + this.offset.y}px`;
+        this.div.style.left = `${View.current.board.offsetLeft + toXPix(x + this.offset.x)}px`;
+        this.div.style.top  = `${View.current.board.offsetTop  + toYPix(y + this.offset.y)}px`;
+    }
+
+    updateTextPosition(){
+        this.div.style.left = `${View.current.board.offsetLeft + toXPix(this.offset.x)}px`;
+        this.div.style.top  = `${View.current.board.offsetTop  + toYPix(this.offset.y)}px`;
     }
 
     setRotation(degree : number){
@@ -111,8 +116,8 @@ export class TextBlock extends AbstractShape {
             return;
         }
 
-        this.offset.x += event.movementX;
-        this.offset.y += event.movementY;
+        this.offset.x += fromXPixScale(event.movementX);
+        this.offset.y += fromYPixScale(event.movementY);
         
         this.div.style.left = `${this.div.offsetLeft + event.movementX}px`;
         this.div.style.top  = `${this.div.offsetTop  + event.movementY}px`;
@@ -262,7 +267,9 @@ export class Point extends Shape {
 
         this.caption = (obj as any).caption;
         if(this.caption == undefined){
-            this.caption = new TextBlock( { text : this.name, isTex : false, offset : new Vec2(10, -20) });
+            const x = fromXPixScale(10);
+            const y = fromYPixScale(20);
+            this.caption = new TextBlock( { text : this.name, isTex : false, offset : new Vec2(x, y) });
         }
 
         this.setPosition(obj.position);
@@ -308,12 +315,7 @@ export class Point extends Shape {
     }
 
     updateCaption(){
-        const position_pix = View.current.toPixPosition(this.position);
-
-        const x = View.current.board.offsetLeft + position_pix.x;
-        const y = View.current.board.offsetTop  + position_pix.y;
-
-        this.caption!.setTextPosition(x, y);
+        this.caption!.setTextPosition(this.position.x, this.position.y);
     }
 
     getProperties(){
@@ -851,11 +853,9 @@ export class DimensionLine extends Shape {
     }
 
     updateCaption(){ 
-        const center_pix = View.current.toPixPosition(this.center);
-
         const [text_width, text_height] = this.caption!.getSize();
-        const x = View.current.board.offsetLeft + center_pix.x - 0.5 * text_width;
-        const y = View.current.board.offsetTop  + center_pix.y - 0.5 * text_height;
+        const x = this.center.x - fromXPixScale(0.5 * text_width);
+        const y = this.center.y + fromYPixScale(0.5 * text_height);
 
         this.caption!.setTextPosition(x, y);
     }
@@ -875,7 +875,7 @@ export class DimensionLine extends Shape {
         const A_shift = A.add(shift_vec);
         const B_shift = B.add(shift_vec);
 
-        const shift_pix_len = View.current.toPix(Math.abs(this.shift));
+        const shift_pix_len = View.current.toXPixScale(Math.abs(this.shift));
         const ratio = (shift_pix_len + 5) / shift_pix_len;
         const shift_plus = shift_vec.mul(ratio);
         const A_shift_plus = A.add(shift_plus);
