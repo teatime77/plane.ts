@@ -168,17 +168,11 @@ export function parseObject(obj: any) : any {
     }
 }
 
-export function saveJson(view : View, anchor : HTMLAnchorElement){
-    const name = prompt("Enter the document name.", View.current.name);
-    if(name == null || name.trim() == ""){
+export function saveJson(anchor : HTMLAnchorElement){
+    const [name, json] = View.getJson();
+    if(name == ""){
         return;
     }
-    View.current.name = name.trim();
-
-    Widget.processed = new Set<number>();
-
-    const data = view.toObj();
-    const json = JSON.stringify(data, null, 4);
 
     const blob = new Blob([json], { type: 'application/json' });
           
@@ -186,7 +180,7 @@ export function saveJson(view : View, anchor : HTMLAnchorElement){
     anchor.href = window.URL.createObjectURL(blob);
     
     // a 要素の download 属性にファイル名をセット
-    anchor.download = `${View.current.name}.json`;
+    anchor.download = `${name}.json`;
     
     // 疑似的に a 要素をクリックさせる
     anchor.click();
@@ -207,18 +201,22 @@ export function handleFileSelect(ev: DragEvent) {
             const json = reader.result as string;
             const obj  = JSON.parse(json);
 
-            Widget.maxId  = -1;
-            Widget.refMap = new Map<number, any>()
-            const view = parseObject(obj);
-
-            if(!(view instanceof View)){
-                throw new MyError();
-            }
+            loadData(obj);
 
             // viewEvent(obj);
         };
         reader.readAsText(file);        
         // uploadFile(f);
+    }
+}
+
+export function loadData(obj : any){
+    Widget.maxId  = -1;
+    Widget.refMap = new Map<number, any>()
+    const view = parseObject(obj);
+
+    if(!(view instanceof View)){
+        throw new MyError();
     }
 }
 

@@ -79,7 +79,7 @@ export function toolBoxEvent(buttons : HTMLButtonElement[]){
 
 export function saveEvent(view : View, save_btn : HTMLButtonElement, anchor : HTMLAnchorElement){
     save_btn.addEventListener("click", (ev : MouseEvent)=>{
-        saveJson(view, anchor);
+        saveJson(anchor);
     });
 }
 
