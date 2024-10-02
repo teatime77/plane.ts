@@ -211,6 +211,9 @@ export function handleFileSelect(ev: DragEvent) {
 }
 
 export function loadData(obj : any){
+    const tex_divs = Array.from($("canvas-div").getElementsByClassName("tex_div")) as HTMLDivElement[];
+    tex_divs.forEach(x => x.remove());
+
     Widget.maxId  = -1;
     Widget.refMap = new Map<number, any>()
     const view = parseObject(obj);

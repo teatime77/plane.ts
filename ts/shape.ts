@@ -23,10 +23,17 @@ export abstract class AbstractShape extends Widget {
 
     select(){
         this.selected = true;
+        View.current.dirty = true;
     }
 
     unselect(){
         this.selected = false;
+        View.current.dirty = true;
+    }
+
+    setOver(is_over : boolean){
+        this.isOver = is_over;
+        View.current.dirty = true;
     }
 }
 
@@ -471,10 +478,13 @@ export abstract class LineByPoints extends AbstractLine {
     }
 }
 
-export class LineSegment extends LineByPoints {    
-
+export class LineSegment extends LineByPoints {
     draw() : void {
         View.current.canvas.drawLine(this, this.pointA.position, this.pointB.position);
+    }
+
+    reading(): Reading {
+        return new Reading("Draw a line segment.", []);
     }
 }
 

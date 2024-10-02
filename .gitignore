@@ -4,3 +4,4 @@ debug.log
 .vscode/settings.json
 public/lib/plane/plane.d.ts
 public/lib/plane/plane.js
+install.bat
