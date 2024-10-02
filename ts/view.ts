@@ -151,19 +151,17 @@ export class View extends Widget {
     drawShapes(){
         if(this.dirty){
             this.dirty = false;
-            // this.removeUnusedDivs();
-
 
             msg("redraw");
 
             this.canvas.clear();
 
-            this.grid.showGrid($inp("show-axis").checked, $inp("show-grid").checked);
+            this.grid.showGrid(showAxis.checked, showGrid.checked);
 
             const shapes = this.allShapes();
             shapes.forEach(c => c.draw());
 
-            if($inp("snap-to-grid").checked){
+            if(snapToGrid.checked){
                 this.grid.showPointer();
             }
         }
@@ -173,7 +171,7 @@ export class View extends Widget {
 
     click(event : MouseEvent){
         let position = this.eventPosition(event);
-        if($inp("snap-to-grid").checked){
+        if(snapToGrid.checked){
             position = this.grid.snap(position);
         }
 
@@ -185,7 +183,7 @@ export class View extends Widget {
 
     pointerdown(event : PointerEvent){
         let position = this.eventPosition(event);
-        if($inp("snap-to-grid").checked){
+        if(snapToGrid.checked){
             position = this.grid.snap(position);
         }
 
@@ -201,7 +199,7 @@ export class View extends Widget {
         event.preventDefault(); 
 
         let position = this.eventPosition(event);
-        if($inp("snap-to-grid").checked){
+        if(snapToGrid.checked){
             position = this.grid.snap(position);
         }
 
@@ -221,6 +219,14 @@ export class View extends Widget {
 
         this.movePosition = position;
 
+        if(snapToGrid.checked){
+            const prev_snap_position = this.grid.snapPosition;
+            this.grid.setSnapPosition();
+            if(! prev_snap_position.equals(this.grid.snapPosition)){
+                this.dirty = true;
+            }
+        }
+
         if(is_over_changed || shape != this.prevShape){
             this.prevShape = shape;
             this.dirty = true;
@@ -229,7 +235,7 @@ export class View extends Widget {
 
     pointerup(event : PointerEvent){
         let position = this.eventPosition(event);
-        if($inp("snap-to-grid").checked){
+        if(snapToGrid.checked){
             position = this.grid.snap(position);
         }
 
@@ -244,7 +250,7 @@ export class View extends Widget {
         event.preventDefault();
 
         let position = this.eventPosition(event);
-        if($inp("snap-to-grid").checked){
+        if(snapToGrid.checked){
             position = this.grid.snap(position);
         }
 
@@ -332,6 +338,7 @@ class Grid {
     view : View;
     subSpanX : number | undefined;
     subSpanY : number | undefined;
+    snapPosition : Vec2 = Vec2.zero();
 
     constructor(view : View){
         this.view = view;
@@ -450,19 +457,26 @@ class Grid {
     }
 
     showGrid(show_grid : boolean, show_axis : boolean){
-        if(show_grid && show_axis){
+        if(show_grid || show_axis){
             this.drawGridAxis("X", show_grid, show_axis);
             this.drawGridAxis("Y", show_grid, show_axis);
         }
     }
 
-    showPointer(){
+    setSnapPosition(){
         if(this.view.movePosition == undefined || this.subSpanX == undefined || this.subSpanY == undefined){
             return;
         }
 
-        const position = this.snap(this.view.movePosition);
+        this.snapPosition = this.snap(this.view.movePosition);
+    }
 
+    showPointer(){
+        if(this.subSpanX == undefined || this.subSpanY == undefined){
+            return;
+        }
+
+        let position = this.snapPosition;
         const lines : [Vec2, Vec2][] = [
             [ new Vec2(position.x - this.subSpanX, position.y), new Vec2(position.x + this.subSpanX, position.y) ],
             [ new Vec2(position.x, position.y - this.subSpanY), new Vec2(position.x, position.y + this.subSpanY) ]

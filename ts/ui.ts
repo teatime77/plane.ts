@@ -1,6 +1,10 @@
 namespace plane_ts {
 //
 
+export let showAxis : HTMLInputElement;
+export let showGrid : HTMLInputElement;
+export let snapToGrid : HTMLInputElement;
+
 export function makeToolBox(div : HTMLElement): HTMLButtonElement[] {
     const name_titles = [
         [ "Selection", "selection", "selection" ],
@@ -56,7 +60,7 @@ export function makeToolBox(div : HTMLElement): HTMLButtonElement[] {
     return buttons;
 }
 
-function makeCheckbox(div : HTMLElement, id : string, text : string){
+function makeCheckbox(div : HTMLElement, id : string, text : string) : HTMLInputElement {
     const inp = document.createElement("input");
     inp.type = "checkbox";
     inp.id   = id;
@@ -66,12 +70,16 @@ function makeCheckbox(div : HTMLElement, id : string, text : string){
     label.htmlFor = id;
     label.textContent = text;
     div.append(label);
+
+    return inp;
 }
 
 export function makeMenuBar(div : HTMLElement) : [HTMLButtonElement, HTMLAnchorElement]{
-    makeCheckbox(div, "show-axis", "Axis");
-    makeCheckbox(div, "show-grid", "Grid");
-    makeCheckbox(div, "snap-to-grid", "Snap to Grid");
+    showAxis   = makeCheckbox(div, "show-axis", "Axis");
+    showGrid   = makeCheckbox(div, "show-grid", "Grid");
+    snapToGrid = makeCheckbox(div, "snap-to-grid", "Snap to Grid");
+
+    menuBarEvent();
 
     const save_btn = document.createElement("button");
     save_btn.textContent = "Save";

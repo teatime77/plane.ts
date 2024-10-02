@@ -77,6 +77,16 @@ export function toolBoxEvent(buttons : HTMLButtonElement[]){
     };
 }
 
+export function menuBarEvent(){
+    showAxis.addEventListener("change", (ev : Event)=>{
+        View.current.dirty = true;
+    });
+
+    showGrid.addEventListener("change", (ev : Event)=>{
+        View.current.dirty = true;
+    });
+}
+
 export function saveEvent(view : View, save_btn : HTMLButtonElement, anchor : HTMLAnchorElement){
     save_btn.addEventListener("click", (ev : MouseEvent)=>{
         saveJson(anchor);
