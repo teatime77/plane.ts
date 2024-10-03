@@ -535,7 +535,7 @@ class DimensionLineBuilder extends Builder {
             const shift  = position.sub(this.pointB.position).dot(normal);
             const caption = new TextBlock({ text : "\\int \\frac{1}{2}", isTex : true, offset : Vec2.zero() });
 
-            this.dimLine = new DimensionLine({ pointA: this.pointA, pointB: this.pointB, shift, caption });
+            this.dimLine = new DimensionLine({ caption, pointA: this.pointA, pointB: this.pointB, shift });
             view.addShape(this.dimLine);
         }
         else if(this.dimLine != undefined){

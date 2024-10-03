@@ -222,6 +222,9 @@ export function loadData(obj : any){
     }
 
     view.allShapes().forEach(x => x.updateCaption());
+
+    view.allShapes().filter(x => x instanceof Point || x instanceof DimensionLine).forEach(x => x.caption!.parent = x);
+    (view.shapes.filter(x => x instanceof TextBlock) as TextBlock[]).forEach(x => x.updateTextPosition());
 }
 
 export function handleDragOver(evt: DragEvent) {

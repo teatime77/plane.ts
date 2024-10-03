@@ -38,6 +38,7 @@ export abstract class AbstractShape extends Widget {
 }
 
 export class TextBlock extends AbstractShape {
+    parent : AbstractShape | undefined;
     text  : string;
     isTex : boolean;
     div   : HTMLDivElement;
@@ -83,16 +84,25 @@ export class TextBlock extends AbstractShape {
         ]);
     }
 
-    setText(text : string){
-        this.text = text;
+    updateTextDiv(){
         if(this.isTex){
 
-            renderKatexSub(this.div, text);
+            renderKatexSub(this.div, this.text);
         }
         else{
 
-            this.div.innerText = text;
+            this.div.innerText = this.text;
         }
+    }
+
+    setText(text : string){
+        this.text = text;
+        this.updateTextDiv();
+    }
+
+    setIsTex(is_tex : boolean){
+        this.isTex = is_tex;
+        this.updateTextDiv();
     }
 
     setTextPosition(x : number, y : number){
@@ -161,6 +171,10 @@ export abstract class Shape extends AbstractShape {
 
         if(obj.lineWidth != undefined){
             this.lineWidth = obj.lineWidth;
+        }
+
+        if(obj.caption != undefined){
+            this.caption = obj.caption;
         }
     }
 
@@ -272,11 +286,11 @@ export class Point extends Shape {
 
         Point.tempPoints.push(this);
 
-        this.caption = (obj as any).caption;
         if(this.caption == undefined){
             const x = fromXPixScale(10);
             const y = fromYPixScale(20);
             this.caption = new TextBlock( { text : this.name, isTex : false, offset : new Vec2(x, y) });
+            this.caption.parent = this;
         }
 
         this.setPosition(obj.position);

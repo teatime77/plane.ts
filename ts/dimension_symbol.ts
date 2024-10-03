@@ -65,16 +65,19 @@ export class DimensionLine extends Shape {
     pointA : Point;
     pointB : Point;
     shift  : number;
+
+    normal! : Vec2;
+    shiftVec! : Vec2;
     center! : Vec2;
     text : string = "";
 
-    constructor(obj : { pointA : Point, pointB : Point, shift : number, caption : TextBlock }){
+    constructor(obj : { caption : TextBlock, pointA : Point, pointB : Point, shift : number }){
         super(obj);
         this.pointA    = obj.pointA;
         this.pointB    = obj.pointB;
         this.shift     = obj.shift;
 
-        this.caption = obj.caption;
+        this.calc();
     }
 
     makeObj() : any {
@@ -103,6 +106,15 @@ export class DimensionLine extends Shape {
     }
 
     calc(){        
+        const A = this.pointA.position;
+        const B = this.pointB.position;
+        const AB = B.sub(A);
+
+        this.normal = AB.rot90().unit();
+        this.shiftVec = this.normal.mul(this.shift);
+        this.center = A.add(B).mul(0.5).add(this.shiftVec);
+
+        this.updateCaption();
     }
 
     updateCaption(){ 
@@ -120,25 +132,19 @@ export class DimensionLine extends Shape {
 
         const A = this.pointA.position;
         const B = this.pointB.position;
-
         const AB = B.sub(A);
-        const normal = AB.rot90().unit();
-        const shift_vec = normal.mul(this.shift);
 
-        const A_shift = A.add(shift_vec);
-        const B_shift = B.add(shift_vec);
+        const A_shift = A.add(this.shiftVec);
+        const B_shift = B.add(this.shiftVec);
 
         const shift_pix_len = View.current.toXPixScale(Math.abs(this.shift));
         const ratio = (shift_pix_len + 5) / shift_pix_len;
-        const shift_plus = shift_vec.mul(ratio);
+        const shift_plus = this.shiftVec.mul(ratio);
         const A_shift_plus = A.add(shift_plus);
         const B_shift_plus = B.add(shift_plus);
 
         const A_shift_inside = A_shift.add(AB.mul( 1/3));
         const B_shift_inside = B_shift.add(AB.mul(-1/3));
-
-        this.center = A.add(B).mul(0.5).add(shift_vec);
-        this.updateCaption();
 
         const degree = toDegree( Math.atan2(-AB.y, AB.x) );
         this.caption.setRotation(degree);
