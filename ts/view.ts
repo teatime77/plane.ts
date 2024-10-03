@@ -36,6 +36,8 @@ export class View extends Widget {
         let obj = Object.assign(super.makeObj(), {
             name   : this.name,
             scale  : this.board.clientWidth / (this.max.x - this.min.x),
+            min    : this.min,
+            max    : this.max,
             shapes : this.shapes.map(x => x.toObj())
         });
 

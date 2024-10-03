@@ -216,11 +216,12 @@ export function loadData(obj : any){
 
     Widget.maxId  = -1;
     Widget.refMap = new Map<number, any>()
-    const view = parseObject(obj);
-
+    const view = parseObject(obj) as View;
     if(!(view instanceof View)){
         throw new MyError();
     }
+
+    view.allShapes().forEach(x => x.updateCaption());
 }
 
 export function handleDragOver(evt: DragEvent) {
