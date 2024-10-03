@@ -119,6 +119,8 @@ export function makeCssClass(){
     position: absolute;
     display: inline-block;
     background-color: transparent;
+    border-style: solid;
+    border-width: 1px;
     cursor: move;
     user-select: none;
 }`;

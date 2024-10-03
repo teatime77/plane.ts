@@ -154,5 +154,16 @@ export function PropertyEvent(property : InputProperty | TextAreaProperty){
     }
 }
 
+export function deleteShapeEvent(shape : AbstractShape, button : HTMLButtonElement){
+    button.addEventListener("click", (ev : MouseEvent)=>{
+        const ok = confirm("Are you sure to delete this shape?");
+        if(ok){
+            remove(View.current.shapes, shape);
+            shape.delete(new Set<number>());
+            View.current.dirty = true;
+        }
+    });
+}
+
 
 }

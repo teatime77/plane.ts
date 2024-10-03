@@ -35,6 +35,19 @@ export abstract class AbstractShape extends Widget {
         this.isOver = is_over;
         View.current.dirty = true;
     }
+
+    delete(deleted : Set<number>){
+        if(deleted.has(this.id)){
+            return;
+        }
+        deleted.add(this.id);
+
+        for(let [name, val] of Object.entries(this)){
+            if(val instanceof AbstractShape){
+                val.delete(deleted);
+            }
+        }    
+    }
 }
 
 export class TextBlock extends AbstractShape {
@@ -134,7 +147,7 @@ export class TextBlock extends AbstractShape {
         }
 
         this.offset.x += fromXPixScale(event.movementX);
-        this.offset.y += fromYPixScale(event.movementY);
+        this.offset.y -= fromYPixScale(event.movementY);
         
         this.div.style.left = `${this.div.offsetLeft + event.movementX}px`;
         this.div.style.top  = `${this.div.offsetTop  + event.movementY}px`;
@@ -147,6 +160,15 @@ export class TextBlock extends AbstractShape {
 
     reading() : Reading {
         throw new MyError();
+    }
+
+    delete(deleted : Set<number>){
+        if(deleted.has(this.id)){
+            return;
+        }
+        super.delete(deleted);
+
+        this.div.remove();
     }
 }
 
@@ -237,6 +259,17 @@ export abstract class Shape extends AbstractShape {
 
     reading() : Reading {
         return new Reading(this.name, []);
+    }
+
+    delete(deleted : Set<number>){        
+        if(deleted.has(this.id)){
+            return;
+        }
+
+        super.delete(deleted);
+        if(this.caption != undefined){
+            this.caption.delete(deleted);
+        }
     }
 }
 

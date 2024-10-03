@@ -135,6 +135,30 @@ function appendTitle(tbl : HTMLTableElement, nest : number, title : string){
     tbl.append(row);
 }
 
+function appendDelete(tbl : HTMLTableElement, shape : AbstractShape){
+    const all_dependencies = View.current.allShapes().map(x => x.dependencies()).flat();
+
+    const row = document.createElement("tr");
+    const cell = document.createElement("td");
+    cell.colSpan = 2;
+
+    const button = document.createElement("button");
+    button.innerText = "delete";
+
+    if(all_dependencies.includes(shape as Shape)){
+        button.disabled = true;
+    }
+    else{
+
+        deleteShapeEvent(shape, button);
+    }
+
+    cell.append(button);
+    row.append(cell);    
+
+    tbl.append(row);
+}
+
 export function showProperty(widget : Widget, nest : number){
     const properties = widget.getProperties();
 
@@ -207,6 +231,10 @@ export function showProperty(widget : Widget, nest : number){
         else{
             throw new MyError();
         }
+    }
+
+    if(widget instanceof AbstractShape){
+        appendDelete(tbl, widget);
     }
 }
 }
