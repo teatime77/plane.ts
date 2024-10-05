@@ -14,6 +14,7 @@ export function makeToolBox(div : HTMLElement): HTMLButtonElement[] {
         [ "LineSegment", "line-segment", "line segment" ],
         [ "HalfLine", "half-line", "half line" ],
         [ "StraightLine", "line", "line" ],
+        [ "Polygon", "polygon", "polygon" ],
         [ "Perpendicular", "perpendicular", "perpendicular" ],
         [ "ParallelLine", "parallel-line", "parallel line" ],
         [ "Circle1", "circle-by-point", "circle by point" ],
@@ -119,8 +120,6 @@ export function makeCssClass(){
     position: absolute;
     display: inline-block;
     background-color: transparent;
-    border-style: solid;
-    border-width: 1px;
     cursor: move;
     user-select: none;
 }`;

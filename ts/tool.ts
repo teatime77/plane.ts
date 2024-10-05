@@ -13,6 +13,7 @@ export abstract class Builder {
             // case "Distance":      return new Distance();
             case "Point":         return new PointBuilder();
             case "LineSegment":   return new LineSegmentBuilder();
+            case "Polygon":       return new PolygonBuilder();
             // case "StraightLine":  return new StraightLine();
             // case "HalfLine":      return new HalfLine();
             // case "BSpline":       return new BSpline();
@@ -61,7 +62,15 @@ export abstract class Builder {
             }
             return point;
         }
+    }
 
+    draw(view : View){        
+    }
+
+    drawPendingShape(shape : Shape){
+        const shapes : Shape[] = [];
+        shape.getAllShapes(shapes);
+        shapes.forEach(x => x.draw());
     }
 }
 
@@ -348,6 +357,56 @@ class LineSegmentBuilder extends Builder {
     }
 }
 
+class PolygonBuilder extends Builder {
+    polygon : Polygon | undefined;
+    lastPosition : Vec2 | undefined;
+
+    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
+        if(this.polygon == undefined){
+            this.polygon = new Polygon({ points : [], lines : [] });
+            view.addShape(this.polygon);
+        }
+
+        let point : Point;
+        if(shape instanceof Point){
+
+            point = shape;
+        }
+        else{
+            point = Point.fromArgs(position);
+        }
+
+        this.polygon.points.push(point);
+
+        if(2 <= this.polygon.points.length){
+            const [pointA, pointB] = this.polygon.points.slice(this.polygon.points.length - 2);
+            const line = new LineSegment({ pointA, pointB });
+
+            this.polygon.lines.push(line);
+
+            if(this.polygon.points[0] == pointB){
+
+                this.polygon = undefined;
+            }
+        }
+    }
+
+    pointermove(event : PointerEvent, view : View, position : Vec2, shape : Shape | undefined){
+        if(this.polygon != undefined){
+
+            this.lastPosition = position;
+            View.current.dirty = true;
+        }
+    }    
+
+    draw(view: View): void {
+        if(this.polygon != undefined && this.lastPosition != undefined){
+            
+            const point = last(this.polygon.points);
+            view.canvas.drawLine(this.polygon, point.position, this.lastPosition);
+        }
+    }
+}
 
 class ParallelLineBuilder extends Builder {
     line  : AbstractLine | undefined;

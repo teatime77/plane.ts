@@ -162,6 +162,7 @@ export class View extends Widget {
 
             const shapes = this.allShapes();
             shapes.forEach(c => c.draw());
+            Builder.tool.draw(this);
 
             if(snapToGrid.checked){
                 this.grid.showPointer();

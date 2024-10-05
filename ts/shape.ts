@@ -535,8 +535,6 @@ export class LineSegment extends LineByPoints {
     }
 }
 
-
-
 export class ParallelLine extends Line {   
     line : AbstractLine;
 
@@ -808,6 +806,36 @@ export class Arc extends CircleArc {
     }
 }
 
+export class Polygon extends Shape {
+    points : Point[] = [];
+    lines  : LineSegment[] = [];
 
+    constructor(obj : { points : Point[], lines  : LineSegment[] }){
+        super(obj);
+        this.points = obj.points;
+        this.lines  = obj.lines;
+    }
+
+    makeObj() : any {
+        let obj = Object.assign(super.makeObj(), {
+            points : this.points.map(x => x.toObj()),
+            lines  : this.lines.map(x => x.toObj())
+        });
+
+        return obj;
+    }
+
+    dependencies() : Shape[] {
+        return super.dependencies().concat(this.points);
+    }
+
+    draw(): void {        
+    }
+
+    getAllShapes(shapes : Shape[]){
+        super.getAllShapes(shapes);
+        shapes.push(... this.points, ... this.lines);
+    }
+}
 
 }
