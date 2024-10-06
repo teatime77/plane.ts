@@ -73,6 +73,13 @@ export function sum(v : number[]) : number {
     return v.reduce((acc, cur) => acc + cur, 0);
 }
 
+export async function fetchText(fileURL: string) {
+    const response = await fetch(fileURL);
+    const text = await response!.text();
+
+    return text;
+}
+
 export function pseudoColor(n : number) : [number, number, number] {
     n = Math.max(0, Math.min(1, n));
 

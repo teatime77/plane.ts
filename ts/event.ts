@@ -1,36 +1,9 @@
 namespace plane_ts {
 //
 
-export let  upperLatinLetters : string;
-export let  lowerLatinLetters : string;
-
-export let  upperGreekLetters : string;
-export let  lowerGreekLetters : string;
-
 let selectedToolButton : HTMLButtonElement;
 
-function initLetters(){
-    const A = "A".charCodeAt(0);
-    const a = "a".charCodeAt(0);
-
-    const Alpha = "Α".charCodeAt(0);
-    const alpha = "α".charCodeAt(0);
-
-
-    upperLatinLetters = range(26).map(i => String.fromCharCode(A + i)).join("");
-    lowerLatinLetters = range(26).map(i => String.fromCharCode(a + i)).join("");
-
-    upperGreekLetters = range(24).filter(i => i != 17).map(i => String.fromCharCode(Alpha + i)).join("");
-    lowerGreekLetters = range(24).filter(i => i != 17).map(i => String.fromCharCode(alpha + i)).join("");
-
-    msg(upperLatinLetters);
-    msg(lowerLatinLetters);
-    msg(upperGreekLetters);
-    msg(lowerGreekLetters);
-}
-
 export function initPlane(menu_div : HTMLElement, tool_div : HTMLElement, canvas_div : HTMLElement, property_div : HTMLElement){
-    initLetters();
     makeCssClass();
 
     const buttons = makeToolBox(tool_div);

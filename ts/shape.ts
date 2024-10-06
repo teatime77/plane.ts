@@ -1,11 +1,14 @@
 ///<reference path="json.ts" />
 
+type  Reading = i18n_ts.Reading;
+const Reading = i18n_ts.Reading;
+
 namespace plane_ts {
 //
 const fgColor = "black";
 let capturedShape : AbstractShape | undefined;
 
-export abstract class AbstractShape extends Widget {
+export abstract class AbstractShape extends Widget implements i18n_ts.Readable {
     selected : boolean = false;
     isOver : boolean = false;
 
@@ -16,6 +19,16 @@ export abstract class AbstractShape extends Widget {
     }
 
     abstract reading() : Reading;
+    highlight(on : boolean) : void {
+        if(on){
+            this.select();
+            this.setOver(true);
+        }
+        else{
+            this.unselect();
+            this.setOver(false);
+        }
+    }
 
     dependencies() : Shape[] {
         return [];
@@ -258,7 +271,7 @@ export abstract class Shape extends AbstractShape {
     }
 
     reading() : Reading {
-        return new Reading(this.name, []);
+        return new Reading(this, i18n_ts.token(this.name), []);
     }
 
     delete(deleted : Set<number>){        
@@ -299,17 +312,19 @@ export class Point extends Shape {
         if(this.name == ""){
 
             const points = View.current.allShapes().filter(x => x instanceof Point).concat(Point.tempPoints);
-            const idxes = points.map(x => upperLatinLetters.indexOf(x.name));
+
+            const upper_latin_letters = i18n_ts.upperLatinLetters;
+            const idxes = points.map(x => upper_latin_letters.indexOf(x.name));
             if(idxes.length == 0){
-                this.name = upperLatinLetters[0];
+                this.name = upper_latin_letters[0];
             }
             else{
                 const max_idx = Math.max(...idxes);
                 if(max_idx == -1){
-                    this.name = upperLatinLetters[0];
+                    this.name = upper_latin_letters[0];
                 }
-                else if(max_idx + 1 < upperLatinLetters.length){
-                    this.name = upperLatinLetters[max_idx + 1];
+                else if(max_idx + 1 < upper_latin_letters.length){
+                    this.name = upper_latin_letters[max_idx + 1];
                 }
                 else{
                     throw new MyError();
@@ -531,7 +546,7 @@ export class LineSegment extends LineByPoints {
     }
 
     reading(): Reading {
-        return new Reading("Draw a line segment.", []);
+        return new Reading(this, T('Draw a line from point "A" to point "B".'), [ this.pointA, this.pointB ]);
     }
 }
 
@@ -568,7 +583,7 @@ export class ParallelLine extends Line {
     }
 
     reading(): Reading {
-        return new Reading("Draw a line through point α that is parallel to line β.", []);
+        return new Reading(this, T('Draw a line through point "A" that is parallel to line "B".'), []);
     }
 }
 
@@ -668,7 +683,7 @@ export class CircleByPoint extends Circle {
     }
 
     reading(): Reading {
-        return new Reading("Draw a circle with point α as the center.", [ this.center ]);
+        return new Reading(this, T('Draw a circle with point "A" as the center.'), [ this.center ]);
     }
 }
 
@@ -835,6 +850,18 @@ export class Polygon extends Shape {
     getAllShapes(shapes : Shape[]){
         super.getAllShapes(shapes);
         shapes.push(... this.points, ... this.lines);
+    }
+
+    reading(): Reading {
+        const point_readings = this.points.map(x => this.reading().toString());
+        switch(this.points.length){
+        case 3:
+            return new Reading(this, T('Draw a triangle with vertices "A", "B", and "C".'), this.points);
+        case 4:
+            return new Reading(this, T('Draw a quadrilateral with vertices "A", "B", "C" and "D".'), this.points);        
+        }
+
+        throw new MyError();
     }
 }
 

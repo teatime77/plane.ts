@@ -7,26 +7,26 @@ export let snapToGrid : HTMLInputElement;
 
 export function makeToolBox(div : HTMLElement): HTMLButtonElement[] {
     const name_titles = [
-        [ "Selection", "selection", "selection" ],
-        [ "Point", "point", "point" ],
-        [ "Midpoint", "mid-point", "mid point" ],
-        [ "Intersection", "intersection", "intersection" ],
-        [ "LineSegment", "line-segment", "line segment" ],
-        [ "HalfLine", "half-line", "half line" ],
-        [ "StraightLine", "line", "line" ],
-        [ "Polygon", "polygon", "polygon" ],
-        [ "Perpendicular", "perpendicular", "perpendicular" ],
-        [ "ParallelLine", "parallel-line", "parallel line" ],
-        [ "Circle1", "circle-by-point", "circle by point" ],
-        [ "Circle2", "circle-by-radius", "circle by radius" ],
-        [ "Arc", "arc", "arc" ],
-        [ "Ellipse", "ellipse", "ellipse" ],
-        [ "Angle", "angle", "angle" ],
-        [ "DimensionLine", "dimension-line", "dimension line" ],
-        [ "LengthSymbol", "length-symbol", "length symbol" ],
-        [ "TangentCircles", "tangent-circles", "tangent circles" ],
-        [ "TangentPoint", "tangent-point", "tangent point" ],
-        [ "Text", "text", "text" ]
+        [ "Selection", "selection", T("selection") ],
+        [ "Point", "point", T("point") ],
+        [ "Midpoint", "mid-point", T("mid point") ],
+        [ "Intersection", "intersection", T("intersection") ],
+        [ "LineSegment", "line-segment", T("line segment") ],
+        [ "HalfLine", "half-line", T("half line") ],
+        [ "StraightLine", "line", T("line") ],
+        [ "Polygon", "polygon", T("polygon") ],
+        [ "Perpendicular", "perpendicular", T("perpendicular") ],
+        [ "ParallelLine", "parallel-line", T("parallel line") ],
+        [ "Circle1", "circle-by-point", T("circle by point") ],
+        [ "Circle2", "circle-by-radius", T("circle by radius") ],
+        [ "Arc", "arc", T("arc") ],
+        [ "Ellipse", "ellipse", T("ellipse") ],
+        [ "Angle", "angle", T("angle") ],
+        [ "DimensionLine", "dimension-line", T("dimension line") ],
+        [ "LengthSymbol", "length-symbol", T("length symbol") ],
+        [ "TangentCircles", "tangent-circles", T("tangent circles") ],
+        [ "TangentPoint", "tangent-point", T("tangent point") ],
+        [ "Text", "text", T("text") ]
     ];
 
     const k = document.location.href.lastIndexOf("/");

@@ -5,3 +5,4 @@ debug.log
 public/lib/plane/plane.d.ts
 public/lib/plane/plane.js
 install.bat
+ts/@types

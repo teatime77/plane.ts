@@ -1,5 +1,7 @@
 ///<reference path="shape.ts" />
 
+const T = i18n_ts.T;
+
 namespace plane_ts {
 
 export function calcFootFrom2Pos(position : Vec2, pos1 : Vec2, e : Vec2) : Vec2 {
@@ -56,7 +58,7 @@ export class Midpoint extends Point {
     }
 
     reading() : Reading {
-        return new Reading("Let α be the midpoint between points β and γ.", [ this, this.pointA, this.pointB]);
+        return new Reading(this, T('Let "A" be the midpoint between points "B" and "C".'), [ this, this.pointA, this.pointB]);
     }
 }
 
@@ -95,7 +97,7 @@ export class FootOfPerpendicular extends Shape {
     }
 
     reading() : Reading {
-        return new Reading("Let α be the foot of the perpendicular line drawn from point β to the line γ.", [ this.foot, this.point, this.line]);
+        return new Reading(this, T('Let "A" be the foot of the perpendicular line drawn from point "B" to the line "C".'), [ this.foot, this.point, this.line]);
     }
 }
 
@@ -168,7 +170,7 @@ export class LineLineIntersection extends Shape {
     }
 
     reading(): Reading {
-        return new Reading("Let α be the intersection point of the two lines.", [this.point]);
+        return new Reading(this, T('Let "A" be the intersection point of the two lines.'), [this.point]);
     }
 }
 
@@ -250,7 +252,7 @@ export class LineArcIntersection extends Shape {
     }
 
     reading(): Reading {
-        return new Reading("Let points α and β be the intersections of the line and the circle.", [ this.pointA, this.pointB ]);
+        return new Reading(this, T('Let points "A" and "B" be the intersections of the line and the circle.'), [ this.pointA, this.pointB ]);
     }
 }
 
@@ -339,7 +341,7 @@ export class ArcArcIntersection extends Shape {
     }
 
     reading(): Reading {
-        return new Reading("Let points α and β be the intersections of the two circles.", [ this.pointA, this.pointB ]);
+        return new Reading(this, T('Let points "A" and "B" be the intersections of the two circles.'), [ this.pointA, this.pointB ]);
     }
 }
 
@@ -444,7 +446,7 @@ export class CircleCircleTangent extends Tangent {
     }
 
     reading(): Reading {
-        return new Reading("Draw tangents to the two circles.", []);
+        return new Reading(this, T('Draw tangents to the two circles.'), []);
     }
 }
 
@@ -535,7 +537,7 @@ export class CirclePointTangent extends Tangent {
     }
 
     reading(): Reading {
-        return new Reading("Draw a tangent line from point α to the circle, and let the points of tangency be points β and γ.",
+        return new Reading(this, T('Draw a tangent line from point "A" to the circle, and let the points of tangency be points "B" and "C".'),
             [this.point].concat(this.tangentPoints));
     }
 }
