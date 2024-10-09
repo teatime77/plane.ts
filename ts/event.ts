@@ -3,7 +3,7 @@ namespace plane_ts {
 
 let selectedToolButton : HTMLButtonElement;
 
-export function initPlane(menu_div : HTMLElement, tool_div : HTMLElement, canvas_div : HTMLElement, property_div : HTMLElement){
+export function initPlane(menu_span : HTMLSpanElement, tool_div : HTMLElement, canvas_div : HTMLElement, property_div : HTMLElement){
     makeCssClass();
 
     const buttons = makeToolBox(tool_div);
@@ -12,7 +12,7 @@ export function initPlane(menu_div : HTMLElement, tool_div : HTMLElement, canvas
     const canvas = makeCanvas(canvas_div);
 
     makePropertyTable(property_div);
-    const [save_btn, anchor] = makeMenuBar(menu_div);
+    const [save_btn, anchor] = makeMenuBar(menu_span);
 
     const view = new View(canvas);
 

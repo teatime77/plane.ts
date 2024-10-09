@@ -75,20 +75,20 @@ function makeCheckbox(div : HTMLElement, id : string, text : string) : HTMLInput
     return inp;
 }
 
-export function makeMenuBar(div : HTMLElement) : [HTMLButtonElement, HTMLAnchorElement]{
-    showAxis   = makeCheckbox(div, "show-axis", "Axis");
-    showGrid   = makeCheckbox(div, "show-grid", "Grid");
-    snapToGrid = makeCheckbox(div, "snap-to-grid", "Snap to Grid");
+export function makeMenuBar(span : HTMLSpanElement) : [HTMLButtonElement, HTMLAnchorElement]{
+    showAxis   = makeCheckbox(span, "show-axis", "Axis");
+    showGrid   = makeCheckbox(span, "show-grid", "Grid");
+    snapToGrid = makeCheckbox(span, "snap-to-grid", "Snap to Grid");
 
     menuBarEvent();
 
     const save_btn = document.createElement("button");
     save_btn.textContent = "Save";
-    div.append(save_btn);
+    span.append(save_btn);
 
     const anchor = document.createElement("a");
     anchor.id = "blob";
-    div.append(anchor);
+    span.append(anchor);
 
     return [save_btn, anchor];
 }
