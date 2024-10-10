@@ -558,16 +558,15 @@ class AngleBuilder extends Builder {
                 lineA.calc();
                 lineB.calc();
 
-                const points = View.current.relation.getIntersections(lineA, lineB);
-                if(points.length != 1){
+                const common_point = getCommonPointOfLines(lineA, lineB);
+                if(common_point == undefined){
                     throw new MyError();
                 }
-                const intersection_position = points[0].position;
 
-                const directionA = Math.sign(pos1.sub(intersection_position).dot(lineA.e));
-                const directionB = Math.sign(pos2.sub(intersection_position).dot(lineB.e));
+                const directionA = Math.sign(pos1.sub(common_point.position).dot(lineA.e));
+                const directionB = Math.sign(pos2.sub(common_point.position).dot(lineB.e));
 
-                const angle = new Angle({ lineA, directionA, lineB, directionB });
+                const angle = new Angle({ angleMark : 0, lineA, directionA, lineB, directionB });
                 view.addShape(angle);
 
                 this.line1 = undefined;

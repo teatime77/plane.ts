@@ -20,8 +20,6 @@ export abstract class Property {
     widget : Widget;
     name   : string;
 
-    abstract valueChanged() : void;
-
     constructor(widget : Widget, name : string){
         this.widget = widget;
         this.name   = name;
@@ -116,6 +114,32 @@ class ColorProperty extends InputProperty {
     }
 }
 
+export class AngleMarkProperty extends Property {
+    span : HTMLSpanElement;
+    // ellipsisButton : HTMLButtonElement;
+    dlg : HTMLDialogElement;
+    img : HTMLImageElement;
+    imgButtons : HTMLImageElement[];
+
+    constructor(angle : Angle, name : string, value : number){
+        super(angle, name);
+
+        const k = document.location.href.lastIndexOf("/");
+        const home = document.location.href.substring(0, k);
+        msg(`home:${home}`);
+
+        this.span = document.createElement("span");
+
+        const button_img_urls = range(Angle.numMarks).map(i => `${home}/lib/plane/img/angle-${i}.png`) as string[];
+    
+        [this.img, this.dlg, this.imgButtons] = makeImageButtons(this.span, `${home}/lib/plane/img/angle-${angle.angleMark}.png`, button_img_urls);
+    }
+
+    imgButtonClick(idx : number) : void {
+        this.setValue(idx);
+    }
+}
+
 function makeConstantProperty(tbl : HTMLTableElement, nest : number, name : string, text : string){
     const span = document.createElement("span");
     span.innerText = text;
@@ -177,15 +201,20 @@ export function showProperty(widget : Widget, nest : number){
                 continue;
             }
 
+            let property : InputProperty | TextAreaProperty | AngleMarkProperty;
+            let property_element : HTMLElement;
+
             if(name == "text" && widget instanceof TextBlock){
 
-                const property = new TextAreaProperty(widget, name, value as string);
-                appendRow(tbl, nest + 1, property.name, property.textArea);
-                PropertyEvent(property!);
+                property = new TextAreaProperty(widget, name, value as string);
+                property_element = property.textArea;
+            }
+            else if(name == "angleMark" && widget instanceof Angle){
+
+                property = new AngleMarkProperty(widget as Angle, name, value);
+                property_element  = property.span;
             }
             else{
-                let property : InputProperty;
-
                 switch(typeof value){
                 case "string":
                     if(name == "color"){
@@ -224,9 +253,11 @@ export function showProperty(widget : Widget, nest : number){
                     throw new MyError();
                 }
 
-                appendRow(tbl, nest + 1, property.name, property.input);
-                PropertyEvent(property!);
+                property_element = property.input;
             }
+
+            appendRow(tbl, nest + 1, property.name, property_element);
+            PropertyEvent(property);
         }
         else{
             throw new MyError();

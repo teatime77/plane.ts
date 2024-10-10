@@ -102,6 +102,34 @@ export function makePropertyTable(div : HTMLElement){
     div.append(table);
 }
 
+export function makeImageButtons(span : HTMLSpanElement, img_url : string, button_img_urls : string[]) 
+    : [HTMLImageElement, HTMLDialogElement, HTMLImageElement[]] {
+    const img = document.createElement("img");
+    img.src = img_url;
+    img.style.width  = "24px";
+    img.style.height = "24px";
+
+    span.append(img);
+
+    const dlg = document.createElement("dialog");
+
+    const imgs : HTMLImageElement[] = [];
+    for(const url of button_img_urls){
+
+        const img = document.createElement("img");
+        img.src = url;
+        img.style.width  = "24px";
+        img.style.height = "24px";
+
+        dlg.append(img);
+        imgs.push(img);
+    }
+
+    span.append(dlg);
+
+    return [img, dlg, imgs];
+}
+
 export function makeCanvas(div : HTMLElement) : HTMLCanvasElement {
     const canvas = document.createElement("canvas");
     canvas.style.width  = "100%";

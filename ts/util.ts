@@ -117,6 +117,19 @@ export function toDegree(radian : number) : number {
     return radian * 180 / Math.PI;
 }
 
+export function inRange(start : number, theta : number, end : number) : boolean {
+    const f = (x:number)=>{ return 0 <= x ? x : 180 + x };
+
+    [start , theta, end] = [ f(start), f(theta), f(end)];
+    [ theta, end ] = [ theta - start, end - start ];
+
+    const g = (x:number)=>{ return 0 <= x ? x : 360 + x };
+    [theta, end] = [ g(theta), g(end)];
+
+    assert(0 <= theta && 0 <= end);
+    return theta <= end;
+}
+
 export function linear(src_min : number, src_val : number, src_max : number, dst_min : number, dst_max : number) : number {
     const ratio = (src_val - src_min) / (src_max - src_min);    
     const dst_val = dst_min + ratio * (dst_max - dst_min);

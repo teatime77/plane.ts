@@ -18,7 +18,6 @@ export class View extends Widget {
     max! : Vec2;
 
     dirty : boolean = false;
-    prevShape : Shape | undefined;
 
     relation = new Relation();
 
@@ -71,6 +70,8 @@ export class View extends Widget {
         this.setMinMax(new Vec2(-max_x, -max_y), new Vec2( max_x,  max_y));
 
         View.current = this;
+
+        this.resize();
     }
 
     setMinMax(min : Vec2, max : Vec2){
@@ -208,13 +209,19 @@ export class View extends Widget {
 
         const shapes = this.allShapes();
 
-        let is_over_changed = false;
-        for(const shape of shapes){
-            const is_over = shape.isNear(position);
-            if(shape.isOver != is_over){
-                shape.isOver = is_over;
-                is_over_changed = true;
+        const old_near_shape = shapes.find(x => x.isOver);
+        const near_shape = this.getShape(position);
+
+        if(old_near_shape != near_shape){
+            if(old_near_shape != undefined){
+                old_near_shape.isOver = false;
             }
+
+            if(near_shape != undefined){
+                near_shape.isOver = true;
+            }
+
+            this.dirty = true;
         }
 
         const shape = this.getShape(position);
@@ -228,11 +235,6 @@ export class View extends Widget {
             if(! prev_snap_position.equals(this.grid.snapPosition)){
                 this.dirty = true;
             }
-        }
-
-        if(is_over_changed || shape != this.prevShape){
-            this.prevShape = shape;
-            this.dirty = true;
         }
     }
 
@@ -271,7 +273,7 @@ export class View extends Widget {
         View.current.dirty = true;
     }
 
-    resize(event : UIEvent){
+    resize(){
         const [w, h] = [ this.board.width, this.board.height ];        
 
         const height = this.board.clientWidth * 9 / 16;
@@ -307,7 +309,12 @@ export class View extends Widget {
             return symbol;
         }
 
-        const line = shapes.filter(x => x instanceof LineSegment).find(x => x.isNear(position));
+        const angle = shapes.filter(x => x instanceof Angle).find(x => x.isNear(position));
+        if(angle != undefined){
+            return angle;
+        }
+
+        const line = shapes.filter(x => x instanceof AbstractLine).find(x => x.isNear(position));
         if(line != undefined){
             return line;
         }

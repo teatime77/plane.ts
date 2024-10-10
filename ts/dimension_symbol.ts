@@ -5,7 +5,9 @@ namespace plane_ts {
 export class Angle extends Shape {
     static radius1Pix = 20;
     static radius1 : number;
+    static numMarks = 4;
 
+    angleMark   : number;
     lineA       : AbstractLine;
     directionA  : number;
 
@@ -14,22 +16,29 @@ export class Angle extends Shape {
 
     intersection : Point;
 
-    constructor(obj : { lineA : AbstractLine, directionA : number, lineB : AbstractLine, directionB : number }){
+    constructor(obj : { angleMark : number, lineA : AbstractLine, directionA : number, lineB : AbstractLine, directionB : number }){
         super(obj);
+        this.angleMark   = obj.angleMark;
+        if(this.angleMark == undefined){
+            this.angleMark = 0;
+        }
         this.lineA       = obj.lineA;
         this.directionA  = obj.directionA;
 
         this.lineB       = obj.lineB;
         this.directionB  = obj.directionB;
 
-        const points = View.current.relation.getIntersections(this.lineA, this.lineB);
-        assert(points.length == 1);
+        const point = getCommonPointOfLines(this.lineA, this.lineB);
+        if(point == undefined){
+            throw new MyError();
+        }
         
-        this.intersection = points[0];
+        this.intersection = point;
     }
 
     makeObj() : any {
         let obj = Object.assign(super.makeObj(), {
+            angleMark  : this.angleMark,
             lineA      : this.lineA.toObj(),
             directionA : this.directionA,
             lineB      : this.lineB.toObj(),
@@ -39,24 +48,68 @@ export class Angle extends Shape {
         return obj;
     }
 
+    getProperties(){
+        return super.getProperties().concat([
+            "angleMark"
+        ]);
+    }
+
+    setAngleMark(angle_mark : number){
+        this.angleMark = angle_mark;
+    }
+
     dependencies() : Shape[] {
         return [ this.lineA, this.lineB ];
+    }
+
+    startEndAngle() : [number, number] {
+        const e1 = this.lineA.e.mul(this.directionA);
+        const e2 = this.lineB.e.mul(this.directionB);
+
+        const start = Math.atan2(e1.y, e1.x);
+        const end   = Math.atan2(e2.y, e2.x);
+
+        return [start, end];
+    }
+
+    isNear(position : Vec2) : boolean {  
+        const distance = this.intersection.position.distance(position);
+
+        let radius = Angle.radius1 * 1.2;
+        if(distance <= radius){
+
+            const [start, end] = this.startEndAngle();
+
+            // the vector from the intersection to position.
+            const v = position.sub(this.intersection.position);
+
+            const theta = Math.atan2(v.y, v.x);
+            const result = inRange(start, theta, end);
+
+            return inRange(start, theta, end);
+        }
+
+        return false;
     }
 
     calc(){        
     }
 
     draw() : void {
-        const e1 = this.lineA.e.mul(this.directionA);
-        const e2 = this.lineB.e.mul(this.directionB);
-
-        const th1 = Math.atan2(e1.y, e1.x);
-        const th2 = Math.atan2(e2.y, e2.x);
+        const [start, end] = this.startEndAngle();
 
         const color = (this.isOver ? "red" : this.color);
         const line_width = (this.selected ? 3 : 1);
+        
+        for(const i of range(Angle.numMarks)){
+            if(this.angleMark < i){
+                break;
+            }
 
-        View.current.canvas.drawArc(this.intersection.position, Angle.radius1, null, color, line_width, th1, th2);
+            const scales = [1, 0.8, 1.2, 1.4];
+            let radius = Angle.radius1 * scales[i];
+            View.current.canvas.drawArc(this.intersection.position, radius, null, color, line_width, start, end);
+        }
     }
 }
 

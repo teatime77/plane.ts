@@ -569,4 +569,31 @@ export class Relation {
 
 }
 
+export function getCommonPointOfLines(lineA : AbstractLine, lineB : AbstractLine) : Point | undefined {
+    const points = View.current.relation.getIntersections(lineA, lineB);
+    if(points.length == 1){
+        return points[0];
+    }
+    else{
+
+        const lineA_points = [ lineA.pointA ];
+        if(lineA instanceof LineByPoints){
+            lineA_points.push(lineA.pointB);
+        }
+
+        const lineB_points = [ lineB.pointA ];
+        if(lineB instanceof LineByPoints){
+            lineB_points.push(lineB.pointB);
+        }
+
+        for(const point of lineA_points){
+            if(lineB_points.includes(point)){
+                return point;
+            }
+        }
+    }
+
+    return undefined;
+}
+
 }
