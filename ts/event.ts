@@ -25,6 +25,11 @@ export function initPlane(menu_span : HTMLSpanElement, tool_div : HTMLElement, c
 }
 
 export function bodyOnLoad(){
+    i18n_ts.initI18n();
+
+    const root = makeGrid();
+    layout_ts.initLayout(root);
+    
     initPlane($div("menu-bar"), $div("shape-tool"), $div("canvas-div"), $div("property-div"));
 }
 

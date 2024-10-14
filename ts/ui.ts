@@ -1,9 +1,14 @@
 namespace plane_ts {
 //
+const $grid = layout_ts.$grid;
+const $block = layout_ts.$block;
+const $button = layout_ts.$button;
 
 export let showAxis : HTMLInputElement;
 export let showGrid : HTMLInputElement;
 export let snapToGrid : HTMLInputElement;
+
+const T = i18n_ts.T;
 
 export function makeToolBox(div : HTMLElement): HTMLButtonElement[] {
     const name_titles = [
@@ -182,5 +187,58 @@ export function toYPixScale(n : number) : number {
 export function drawLine(shape : Shape, p1 : Vec2, p2 : Vec2){
     View.current.canvas.drawLine(shape, p1, p2);
 }
+
+
+export function makeGrid(){
+
+    const root = $grid({
+        rows     : "50px 100%",
+        children:[
+            $grid({
+                children: [
+                    $block({
+                        id : "menu-bar",
+                        children : [],
+                        backgroundColor : "lime",
+                    })
+                ]
+            })
+            ,
+            $grid({
+                columns  : "50px 50% 50% 300px",
+
+                children : [
+                    $block({
+                        id : "shape-tool",
+                        children : [],
+                        backgroundColor : "green",
+                    })
+                    ,
+                    $block({
+                        children : [],
+                        aspectRatio : 1,
+                        backgroundColor : "blue",
+                    })
+                    ,
+                    $block({
+                        id : "canvas-div",
+                        children : [],
+                        aspectRatio : 1,
+                        backgroundColor : "orange",
+                    })
+                    ,
+                    $block({
+                        id : "property-div",
+                        children : [],
+                        backgroundColor : "cyan",
+                    }),
+                ]
+            })
+        ]
+    });
+
+    return root;    
+}
+
 
 }

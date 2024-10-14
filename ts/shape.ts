@@ -5,6 +5,7 @@ const Reading = i18n_ts.Reading;
 
 namespace plane_ts {
 //
+const T = i18n_ts.T;
 const fgColor = "black";
 let capturedShape : AbstractShape | undefined;
 

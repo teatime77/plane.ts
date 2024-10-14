@@ -51,7 +51,7 @@ export class TextAreaProperty extends Property {
         super(widget, name);
         this.textArea = document.createElement("textarea");
         this.textArea.id   = "text-block-text-area";
-        this.textArea.cols = 80;
+        this.textArea.cols = 20;
         this.textArea.rows = 10;
         this.textArea.value = value;
     }

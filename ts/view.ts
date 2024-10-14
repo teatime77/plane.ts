@@ -56,11 +56,7 @@ export class View extends Widget {
         this.canvas = new Canvas(this, this.board);
         this.grid   = new Grid(this);
 
-        this.board.style.height = `${this.board.clientWidth * 9 / 16}px`;
-
         this.board.width  = this.board.clientWidth;
-        // this.board.height = this.board.clientWidth * 9 / 16;
-
         this.board.height = this.board.clientHeight;
 
         const scale = 100;
@@ -274,23 +270,13 @@ export class View extends Widget {
     }
 
     resize(){
-        const [w, h] = [ this.board.width, this.board.height ];        
-
-        const height = this.board.clientWidth * 9 / 16;
-
-        this.board.style.height = `${height}px`;
-
         this.board.width  = this.board.clientWidth;
-        this.board.height = height;
-
-        // const [rx, ry] = [ this.board.width / w, this.board.height / h ];
-
-        // this.setMinMax(this.min.mul(rx, ry), this.max.mul(rx, ry));
+        this.board.height = this.board.clientHeight;
 
         this.updateTextBlockPositions();
         this.dirty = true;
 
-        msg(`resize: w:${w} ${this.board.width} h:${h} ${this.board.height} max:${this.max}`);
+        msg(`resize: w:${this.board.width} h:${this.board.height} max:${this.max}`);
     }
 
     addShape(shape : AbstractShape){

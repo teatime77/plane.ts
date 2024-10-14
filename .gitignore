@@ -6,3 +6,5 @@ public/lib/plane/plane.d.ts
 public/lib/plane/plane.js
 install.bat
 ts/@types
+public/lib/i18n
+public/lib/layout

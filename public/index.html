@@ -21,7 +21,9 @@
         integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"
         onload="renderMathInElement(document.body);"></script>
 
-    <script type="text/javascript" src="lib/plane/plane.js"></script>
+        <script type="text/javascript" src="lib/i18n/i18n.js"></script>
+        <script type="text/javascript" src="lib/layout/layout.js"></script>
+        <script type="text/javascript" src="lib/plane/plane.js"></script>
 
 <style type="text/css">
 html {
@@ -38,13 +40,5 @@ body {
 
 </head>
 <body onload="plane_ts.bodyOnLoad()">
-
-<span id="menu-bar"></span>
-<br/>
-<div style="display: flex; width: 100%; height:max-content;">
-    <div id="shape-tool"   style="flex-grow: 0; "></div>
-    <div id="canvas-div"   style="flex-grow: 1; " ></div>
-    <div id="property-div" style="flex-grow: 0; width: 300px;"></div>
-</div>
 </body>
 </html>

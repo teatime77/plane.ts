@@ -1,8 +1,7 @@
 ///<reference path="shape.ts" />
 
-const T = i18n_ts.T;
-
 namespace plane_ts {
+const T = i18n_ts.T;
 
 export function calcFootFrom2Pos(position : Vec2, pos1 : Vec2, e : Vec2) : Vec2 {
     const v = position.sub(pos1);
