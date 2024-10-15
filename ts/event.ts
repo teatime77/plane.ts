@@ -1,13 +1,14 @@
 namespace plane_ts {
 //
 
-let selectedToolButton : HTMLButtonElement;
-
-export function initPlane(menu_span : HTMLSpanElement, tool_div : HTMLElement, canvas_div : HTMLElement, property_div : HTMLElement){
+export function initPlane(menu_span : HTMLSpanElement, shape_tool : layout_ts.Block, canvas_div : HTMLElement, property_div : HTMLElement){
     makeCssClass();
 
-    const buttons = makeToolBox(tool_div);
-    toolBoxEvent(buttons);
+    makeToolBox(shape_tool);
+    shape_tool.onChange = (ui : layout_ts.UI)=>{
+        const button = ui as layout_ts.RadioButton;
+        Builder.tool = Builder.makeToolByType(button.button.value);
+    }
 
     const canvas = makeCanvas(canvas_div);
 
@@ -30,29 +31,8 @@ export function bodyOnLoad(){
     const root = makeGrid();
     layout_ts.initLayout(root);
     
-    initPlane($div("menu-bar"), $div("shape-tool"), $div("canvas-div"), $div("property-div"));
-}
-
-function selectButton(button : HTMLButtonElement){
-    selectedToolButton = button;
-    button.style.margin      = "1px";
-    button.style.borderWidth = "2px";
-}
-
-export function toolBoxEvent(buttons : HTMLButtonElement[]){
-    selectButton(buttons[0]);
-
-    for(const button of buttons){
-        button.addEventListener("click", (ev : MouseEvent)=>{
-            selectedToolButton.style.margin      = "2px";
-            selectedToolButton.style.borderWidth = "1px";
-
-            selectButton(button);                    
-
-            msg(`tool:${button.value}`);
-            Builder.changeTool(button.value);
-        });
-    };
+    const shape_tool = root.getUIById("shape-tool")! as layout_ts.Block;
+    initPlane($div("menu-bar"), shape_tool, $div("canvas-div"), $div("property-div"));
 }
 
 export function menuBarEvent(){

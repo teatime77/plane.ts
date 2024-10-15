@@ -3,10 +3,6 @@ namespace plane_ts {
 export abstract class Builder {
     static tool : Builder;
 
-    static changeTool(tool_name : string){
-        Builder.tool = this.makeToolByType(tool_name);
-    }
-
     static makeToolByType(tool_name: string): Builder {    
         switch(tool_name){
             case "Selection":        return new SelectionTool();

@@ -10,7 +10,7 @@ export let snapToGrid : HTMLInputElement;
 
 const T = i18n_ts.T;
 
-export function makeToolBox(div : HTMLElement): HTMLButtonElement[] {
+export function makeToolBox(shape_tool : layout_ts.Block){
     const name_titles = [
         [ "Selection", "selection", T("selection") ],
         [ "Point", "point", T("point") ],
@@ -38,32 +38,19 @@ export function makeToolBox(div : HTMLElement): HTMLButtonElement[] {
     const home = document.location.href.substring(0, k);
     msg(`home:${home}`);
 
-    const buttons : HTMLButtonElement[] = [];
     for(const [value, name, title] of name_titles){
-        const button = document.createElement("button");
-        button.className = "tool-button";
-        button.id = `${name}-button`;
-        button.value = value;
-        button.title = title;
-        button.style.margin      = "2px";
-        button.style.borderWidth = "1px";
+        const radio = layout_ts.$radio({
+            value : value,
+            title : title,
+            url   : `${home}/lib/plane/img/${name}.png`,
+            width : "24px",
+            height : "24px",
+        });
 
-        const img = document.createElement("img");
-        img.src = `${home}/lib/plane/img/${name}.png`;
-        img.className = "tool-button-img";
-        img.style.width  = "24px";
-        img.style.height = "24px";
-
-        button.append(img);
-        div.append(button);
-
-        const br = document.createElement("br");
-        div.append(br);
-
-        buttons.push(button);
+        shape_tool.addRadioButton(radio);
     }
 
-    return buttons;
+    shape_tool.children[0].select(true);
 }
 
 function makeCheckbox(div : HTMLElement, id : string, text : string) : HTMLInputElement {
