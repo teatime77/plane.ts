@@ -1,5 +1,7 @@
 namespace plane_ts {
 //
+type Block = layout_ts.Block;
+
 const $grid = layout_ts.$grid;
 const $block = layout_ts.$block;
 const $button = layout_ts.$button;
@@ -175,19 +177,64 @@ export function drawLine(shape : Shape, p1 : Vec2, p2 : Vec2){
     View.current.canvas.drawLine(shape, p1, p2);
 }
 
+export function makeUIs() : [ layout_ts.Block, layout_ts.Block, layout_ts.Block, layout_ts.Block, layout_ts.Block ] {
+    const k = document.location.href.lastIndexOf("/");
+    const home = document.location.href.substring(0, k);
+    msg(`home:${home}`);
 
-export function makeGrid(){
+    const menu_block = $block({
+        id : "menu-bar",
+        children : [],
+        backgroundColor : "lime",
+    });
+
+    const tool_block = $block({
+        id : "shape-tool",
+        children : [],
+        backgroundColor : "green",
+    });
+
+    const text_block = $block({
+        children : [
+            $button({
+                id : "add-statement",
+                width : "24px",
+                height : "24px",
+                url : `${home}/lib/plane/img/statement.png`,
+                click: (ev:MouseEvent)=>{ msg("add statement clicked"); }
+            })
+        ],
+        aspectRatio : 1,
+        backgroundColor : "blue",
+    });
+
+    const canvas_block = $block({
+        id : "canvas-div",
+        children : [],
+        aspectRatio : 1,
+        backgroundColor : "orange",
+    });
+
+    const property_block = $block({
+        id : "property-div",
+        children : [],
+        backgroundColor : "cyan",
+    });
+
+    return [ menu_block, tool_block, text_block, canvas_block, property_block ];
+}
+
+export function makeGrid(menu_block : Block, tool_block : Block, text_block : Block, canvas_block : Block, property_block : Block){
+    const k = document.location.href.lastIndexOf("/");
+    const home = document.location.href.substring(0, k);
+    msg(`home:${home}`);
 
     const root = $grid({
         rows     : "50px 100%",
         children:[
             $grid({
                 children: [
-                    $block({
-                        id : "menu-bar",
-                        children : [],
-                        backgroundColor : "lime",
-                    })
+                    menu_block
                 ]
             })
             ,
@@ -195,30 +242,13 @@ export function makeGrid(){
                 columns  : "50px 50% 50% 300px",
 
                 children : [
-                    $block({
-                        id : "shape-tool",
-                        children : [],
-                        backgroundColor : "green",
-                    })
+                    tool_block
                     ,
-                    $block({
-                        children : [],
-                        aspectRatio : 1,
-                        backgroundColor : "blue",
-                    })
+                    text_block
                     ,
-                    $block({
-                        id : "canvas-div",
-                        children : [],
-                        aspectRatio : 1,
-                        backgroundColor : "orange",
-                    })
+                    canvas_block
                     ,
-                    $block({
-                        id : "property-div",
-                        children : [],
-                        backgroundColor : "cyan",
-                    }),
+                    property_block
                 ]
             })
         ]

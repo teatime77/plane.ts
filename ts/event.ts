@@ -1,19 +1,38 @@
 namespace plane_ts {
 //
+type Block = layout_ts.Block;
 
-export function initPlane(menu_span : HTMLSpanElement, shape_tool : layout_ts.Block, canvas_div : HTMLElement, property_div : HTMLElement){
+function makeAddStatementDlg() : layout_ts.Dialog {
+    return new layout_ts.Dialog({
+        width  : "400px",
+        height : "300px",
+        content : layout_ts.$textarea({
+            cols : 5,
+            rows : 5
+        })
+    })
+}
+
+export function initPlane(root : layout_ts.Grid, menu_block : Block, tool_block : Block, text_block : Block, canvas_block : Block, property_block : Block){
     makeCssClass();
 
+    const shape_tool = root.getUIById("shape-tool")! as layout_ts.Block;
     makeToolBox(shape_tool);
     shape_tool.onChange = (ui : layout_ts.UI)=>{
         const button = ui as layout_ts.RadioButton;
         Builder.tool = Builder.makeToolByType(button.button.value);
     }
 
-    const canvas = makeCanvas(canvas_div);
+    const dlg = makeAddStatementDlg();
+    const add_btn = root.getUIById("add-statement") as layout_ts.Button;
+    add_btn.click = (ev : MouseEvent)=>{
+        dlg.showModal(ev);
+    }
 
-    makePropertyTable(property_div);
-    const [save_btn, anchor] = makeMenuBar(menu_span);
+    const canvas = makeCanvas(canvas_block.div);
+
+    makePropertyTable(property_block.div);
+    const [save_btn, anchor] = makeMenuBar(menu_block.html());
 
     const view = new View(canvas);
 
@@ -28,11 +47,11 @@ export function initPlane(menu_span : HTMLSpanElement, shape_tool : layout_ts.Bl
 export function bodyOnLoad(){
     i18n_ts.initI18n();
 
-    const root = makeGrid();
+    const [ menu_block, tool_block, text_block, canvas_block, property_block ] = makeUIs();
+    const root = makeGrid(menu_block, tool_block, text_block, canvas_block, property_block);
     layout_ts.initLayout(root);
     
-    const shape_tool = root.getUIById("shape-tool")! as layout_ts.Block;
-    initPlane($div("menu-bar"), shape_tool, $div("canvas-div"), $div("property-div"));
+    initPlane(root, menu_block, tool_block, text_block, canvas_block, property_block);
 }
 
 export function menuBarEvent(){
