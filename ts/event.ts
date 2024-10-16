@@ -2,31 +2,14 @@ namespace plane_ts {
 //
 type Block = layout_ts.Block;
 
-function makeAddStatementDlg() : layout_ts.Dialog {
-    return new layout_ts.Dialog({
-        width  : "400px",
-        height : "300px",
-        content : layout_ts.$textarea({
-            cols : 5,
-            rows : 5
-        })
-    })
-}
 
 export function initPlane(root : layout_ts.Grid, menu_block : Block, tool_block : Block, text_block : Block, canvas_block : Block, property_block : Block){
     makeCssClass();
 
-    const shape_tool = root.getUIById("shape-tool")! as layout_ts.Block;
-    makeToolBox(shape_tool);
-    shape_tool.onChange = (ui : layout_ts.UI)=>{
+    makeToolBox(tool_block);
+    tool_block.onChange = (ui : layout_ts.UI)=>{
         const button = ui as layout_ts.RadioButton;
         Builder.tool = Builder.makeToolByType(button.button.value);
-    }
-
-    const dlg = makeAddStatementDlg();
-    const add_btn = root.getUIById("add-statement") as layout_ts.Button;
-    add_btn.click = (ev : MouseEvent)=>{
-        dlg.showModal(ev);
     }
 
     const canvas = makeCanvas(canvas_block.div);

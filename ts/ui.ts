@@ -5,6 +5,7 @@ type Block = layout_ts.Block;
 const $grid = layout_ts.$grid;
 const $block = layout_ts.$block;
 const $button = layout_ts.$button;
+const $dialog = layout_ts.$dialog;
 
 export let showAxis : HTMLInputElement;
 export let showGrid : HTMLInputElement;
@@ -12,7 +13,7 @@ export let snapToGrid : HTMLInputElement;
 
 const T = i18n_ts.T;
 
-export function makeToolBox(shape_tool : layout_ts.Block){
+export function makeToolBox(tool_block : layout_ts.Block){
     const name_titles = [
         [ "Selection", "selection", T("selection") ],
         [ "Point", "point", T("point") ],
@@ -45,14 +46,14 @@ export function makeToolBox(shape_tool : layout_ts.Block){
             value : value,
             title : title,
             url   : `${home}/lib/plane/img/${name}.png`,
-            width : "24px",
-            height : "24px",
+            width : "36px",
+            height : "36px",
         });
 
-        shape_tool.addRadioButton(radio);
+        tool_block.addRadioButton(radio);
     }
 
-    shape_tool.children[0].select(true);
+    tool_block.children[0].select(true);
 }
 
 function makeCheckbox(div : HTMLElement, id : string, text : string) : HTMLInputElement {
@@ -100,8 +101,8 @@ export function makeImageButtons(span : HTMLSpanElement, img_url : string, butto
     : [HTMLImageElement, HTMLDialogElement, HTMLImageElement[]] {
     const img = document.createElement("img");
     img.src = img_url;
-    img.style.width  = "24px";
-    img.style.height = "24px";
+    img.style.width  = "36px";
+    img.style.height = "36px";
 
     span.append(img);
 
@@ -112,8 +113,8 @@ export function makeImageButtons(span : HTMLSpanElement, img_url : string, butto
 
         const img = document.createElement("img");
         img.src = url;
-        img.style.width  = "24px";
-        img.style.height = "24px";
+        img.style.width  = "36px";
+        img.style.height = "36px";
 
         dlg.append(img);
         imgs.push(img);
@@ -182,6 +183,15 @@ export function makeUIs() : [ layout_ts.Block, layout_ts.Block, layout_ts.Block,
     const home = document.location.href.substring(0, k);
     msg(`home:${home}`);
 
+    const add_statement_dlg = $dialog({
+        width  : "400px",
+        height : "300px",
+        content : layout_ts.$textarea({
+            cols : 5,
+            rows : 5
+        })
+    });
+
     const menu_block = $block({
         id : "menu-bar",
         children : [],
@@ -189,7 +199,6 @@ export function makeUIs() : [ layout_ts.Block, layout_ts.Block, layout_ts.Block,
     });
 
     const tool_block = $block({
-        id : "shape-tool",
         children : [],
         backgroundColor : "green",
     });
@@ -197,11 +206,13 @@ export function makeUIs() : [ layout_ts.Block, layout_ts.Block, layout_ts.Block,
     const text_block = $block({
         children : [
             $button({
-                id : "add-statement",
-                width : "24px",
-                height : "24px",
+                width : "36px",
+                height : "36px",
                 url : `${home}/lib/plane/img/statement.png`,
-                click: (ev:MouseEvent)=>{ msg("add statement clicked"); }
+                click: (ev:MouseEvent)=>{ 
+                    msg("show add statement dlg"); 
+                    add_statement_dlg.showModal(ev);
+                }
             })
         ],
         aspectRatio : 1,
