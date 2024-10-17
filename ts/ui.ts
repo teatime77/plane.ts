@@ -6,6 +6,7 @@ const $grid = layout_ts.$grid;
 const $block = layout_ts.$block;
 const $button = layout_ts.$button;
 const $dialog = layout_ts.$dialog;
+const $popup = layout_ts.$popup;
 
 export let showAxis : HTMLInputElement;
 export let showGrid : HTMLInputElement;
@@ -178,10 +179,28 @@ export function drawLine(shape : Shape, p1 : Vec2, p2 : Vec2){
     View.current.canvas.drawLine(shape, p1, p2);
 }
 
+function makeStatementMenu() : layout_ts.PopupMenu {
+    const statements = initStatements();
+
+    const statement_menu = $popup({
+        direction : "column",
+        click : (idx:number, id? : string, value? : string)=>{
+            msg(`statement:${statements[idx].text}`);
+            Builder.tool = new StatementTool(statements[idx]);
+        }
+        ,
+        children : statements.map(x => $button({ text : x.text}))
+    });
+
+    return statement_menu;
+}
+
 export function makeUIs() : [ layout_ts.Block, layout_ts.Block, layout_ts.Block, layout_ts.Block, layout_ts.Block ] {
     const k = document.location.href.lastIndexOf("/");
     const home = document.location.href.substring(0, k);
     msg(`home:${home}`);
+
+    const statement_menu = makeStatementMenu();
 
     const add_statement_dlg = $dialog({
         width  : "400px",
@@ -208,10 +227,20 @@ export function makeUIs() : [ layout_ts.Block, layout_ts.Block, layout_ts.Block,
             $button({
                 width : "36px",
                 height : "36px",
-                url : `${home}/lib/plane/img/statement.png`,
+                url : `${home}/lib/plane/img/text.png`,
                 click: (ev:MouseEvent)=>{ 
                     msg("show add statement dlg"); 
                     add_statement_dlg.showModal(ev);
+                }
+            })
+            ,
+            $button({
+                width : "36px",
+                height : "36px",
+                url : `${home}/lib/plane/img/statement.png`,
+                click: (ev:MouseEvent)=>{ 
+                    msg("show statement menu"); 
+                    statement_menu.show(ev);
                 }
             })
         ],

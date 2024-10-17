@@ -16,7 +16,10 @@ export abstract class AbstractShape extends Widget implements i18n_ts.Readable {
     constructor(obj : any){
         super(obj);
         
-        View.current.dirty = true;
+        if(View.current != undefined){
+
+            View.current.dirty = true;
+        }
     }
 
     abstract reading() : Reading;
@@ -854,7 +857,6 @@ export class Polygon extends Shape {
     }
 
     reading(): Reading {
-        const point_readings = this.points.map(x => this.reading().toString());
         switch(this.points.length){
         case 3:
             return new Reading(this, T('Draw a triangle with vertices "A", "B", and "C".'), this.points);
