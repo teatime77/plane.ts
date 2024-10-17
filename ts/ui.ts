@@ -2,6 +2,7 @@ namespace plane_ts {
 //
 type Block = layout_ts.Block;
 
+const $flex = layout_ts.$flex;
 const $grid = layout_ts.$grid;
 const $block = layout_ts.$block;
 const $button = layout_ts.$button;
@@ -14,7 +15,7 @@ export let snapToGrid : HTMLInputElement;
 
 const T = i18n_ts.T;
 
-export function makeToolBox(tool_block : layout_ts.Block){
+export function makeToolButtons() : layout_ts.RadioButton[] {
     const name_titles = [
         [ "Selection", "selection", T("selection") ],
         [ "Point", "point", T("point") ],
@@ -42,6 +43,7 @@ export function makeToolBox(tool_block : layout_ts.Block){
     const home = document.location.href.substring(0, k);
     msg(`home:${home}`);
 
+    const tool_buttons : layout_ts.RadioButton[] = [];
     for(const [value, name, title] of name_titles){
         const radio = layout_ts.$radio({
             value : value,
@@ -51,10 +53,10 @@ export function makeToolBox(tool_block : layout_ts.Block){
             height : "36px",
         });
 
-        tool_block.addRadioButton(radio);
+        tool_buttons.push(radio);
     }
-
-    tool_block.children[0].select(true);
+    
+    return tool_buttons;
 }
 
 function makeCheckbox(div : HTMLElement, id : string, text : string) : HTMLInputElement {
@@ -195,12 +197,14 @@ function makeStatementMenu() : layout_ts.PopupMenu {
     return statement_menu;
 }
 
-export function makeUIs() : [ layout_ts.Block, layout_ts.Block, layout_ts.Block, layout_ts.Block, layout_ts.Block ] {
+export function makeUIs() : [ layout_ts.Block, layout_ts.Block, layout_ts.Block, layout_ts.Block, layout_ts.Block, layout_ts.Flex ] {
     const k = document.location.href.lastIndexOf("/");
     const home = document.location.href.substring(0, k);
     msg(`home:${home}`);
 
     const statement_menu = makeStatementMenu();
+
+    const tool_buttons = makeToolButtons();
 
     const add_statement_dlg = $dialog({
         width  : "400px",
@@ -217,12 +221,15 @@ export function makeUIs() : [ layout_ts.Block, layout_ts.Block, layout_ts.Block,
         backgroundColor : "lime",
     });
 
-    const tool_block = $block({
-        children : [],
+    const tool_block = $flex({
+        id : "tool-block",
+        direction : "column",
+        children : tool_buttons,
         backgroundColor : "green",
     });
 
     const text_block = $block({
+        id : "text-block",
         children : [
             $button({
                 width : "36px",
@@ -261,16 +268,24 @@ export function makeUIs() : [ layout_ts.Block, layout_ts.Block, layout_ts.Block,
         backgroundColor : "cyan",
     });
 
-    return [ menu_block, tool_block, text_block, canvas_block, property_block ];
+    const shapes_block = $flex({
+        id : "shapes-block",
+        width : "100%",
+        children : [],
+        backgroundColor : "chocolate",
+    });
+
+
+    return [ menu_block, tool_block, text_block, canvas_block, property_block, shapes_block ];
 }
 
-export function makeGrid(menu_block : Block, tool_block : Block, text_block : Block, canvas_block : Block, property_block : Block){
+export function makeGrid(menu_block : Block, tool_block : Block, text_block : Block, canvas_block : Block, property_block : Block, shapes_block : Block){
     const k = document.location.href.lastIndexOf("/");
     const home = document.location.href.substring(0, k);
     msg(`home:${home}`);
 
     const root = $grid({
-        rows     : "50px 100%",
+        rows     : "25px 100% 25px",
         children:[
             $grid({
                 children: [
@@ -291,6 +306,8 @@ export function makeGrid(menu_block : Block, tool_block : Block, text_block : Bl
                     property_block
                 ]
             })
+            ,
+            shapes_block
         ]
     });
 

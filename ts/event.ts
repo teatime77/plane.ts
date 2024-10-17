@@ -6,7 +6,6 @@ type Block = layout_ts.Block;
 export function initPlane(root : layout_ts.Grid, menu_block : Block, tool_block : Block, text_block : Block, canvas_block : Block, property_block : Block){
     makeCssClass();
 
-    makeToolBox(tool_block);
     tool_block.onChange = (ui : layout_ts.UI)=>{
         const button = ui as layout_ts.RadioButton;
         Builder.tool = Builder.makeToolByType(button.button.value);
@@ -30,8 +29,8 @@ export function initPlane(root : layout_ts.Grid, menu_block : Block, tool_block 
 export function bodyOnLoad(){
     i18n_ts.initI18n();
 
-    const [ menu_block, tool_block, text_block, canvas_block, property_block ] = makeUIs();
-    const root = makeGrid(menu_block, tool_block, text_block, canvas_block, property_block);
+    const [ menu_block, tool_block, text_block, canvas_block, property_block, shapes_block ] = makeUIs();
+    const root = makeGrid(menu_block, tool_block, text_block, canvas_block, property_block, shapes_block);
     layout_ts.initLayout(root);
     
     initPlane(root, menu_block, tool_block, text_block, canvas_block, property_block);
