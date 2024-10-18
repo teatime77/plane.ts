@@ -229,16 +229,17 @@ export function drawLine(shape : Shape, p1 : Vec2, p2 : Vec2){
 }
 
 function makeStatementMenu() : layout_ts.PopupMenu {
-    const statements = initStatements();
+    const statement_infos = getStatementInfos();
 
     const statement_menu = $popup({
         direction : "column",
         click : (idx:number, id? : string, value? : string)=>{
-            msg(`statement:${statements[idx].text}`);
-            Builder.tool = new StatementTool(statements[idx]);
+            const info = statement_infos[idx];
+            msg(`statement:${info.text}`);
+            Builder.tool = new StatementTool(info.text, info.selectors);
         }
         ,
-        children : statements.map(x => $button({ text : x.text}))
+        children : statement_infos.map(x => $button({ text : x.text}))
     });
 
     return statement_menu;

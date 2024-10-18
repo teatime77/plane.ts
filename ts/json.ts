@@ -166,6 +166,9 @@ export function parseObject(obj: any) : any {
     //     case Surface.name:
     //         return new Surface(obj);
     
+    case Statement.name:
+        return new Statement(obj);
+
     default:
         throw new MyError();
     }
