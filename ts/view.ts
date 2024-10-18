@@ -281,6 +281,7 @@ export class View extends Widget {
 
     addShape(shape : AbstractShape){
         this.shapes.push(shape);
+        addShapeList(shape);
     }
 
     getShape(position : Vec2) : Shape | undefined {

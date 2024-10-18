@@ -24,9 +24,11 @@ export class Plane {
     shapes_block : Block;
 
     constructor(){
+        thePlane = this;
+        
         const k = document.location.href.lastIndexOf("/");
-        const home = document.location.href.substring(0, k);
-        msg(`home:${home}`);
+        homeURL = document.location.href.substring(0, k);
+        msg(`home:${homeURL}`);
     
         const statement_menu = makeStatementMenu();
     
@@ -60,7 +62,7 @@ export class Plane {
                 $button({
                     width : "36px",
                     height : "36px",
-                    url : `${home}/lib/plane/img/text.png`,
+                    url : `${homeURL}/lib/plane/img/text.png`,
                     click: (ev:MouseEvent)=>{ 
                         msg("show add statement dlg"); 
                         add_statement_dlg.showModal(ev);
@@ -70,7 +72,7 @@ export class Plane {
                 $button({
                     width : "36px",
                     height : "36px",
-                    url : `${home}/lib/plane/img/statement.png`,
+                    url : `${homeURL}/lib/plane/img/statement.png`,
                     click: (ev:MouseEvent)=>{ 
                         msg("show statement menu"); 
                         statement_menu.show(ev);

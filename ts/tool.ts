@@ -667,28 +667,46 @@ const toolList : [typeof Builder, string, string, (typeof AbstractShape)[]][] = 
     [ TextBlockBuilder          , "text"            , T("text")             , [ TextBlock ] ],
 ];
 
-export function getImgNameByClass(shape : AbstractShape) : string {
-    for(const [ tool, img_name, help, shapes] of toolList){
-        if(shapes.some(x => shape instanceof x)){
-            return img_name;
+export function addShapeList(shape : AbstractShape) {
+    let shape_img_name : string | undefined;
+
+    if(shape instanceof Statement){
+
+        shape_img_name = "statement";
+    }
+    else{
+
+        for(const [ tool, img_name, title, shapes] of toolList){
+            if(shapes.some(x => shape instanceof x)){
+
+                shape_img_name = img_name;
+                break;
+            }
         }
     }
 
-    throw new MyError();
+    if(shape_img_name == undefined){
+        throw new MyError();
+    }
+
+    const button = layout_ts.$button({
+        url    : `${homeURL}/lib/plane/img/${shape_img_name}.png`,
+        width  : "20px",
+        height : "20px",
+    });
+
+    thePlane.shapes_block.addChild(button);
+    thePlane.shapes_block.updateLayout();
 }
 
 export function makeToolButtons() : layout_ts.RadioButton[] {
-    const k = document.location.href.lastIndexOf("/");
-    const home = document.location.href.substring(0, k);
-    msg(`home:${home}`);
-
     const tool_buttons : layout_ts.RadioButton[] = [];
 
     for(const [ tool, img_name, title, shapes] of toolList){
         const radio = layout_ts.$radio({
             value : tool.name,
             title : title,
-            url   : `${home}/lib/plane/img/${img_name}.png`,
+            url   : `${homeURL}/lib/plane/img/${img_name}.png`,
             width : "36px",
             height : "36px",
         });
