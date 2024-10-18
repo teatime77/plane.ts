@@ -1,5 +1,7 @@
 namespace plane_ts {
 //
+const T = i18n_ts.T;
+
 export abstract class Builder {
     static tool : Builder;
 
@@ -648,6 +650,30 @@ class TextBlockBuilder extends Builder {
 
     }
 }
+
+
+const toolList = [
+    [ SelectionTool, "selection", T("selection") ],
+    [ PointBuilder, "point", T("point") ],
+    [ MidpointBuilder, "mid-point", T("mid point") ],
+    [ IntersectionBuilder, "intersection", T("intersection") ],
+    [ LineSegmentBuilder, "line-segment", T("line segment") ],
+    [ "HalfLine", "half-line", T("half line") ],
+    [ "StraightLine", "line", T("line") ],
+    [ PolygonBuilder, "polygon", T("polygon") ],
+    [ PerpendicularBuilder, "perpendicular", T("perpendicular") ],
+    [ ParallelLineBuilder, "parallel-line", T("parallel line") ],
+    [ Circle1Builder, "circle-by-point", T("circle by point") ],
+    [ Circle2Builder, "circle-by-radius", T("circle by radius") ],
+    [ ArcBuilder, "arc", T("arc") ],
+    [ EllipseBuilder, "ellipse", T("ellipse") ],
+    [ AngleBuilder, "angle", T("angle") ],
+    [ DimensionLineBuilder, "dimension-line", T("dimension line") ],
+    [ LengthSymbolBuilder, "length-symbol", T("length symbol") ],
+    [ "TangentCircles", "tangent-circles", T("tangent circles") ],
+    [ "TangentPoint", "tangent-point", T("tangent point") ],
+    [ TextBlockBuilder, "text", T("text") ]
+];
 
 
 }

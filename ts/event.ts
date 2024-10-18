@@ -3,18 +3,18 @@ namespace plane_ts {
 type Block = layout_ts.Block;
 
 
-export function initPlane(root : layout_ts.Grid, menu_block : Block, tool_block : Block, text_block : Block, canvas_block : Block, property_block : Block){
+export function initPlane(plane : Plane, root : layout_ts.Grid){
     makeCssClass();
 
-    tool_block.onChange = (ui : layout_ts.UI)=>{
+    plane.tool_block.onChange = (ui : layout_ts.UI)=>{
         const button = ui as layout_ts.RadioButton;
         Builder.tool = Builder.makeToolByType(button.button.value);
     }
 
-    const canvas = makeCanvas(canvas_block.div);
+    const canvas = makeCanvas(plane.canvas_block.div);
 
-    makePropertyTable(property_block.div);
-    const [save_btn, anchor] = makeMenuBar(menu_block.html());
+    makePropertyTable(plane.property_block.div);
+    const [save_btn, anchor] = makeMenuBar(plane.menu_block.html());
 
     const view = new View(canvas);
 
@@ -29,11 +29,11 @@ export function initPlane(root : layout_ts.Grid, menu_block : Block, tool_block 
 export function bodyOnLoad(){
     i18n_ts.initI18n();
 
-    const [ menu_block, tool_block, text_block, canvas_block, property_block, shapes_block ] = makeUIs();
-    const root = makeGrid(menu_block, tool_block, text_block, canvas_block, property_block, shapes_block);
+    const plane = new Plane();
+    const root = makeGrid(plane);
     layout_ts.initLayout(root);
     
-    initPlane(root, menu_block, tool_block, text_block, canvas_block, property_block);
+    initPlane(plane, root);
 }
 
 export function menuBarEvent(){

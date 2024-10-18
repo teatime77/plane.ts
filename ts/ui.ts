@@ -15,7 +15,96 @@ export let snapToGrid : HTMLInputElement;
 
 const T = i18n_ts.T;
 
+export class Plane {
+    menu_block : Block;
+    tool_block : Block;
+    text_block : Block;
+    canvas_block : Block;
+    property_block : Block;
+    shapes_block : Block;
+
+    constructor(){
+        const k = document.location.href.lastIndexOf("/");
+        const home = document.location.href.substring(0, k);
+        msg(`home:${home}`);
+    
+        const statement_menu = makeStatementMenu();
+    
+        const tool_buttons = makeToolButtons();
+    
+        const add_statement_dlg = $dialog({
+            width  : "400px",
+            height : "300px",
+            content : layout_ts.$textarea({
+                cols : 5,
+                rows : 5
+            })
+        });
+    
+        this.menu_block = $block({
+            id : "menu-bar",
+            children : [],
+            backgroundColor : "lime",
+        });
+    
+        this.tool_block = $flex({
+            id : "tool-block",
+            direction : "column",
+            children : tool_buttons,
+            backgroundColor : "green",
+        });
+    
+        this.text_block = $block({
+            id : "text-block",
+            children : [
+                $button({
+                    width : "36px",
+                    height : "36px",
+                    url : `${home}/lib/plane/img/text.png`,
+                    click: (ev:MouseEvent)=>{ 
+                        msg("show add statement dlg"); 
+                        add_statement_dlg.showModal(ev);
+                    }
+                })
+                ,
+                $button({
+                    width : "36px",
+                    height : "36px",
+                    url : `${home}/lib/plane/img/statement.png`,
+                    click: (ev:MouseEvent)=>{ 
+                        msg("show statement menu"); 
+                        statement_menu.show(ev);
+                    }
+                })
+            ],
+            aspectRatio : 1,
+            backgroundColor : "blue",
+        });
+    
+        this.canvas_block = $block({
+            id : "canvas-div",
+            children : [],
+            aspectRatio : 1,
+            backgroundColor : "orange",
+        });
+    
+        this.property_block = $block({
+            id : "property-div",
+            children : [],
+            backgroundColor : "cyan",
+        });
+    
+        this.shapes_block = $flex({
+            id : "shapes-block",
+            width : "100%",
+            children : [],
+            backgroundColor : "chocolate",
+        });            
+    }
+}
+
 export function makeToolButtons() : layout_ts.RadioButton[] {
+
     const name_titles = [
         [ "Selection", "selection", T("selection") ],
         [ "Point", "point", T("point") ],
@@ -38,6 +127,7 @@ export function makeToolButtons() : layout_ts.RadioButton[] {
         [ "TangentPoint", "tangent-point", T("tangent point") ],
         [ "Text", "text", T("text") ]
     ];
+
 
     const k = document.location.href.lastIndexOf("/");
     const home = document.location.href.substring(0, k);
@@ -197,89 +287,7 @@ function makeStatementMenu() : layout_ts.PopupMenu {
     return statement_menu;
 }
 
-export function makeUIs() : [ layout_ts.Block, layout_ts.Block, layout_ts.Block, layout_ts.Block, layout_ts.Block, layout_ts.Flex ] {
-    const k = document.location.href.lastIndexOf("/");
-    const home = document.location.href.substring(0, k);
-    msg(`home:${home}`);
-
-    const statement_menu = makeStatementMenu();
-
-    const tool_buttons = makeToolButtons();
-
-    const add_statement_dlg = $dialog({
-        width  : "400px",
-        height : "300px",
-        content : layout_ts.$textarea({
-            cols : 5,
-            rows : 5
-        })
-    });
-
-    const menu_block = $block({
-        id : "menu-bar",
-        children : [],
-        backgroundColor : "lime",
-    });
-
-    const tool_block = $flex({
-        id : "tool-block",
-        direction : "column",
-        children : tool_buttons,
-        backgroundColor : "green",
-    });
-
-    const text_block = $block({
-        id : "text-block",
-        children : [
-            $button({
-                width : "36px",
-                height : "36px",
-                url : `${home}/lib/plane/img/text.png`,
-                click: (ev:MouseEvent)=>{ 
-                    msg("show add statement dlg"); 
-                    add_statement_dlg.showModal(ev);
-                }
-            })
-            ,
-            $button({
-                width : "36px",
-                height : "36px",
-                url : `${home}/lib/plane/img/statement.png`,
-                click: (ev:MouseEvent)=>{ 
-                    msg("show statement menu"); 
-                    statement_menu.show(ev);
-                }
-            })
-        ],
-        aspectRatio : 1,
-        backgroundColor : "blue",
-    });
-
-    const canvas_block = $block({
-        id : "canvas-div",
-        children : [],
-        aspectRatio : 1,
-        backgroundColor : "orange",
-    });
-
-    const property_block = $block({
-        id : "property-div",
-        children : [],
-        backgroundColor : "cyan",
-    });
-
-    const shapes_block = $flex({
-        id : "shapes-block",
-        width : "100%",
-        children : [],
-        backgroundColor : "chocolate",
-    });
-
-
-    return [ menu_block, tool_block, text_block, canvas_block, property_block, shapes_block ];
-}
-
-export function makeGrid(menu_block : Block, tool_block : Block, text_block : Block, canvas_block : Block, property_block : Block, shapes_block : Block){
+export function makeGrid(plane : Plane){
     const k = document.location.href.lastIndexOf("/");
     const home = document.location.href.substring(0, k);
     msg(`home:${home}`);
@@ -289,7 +297,7 @@ export function makeGrid(menu_block : Block, tool_block : Block, text_block : Bl
         children:[
             $grid({
                 children: [
-                    menu_block
+                    plane.menu_block
                 ]
             })
             ,
@@ -297,17 +305,17 @@ export function makeGrid(menu_block : Block, tool_block : Block, text_block : Bl
                 columns  : "50px 50% 50% 300px",
 
                 children : [
-                    tool_block
+                    plane.tool_block
                     ,
-                    text_block
+                    plane.text_block
                     ,
-                    canvas_block
+                    plane.canvas_block
                     ,
-                    property_block
+                    plane.property_block
                 ]
             })
             ,
-            shapes_block
+            plane.shapes_block
         ]
     });
 
