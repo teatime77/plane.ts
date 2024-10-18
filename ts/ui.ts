@@ -103,51 +103,6 @@ export class Plane {
     }
 }
 
-export function makeToolButtons() : layout_ts.RadioButton[] {
-
-    const name_titles = [
-        [ "Selection", "selection", T("selection") ],
-        [ "Point", "point", T("point") ],
-        [ "Midpoint", "mid-point", T("mid point") ],
-        [ "Intersection", "intersection", T("intersection") ],
-        [ "LineSegment", "line-segment", T("line segment") ],
-        [ "HalfLine", "half-line", T("half line") ],
-        [ "StraightLine", "line", T("line") ],
-        [ "Polygon", "polygon", T("polygon") ],
-        [ "Perpendicular", "perpendicular", T("perpendicular") ],
-        [ "ParallelLine", "parallel-line", T("parallel line") ],
-        [ "Circle1", "circle-by-point", T("circle by point") ],
-        [ "Circle2", "circle-by-radius", T("circle by radius") ],
-        [ "Arc", "arc", T("arc") ],
-        [ "Ellipse", "ellipse", T("ellipse") ],
-        [ "Angle", "angle", T("angle") ],
-        [ "DimensionLine", "dimension-line", T("dimension line") ],
-        [ "LengthSymbol", "length-symbol", T("length symbol") ],
-        [ "TangentCircles", "tangent-circles", T("tangent circles") ],
-        [ "TangentPoint", "tangent-point", T("tangent point") ],
-        [ "Text", "text", T("text") ]
-    ];
-
-
-    const k = document.location.href.lastIndexOf("/");
-    const home = document.location.href.substring(0, k);
-    msg(`home:${home}`);
-
-    const tool_buttons : layout_ts.RadioButton[] = [];
-    for(const [value, name, title] of name_titles){
-        const radio = layout_ts.$radio({
-            value : value,
-            title : title,
-            url   : `${home}/lib/plane/img/${name}.png`,
-            width : "36px",
-            height : "36px",
-        });
-
-        tool_buttons.push(radio);
-    }
-    
-    return tool_buttons;
-}
 
 function makeCheckbox(div : HTMLElement, id : string, text : string) : HTMLInputElement {
     const inp = document.createElement("input");

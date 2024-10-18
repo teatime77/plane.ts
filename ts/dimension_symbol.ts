@@ -145,6 +145,7 @@ export class DimensionLine extends Shape {
 
     setShift(shift : number){
         this.shift = shift;
+        this.calc();
         View.current.dirty = true;
     }
 

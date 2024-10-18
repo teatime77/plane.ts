@@ -2,39 +2,8 @@ namespace plane_ts {
 //
 const T = i18n_ts.T;
 
-export abstract class Builder {
+export class Builder {
     static tool : Builder;
-
-    static makeToolByType(tool_name: string): Builder {    
-        switch(tool_name){
-            case "Selection":        return new SelectionTool();
-            // case "Distance":      return new Distance();
-            case "Point":         return new PointBuilder();
-            case "LineSegment":   return new LineSegmentBuilder();
-            case "Polygon":       return new PolygonBuilder();
-            // case "StraightLine":  return new StraightLine();
-            // case "HalfLine":      return new HalfLine();
-            // case "BSpline":       return new BSpline();
-            // case "Rect":          return new Rect();
-            case "Circle1":        return new Circle1Builder();
-            case "Circle2":        return new Circle2Builder();
-            case "Ellipse":           return new EllipseBuilder();
-            case "Arc":           return new ArcBuilder();
-            case "DimensionLine": return new DimensionLineBuilder();
-            case "LengthSymbol":  return new LengthSymbolBuilder();
-            case "Midpoint":      return new MidpointBuilder();
-            case "Perpendicular": return new PerpendicularBuilder()
-            case "ParallelLine":  return new ParallelLineBuilder();
-            case "Intersection":  return new IntersectionBuilder();
-            case "Tangent":       return new TangentBuilder();
-            case "Angle":         return new AngleBuilder();
-            case "Text":         return new TextBlockBuilder();
-            // case "Image":         return new Image({fileName:"./img/teatime77.png"});
-            // case "FuncLine":      return new FuncLine();
-        }
-
-        throw new MyError();
-    }
 
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){        
     }
@@ -505,9 +474,34 @@ class IntersectionBuilder extends Builder {
 }
 
 
-class TangentBuilder extends Builder {
+class CirclePointTangentBuilder extends Builder {
     circle : Circle | undefined;
     point  : Point  | undefined;
+
+    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
+        if(shape instanceof Circle){
+
+            this.circle = shape;
+        }
+
+        if(shape instanceof Point){
+            this.point = shape;
+        }
+
+        if(this.circle != undefined && this.point != undefined){
+
+            const tangent = new CirclePointTangent( { circle : this.circle, point : this.point });
+            view.addShape(tangent);
+
+            this.circle = undefined;
+            this.point  = undefined;
+        }
+    }
+}
+
+
+class CircleCircleTangentBuilder extends Builder {
+    circle : Circle | undefined;
 
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
         if(shape instanceof Circle){
@@ -520,21 +514,7 @@ class TangentBuilder extends Builder {
                 view.addShape(tangent);
     
                 this.circle = undefined;
-                this.point  = undefined;
             }
-        }
-
-        if(this.point == undefined && shape instanceof Point){
-            this.point = shape;
-        }
-
-        if(this.circle != undefined && this.point != undefined){
-
-            const tangent = new CirclePointTangent( { circle : this.circle, point : this.point });
-            view.addShape(tangent);
-
-            this.circle = undefined;
-            this.point  = undefined;
         }
     }
 }
@@ -579,34 +559,49 @@ class DimensionLineBuilder extends Builder {
     dimLine : DimensionLine | undefined;
 
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
-        if(this.pointA == undefined){
+        if(this.dimLine == undefined){
             if(shape instanceof Point){
-                this.pointA = shape;
+
+                if(this.pointA == undefined){
+                    this.pointA = shape;
+                    this.pointA.select();
+                }
+                else{
+                    this.pointB = shape;
+                    this.pointB.select();
+
+                    const normal = this.pointB.sub(this.pointA).rot90().unit();
+                    const shift  = position.sub(this.pointB.position).dot(normal);
+                    const caption = new TextBlock({ text : "\\int \\frac{1}{2}", isTex : true, offset : Vec2.zero() });
+
+                    this.dimLine = new DimensionLine({ caption, pointA: this.pointA, pointB: this.pointB, shift });
+                }
+
+                View.current.dirty = true;
             }
         }
-        else if(this.pointB == undefined && shape instanceof Point){
-            this.pointB = shape;
+        else{
 
-            const normal = this.pointB.sub(this.pointA).rot90().unit();
-            const shift  = position.sub(this.pointB.position).dot(normal);
-            const caption = new TextBlock({ text : "\\int \\frac{1}{2}", isTex : true, offset : Vec2.zero() });
-
-            this.dimLine = new DimensionLine({ caption, pointA: this.pointA, pointB: this.pointB, shift });
             view.addShape(this.dimLine);
-        }
-        else if(this.dimLine != undefined){
-            this.pointA      = undefined;
-            this.pointB      = undefined;
+
+            this.pointA  = undefined;
+            this.pointB  = undefined;
             this.dimLine = undefined;
         }
     }
 
     pointermove(event : PointerEvent, view : View, position : Vec2, shape : Shape | undefined){
-        if(this.pointA != undefined && this.pointB != undefined && this.dimLine != undefined){
+        if(this.dimLine != undefined){
 
-            const normal = this.pointB.sub(this.pointA).rot90().unit();
-            const shift  = position.sub(this.pointB.position).dot(normal);
+            const normal = this.pointB!.sub(this.pointA!).rot90().unit();
+            const shift  = position.sub(this.pointB!.position).dot(normal);
             this.dimLine.setShift( shift );
+        }
+    }
+
+    draw(view: View): void {
+        if(this.dimLine != undefined){
+            this.dimLine.draw();
         }
     }
 }
@@ -651,29 +646,67 @@ class TextBlockBuilder extends Builder {
     }
 }
 
-
-const toolList = [
-    [ SelectionTool, "selection", T("selection") ],
-    [ PointBuilder, "point", T("point") ],
-    [ MidpointBuilder, "mid-point", T("mid point") ],
-    [ IntersectionBuilder, "intersection", T("intersection") ],
-    [ LineSegmentBuilder, "line-segment", T("line segment") ],
-    [ "HalfLine", "half-line", T("half line") ],
-    [ "StraightLine", "line", T("line") ],
-    [ PolygonBuilder, "polygon", T("polygon") ],
-    [ PerpendicularBuilder, "perpendicular", T("perpendicular") ],
-    [ ParallelLineBuilder, "parallel-line", T("parallel line") ],
-    [ Circle1Builder, "circle-by-point", T("circle by point") ],
-    [ Circle2Builder, "circle-by-radius", T("circle by radius") ],
-    [ ArcBuilder, "arc", T("arc") ],
-    [ EllipseBuilder, "ellipse", T("ellipse") ],
-    [ AngleBuilder, "angle", T("angle") ],
-    [ DimensionLineBuilder, "dimension-line", T("dimension line") ],
-    [ LengthSymbolBuilder, "length-symbol", T("length symbol") ],
-    [ "TangentCircles", "tangent-circles", T("tangent circles") ],
-    [ "TangentPoint", "tangent-point", T("tangent point") ],
-    [ TextBlockBuilder, "text", T("text") ]
+const toolList : [typeof Builder, string, string, (typeof AbstractShape)[]][] = [
+    [ SelectionTool             , "selection"       , T("selection")        , [  ] ],
+    [ PointBuilder              , "point"           , T("point")            , [ Point ] ],
+    [ MidpointBuilder           , "mid-point"       , T("mid point")        , [ Midpoint ] ],
+    [ IntersectionBuilder       , "intersection"    , T("intersection")     , [ LineLineIntersection, LineArcIntersection, ArcArcIntersection ] ],
+    [ LineSegmentBuilder        , "line-segment"    , T("line segment")     , [ LineSegment ] ],
+    [ PolygonBuilder            , "polygon"         , T("polygon")          , [ Polygon ] ],
+    [ PerpendicularBuilder      , "perpendicular"   , T("perpendicular")    , [ FootOfPerpendicular ] ],
+    [ ParallelLineBuilder       , "parallel-line"   , T("parallel line")    , [ ParallelLine ] ],
+    [ Circle1Builder            , "circle-by-point" , T("circle by point")  , [ CircleByPoint ] ],
+    [ Circle2Builder            , "circle-by-radius", T("circle by radius") , [ CircleByRadius ] ],
+    [ ArcBuilder                , "arc"             , T("arc")              , [ Arc ] ],
+    [ EllipseBuilder            , "ellipse"         , T("ellipse")          , [ Ellipse ] ],
+    [ CirclePointTangentBuilder , "tangent-point"   , T("tangent point")    , [ CirclePointTangent ] ],
+    [ CircleCircleTangentBuilder, "tangent-circles" , T("tangent circles")  , [ CircleCircleTangent ] ],
+    [ AngleBuilder              , "angle"           , T("angle")            , [ Angle ] ],
+    [ DimensionLineBuilder      , "dimension-line"  , T("dimension line")   , [ DimensionLine ] ],
+    [ LengthSymbolBuilder       , "length-symbol"   , T("length symbol")    , [ LengthSymbol ] ],
+    [ TextBlockBuilder          , "text"            , T("text")             , [ TextBlock ] ],
 ];
 
+export function getImgNameByClass(shape : AbstractShape) : string {
+    for(const [ tool, img_name, help, shapes] of toolList){
+        if(shapes.some(x => shape instanceof x)){
+            return img_name;
+        }
+    }
+
+    throw new MyError();
+}
+
+export function makeToolButtons() : layout_ts.RadioButton[] {
+    const k = document.location.href.lastIndexOf("/");
+    const home = document.location.href.substring(0, k);
+    msg(`home:${home}`);
+
+    const tool_buttons : layout_ts.RadioButton[] = [];
+
+    for(const [ tool, img_name, title, shapes] of toolList){
+        const radio = layout_ts.$radio({
+            value : tool.name,
+            title : title,
+            url   : `${home}/lib/plane/img/${img_name}.png`,
+            width : "36px",
+            height : "36px",
+        });
+
+        tool_buttons.push(radio);
+    }    
+
+    return tool_buttons;
+}
+
+export function makeToolByType(tool_name: string): Builder {
+    for(const [ tool, img_name, title, shapes] of toolList){
+        if(tool.name == tool_name){
+            return new tool()
+        }
+    }
+
+    throw new MyError();
+}
 
 }

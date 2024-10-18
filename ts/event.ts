@@ -8,7 +8,7 @@ export function initPlane(plane : Plane, root : layout_ts.Grid){
 
     plane.tool_block.onChange = (ui : layout_ts.UI)=>{
         const button = ui as layout_ts.RadioButton;
-        Builder.tool = Builder.makeToolByType(button.button.value);
+        Builder.tool = makeToolByType(button.button.value);
     }
 
     const canvas = makeCanvas(plane.canvas_block.div);
