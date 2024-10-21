@@ -343,17 +343,24 @@ class PolygonBuilder extends Builder {
             point = Point.fromArgs(position);
         }
 
-        this.polygon.points.push(point);
+        if(3 <= this.polygon.points.length && this.polygon.points[0] == point){
 
-        if(2 <= this.polygon.points.length){
-            const [pointA, pointB] = this.polygon.points.slice(this.polygon.points.length - 2);
-            const line = new LineSegment({ pointA, pointB });
+            const pointA = last(this.polygon.points);
+            const line = new LineSegment({ pointA, pointB : point });
 
             this.polygon.lines.push(line);
 
-            if(this.polygon.points[0] == pointB){
+            this.polygon = undefined;
+        }
+        else{
 
-                this.polygon = undefined;
+            this.polygon.points.push(point);
+
+            if(2 <= this.polygon.points.length){
+                const [pointA, pointB] = this.polygon.points.slice(this.polygon.points.length - 2);
+                const line = new LineSegment({ pointA, pointB });
+
+                this.polygon.lines.push(line);
             }
         }
     }

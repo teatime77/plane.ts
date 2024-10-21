@@ -2,6 +2,8 @@
 
 namespace plane_ts {
 //
+const T = i18n_ts.T;
+
 export class Angle extends Shape {
     static radius1Pix = 20;
     static radius1 : number;
@@ -110,6 +112,10 @@ export class Angle extends Shape {
             let radius = Angle.radius1 * scales[i];
             View.current.canvas.drawArc(this.intersection.position, radius, null, color, line_width, start, end);
         }
+    }
+
+    reading() : Reading {
+        return new Reading(this, T('Draw the angle formed by intersecting two lines.'), []);
     }
 }
 

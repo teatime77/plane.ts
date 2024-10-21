@@ -275,7 +275,8 @@ export abstract class Shape extends AbstractShape {
     }
 
     reading() : Reading {
-        return new Reading(this, i18n_ts.token(this.name), []);
+        const name = (this.name != "" ? this.name : this.constructor.name);
+        return new Reading(this, i18n_ts.token(name), []);
     }
 
     delete(deleted : Set<number>){        
