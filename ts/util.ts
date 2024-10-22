@@ -163,4 +163,13 @@ export function pairKey(a : Widget, b : Widget) : string {
     return a.id <= b.id ? `${a.id}:${b.id}` : `${b.id}:${a.id}`;
 }
 
+
+export async function sleep(milliseconds : number) : Promise<void> {
+    return new Promise((resolve) => {
+        setTimeout(()=>{
+            resolve();
+        }, milliseconds);
+    });
+}
+
 }

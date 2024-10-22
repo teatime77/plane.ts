@@ -65,6 +65,10 @@ export abstract class AbstractShape extends Widget implements i18n_ts.Readable {
             }
         }    
     }
+
+    async play(speech : i18n_ts.AbstractSpeech){
+
+    }
 }
 
 export class TextBlock extends AbstractShape {

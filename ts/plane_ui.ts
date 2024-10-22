@@ -10,6 +10,8 @@ const $button = layout_ts.$button;
 const $dialog = layout_ts.$dialog;
 const $popup = layout_ts.$popup;
 const $textarea = layout_ts.$textarea;
+const $label = layout_ts.$label;
+const $input_number = layout_ts.$input_number;
 
 export let showAxis : HTMLInputElement;
 export let showGrid : HTMLInputElement;
@@ -39,32 +41,64 @@ export class Plane {
     
         const tool_buttons = makeToolButtons();
     
-        const textarea = $textarea({
-            cols : 5,
-            rows : 5
-        });
-
         this.add_statement_dlg = $dialog({
             width  : "400px",
             height : "300px",
             content : $grid({
                 columns : "100% 100px",
                 children : [
-                    textarea
+                    $textarea({
+                        cols : 5,
+                        rows : 5,
+                        change : async (ev : Event)=>{
+                            StatementTool.one.changeText(ev);
+                        }
+                    })
                     ,
                     $flex({
-                        id : "add-statement-shapes",
                         direction : "column",
                         children : [
+                            $flex({
+                                children : [
+                                    $label({
+                                        text : "interval"
+                                    })
+                                    ,
+                                    $input_number({
+                                        width : "30px",
+                                        value : 0,
+                                        step : 0.1,
+                                        min  : 0,
+                                        change : async (ev : Event)=>{
+                                            StatementTool.one.changeInterval(ev);
+                                        }
+                                    })
+                                ]
+                            })
+                            ,
+                            $button({
+                                id : "add-statement-play",
+                                text : "play",
+                                click : async (ev : MouseEvent)=>{
+                                    this.add_statement_dlg.grid.updateLayout();
+                                    StatementTool.one.play(i18n_ts.AbstractSpeech.one);
+                                }
+                            })
+                            ,
+                            $flex({
+                                id : "add-statement-shapes",
+                                direction : "column",
+                                children : [
 
+                                ]
+                            })
                         ]
                     })
                 ]
             })
             ,
             okClick : async (ev : MouseEvent)=>{
-                const text = textarea.value();
-                StatementTool.one.finish(text)
+                StatementTool.one.finish()
             }
         });
     
