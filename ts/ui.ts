@@ -1,6 +1,7 @@
 namespace plane_ts {
 //
 type Block = layout_ts.Block;
+type Dialog = layout_ts.Dialog
 
 const $flex = layout_ts.$flex;
 const $grid = layout_ts.$grid;
@@ -8,6 +9,7 @@ const $block = layout_ts.$block;
 const $button = layout_ts.$button;
 const $dialog = layout_ts.$dialog;
 const $popup = layout_ts.$popup;
+const $textarea = layout_ts.$textarea;
 
 export let showAxis : HTMLInputElement;
 export let showGrid : HTMLInputElement;
@@ -22,9 +24,12 @@ export class Plane {
     canvas_block : Block;
     property_block : Block;
     shapes_block : Block;
+    add_statement_dlg : Dialog;
+
+    static one : Plane;
 
     constructor(){
-        thePlane = this;
+        Plane.one = this;
         
         const k = document.location.href.lastIndexOf("/");
         homeURL = document.location.href.substring(0, k);
@@ -34,13 +39,33 @@ export class Plane {
     
         const tool_buttons = makeToolButtons();
     
-        const add_statement_dlg = $dialog({
+        const textarea = $textarea({
+            cols : 5,
+            rows : 5
+        });
+
+        this.add_statement_dlg = $dialog({
             width  : "400px",
             height : "300px",
-            content : layout_ts.$textarea({
-                cols : 5,
-                rows : 5
+            content : $grid({
+                columns : "100% 100px",
+                children : [
+                    textarea
+                    ,
+                    $flex({
+                        id : "add-statement-shapes",
+                        direction : "column",
+                        children : [
+
+                        ]
+                    })
+                ]
             })
+            ,
+            okClick : async (ev : MouseEvent)=>{
+                const text = textarea.value();
+                StatementTool.one.finish(text)
+            }
         });
     
         this.menu_block = $block({
@@ -65,7 +90,7 @@ export class Plane {
                     url : `${homeURL}/lib/plane/img/text.png`,
                     click: async (ev:MouseEvent)=>{ 
                         msg("show add statement dlg"); 
-                        add_statement_dlg.showModal(ev);
+                        this.add_statement_dlg.showModal(ev);
                     }
                 })
                 ,
@@ -236,7 +261,7 @@ function makeStatementMenu() : layout_ts.PopupMenu {
         click : (idx:number, id? : string, value? : string)=>{
             const info = statement_infos[idx];
             msg(`statement:${info.text}`);
-            Builder.tool = new StatementTool(info.text, info.selectors);
+            Builder.tool = new StatementSelectorTool(info.text, info.selectors);
         }
         ,
         children : statement_infos.map(x => $button({ text : x.text}))

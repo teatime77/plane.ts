@@ -3,7 +3,6 @@ namespace plane_ts {
 type Block = layout_ts.Block;
 
 export let homeURL : string;
-export let thePlane : Plane;
 
 export function initPlane(plane : Plane, root : layout_ts.Grid){
     makeCssClass();

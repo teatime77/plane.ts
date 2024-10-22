@@ -674,7 +674,7 @@ const toolList : [typeof Builder, string, string, (typeof AbstractShape)[]][] = 
     [ TextBlockBuilder          , "text"            , T("text")             , [ TextBlock ] ],
 ];
 
-export function addShapeList(shape : AbstractShape) {
+export function makeShapeButton(shape : AbstractShape) : layout_ts.Button {
     let shape_img_name : string | undefined;
 
     if(shape instanceof Statement){
@@ -702,8 +702,14 @@ export function addShapeList(shape : AbstractShape) {
         height : "20px",
     });
 
-    thePlane.shapes_block.addChild(button);
-    thePlane.shapes_block.updateLayout();
+    return button;
+}
+
+export function addShapeList(shape : AbstractShape){
+    const button = makeShapeButton(shape);
+    
+    Plane.one.shapes_block.addChild(button);
+    Plane.one.shapes_block.updateLayout();
 }
 
 export function makeToolButtons() : layout_ts.RadioButton[] {

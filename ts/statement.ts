@@ -115,6 +115,46 @@ class TriangleSelector extends ShapeSelector {
 }
 
 export class StatementTool extends Builder {
+    text : string = "";
+    shapes : AbstractShape[] = [];
+
+    static one : StatementTool;
+
+    static start(ev:MouseEvent){
+        Builder.tool = new StatementTool();
+
+        const dlg = Plane.one.add_statement_dlg;
+
+        dlg.show(ev);
+
+        const y = window.innerHeight - dlg.getHeight();
+        dlg.setXY(0, y);
+    }
+
+    constructor(){
+        super();
+        StatementTool.one = this;
+    }
+
+    click(event : MouseEvent, view : View, position : Vec2, shape : AbstractShape | undefined){        
+        if(shape != undefined){
+
+            this.shapes.push(shape);
+
+            const button = makeShapeButton(shape);
+            const flex = Plane.one.add_statement_dlg.getUIById("add-statement-shapes") as layout_ts.Flex;
+            flex.addChild(button);
+            flex.updateLayout();
+        }
+    }
+
+    finish(text : string){
+        const statement = new Statement({ text, shapes : this.shapes });
+        View.current.addShape(statement);
+    }
+}
+
+export class StatementSelectorTool extends Builder {
     text : string;
     selectors : ShapeSelector[];
 

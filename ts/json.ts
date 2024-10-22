@@ -232,7 +232,7 @@ export function loadData(obj : any){
     view.allShapes().filter(x => x instanceof Point || x instanceof DimensionLine).forEach(x => x.caption!.parent = x);
     (view.shapes.filter(x => x instanceof TextBlock) as TextBlock[]).forEach(x => x.updateTextPosition());
 
-    thePlane.shapes_block.clear();
+    Plane.one.shapes_block.clear();
     view.shapes.forEach(x => addShapeList(x));
 }
 
