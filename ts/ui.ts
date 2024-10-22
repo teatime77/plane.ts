@@ -63,7 +63,7 @@ export class Plane {
                     width : "36px",
                     height : "36px",
                     url : `${homeURL}/lib/plane/img/text.png`,
-                    click: (ev:MouseEvent)=>{ 
+                    click: async (ev:MouseEvent)=>{ 
                         msg("show add statement dlg"); 
                         add_statement_dlg.showModal(ev);
                     }
@@ -73,7 +73,7 @@ export class Plane {
                     width : "36px",
                     height : "36px",
                     url : `${homeURL}/lib/plane/img/statement.png`,
-                    click: (ev:MouseEvent)=>{ 
+                    click: async (ev:MouseEvent)=>{ 
                         msg("show statement menu"); 
                         statement_menu.show(ev);
                     }
