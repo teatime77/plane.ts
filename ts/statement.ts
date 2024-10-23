@@ -2,7 +2,7 @@
 
 namespace plane_ts {
 //
-const T = i18n_ts.T;
+const TT = i18n_ts.TT;
 
 abstract class ShapeSelector {
     prompts : string[];
@@ -250,40 +250,40 @@ export class Statement extends AbstractShape {
 export function getStatementInfos() : { text : string, selectors : ShapeSelector[] }[] {
     const statement_info_list : [ string, ShapeSelector[]][] = [
         [
-            T('These two lines are parallel.'),
+            TT('These two lines are parallel.'),
             [ 
-                new LineSelector(T("Click the first line.")), 
-                new LineSelector(T("Click the second line.")) 
+                new LineSelector(TT("Click the first line.")), 
+                new LineSelector(TT("Click the second line.")) 
             ]
         ]
         ,
         [
-            T('These two angles are equal.'),
+            TT('These two angles are equal.'),
             [ 
-                new AngleSelector(T("Click the first angle.")), 
-                new AngleSelector(T("Click the second angle.")) 
+                new AngleSelector(TT("Click the first angle.")), 
+                new AngleSelector(TT("Click the second angle.")) 
             ]
         ]
         ,
         [
-            T('The sum of these two angles is 180 degrees.'),
+            TT('The sum of these two angles is 180 degrees.'),
             [ 
-                new AngleSelector(T("Click the first angle.")),
-                new AngleSelector(T("Click the second angle.")) 
+                new AngleSelector(TT("Click the first angle.")),
+                new AngleSelector(TT("Click the second angle.")) 
             ]
         ]
         ,
         [
-            T('These two lines are radii of a circle.'),
+            TT('These two lines are radii of a circle.'),
             [  
-                new LineSelector(T("Click the first line.")), 
-                new LineSelector(T("Click the second line."))
+                new LineSelector(TT("Click the first line.")), 
+                new LineSelector(TT("Click the second line."))
                 ,
             ]
         ]
         ,
         [
-            T('These two lines are equal in length.'),
+            TT('These two lines are equal in length.'),
             [ 
                 new LineSelector(""), 
                 new LineSelector("") 
@@ -291,18 +291,18 @@ export function getStatementInfos() : { text : string, selectors : ShapeSelector
         ]
         ,
         [
-            T('The two triangles are congruent.'),
+            TT('The two triangles are congruent.'),
             [ 
                 new TriangleSelector([
-                    T("Click the first point of the first triangle."),
-                    T("Click the second point of the first triangle."),
-                    T("Click the third point of the first triangle."),
+                    TT("Click the first point of the first triangle."),
+                    TT("Click the second point of the first triangle."),
+                    TT("Click the third point of the first triangle."),
                 ])
                 , 
                 new TriangleSelector([
-                    T("Click the first point of the second triangle."),
-                    T("Click the second point of the second triangle."),
-                    T("Click the third point of the second triangle."),
+                    TT("Click the first point of the second triangle."),
+                    TT("Click the second point of the second triangle."),
+                    TT("Click the third point of the second triangle."),
                 ]) 
             ]
         ]

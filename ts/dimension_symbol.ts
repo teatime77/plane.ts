@@ -2,7 +2,7 @@
 
 namespace plane_ts {
 //
-const T = i18n_ts.T;
+const TT = i18n_ts.TT;
 
 export class Angle extends Shape {
     static radius1Pix = 20;
@@ -115,7 +115,7 @@ export class Angle extends Shape {
     }
 
     reading() : Reading {
-        return new Reading(this, T('Draw the angle formed by intersecting two lines.'), []);
+        return new Reading(this, TT('Draw the angle formed by intersecting two lines.'), []);
     }
 }
 

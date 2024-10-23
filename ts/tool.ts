@@ -1,6 +1,6 @@
 namespace plane_ts {
 //
-const T = i18n_ts.T;
+const TT = i18n_ts.TT;
 
 export class Builder {
     static tool : Builder;
@@ -654,24 +654,24 @@ class TextBlockBuilder extends Builder {
 }
 
 const toolList : [typeof Builder, string, string, (typeof AbstractShape)[]][] = [
-    [ SelectionTool             , "selection"       , T("selection")        , [  ] ],
-    [ PointBuilder              , "point"           , T("point")            , [ Point ] ],
-    [ MidpointBuilder           , "mid-point"       , T("mid point")        , [ Midpoint ] ],
-    [ IntersectionBuilder       , "intersection"    , T("intersection")     , [ LineLineIntersection, LineArcIntersection, ArcArcIntersection ] ],
-    [ LineSegmentBuilder        , "line-segment"    , T("line segment")     , [ LineSegment ] ],
-    [ PolygonBuilder            , "polygon"         , T("polygon")          , [ Polygon ] ],
-    [ PerpendicularBuilder      , "perpendicular"   , T("perpendicular")    , [ FootOfPerpendicular ] ],
-    [ ParallelLineBuilder       , "parallel-line"   , T("parallel line")    , [ ParallelLine ] ],
-    [ Circle1Builder            , "circle-by-point" , T("circle by point")  , [ CircleByPoint ] ],
-    [ Circle2Builder            , "circle-by-radius", T("circle by radius") , [ CircleByRadius ] ],
-    [ ArcBuilder                , "arc"             , T("arc")              , [ Arc ] ],
-    [ EllipseBuilder            , "ellipse"         , T("ellipse")          , [ Ellipse ] ],
-    [ CirclePointTangentBuilder , "tangent-point"   , T("tangent point")    , [ CirclePointTangent ] ],
-    [ CircleCircleTangentBuilder, "tangent-circles" , T("tangent circles")  , [ CircleCircleTangent ] ],
-    [ AngleBuilder              , "angle"           , T("angle")            , [ Angle ] ],
-    [ DimensionLineBuilder      , "dimension-line"  , T("dimension line")   , [ DimensionLine ] ],
-    [ LengthSymbolBuilder       , "length-symbol"   , T("length symbol")    , [ LengthSymbol ] ],
-    [ TextBlockBuilder          , "text"            , T("text")             , [ TextBlock ] ],
+    [ SelectionTool             , "selection"       , TT("selection")        , [  ] ],
+    [ PointBuilder              , "point"           , TT("point")            , [ Point ] ],
+    [ MidpointBuilder           , "mid-point"       , TT("mid point")        , [ Midpoint ] ],
+    [ IntersectionBuilder       , "intersection"    , TT("intersection")     , [ LineLineIntersection, LineArcIntersection, ArcArcIntersection ] ],
+    [ LineSegmentBuilder        , "line-segment"    , TT("line segment")     , [ LineSegment ] ],
+    [ PolygonBuilder            , "polygon"         , TT("polygon")          , [ Polygon ] ],
+    [ PerpendicularBuilder      , "perpendicular"   , TT("perpendicular")    , [ FootOfPerpendicular ] ],
+    [ ParallelLineBuilder       , "parallel-line"   , TT("parallel line")    , [ ParallelLine ] ],
+    [ Circle1Builder            , "circle-by-point" , TT("circle by point")  , [ CircleByPoint ] ],
+    [ Circle2Builder            , "circle-by-radius", TT("circle by radius") , [ CircleByRadius ] ],
+    [ ArcBuilder                , "arc"             , TT("arc")              , [ Arc ] ],
+    [ EllipseBuilder            , "ellipse"         , TT("ellipse")          , [ Ellipse ] ],
+    [ CirclePointTangentBuilder , "tangent-point"   , TT("tangent point")    , [ CirclePointTangent ] ],
+    [ CircleCircleTangentBuilder, "tangent-circles" , TT("tangent circles")  , [ CircleCircleTangent ] ],
+    [ AngleBuilder              , "angle"           , TT("angle")            , [ Angle ] ],
+    [ DimensionLineBuilder      , "dimension-line"  , TT("dimension line")   , [ DimensionLine ] ],
+    [ LengthSymbolBuilder       , "length-symbol"   , TT("length symbol")    , [ LengthSymbol ] ],
+    [ TextBlockBuilder          , "text"            , TT("text")             , [ TextBlock ] ],
 ];
 
 export function makeShapeButton(shape : AbstractShape) : layout_ts.Button {

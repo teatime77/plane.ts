@@ -5,7 +5,7 @@ const Reading = i18n_ts.Reading;
 
 namespace plane_ts {
 //
-const T = i18n_ts.T;
+const TT = i18n_ts.TT;
 const fgColor = "black";
 let capturedShape : AbstractShape | undefined;
 
@@ -555,7 +555,7 @@ export class LineSegment extends LineByPoints {
     }
 
     reading(): Reading {
-        return new Reading(this, T('Draw a line from point "A" to point "B".'), [ this.pointA, this.pointB ]);
+        return new Reading(this, TT('Draw a line from point "A" to point "B".'), [ this.pointA, this.pointB ]);
     }
 }
 
@@ -592,7 +592,7 @@ export class ParallelLine extends Line {
     }
 
     reading(): Reading {
-        return new Reading(this, T('Draw a line through point "A" that is parallel to line "B".'), []);
+        return new Reading(this, TT('Draw a line through point "A" that is parallel to line "B".'), []);
     }
 }
 
@@ -692,7 +692,7 @@ export class CircleByPoint extends Circle {
     }
 
     reading(): Reading {
-        return new Reading(this, T('Draw a circle with point "A" as the center.'), [ this.center ]);
+        return new Reading(this, TT('Draw a circle with point "A" as the center.'), [ this.center ]);
     }
 }
 
@@ -864,9 +864,9 @@ export class Polygon extends Shape {
     reading(): Reading {
         switch(this.points.length){
         case 3:
-            return new Reading(this, T('Draw a triangle with vertices "A", "B", and "C".'), this.points);
+            return new Reading(this, TT('Draw a triangle with vertices "A", "B", and "C".'), this.points);
         case 4:
-            return new Reading(this, T('Draw a quadrilateral with vertices "A", "B", "C" and "D".'), this.points);        
+            return new Reading(this, TT('Draw a quadrilateral with vertices "A", "B", "C" and "D".'), this.points);        
         }
 
         throw new MyError();

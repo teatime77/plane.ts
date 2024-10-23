@@ -17,7 +17,7 @@ export let showAxis : HTMLInputElement;
 export let showGrid : HTMLInputElement;
 export let snapToGrid : HTMLInputElement;
 
-const T = i18n_ts.T;
+const TT = i18n_ts.TT;
 
 export class Plane {
     menu_block : Block;
