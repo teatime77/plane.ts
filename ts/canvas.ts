@@ -18,7 +18,7 @@ export class Canvas {
     }
 
     drawLine(shape : Shape, p1 : Vec2, p2 : Vec2){
-        const color = (shape.isOver ? "red" : shape.color);
+        const color = shape.modeColor();
 
         const pix1 = this.view.toPixPosition(p1);
         const pix2 = this.view.toPixPosition(p2);
@@ -28,7 +28,7 @@ export class Canvas {
         ctx.moveTo(pix1.x, pix1.y);
         ctx.lineTo(pix2.x, pix2.y);
         ctx.strokeStyle = color;
-        ctx.lineWidth = (shape.selected ? 3 : shape.lineWidth);
+        ctx.lineWidth = shape.modeLineWidth();
         ctx.stroke();   
     }
 

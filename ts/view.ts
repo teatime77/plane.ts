@@ -215,6 +215,7 @@ export class View extends Widget {
 
             if(near_shape != undefined){
                 near_shape.isOver = true;
+                msg(`over:${near_shape.constructor.name}`);
             }
 
             this.dirty = true;

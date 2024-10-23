@@ -100,8 +100,8 @@ export class Angle extends Shape {
     draw() : void {
         const [start, end] = this.startEndAngle();
 
-        const color = (this.isOver ? "red" : this.color);
-        const line_width = (this.selected ? 3 : 1);
+        const color = this.modeColor();
+        const line_width = (this.isOver || this.mode != Mode.none ? 3 : 1);
         
         for(const i of range(Angle.numMarks)){
             if(this.angleMark < i){

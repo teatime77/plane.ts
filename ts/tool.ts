@@ -50,6 +50,7 @@ export class SelectionTool extends Builder {
 
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){        
         if(shape != undefined){
+            shape.setMode(Mode.target);
             showProperty(shape, 0);
         }
     }
@@ -123,6 +124,7 @@ class MidpointBuilder extends Builder {
         if(this.pointA == undefined){
             if(shape instanceof Point){
                 this.pointA = shape;
+                this.pointA.setMode(Mode.depend);
             }
         }
         else if(shape instanceof Point){
@@ -142,6 +144,7 @@ class Circle1Builder extends Builder {
             if(shape == undefined || !(shape instanceof Point)){
                 shape = Point.fromArgs(position);
             }
+            shape.setMode(Mode.depend);
 
             const point = Point.fromArgs(position);
             this.circle = CircleByPoint.fromArgs(shape as Point, point);
@@ -186,6 +189,7 @@ class Circle2Builder extends Builder {
             if(shape == undefined || !(shape instanceof Point)){
                 shape = Point.fromArgs(position);
             }
+            shape.setMode(Mode.depend);
 
             this.circle = new CircleByRadius({ center : (shape as Point) , radius : 0 });
 
@@ -211,9 +215,11 @@ class EllipseBuilder extends Builder {
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
         if(this.center == undefined){
             this.center = this.makePointOnClick(view, position, shape);
+            this.center.setMode(Mode.depend);
         }
         else if(this.xPoint == undefined){
             this.xPoint = this.makePointOnClick(view, position, shape);
+            this.xPoint.setMode(Mode.depend);
 
             this.ellipse = new Ellipse({ center : this.center, xPoint : this.xPoint, radiusY : 0 });
             view.addShape(this.ellipse);
@@ -254,9 +260,12 @@ class ArcBuilder extends Builder {
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
         if(this.center == undefined){
             this.center = this.makePointOnClick(view, position, shape);
+            this.center.setMode(Mode.depend);
         }
         else if(this.pointA == undefined){
             this.pointA = this.makePointOnClick(view, position, shape);
+            this.pointA.setMode(Mode.depend);
+
             this.pointB = Point.fromArgs(position);
 
             this.arc = new Arc({ center : this.center, pointA : this.pointA, pointB : this.pointB });
@@ -294,6 +303,7 @@ class LineSegmentBuilder extends Builder {
             else{
                 pointA = Point.fromArgs(position);
             }
+            pointA.setMode(Mode.depend);
 
             const pointB = Point.fromArgs(position);
             this.line = new LineSegment({ pointA, pointB });
@@ -353,6 +363,7 @@ class PolygonBuilder extends Builder {
             this.polygon = undefined;
         }
         else{
+            point.setMode(Mode.depend);
 
             this.polygon.points.push(point);
 
@@ -390,9 +401,11 @@ class ParallelLineBuilder extends Builder {
         if(shape instanceof Point){
 
             this.point = shape;
+            this.point.setMode(Mode.depend);
         }
         else if(shape instanceof AbstractLine){
             this.line = shape;
+            this.line.setMode(Mode.depend);
         }
 
         if(this.line != undefined && this.point != undefined){
@@ -417,6 +430,7 @@ class PerpendicularBuilder extends Builder {
             if(shape instanceof Point){
 
                 this.point = shape;
+                this.point.setMode(Mode.depend);
             }
         }
         else{
@@ -437,10 +451,10 @@ class IntersectionBuilder extends Builder {
         if(shape instanceof AbstractLine || shape instanceof CircleArc){
             if(this.shape1 == undefined){
                 this.shape1 = shape;
-                this.shape1.select();
+                this.shape1.setMode(Mode.depend);
             }
             else{
-                this.shape1.unselect();
+                this.shape1.setMode(Mode.none);
 
                 let new_shape : Shape;
                 if(this.shape1 instanceof AbstractLine && shape instanceof AbstractLine){
@@ -535,10 +549,13 @@ class AngleBuilder extends Builder {
         if(shape instanceof AbstractLine){
             if(this.line1 == undefined){
                 this.line1 = shape;
+                this.line1.setMode(Mode.depend);
+
                 this.pos1  = position;
             }
             else{
                 const [lineA, pos1, lineB, pos2] = [this.line1, this.pos1!, shape, position];
+                lineB.setMode(Mode.depend);
 
                 lineA.calc();
                 lineB.calc();
@@ -571,11 +588,11 @@ class DimensionLineBuilder extends Builder {
 
                 if(this.pointA == undefined){
                     this.pointA = shape;
-                    this.pointA.select();
+                    this.pointA.setMode(Mode.depend);
                 }
                 else{
                     this.pointB = shape;
-                    this.pointB.select();
+                    this.pointB.setMode(Mode.depend);
 
                     const normal = this.pointB.sub(this.pointA).rot90().unit();
                     const shift  = position.sub(this.pointB.position).dot(normal);

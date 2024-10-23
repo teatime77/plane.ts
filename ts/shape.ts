@@ -9,9 +9,16 @@ const TT = i18n_ts.TT;
 const fgColor = "black";
 let capturedShape : AbstractShape | undefined;
 
+export enum Mode {
+    none,
+    depend,
+    target
+}
+
 export abstract class AbstractShape extends Widget implements i18n_ts.Readable {
-    selected : boolean = false;
+    mode : Mode = Mode.none;
     isOver : boolean = false;
+    narration : string = "";
 
     constructor(obj : any){
         super(obj);
@@ -22,15 +29,29 @@ export abstract class AbstractShape extends Widget implements i18n_ts.Readable {
         }
     }
 
+    makeObj() : any {
+        let obj = super.makeObj();
+
+        if(this.narration != ""){
+            obj.narration = this.narration;
+        }
+
+        return obj;
+    }
+
+    getProperties(){
+        return super.getProperties().concat([
+            "narration"
+        ]);
+    }
+
     abstract reading() : Reading;
     highlight(on : boolean) : void {
         if(on){
-            this.select();
-            this.setOver(true);
+            this.setMode(Mode.depend);
         }
         else{
-            this.unselect();
-            this.setOver(false);
+            this.setMode(Mode.none);
         }
     }
 
@@ -38,18 +59,8 @@ export abstract class AbstractShape extends Widget implements i18n_ts.Readable {
         return [];
     }
 
-    select(){
-        this.selected = true;
-        View.current.dirty = true;
-    }
-
-    unselect(){
-        this.selected = false;
-        View.current.dirty = true;
-    }
-
-    setOver(is_over : boolean){
-        this.isOver = is_over;
+    setMode(mode : Mode){
+        this.mode = mode;
         View.current.dirty = true;
     }
 
@@ -259,6 +270,21 @@ export abstract class Shape extends AbstractShape {
         return false;
     }
 
+    modeColor() : string {
+        switch(this.mode){
+        case Mode.none:
+            return this.color;
+        case Mode.depend:
+            return "blue";
+        case Mode.target:
+            return "red";
+        }
+    }
+
+    modeLineWidth() : number {
+        return (this.isOver || this.mode != Mode.none ? 3 : this.lineWidth);
+    }
+
     getAllShapes(shapes : Shape[]){
         shapes.push(this);
     }
@@ -407,7 +433,7 @@ export class Point extends Shape {
     }
 
     draw() : void {
-        const color = (this.isOver ? "red" : this.color);
+        const color = this.modeColor();
 
         View.current.canvas.drawCircle(this.position, Point.radius, color, null, 0);
         
@@ -649,8 +675,8 @@ export abstract class Circle extends CircleArc {
     }
 
     draw() : void {
-        const stroke_color = (this.isOver ? "red" : this.color);
-        const line_width = (this.selected ? 3 : this.lineWidth)
+        const stroke_color = this.modeColor();
+        const line_width = this.modeLineWidth();
         View.current.canvas.drawCircle(this.center.position, this.radius(), null, stroke_color, line_width)
     }
 }
@@ -755,8 +781,8 @@ export class Ellipse extends CircleArcEllipse {
         const center_to_x = this.xPoint.sub(this.center)
         const rotation = Math.atan2(- center_to_x.y, center_to_x.x);
 
-        const color = (this.isOver ? "red" : this.color);
-        const line_width = (this.selected ? 3 : 1);
+        const color = this.modeColor();
+        const line_width = (this.isOver || this.mode != Mode.none ? 3 : 1);
 
         View.current.canvas.drawEllipse(this.center.position, radius_x, this.radiusY, rotation, color, line_width);
     }
@@ -821,7 +847,7 @@ export class Arc extends CircleArc {
 
     draw(): void {
         const [th1, th2] = this.angles();
-        const color = (this.isOver ? "red" : this.color);
+        const color = this.modeColor();
         View.current.canvas.drawArc(this.center.position, this.radius(), null, color, this.lineWidth, th1, th2);
     }
 

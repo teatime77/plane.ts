@@ -240,8 +240,7 @@ export class Statement extends AbstractShape {
     async play(speech : i18n_ts.AbstractSpeech){
         for(const dep of this.dependencies()){
             msg(`select : ${dep.constructor.name}`);
-            dep.select();
-            dep.setOver(true);
+            dep.setMode(Mode.target);
             await sleep(1000 * this.interval);
         }    
     }

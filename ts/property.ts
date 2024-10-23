@@ -52,13 +52,16 @@ export class TextAreaProperty extends Property {
         this.textArea = document.createElement("textarea");
         this.textArea.id   = "text-block-text-area";
         this.textArea.cols = 20;
-        this.textArea.rows = 10;
+        this.textArea.rows = (name == "narration" ? 1 : 10);
         this.textArea.value = value;
     }
 
     valueChanged() : void {
         this.setValue(this.textArea.value);
-        (this.widget as TextBlock).div.innerText = this.textArea.value;
+        if(this.widget instanceof TextBlock){
+
+            this.widget.div.innerText = this.textArea.value;
+        }
     }
 }
 
@@ -202,7 +205,7 @@ export function showProperty(widget : Widget, nest : number){
             let property : InputProperty | TextAreaProperty | AngleMarkProperty;
             let property_element : HTMLElement;
 
-            if(name == "text" && widget instanceof TextBlock){
+            if(name == "narration" || name == "text" && widget instanceof TextBlock){
 
                 property = new TextAreaProperty(widget, name, value as string);
                 property_element = property.textArea;

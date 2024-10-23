@@ -40,7 +40,7 @@ export function assert(b : boolean, msg : string = ""){
 }    
 
 export function msg(txt : string){
-    console.log(txt);
+    layout_ts.Log.log(txt);
 }
 
 export function range(n: number) : number[]{
