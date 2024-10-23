@@ -147,6 +147,11 @@ export class View extends Widget {
         }
     }
 
+    resetMode(){
+        this.allShapes().forEach(x =>{ x.setMode(Mode.none); x.isOver = false; });
+        this.dirty = true;
+    }
+
     drawShapes(){
         if(this.dirty){
             this.dirty = false;

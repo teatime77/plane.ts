@@ -39,6 +39,10 @@ export class Builder {
         shape.getAllShapes(shapes);
         shapes.forEach(x => x.draw());
     }
+
+    resetTool(){
+        View.current.resetMode();
+    }
 }
 
 export class SelectionTool extends Builder {
@@ -48,8 +52,10 @@ export class SelectionTool extends Builder {
     minSave : Vec2 | undefined;
     maxSave : Vec2 | undefined;
 
-    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){        
+    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){ 
+        this.resetTool();
         if(shape != undefined){
+
             shape.setMode(Mode.target);
             showProperty(shape, 0);
         }
@@ -113,6 +119,7 @@ class PointBuilder extends Builder {
             view.addShape(new_point);
 
             showProperty(new_point, 0);
+            this.resetTool();
         }
     }
 }
@@ -122,6 +129,7 @@ class MidpointBuilder extends Builder {
 
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
         if(this.pointA == undefined){
+
             if(shape instanceof Point){
                 this.pointA = shape;
                 this.pointA.setMode(Mode.depend);
@@ -131,6 +139,7 @@ class MidpointBuilder extends Builder {
             const mid_point = new Midpoint( { position:Vec2.zero(), pointA : this.pointA, pointB : shape  } );
             view.addShape(mid_point);
             this.pointA      = undefined;
+            this.resetTool();
         }
     }
 }
@@ -162,6 +171,7 @@ class Circle1Builder extends Builder {
             }
 
             this.circle = undefined;
+            this.resetTool();
         }
     }
 
@@ -197,6 +207,7 @@ class Circle2Builder extends Builder {
         }
         else{
             this.circle = undefined;
+            this.resetTool();
         }
     }
 
@@ -214,6 +225,7 @@ class EllipseBuilder extends Builder {
 
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
         if(this.center == undefined){
+
             this.center = this.makePointOnClick(view, position, shape);
             this.center.setMode(Mode.depend);
         }
@@ -230,6 +242,7 @@ class EllipseBuilder extends Builder {
             this.ellipse = undefined;
             this.center = undefined;
             this.xPoint = undefined;
+            this.resetTool();
         }
     }
 
@@ -259,6 +272,7 @@ class ArcBuilder extends Builder {
 
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
         if(this.center == undefined){
+
             this.center = this.makePointOnClick(view, position, shape);
             this.center.setMode(Mode.depend);
         }
@@ -279,6 +293,7 @@ class ArcBuilder extends Builder {
             this.center = undefined;
             this.pointA = undefined;
             this.pointB = undefined;
+            this.resetTool();
         }
     }
 
@@ -316,6 +331,7 @@ class LineSegmentBuilder extends Builder {
             }
 
             this.line = undefined;
+            this.resetTool();
         }
     }
 
@@ -340,6 +356,7 @@ class PolygonBuilder extends Builder {
 
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
         if(this.polygon == undefined){
+
             this.polygon = new Polygon({ points : [], lines : [] });
             view.addShape(this.polygon);
         }
@@ -361,6 +378,7 @@ class PolygonBuilder extends Builder {
             this.polygon.lines.push(line);
 
             this.polygon = undefined;
+            this.resetTool();
         }
         else{
             point.setMode(Mode.depend);
@@ -415,6 +433,7 @@ class ParallelLineBuilder extends Builder {
 
             this.line  = undefined;
             this.point = undefined;
+            this.resetTool();
         }
     }
 
@@ -439,6 +458,7 @@ class PerpendicularBuilder extends Builder {
                 view.addShape(foot);
 
                 this.point = undefined;
+                this.resetTool();
             }
         }
     }
@@ -487,6 +507,7 @@ class IntersectionBuilder extends Builder {
                 view.addShape(new_shape);
 
                 this.shape1 = undefined;
+                this.resetTool();
             }
 
         }
@@ -516,6 +537,7 @@ class CirclePointTangentBuilder extends Builder {
 
             this.circle = undefined;
             this.point  = undefined;
+            this.resetTool();
         }
     }
 }
@@ -535,6 +557,7 @@ class CircleCircleTangentBuilder extends Builder {
                 view.addShape(tangent);
     
                 this.circle = undefined;
+                this.resetTool();
             }
         }
     }
@@ -548,6 +571,7 @@ class AngleBuilder extends Builder {
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
         if(shape instanceof AbstractLine){
             if(this.line1 == undefined){
+
                 this.line1 = shape;
                 this.line1.setMode(Mode.depend);
 
@@ -572,6 +596,7 @@ class AngleBuilder extends Builder {
                 view.addShape(angle);
 
                 this.line1 = undefined;
+                this.resetTool();
             }
         }
     }
@@ -611,6 +636,7 @@ class DimensionLineBuilder extends Builder {
             this.pointA  = undefined;
             this.pointB  = undefined;
             this.dimLine = undefined;
+            this.resetTool();
         }
     }
 
@@ -651,6 +677,7 @@ class LengthSymbolBuilder extends Builder {
                 view.addShape(symbol);
 
                 this.pointA      = undefined;
+                this.resetTool();
             }    
         }
     }
@@ -666,7 +693,7 @@ class TextBlockBuilder extends Builder {
         text_block.updateTextPosition();
 
         view.addShape(text_block);
-
+        this.resetTool();
     }
 }
 

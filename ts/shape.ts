@@ -16,12 +16,17 @@ export enum Mode {
 }
 
 export abstract class AbstractShape extends Widget implements i18n_ts.Readable {
+    visible : boolean = true;
     mode : Mode = Mode.none;
     isOver : boolean = false;
     narration : string = "";
 
     constructor(obj : any){
         super(obj);
+
+        if(obj.visible != undefined && !obj.visible){
+            this.visible = false;
+        }
         
         if(View.current != undefined){
 
@@ -36,12 +41,16 @@ export abstract class AbstractShape extends Widget implements i18n_ts.Readable {
             obj.narration = this.narration;
         }
 
+        if(!this.visible){
+            obj.visible = false;
+        }
+
         return obj;
     }
 
     getProperties(){
         return super.getProperties().concat([
-            "narration"
+            "narration", "visible"
         ]);
     }
 
@@ -98,6 +107,18 @@ export class TextBlock extends AbstractShape {
 
         this.div   = document.createElement("div");
         this.div.className = "tex_div";
+
+        if(! this.visible){
+            if(Plane.one.editMode){
+
+                this.div.style.color = "gray";
+            }
+            else{
+                this.div.style.display = "none";
+            }
+
+        }
+
         if(obj.isTex){
 
             renderKatexSub(this.div, obj.text);

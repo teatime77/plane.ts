@@ -27,13 +27,17 @@ export class Plane {
     property_block : Block;
     shapes_block : Block;
     add_statement_dlg : Dialog;
+    editMode : boolean;
 
     static one : Plane;
 
     constructor(){
         Plane.one = this;
         
-        [ urlOrigin, , ] = i18n_ts.parseURL();
+        let params : Map<string, string>;
+
+        [ urlOrigin, , params] = i18n_ts.parseURL();
+        this.editMode = (params.get("mode") == "edit");
     
         const statement_menu = makeStatementMenu();
     
