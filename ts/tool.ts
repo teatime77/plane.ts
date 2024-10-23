@@ -697,7 +697,7 @@ export function makeShapeButton(shape : AbstractShape) : layout_ts.Button {
     }
 
     const button = layout_ts.$button({
-        url    : `${homeURL}/lib/plane/img/${shape_img_name}.png`,
+        url    : `${urlOrigin}/lib/plane/img/${shape_img_name}.png`,
         width  : "20px",
         height : "20px",
     });
@@ -719,7 +719,7 @@ export function makeToolButtons() : layout_ts.RadioButton[] {
         const radio = layout_ts.$radio({
             value : tool.name,
             title : title,
-            url   : `${homeURL}/lib/plane/img/${img_name}.png`,
+            url   : `${urlOrigin}/lib/plane/img/${img_name}.png`,
             width : "36px",
             height : "36px",
         });

@@ -33,9 +33,7 @@ export class Plane {
     constructor(){
         Plane.one = this;
         
-        const k = document.location.href.lastIndexOf("/");
-        homeURL = document.location.href.substring(0, k);
-        msg(`home:${homeURL}`);
+        [ urlOrigin, , ] = i18n_ts.parseURL();
     
         const statement_menu = makeStatementMenu();
     
@@ -121,7 +119,7 @@ export class Plane {
                 $button({
                     width : "36px",
                     height : "36px",
-                    url : `${homeURL}/lib/plane/img/text.png`,
+                    url : `${urlOrigin}/lib/plane/img/text.png`,
                     click: async (ev:MouseEvent)=>{ 
                         msg("show add statement dlg"); 
                         this.add_statement_dlg.showModal(ev);
@@ -131,7 +129,7 @@ export class Plane {
                 $button({
                     width : "36px",
                     height : "36px",
-                    url : `${homeURL}/lib/plane/img/statement.png`,
+                    url : `${urlOrigin}/lib/plane/img/statement.png`,
                     click: async (ev:MouseEvent)=>{ 
                         msg("show statement menu"); 
                         statement_menu.show(ev);
@@ -305,10 +303,6 @@ function makeStatementMenu() : layout_ts.PopupMenu {
 }
 
 export function makeGrid(plane : Plane){
-    const k = document.location.href.lastIndexOf("/");
-    const home = document.location.href.substring(0, k);
-    msg(`home:${home}`);
-
     const root = $grid({
         rows     : "25px 100% 25px",
         children:[

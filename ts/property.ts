@@ -124,15 +124,13 @@ export class AngleMarkProperty extends Property {
     constructor(angle : Angle, name : string, value : number){
         super(angle, name);
 
-        const k = document.location.href.lastIndexOf("/");
-        const home = document.location.href.substring(0, k);
-        msg(`home:${home}`);
+        const [ origin, , ] = i18n_ts.parseURL();
 
         this.span = document.createElement("span");
 
-        const button_img_urls = range(Angle.numMarks).map(i => `${home}/lib/plane/img/angle-${i}.png`) as string[];
+        const button_img_urls = range(Angle.numMarks).map(i => `${origin}/lib/plane/img/angle-${i}.png`) as string[];
     
-        [this.img, this.dlg, this.imgButtons] = makeImageButtons(this.span, `${home}/lib/plane/img/angle-${angle.angleMark}.png`, button_img_urls);
+        [this.img, this.dlg, this.imgButtons] = makeImageButtons(this.span, `${origin}/lib/plane/img/angle-${angle.angleMark}.png`, button_img_urls);
     }
 
     imgButtonClick(idx : number) : void {
