@@ -100,18 +100,44 @@ export class FootOfPerpendicular extends Shape {
     }
 }
 
-export class LineLineIntersection extends Shape {
+export function calcLineLineIntersection(l1 : AbstractLine, l2 : AbstractLine) : Vec2 {
+    l1.calc();
+    l2.calc();
+    if(l1.e == undefined || l2.e == undefined){
+        throw new MyError();
+    }
+
+    /*
+    l1.p1 + u l1.e = l2.p1 + v l2.e
+
+    l1.p1.x + u l1.e.x = l2.p1.x + v l2.e.x
+    l1.p1.y + u l1.e.y = l2.p1.y + v l2.e.y
+
+    l1.e.x, - l2.e.x   u = l2.p1.x - l1.p1.x
+    l1.e.y, - l2.e.y   v = l2.p1.y - l1.p1.y
+    
+    */
+    const m = new Mat2([[l1.e.x, - l2.e.x], [l1.e.y, - l2.e.y]]);
+    const v = new Vec2(l2.pointA.position.x - l1.pointA.position.x, l2.pointA.position.y - l1.pointA.position.y);
+    const mi = m.inv();
+    const uv = mi.dot(v);
+    const u = uv.x;
+
+    const position = l1.pointA.position.add(l1.e.mul(u));
+
+    return position;
+}
+
+export class LineLineIntersection extends Point {
     lineA : AbstractLine;
     lineB : AbstractLine;
-    point : Point;
 
-    constructor(obj : {lineA:AbstractLine, lineB:AbstractLine, point : Point }) {
+    constructor(obj : { position : Vec2, lineA:AbstractLine, lineB:AbstractLine }) {
         super(obj)
         this.lineA = obj.lineA;
         this.lineB = obj.lineB;
-        this.point = obj.point;
 
-        View.current.relation.setIntersections(this.lineA, this.lineB, [this.point]);
+        View.current.relation.setIntersections(this.lineA, this.lineB, [this]);
 
         this.calc();
     }
@@ -120,15 +146,9 @@ export class LineLineIntersection extends Shape {
         let obj = Object.assign(super.makeObj(), {
             lineA : this.lineA.toObj(),
             lineB : this.lineB.toObj(),
-            point : this.point.toObj()
         });
 
         return obj;
-    }
-
-    getAllShapes(shapes : Shape[]){
-        super.getAllShapes(shapes);
-        shapes.push(this.point);
     }
 
     dependencies() : Shape[] {
@@ -136,40 +156,13 @@ export class LineLineIntersection extends Shape {
     }
 
     calc(){        
-        const [l1, l2] = [ this.lineA, this.lineB ];
+        const position = calcLineLineIntersection(this.lineA, this.lineB);
 
-        l1.calc();
-        l2.calc();
-        if(l1.e == undefined || l2.e == undefined){
-            throw new MyError();
-        }
-
-        /*
-        l1.p1 + u l1.e = l2.p1 + v l2.e
-
-        l1.p1.x + u l1.e.x = l2.p1.x + v l2.e.x
-        l1.p1.y + u l1.e.y = l2.p1.y + v l2.e.y
-
-        l1.e.x, - l2.e.x   u = l2.p1.x - l1.p1.x
-        l1.e.y, - l2.e.y   v = l2.p1.y - l1.p1.y
-        
-        */
-        const m = new Mat2([[l1.e.x, - l2.e.x], [l1.e.y, - l2.e.y]]);
-        const v = new Vec2(l2.pointA.position.x - l1.pointA.position.x, l2.pointA.position.y - l1.pointA.position.y);
-        const mi = m.inv();
-        const uv = mi.dot(v);
-        const u = uv.x;
-
-        const position = l1.pointA.position.add(l1.e.mul(u));
-        this.point.setPosition(position);
-    }
-
-    draw() : void {
-        this.point.draw();
+        this.setPosition(position);
     }
 
     reading(): Reading {
-        return new Reading(this, TT('Let "A" be the intersection point of the two lines.'), [this.point]);
+        return new Reading(this, TT('Let "A" be the intersection point of the two lines.'), [this]);
     }
 }
 

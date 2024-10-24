@@ -91,7 +91,6 @@ export abstract class AbstractShape extends Widget implements i18n_ts.Readable {
     }
 
     async play(speech : i18n_ts.AbstractSpeech){
-
     }
 }
 
@@ -112,16 +111,7 @@ export class TextBlock extends AbstractShape {
         this.div   = document.createElement("div");
         this.div.className = "tex_div";
 
-        if(! this.visible){
-            if(Plane.one.editMode){
-
-                this.div.style.color = "gray";
-            }
-            else{
-                this.div.style.display = "none";
-            }
-
-        }
+        this.setVisible(this.visible);
 
         if(obj.isTex){
 
@@ -162,6 +152,24 @@ export class TextBlock extends AbstractShape {
         else{
 
             this.div.innerText = this.text;
+        }
+    }
+
+    setVisible(visible : boolean){
+        this.visible = visible;
+
+        if(this.visible){
+            this.div.style.color = "";
+            this.div.style.display = "";
+        }
+        else{
+            if(Plane.one.editMode){
+
+                this.div.style.color = "gray";
+            }
+            else{
+                this.div.style.display = "none";
+            }
         }
     }
 

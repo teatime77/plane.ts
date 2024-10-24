@@ -478,8 +478,11 @@ class IntersectionBuilder extends Builder {
 
                 let new_shape : Shape;
                 if(this.shape1 instanceof AbstractLine && shape instanceof AbstractLine){
-                    const point = Point.fromArgs(Vec2.zero());
-                    new_shape = new LineLineIntersection({ lineA : this.shape1, lineB : shape, point });
+
+                    const [ lineA, lineB ] = [ this.shape1, shape ];
+                    const position = calcLineLineIntersection(lineA, lineB);
+
+                    new_shape = new LineLineIntersection({ lineA, lineB, position });
                 }
                 else if(this.shape1 instanceof CircleArc && shape instanceof CircleArc){
                     const pointA = Point.fromArgs(Vec2.zero())
