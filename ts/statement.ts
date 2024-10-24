@@ -115,8 +115,6 @@ class TriangleSelector extends ShapeSelector {
 }
 
 export class StatementTool extends Builder {
-    text : string = "";
-    shapes : AbstractShape[] = [];
     statement : Statement;
 
     static one : StatementTool;
@@ -128,7 +126,7 @@ export class StatementTool extends Builder {
 
         dlg.show(ev);
 
-        const y = window.innerHeight - dlg.getHeight();
+        const y = window.innerHeight - dlg.getHeight() - 50;
         dlg.setXY(0, y);
     }
 
@@ -141,7 +139,7 @@ export class StatementTool extends Builder {
     click(event : MouseEvent, view : View, position : Vec2, shape : AbstractShape | undefined){        
         if(shape != undefined){
 
-            this.shapes.push(shape);
+            this.statement.shapes.push(shape);
 
             const button = makeShapeButton(shape);
             const flex = Plane.one.add_statement_dlg.getUIById("add-statement-shapes") as layout_ts.Flex;
@@ -238,6 +236,11 @@ export class Statement extends AbstractShape {
 
 
     async play(speech : i18n_ts.AbstractSpeech){
+        if(this.text != ""){
+
+            speech.speak(this.text);
+        }
+
         for(const dep of this.dependencies()){
             msg(`select : ${dep.constructor.name}`);
             dep.setMode(Mode.target);
