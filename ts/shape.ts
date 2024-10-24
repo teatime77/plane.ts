@@ -27,6 +27,10 @@ export abstract class AbstractShape extends Widget implements i18n_ts.Readable {
         if(obj.visible != undefined && !obj.visible){
             this.visible = false;
         }
+
+        if(obj.narration != undefined){
+            this.narration = obj.narration;
+        }
         
         if(View.current != undefined){
 
