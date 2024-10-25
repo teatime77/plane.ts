@@ -133,7 +133,7 @@ export class StatementTool extends Builder {
     constructor(){
         super();
         StatementTool.one = this;
-        this.statement = new Statement({ text : "", shapes : [] });
+        this.statement = new Statement({ shapes : [] });
     }
 
     click(event : MouseEvent, view : View, position : Vec2, shape : AbstractShape | undefined){        
@@ -150,8 +150,8 @@ export class StatementTool extends Builder {
 
     async changeText(ev : Event){
         const textarea = ev.target as HTMLTextAreaElement;
-        this.statement.text = textarea.value;
-        console.log(`change text:${this.statement.text}`);
+        this.statement.narration = textarea.value;
+        console.log(`change text:${this.statement.narration}`);
     }
 
     async changeInterval(ev : Event){
@@ -170,12 +170,12 @@ export class StatementTool extends Builder {
 }
 
 export class StatementSelectorTool extends Builder {
-    text : string;
+    narration : string;
     selectors : ShapeSelector[];
 
     constructor(text : string, selectors : ShapeSelector[]){
         super();
-        this.text = text;
+        this.narration = text;
         this.selectors = selectors;
         this.selectors.forEach(x => x.clear());
 
@@ -194,7 +194,7 @@ export class StatementSelectorTool extends Builder {
 
                     msg(`statement finished`);
                     const shapes = this.selectors.map(x => x.shapes()).flat();
-                    const statement = new Statement({ text : this.text, shapes });
+                    const statement = new Statement({ narration : this.narration, shapes });
                     View.current.addShape(statement);
                 }
             }
@@ -203,13 +203,11 @@ export class StatementSelectorTool extends Builder {
 }
 
 export class Statement extends AbstractShape {
-    text : string;
     shapes : AbstractShape[];
     interval : number = 0;
 
-    constructor(obj : { text : string, shapes : AbstractShape[], interval? : number }){
+    constructor(obj : { narration? : string, shapes : AbstractShape[], interval? : number }){
         super(obj);
-        this.text   = obj.text;
         this.shapes = obj.shapes;
 
         if(obj.interval != undefined){
@@ -222,12 +220,11 @@ export class Statement extends AbstractShape {
     }
 
     reading() : Reading {
-        return new Reading(this, this.text, []);
+        return new Reading(this, this.narration, []);
     }
 
     makeObj() : any {
         let obj = Object.assign(super.makeObj(), {
-            text : this.text,
             shapes : this.shapes.map(x => x.toObj())
         });
 
@@ -236,9 +233,9 @@ export class Statement extends AbstractShape {
 
 
     async play(speech : i18n_ts.AbstractSpeech){
-        if(this.text != ""){
+        if(this.narration != ""){
 
-            speech.speak(this.text);
+            speech.speak(this.narration);
         }
 
         for(const dep of this.dependencies()){

@@ -747,6 +747,9 @@ export function makeShapeButton(shape : AbstractShape) : layout_ts.Button {
         url    : `${urlOrigin}/lib/plane/img/${shape_img_name}.png`,
         width  : "20px",
         height : "20px",
+        click : async (ev : MouseEvent)=>{
+            showProperty(shape, 0);
+        }
     });
 
     return button;
