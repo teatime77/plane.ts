@@ -154,12 +154,6 @@ export class StatementTool extends Builder {
         console.log(`change text:${this.statement.narration}`);
     }
 
-    async changeInterval(ev : Event){
-        const input = ev.target as HTMLInputElement;
-        this.statement.interval = parseFloat(input.value);
-        console.log(`change interval:${this.statement.interval}`);
-    }
-
     async play(speech : i18n_ts.AbstractSpeech){
         await this.statement.play(speech);
     }
@@ -204,15 +198,10 @@ export class StatementSelectorTool extends Builder {
 
 export class Statement extends AbstractShape {
     shapes : AbstractShape[];
-    interval : number = 0;
 
-    constructor(obj : { narration? : string, shapes : AbstractShape[], interval? : number }){
+    constructor(obj : { narration? : string, shapes : AbstractShape[] }){
         super(obj);
         this.shapes = obj.shapes;
-
-        if(obj.interval != undefined){
-            this.interval = obj.interval;
-        }
     }
 
     dependencies() : Shape[] {
@@ -229,20 +218,6 @@ export class Statement extends AbstractShape {
         });
 
         return obj;
-    }
-
-
-    async play(speech : i18n_ts.AbstractSpeech){
-        if(this.narration != ""){
-
-            speech.speak(this.narration);
-        }
-
-        for(const dep of this.dependencies()){
-            msg(`select : ${dep.constructor.name}`);
-            dep.setMode(Mode.target);
-            await sleep(1000 * this.interval);
-        }    
     }
 }
 

@@ -19,7 +19,9 @@ export abstract class AbstractShape extends Widget implements i18n_ts.Readable {
     visible : boolean = true;
     mode : Mode = Mode.none;
     isOver : boolean = false;
+    mute : boolean = false;
     narration : string = "";
+    interval : number = 1;
 
     constructor(obj : any){
         super(obj);
@@ -28,8 +30,16 @@ export abstract class AbstractShape extends Widget implements i18n_ts.Readable {
             this.visible = false;
         }
 
+        if(obj.mute != undefined){
+            this.mute = obj.mute;
+        }
+
         if(obj.narration != undefined){
             this.narration = obj.narration;
+        }
+
+        if(obj.interval != undefined){
+            this.interval = obj.interval;
         }
         
         if(View.current != undefined){
@@ -41,8 +51,16 @@ export abstract class AbstractShape extends Widget implements i18n_ts.Readable {
     makeObj() : any {
         let obj = super.makeObj();
 
+        if(this.mute){
+            obj.mute = true;
+        }
+
         if(this.narration != ""){
             obj.narration = this.narration;
+        }
+
+        if(this.interval != 1){
+            obj.interval = this.interval;
         }
 
         if(!this.visible){
@@ -54,7 +72,7 @@ export abstract class AbstractShape extends Widget implements i18n_ts.Readable {
 
     getProperties(){
         return super.getProperties().concat([
-            "narration", "visible"
+            "mute", "narration", "visible", "interval"
         ]);
     }
 

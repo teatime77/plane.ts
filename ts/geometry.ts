@@ -162,7 +162,7 @@ export class LineLineIntersection extends Point {
     }
 
     reading(): Reading {
-        return new Reading(this, TT('Let "A" be the intersection point of the two lines.'), [this]);
+        return new Reading(this, TT('There is one intersection between the two lines.'), []);
     }
 }
 

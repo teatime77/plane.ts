@@ -60,24 +60,6 @@ export class Plane {
                     $flex({
                         direction : "column",
                         children : [
-                            $flex({
-                                children : [
-                                    $label({
-                                        text : "interval"
-                                    })
-                                    ,
-                                    $input_number({
-                                        width : "30px",
-                                        value : 0,
-                                        step : 0.1,
-                                        min  : 0,
-                                        change : async (ev : Event)=>{
-                                            StatementTool.one.changeInterval(ev);
-                                        }
-                                    })
-                                ]
-                            })
-                            ,
                             $button({
                                 id : "add-statement-play",
                                 text : "play",

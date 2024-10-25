@@ -87,10 +87,19 @@ class StringProperty extends InputProperty {
 }
 
 class NumberProperty extends InputProperty {
-    constructor(widget : Widget, name : string, value : number){
+    constructor(widget : Widget, name : string, value : number, step? : number, min? : number, max? : number){
         super(widget, name, "number");
         this.input.step  = "0.1";
         this.input.value = value.toString();
+        if(step != undefined){
+            this.input.step = `${step}`;
+        }
+        if(min != undefined){
+            this.input.min = `${min}`;
+        }
+        if(max != undefined){
+            this.input.max = `${max}`;
+        }
     }
 
     valueChanged() : void {
@@ -229,7 +238,12 @@ export function showProperty(widget : Widget, nest : number){
                     break;
                     
                 case "number":
-                    property = new NumberProperty(widget, name, value);
+                    if(name == "interval"){
+                        property = new NumberProperty(widget, name, value, 0.1, 0);
+                    }
+                    else{
+                        property = new NumberProperty(widget, name, value);
+                    }
                     break;
                     
                 case "boolean":
