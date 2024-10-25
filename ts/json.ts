@@ -174,22 +174,12 @@ export function parseObject(obj: any) : any {
     }
 }
 
-export function saveJson(anchor : HTMLAnchorElement){
-    const [name, json] = View.getJson();
-    if(name == ""){
-        return;
-    }
+export function saveJson(anchor : layout_ts.Anchor){
+    const json = View.getJson();
 
     const blob = new Blob([json], { type: 'application/json' });
-          
-    // a 要素の href 属性に Object URL をセット
-    anchor.href = window.URL.createObjectURL(blob);
-    
-    // a 要素の download 属性にファイル名をセット
-    anchor.download = `${name}.json`;
-    
-    // 疑似的に a 要素をクリックさせる
-    anchor.click();
+
+    layout_ts.saveBlob(anchor, "movie", blob);
 }
 
 export function handleFileSelect(ev: DragEvent) {

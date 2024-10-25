@@ -15,13 +15,10 @@ export function initPlane(plane : Plane, root : layout_ts.Grid){
     const canvas = makeCanvas(plane.canvas_block.div);
 
     makePropertyTable(plane.property_block.div);
-    const [save_btn, anchor] = makeMenuBar(plane.menu_block.html());
 
     const view = new View(canvas);
 
     viewEvent(view);
-
-    saveEvent(view, save_btn, anchor);
 
     Builder.tool = new SelectionTool();
 
@@ -37,21 +34,6 @@ export function bodyOnLoad(){
     initPlane(plane, root);
 }
 
-export function menuBarEvent(){
-    showAxis.addEventListener("change", (ev : Event)=>{
-        View.current.dirty = true;
-    });
-
-    showGrid.addEventListener("change", (ev : Event)=>{
-        View.current.dirty = true;
-    });
-}
-
-export function saveEvent(view : View, save_btn : HTMLButtonElement, anchor : HTMLAnchorElement){
-    save_btn.addEventListener("click", (ev : MouseEvent)=>{
-        saveJson(anchor);
-    });
-}
 
 export function viewEvent(view : View){
     view.board.addEventListener("pointerdown", view.pointerdown.bind(view));

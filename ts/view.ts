@@ -9,6 +9,8 @@ export class View extends Widget {
     grid : Grid;
 
     shapes : AbstractShape[] = [];
+    undoStack : AbstractShape[] = [];
+
     changed : Set<Shape> = new Set<Shape>();
 
     downPosition : Vec2 | undefined;
@@ -160,13 +162,13 @@ export class View extends Widget {
 
             this.canvas.clear();
 
-            this.grid.showGrid(showAxis.checked, showGrid.checked);
+            this.grid.showGrid(Plane.one.show_axis.checked(), Plane.one.show_grid.checked());
 
             const shapes = this.allShapes();
             shapes.forEach(c => c.draw());
             Builder.tool.draw(this);
 
-            if(snapToGrid.checked){
+            if(Plane.one.snap_to_grid.checked()){
                 this.grid.showPointer();
             }
         }
@@ -176,7 +178,7 @@ export class View extends Widget {
 
     click(event : MouseEvent){
         let position = this.eventPosition(event);
-        if(snapToGrid.checked){
+        if(Plane.one.snap_to_grid.checked()){
             position = this.grid.snap(position);
         }
 
@@ -188,7 +190,7 @@ export class View extends Widget {
 
     pointerdown(event : PointerEvent){
         let position = this.eventPosition(event);
-        if(snapToGrid.checked){
+        if(Plane.one.snap_to_grid.checked()){
             position = this.grid.snap(position);
         }
 
@@ -204,7 +206,7 @@ export class View extends Widget {
         event.preventDefault(); 
 
         let position = this.eventPosition(event);
-        if(snapToGrid.checked){
+        if(Plane.one.snap_to_grid.checked()){
             position = this.grid.snap(position);
         }
 
@@ -231,7 +233,7 @@ export class View extends Widget {
 
         this.movePosition = position;
 
-        if(snapToGrid.checked){
+        if(Plane.one.snap_to_grid.checked()){
             const prev_snap_position = this.grid.snapPosition;
             this.grid.setSnapPosition();
             if(! prev_snap_position.equals(this.grid.snapPosition)){
@@ -242,7 +244,7 @@ export class View extends Widget {
 
     pointerup(event : PointerEvent){
         let position = this.eventPosition(event);
-        if(snapToGrid.checked){
+        if(Plane.one.snap_to_grid.checked()){
             position = this.grid.snap(position);
         }
 
@@ -257,7 +259,7 @@ export class View extends Widget {
         event.preventDefault();
 
         let position = this.eventPosition(event);
-        if(snapToGrid.checked){
+        if(Plane.one.snap_to_grid.checked()){
             position = this.grid.snap(position);
         }
 
@@ -334,6 +336,40 @@ export class View extends Widget {
 
         const text_blocks = this.shapes.filter(x => x instanceof TextBlock) as TextBlock[];
         text_blocks.forEach(x => x.updateTextPosition());
+    }
+
+    undo(){
+        if(this.shapes.length == 0){
+            return;
+        }
+
+        const shape = this.shapes.pop()!;
+
+        const valid_shapes = new Set<Shape>(this.allShapes());
+
+        const shapes_created_by_shape =  shape.allShapes().filter(x => ! valid_shapes.has(x));
+        shapes_created_by_shape.forEach(x => x.hideTextBlock());
+
+        this.undoStack.push(shape);
+
+        popShapeList();
+
+        this.dirty = true;
+    }
+
+    redo(){
+        if(this.undoStack.length == 0){
+            return;
+        }
+
+        const shape = this.undoStack.pop()!;
+        shape.allShapes().forEach(x => x.restoreTextBlock());
+
+        this.shapes.push(shape);
+
+        addShapeList(shape);
+
+        this.dirty = true;
     }
 }
 

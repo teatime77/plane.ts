@@ -762,6 +762,11 @@ export function addShapeList(shape : AbstractShape){
     Plane.one.shapes_block.updateLayout();
 }
 
+export function popShapeList(){
+    Plane.one.shapes_block.popChild();
+    Plane.one.shapes_block.updateLayout();
+}
+
 export function makeToolButtons() : layout_ts.RadioButton[] {
     const tool_buttons : layout_ts.RadioButton[] = [];
 

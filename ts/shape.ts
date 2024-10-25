@@ -86,6 +86,17 @@ export abstract class AbstractShape extends Widget implements i18n_ts.Readable {
         }
     }
 
+    getAllShapes(shapes : Shape[]){
+    }
+
+
+    allShapes() : Shape[] {
+        const shapes : Shape[] = [];
+        this.getAllShapes(shapes);
+
+        return unique(shapes);
+    }
+
     dependencies() : Shape[] {
         return [];
     }
@@ -109,6 +120,34 @@ export abstract class AbstractShape extends Widget implements i18n_ts.Readable {
     }
 
     async play(speech : i18n_ts.AbstractSpeech){
+    }
+
+    getTextBlock() : TextBlock | undefined {
+        if(this instanceof TextBlock){
+            return this;
+        }
+        else if(this instanceof Shape && this.caption != undefined){
+            return this.caption;
+        }
+        else{
+            return undefined;
+        }
+    }
+
+    hideTextBlock(){
+        const text_block = this.getTextBlock();
+        if(text_block != undefined){
+
+            text_block.div.dataset.display_backup = text_block.div.style.display;
+            text_block.div.style.display = "none";
+        }
+    }
+
+    restoreTextBlock(){
+        const text_block = this.getTextBlock();
+        if(text_block != undefined && text_block.div.dataset.display_backup != undefined){
+            text_block.div.style.display = text_block.div.dataset.display_backup;
+        }
     }
 }
 

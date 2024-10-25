@@ -12,10 +12,8 @@ const $popup = layout_ts.$popup;
 const $textarea = layout_ts.$textarea;
 const $label = layout_ts.$label;
 const $input_number = layout_ts.$input_number;
-
-export let showAxis : HTMLInputElement;
-export let showGrid : HTMLInputElement;
-export let snapToGrid : HTMLInputElement;
+type CheckBox = layout_ts.CheckBox;
+const $checkbox = layout_ts.$checkbox;
 
 const TT = i18n_ts.TT;
 
@@ -28,6 +26,10 @@ export class Plane {
     shapes_block : Block;
     add_statement_dlg : Dialog;
     editMode : boolean;
+
+    show_axis! : CheckBox;
+    show_grid! : CheckBox;
+    snap_to_grid! : CheckBox;
 
     static one : Plane;
 
@@ -86,9 +88,62 @@ export class Plane {
             }
         });
     
-        this.menu_block = $block({
-            id : "menu-bar",
-            children : [],
+        Plane.one.show_axis = $checkbox({
+            text : "Axis",
+            change : (target : CheckBox)=>{
+                View.current.dirty = true;
+            }
+        });
+
+        Plane.one.show_grid = $checkbox({
+            text : "Grid",
+            change : (target : CheckBox)=>{
+                View.current.dirty = true;                
+            }
+        });
+
+        Plane.one.snap_to_grid = $checkbox({
+            text : "Snap to Grid",
+        });
+
+        const save_anchor = layout_ts.$anchor({
+        });
+        
+        this.menu_block = $flex({
+            children : [
+                Plane.one.show_axis
+                ,
+                Plane.one.show_grid
+                ,
+                Plane.one.snap_to_grid
+                ,
+                $button({
+                    width : "24px",
+                    height : "24px",
+                    url : `${urlOrigin}/lib/plane/img/undo.png`,
+                    click : async(ev : MouseEvent)=>{
+                        View.current.undo();
+                    }
+                })
+                ,
+                $button({
+                    width : "24px",
+                    height : "24px",
+                    url : `${urlOrigin}/lib/plane/img/redo.png`,
+                    click : async(ev : MouseEvent)=>{
+                        View.current.redo();
+                    }
+                })
+                ,
+                $button({
+                    text : "Save",
+                    click : async(ev : MouseEvent)=>{
+                        saveJson(save_anchor);
+                    }
+                })
+                ,
+                save_anchor
+            ],
             backgroundColor : "lime",
         });
     
@@ -146,39 +201,6 @@ export class Plane {
             backgroundColor : "chocolate",
         });            
     }
-}
-
-
-function makeCheckbox(div : HTMLElement, id : string, text : string) : HTMLInputElement {
-    const inp = document.createElement("input");
-    inp.type = "checkbox";
-    inp.id   = id;
-    div.append(inp);
-
-    const label = document.createElement("label");
-    label.htmlFor = id;
-    label.textContent = text;
-    div.append(label);
-
-    return inp;
-}
-
-export function makeMenuBar(span : HTMLSpanElement) : [HTMLButtonElement, HTMLAnchorElement]{
-    showAxis   = makeCheckbox(span, "show-axis", "Axis");
-    showGrid   = makeCheckbox(span, "show-grid", "Grid");
-    snapToGrid = makeCheckbox(span, "snap-to-grid", "Snap to Grid");
-
-    menuBarEvent();
-
-    const save_btn = document.createElement("button");
-    save_btn.textContent = "Save";
-    span.append(save_btn);
-
-    const anchor = document.createElement("a");
-    anchor.id = "blob";
-    span.append(anchor);
-
-    return [save_btn, anchor];
 }
 
 export function makePropertyTable(div : HTMLElement){
