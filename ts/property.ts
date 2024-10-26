@@ -1,5 +1,28 @@
 namespace plane_ts {
 //
+type Block = layout_ts.Block;
+type Dialog = layout_ts.Dialog
+type CheckBox = layout_ts.CheckBox;
+type InputNumber = layout_ts.InputNumber;
+type InputText = layout_ts.InputText;
+type InputColor = layout_ts.InputColor;
+type TextArea = layout_ts.TextArea;
+
+const $flex = layout_ts.$flex;
+const $grid = layout_ts.$grid;
+const $block = layout_ts.$block;
+const $button = layout_ts.$button;
+const $dialog = layout_ts.$dialog;
+const $popup = layout_ts.$popup;
+const $textarea = layout_ts.$textarea;
+const $label = layout_ts.$label;
+const $input_number = layout_ts.$input_number;
+const $checkbox = layout_ts.$checkbox;
+const $input_text = layout_ts.$input_text;
+const $input_color = layout_ts.$input_color;
+
+const TT = i18n_ts.TT;
+
 function appendRow(tbl : HTMLTableElement, nest : number, name : string, value : HTMLElement){
     const row = document.createElement("tr");
 
@@ -45,84 +68,110 @@ export abstract class Property {
 }
 
 export class TextAreaProperty extends Property {
-    textArea : HTMLTextAreaElement;
+    textArea : TextArea;
 
     constructor(widget : Widget, name : string, value : string){
         super(widget, name);
-        this.textArea = document.createElement("textarea");
-        this.textArea.id   = "text-block-text-area";
-        this.textArea.cols = 20;
-        this.textArea.rows = (name == "narration" ? 1 : 10);
-        this.textArea.value = value;
-    }
+        this.textArea = $textarea({
+            id   : "text-block-text-area",
+            cols : 20,
+            rows : (name == "narration" ? 1 : 10),
+            value : value,
+            change : async (ev : Event)=>{
+                this.setValue(this.textArea.value);
+                if(this.widget instanceof TextBlock){
 
-    valueChanged() : void {
-        this.setValue(this.textArea.value);
-        if(this.widget instanceof TextBlock){
-
-            this.widget.div.innerText = this.textArea.value;
-        }
+                    this.widget.div.innerText = this.textArea.textArea.value;
+                }
+            }
+        });
     }
 }
 
 export abstract class InputProperty extends Property {
-    input  : HTMLInputElement;
+    abstract getInput()  : HTMLInputElement;
 
     constructor(widget : Widget, name : string, input_type : string){
         super(widget, name);
-        this.input = document.createElement("input");
-        this.input.type = input_type;
     }
 
     valueChanged() : void {
-        this.setValue(this.input.value);
+        this.setValue(this.getInput().value);
     }
 }
 
 class StringProperty extends InputProperty {
+    input : InputText;
+
     constructor(widget : Widget, name : string, value : string){
         super(widget, name, "text");
-        this.input.value = value;
+        this.input = $input_text({
+            text : value,
+            change : async (ev : Event)=>{
+                this.setValue(this.input.input.value);
+            }
+        })
+    }
+
+    getInput()  : HTMLInputElement {
+        return this.input.input;
     }
 }
 
 class NumberProperty extends InputProperty {
+    input : InputNumber;
+
     constructor(widget : Widget, name : string, value : number, step? : number, min? : number, max? : number){
         super(widget, name, "number");
-        this.input.step  = "0.1";
-        this.input.value = value.toString();
-        if(step != undefined){
-            this.input.step = `${step}`;
-        }
-        if(min != undefined){
-            this.input.min = `${min}`;
-        }
-        if(max != undefined){
-            this.input.max = `${max}`;
-        }
+        this.input = $input_number({
+            step : 0.1,
+            value : value,
+            min : min,
+            max : max,
+            change : async (ev : Event)=>{
+                this.setValue(this.input.value());
+            }
+        })
     }
 
-    valueChanged() : void {
-        this.setValue(parseFloat(this.input.value));
+    getInput()  : HTMLInputElement {
+        return this.input.input;
     }
 }
 
 
 class BooleanProperty extends InputProperty {
+    input : CheckBox;
+
     constructor(widget : Widget, name : string, value : boolean){
         super(widget, name, "checkbox");
-        this.input.checked = value;
+        this.input = $checkbox({
+            text : name
+        })
+        this.input.input.checked = value;
+    }
+
+    getInput()  : HTMLInputElement {
+        return this.input.input;
     }
 
     valueChanged() : void {
-        this.setValue(this.input.checked);
+        this.setValue(this.input.input.checked);
     }
 }
 
 class ColorProperty extends InputProperty {
+    input : InputColor;
+
     constructor(widget : Widget, name : string, value : string){
         super(widget, name, "color");
-        this.input.value = value;
+        this.input = $input_color({
+            text : value
+        });
+    }
+
+    getInput()  : HTMLInputElement {
+        return this.input.input;
     }
 }
 
@@ -143,11 +192,45 @@ export class AngleMarkProperty extends Property {
         const button_img_urls = range(Angle.numMarks).map(i => `${origin}/lib/plane/img/angle-${i}.png`) as string[];
     
         [this.img, this.dlg, this.imgButtons] = makeImageButtons(this.span, `${origin}/lib/plane/img/angle-${angle.angleMark}.png`, button_img_urls);
+    
+        this.img.addEventListener("click", (ev:MouseEvent)=>{
+            this.dlg.showModal();
+        });
+
+        for(const [idx, button] of this.imgButtons.entries()){
+            button.addEventListener("click", (ev : MouseEvent)=>{
+                this.imgButtonClick(idx);
+            })
+        }
     }
 
     imgButtonClick(idx : number) : void {
         this.setValue(idx);
     }
+}
+
+export class SelectedShapesProperty extends Property {
+    span : HTMLSpanElement;
+    // flex : layout_ts.Flex;
+
+    constructor(statement : Statement, name : string, value : AbstractShape[]){
+        super(statement, name);
+        // this.flex = $flex({
+        //     children : value.map(x => makeShapeButton(x))
+        // });
+        this.span = document.createElement("span");
+        const buttons = value.map(x => makeShapeButton(x));
+        for(const button of buttons){
+            button.button.style.position = "";
+            this.span.append(button.button);
+        }
+    }
+
+    // layout(){
+    //     const parent = this.flex.div.parentElement!;
+    //     const rc = parent.getBoundingClientRect();
+    //     this.flex.layout(rc.x, rc.y, 163, 26);
+    // }
 }
 
 function makeConstantProperty(tbl : HTMLTableElement, nest : number, name : string, text : string){
@@ -202,6 +285,9 @@ export function showProperty(widget : Widget, nest : number){
     }
 
     appendTitle(tbl, nest, widget.constructor.name);
+
+    let selected_shapes_property : SelectedShapesProperty | undefined;
+
     for(const property_name of properties){
 
         if(typeof property_name == "string"){
@@ -211,18 +297,26 @@ export function showProperty(widget : Widget, nest : number){
                 continue;
             }
 
-            let property : InputProperty | TextAreaProperty | AngleMarkProperty;
+            let property : InputProperty | TextAreaProperty | AngleMarkProperty | SelectedShapesProperty;
             let property_element : HTMLElement;
 
             if(name == "narration" || name == "text" && widget instanceof TextBlock){
 
                 property = new TextAreaProperty(widget, name, value as string);
-                property_element = property.textArea;
+                property_element = property.textArea.textArea;
             }
             else if(name == "angleMark" && widget instanceof Angle){
 
                 property = new AngleMarkProperty(widget as Angle, name, value);
                 property_element  = property.span;
+            }
+            else if(name == "selectedShapes" && widget instanceof Statement){
+
+                property = new SelectedShapesProperty(widget as Statement, name, value);
+                // property = selected_shapes_property;
+                // property_element  = property.flex.div;
+                property_element  = property.span;
+
             }
             else{
                 switch(typeof value){
@@ -268,16 +362,19 @@ export function showProperty(widget : Widget, nest : number){
                     throw new MyError();
                 }
 
-                property_element = property.input;
+                property_element = property.getInput();
             }
 
             appendRow(tbl, nest + 1, property.name, property_element);
-            PropertyEvent(property);
         }
         else{
             throw new MyError();
         }
     }
+
+    // if(selected_shapes_property != undefined){
+    //     selected_shapes_property.layout();
+    // }
 
     if(widget instanceof AbstractShape){
         appendDelete(tbl, widget);

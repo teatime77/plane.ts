@@ -85,29 +85,6 @@ export function setCaptionEvent(caption : TextBlock){
     });
 }
 
-export function PropertyEvent(property : InputProperty | TextAreaProperty | AngleMarkProperty){
-    if(property instanceof InputProperty){
-
-        property.input.addEventListener("change", property.valueChanged.bind(property));
-    }
-    else if(property instanceof AngleMarkProperty){
-
-        property.img.addEventListener("click", (ev:MouseEvent)=>{
-            property.dlg.showModal();
-        });
-
-        for(const [idx, button] of property.imgButtons.entries()){
-            button.addEventListener("click", (ev : MouseEvent)=>{
-                property.imgButtonClick(idx);
-            })
-        }
-    }
-    else{
-
-        property.textArea.addEventListener("input", property.valueChanged.bind(property));
-    }
-}
-
 export function deleteShapeEvent(shape : AbstractShape, button : HTMLButtonElement){
     button.addEventListener("click", (ev : MouseEvent)=>{
         const ok = confirm("Are you sure to delete this shape?");

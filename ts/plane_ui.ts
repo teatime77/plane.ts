@@ -90,14 +90,14 @@ export class Plane {
     
         Plane.one.show_axis = $checkbox({
             text : "Axis",
-            change : (target : CheckBox)=>{
+            change : async (ev : Event)=>{
                 View.current.dirty = true;
             }
         });
 
         Plane.one.show_grid = $checkbox({
             text : "Grid",
-            change : (target : CheckBox)=>{
+            change : async (ev : Event)=>{
                 View.current.dirty = true;                
             }
         });

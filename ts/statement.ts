@@ -139,7 +139,7 @@ export class StatementTool extends Builder {
     click(event : MouseEvent, view : View, position : Vec2, shape : AbstractShape | undefined){        
         if(shape != undefined){
 
-            this.statement.shapes.push(shape);
+            this.statement.selectedShapes.push(shape);
 
             const button = makeShapeButton(shape);
             const flex = Plane.one.add_statement_dlg.getUIById("add-statement-shapes") as layout_ts.Flex;
@@ -197,15 +197,21 @@ export class StatementSelectorTool extends Builder {
 }
 
 export class Statement extends AbstractShape {
-    shapes : AbstractShape[];
+    selectedShapes : AbstractShape[];
 
     constructor(obj : { narration? : string, shapes : AbstractShape[] }){
         super(obj);
-        this.shapes = obj.shapes;
+        this.selectedShapes = obj.shapes;
     }
 
     dependencies() : Shape[] {
-        return this.shapes as Shape[];
+        return this.selectedShapes as Shape[];
+    }
+
+    getProperties(){
+        return super.getProperties().concat([
+            "selectedShapes"
+        ]);
     }
 
     reading() : Reading {
@@ -214,7 +220,7 @@ export class Statement extends AbstractShape {
 
     makeObj() : any {
         let obj = Object.assign(super.makeObj(), {
-            shapes : this.shapes.map(x => x.toObj())
+            shapes : this.selectedShapes.map(x => x.toObj())
         });
 
         return obj;
