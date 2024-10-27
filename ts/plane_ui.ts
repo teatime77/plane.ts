@@ -39,12 +39,9 @@ export class Plane {
 
         [ urlOrigin, , params] = i18n_ts.parseURL();
         this.editMode = (params.get("mode") == "edit");
-    
-        const statement_menu = makeStatementMenu();
-    
+        
         const tool_buttons = makeToolButtons();
-    
-    
+        
         Plane.one.show_axis = $checkbox({
             text : "Axis",
             change : async (ev : Event)=>{
@@ -228,23 +225,6 @@ export function toYPixScale(n : number) : number {
 
 export function drawLine(shape : Shape, p1 : Vec2, p2 : Vec2){
     View.current.canvas.drawLine(shape, p1, p2);
-}
-
-function makeStatementMenu() : layout_ts.PopupMenu {
-    const statement_infos = getStatementInfos();
-
-    const statement_menu = $popup({
-        direction : "column",
-        click : (idx:number, id? : string, value? : string)=>{
-            const info = statement_infos[idx];
-            msg(`statement:${info.text}`);
-            // Builder.tool = new StatementSelectorTool(info.text, info.selectors);
-        }
-        ,
-        children : statement_infos.map(x => $button({ text : x.text}))
-    });
-
-    return statement_menu;
 }
 
 export function makeGrid(plane : Plane){
