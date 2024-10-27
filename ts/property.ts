@@ -210,14 +210,13 @@ export class AngleMarkProperty extends Property {
 }
 
 export class SelectedShapesProperty extends Property {
+    static one : SelectedShapesProperty;
+
     span : HTMLSpanElement;
-    // flex : layout_ts.Flex;
 
     constructor(statement : Statement, name : string, value : AbstractShape[]){
         super(statement, name);
-        // this.flex = $flex({
-        //     children : value.map(x => makeShapeButton(x))
-        // });
+        SelectedShapesProperty.one = this;
         this.span = document.createElement("span");
         const buttons = value.map(x => makeShapeButton(x));
         for(const button of buttons){
@@ -225,12 +224,6 @@ export class SelectedShapesProperty extends Property {
             this.span.append(button.button);
         }
     }
-
-    // layout(){
-    //     const parent = this.flex.div.parentElement!;
-    //     const rc = parent.getBoundingClientRect();
-    //     this.flex.layout(rc.x, rc.y, 163, 26);
-    // }
 }
 
 function makeConstantProperty(tbl : HTMLTableElement, nest : number, name : string, text : string){

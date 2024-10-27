@@ -24,7 +24,6 @@ export class Plane {
     canvas_block : Block;
     property_block : Block;
     shapes_block : Block;
-    add_statement_dlg : Dialog;
     editMode : boolean;
 
     show_axis! : CheckBox;
@@ -45,48 +44,6 @@ export class Plane {
     
         const tool_buttons = makeToolButtons();
     
-        this.add_statement_dlg = $dialog({
-            width  : "400px",
-            height : "300px",
-            content : $grid({
-                columns : "100% 100px",
-                children : [
-                    $textarea({
-                        cols : 5,
-                        rows : 5,
-                        change : async (ev : Event)=>{
-                            StatementTool.one.changeText(ev);
-                        }
-                    })
-                    ,
-                    $flex({
-                        direction : "column",
-                        children : [
-                            $button({
-                                id : "add-statement-play",
-                                text : "play",
-                                click : async (ev : MouseEvent)=>{
-                                    this.add_statement_dlg.grid.updateLayout();
-                                    StatementTool.one.play(i18n_ts.AbstractSpeech.one);
-                                }
-                            })
-                            ,
-                            $flex({
-                                id : "add-statement-shapes",
-                                direction : "column",
-                                children : [
-
-                                ]
-                            })
-                        ]
-                    })
-                ]
-            })
-            ,
-            okClick : async (ev : MouseEvent)=>{
-                StatementTool.one.finish()
-            }
-        });
     
         Plane.one.show_axis = $checkbox({
             text : "Axis",
@@ -156,27 +113,7 @@ export class Plane {
     
         this.text_block = $block({
             id : "text-block",
-            children : [
-                $button({
-                    width : "36px",
-                    height : "36px",
-                    url : `${urlOrigin}/lib/plane/img/text.png`,
-                    click: async (ev:MouseEvent)=>{ 
-                        msg("show add statement dlg"); 
-                        this.add_statement_dlg.showModal(ev);
-                    }
-                })
-                ,
-                $button({
-                    width : "36px",
-                    height : "36px",
-                    url : `${urlOrigin}/lib/plane/img/statement.png`,
-                    click: async (ev:MouseEvent)=>{ 
-                        msg("show statement menu"); 
-                        statement_menu.show(ev);
-                    }
-                })
-            ],
+            children : [],
             aspectRatio : 1,
             backgroundColor : "blue",
         });
@@ -301,7 +238,7 @@ function makeStatementMenu() : layout_ts.PopupMenu {
         click : (idx:number, id? : string, value? : string)=>{
             const info = statement_infos[idx];
             msg(`statement:${info.text}`);
-            Builder.tool = new StatementSelectorTool(info.text, info.selectors);
+            // Builder.tool = new StatementSelectorTool(info.text, info.selectors);
         }
         ,
         children : statement_infos.map(x => $button({ text : x.text}))

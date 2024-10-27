@@ -1,4 +1,3 @@
-///<reference path="tool.ts" />
 
 namespace plane_ts {
 //
@@ -114,55 +113,7 @@ class TriangleSelector extends ShapeSelector {
     }
 }
 
-export class StatementTool extends Builder {
-    statement : Statement;
-
-    static one : StatementTool;
-
-    static start(ev:MouseEvent){
-        Builder.tool = new StatementTool();
-
-        const dlg = Plane.one.add_statement_dlg;
-
-        dlg.show(ev);
-
-        const y = window.innerHeight - dlg.getHeight() - 50;
-        dlg.setXY(0, y);
-    }
-
-    constructor(){
-        super();
-        StatementTool.one = this;
-        this.statement = new Statement({ shapes : [] });
-    }
-
-    click(event : MouseEvent, view : View, position : Vec2, shape : AbstractShape | undefined){        
-        if(shape != undefined){
-
-            this.statement.selectedShapes.push(shape);
-
-            const button = makeShapeButton(shape);
-            const flex = Plane.one.add_statement_dlg.getUIById("add-statement-shapes") as layout_ts.Flex;
-            flex.addChild(button);
-            flex.updateLayout();
-        }
-    }
-
-    async changeText(ev : Event){
-        const textarea = ev.target as HTMLTextAreaElement;
-        this.statement.narration = textarea.value;
-        console.log(`change text:${this.statement.narration}`);
-    }
-
-    async play(speech : i18n_ts.AbstractSpeech){
-        await this.statement.play(speech);
-    }
-
-    finish(){
-        View.current.addShape(this.statement);
-    }
-}
-
+/*
 export class StatementSelectorTool extends Builder {
     narration : string;
     selectors : ShapeSelector[];
@@ -195,6 +146,7 @@ export class StatementSelectorTool extends Builder {
         }
     }
 }
+*/
 
 export class Statement extends AbstractShape {
     selectedShapes : AbstractShape[];

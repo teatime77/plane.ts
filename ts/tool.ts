@@ -700,6 +700,32 @@ class TextBlockBuilder extends Builder {
     }
 }
 
+
+export class StatementBuilder extends Builder {
+    statement : Statement;
+
+    constructor(){
+        super();
+
+        this.statement = new Statement({ shapes : [] });
+        View.current.addShape(this.statement);
+
+        showProperty(this.statement, 0);
+    }
+
+    click(event : MouseEvent, view : View, position : Vec2, shape : AbstractShape | undefined){        
+        if(shape != undefined){
+
+            this.statement.selectedShapes.push(shape);
+
+            const button = makeShapeButton(shape);
+            button.button.style.position = "";
+
+            SelectedShapesProperty.one.span.append(button.button);
+        }
+    }
+}
+
 const toolList : [typeof Builder, string, string, (typeof AbstractShape)[]][] = [
     [ SelectionTool             , "selection"       , TT("selection")        , [  ] ],
     [ PointBuilder              , "point"           , TT("point")            , [ Point ] ],
@@ -719,23 +745,17 @@ const toolList : [typeof Builder, string, string, (typeof AbstractShape)[]][] = 
     [ DimensionLineBuilder      , "dimension-line"  , TT("dimension line")   , [ DimensionLine ] ],
     [ LengthSymbolBuilder       , "length-symbol"   , TT("length symbol")    , [ LengthSymbol ] ],
     [ TextBlockBuilder          , "text"            , TT("text")             , [ TextBlock ] ],
+    [ StatementBuilder          , "statement"       , TT("statement")        , [ Statement ] ],
 ];
 
 export function makeShapeButton(shape : AbstractShape) : layout_ts.Button {
     let shape_img_name : string | undefined;
 
-    if(shape instanceof Statement){
+    for(const [ tool, img_name, title, shapes] of toolList){
+        if(shapes.some(x => shape instanceof x)){
 
-        shape_img_name = "statement";
-    }
-    else{
-
-        for(const [ tool, img_name, title, shapes] of toolList){
-            if(shapes.some(x => shape instanceof x)){
-
-                shape_img_name = img_name;
-                break;
-            }
+            shape_img_name = img_name;
+            break;
         }
     }
 
