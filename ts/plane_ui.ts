@@ -112,7 +112,7 @@ export class Plane {
             id : "text-block",
             children : [],
             aspectRatio : 1,
-            backgroundColor : "blue",
+            backgroundColor : "lightyellow",
         });
     
         this.canvas_block = $block({

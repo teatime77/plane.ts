@@ -1,5 +1,3 @@
-var katex : any;
-
 namespace plane_ts {
 //
 

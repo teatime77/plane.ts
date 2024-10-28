@@ -172,7 +172,7 @@ export class TextBlock extends AbstractShape {
 
         if(obj.isTex){
 
-            layout_ts.renderKatexSub(this.div, obj.text);
+            parser_ts.renderKatexSub(this.div, obj.text);
         }
         else{
 
@@ -204,7 +204,7 @@ export class TextBlock extends AbstractShape {
     updateTextDiv(){
         if(this.isTex){
 
-            layout_ts.renderKatexSub(this.div, this.text);
+            parser_ts.renderKatexSub(this.div, this.text);
         }
         else{
 

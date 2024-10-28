@@ -75,13 +75,13 @@ export class TextAreaProperty extends Property {
         this.textArea = $textarea({
             id   : "text-block-text-area",
             cols : 20,
-            rows : (name == "narration" || name == "expression_str" ? 1 : 10),
+            rows : (name == "narration" || name == "mathText" ? 1 : 10),
             value : value,
             change : async (ev : Event)=>{
-                this.setValue(this.textArea.value);
+                this.setValue(this.textArea.getValue());
                 if(this.widget instanceof TextBlock){
 
-                    this.widget.div.innerText = this.textArea.textArea.value;
+                    this.widget.div.innerText = this.textArea.getValue();
                 }
             }
         });
@@ -293,7 +293,7 @@ export function showProperty(widget : Widget, nest : number){
             let property : InputProperty | TextAreaProperty | AngleMarkProperty | SelectedShapesProperty;
             let property_element : HTMLElement;
 
-            if(name == "narration" || name == "expression_str" || name == "text" && widget instanceof TextBlock){
+            if(name == "narration" || name == "mathText" || name == "text" && widget instanceof TextBlock){
 
                 property = new TextAreaProperty(widget, name, value as string);
                 property_element = property.textArea.textArea;
