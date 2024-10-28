@@ -1,10 +1,12 @@
-public/katex
-tmp
-debug.log
 .vscode/settings.json
-public/lib/plane/plane.d.ts
-public/lib/plane/plane.js
+debug.log
 install.bat
 ts/@types
+tmp
+
+public/katex
+public/lib/plane/plane.d.ts
+public/lib/plane/plane.js
 public/lib/i18n
 public/lib/layout
+public/lib/parser

@@ -1,13 +1,25 @@
 namespace plane_ts {
 //
+type Term = parser_ts.Term;
+const parseMath = parser_ts.parseMath;
 const TT = i18n_ts.TT;
 
 export class Statement extends AbstractShape {
+    expression_str : string = "";
+    expression? : Term;
+    texDiv? : HTMLDivElement;
     selectedShapes : AbstractShape[];
 
-    constructor(obj : { narration? : string, shapes : AbstractShape[] }){
+    constructor(obj : { narration? : string, shapes : AbstractShape[], expression_str? : string }){
         super(obj);
         this.selectedShapes = obj.shapes;
+        if(obj.expression_str != undefined){
+            this.expression_str = obj.expression_str;
+            this.expression = parseMath(this.expression_str);
+
+            this.texDiv = document.createElement("div");
+            // layout_ts.renderKatexSub(this.texDiv, this.text);
+        }
     }
 
     dependencies() : Shape[] {
@@ -16,7 +28,7 @@ export class Statement extends AbstractShape {
 
     getProperties(){
         return super.getProperties().concat([
-            "selectedShapes"
+            "selectedShapes", "expression_str"
         ]);
     }
 
@@ -29,7 +41,15 @@ export class Statement extends AbstractShape {
             shapes : this.selectedShapes.map(x => x.toObj())
         });
 
+        if(this.expression_str != ""){
+            obj.expression_str = this.expression_str;
+        }
+
         return obj;
+    }
+
+    setExpression_str(str : string){
+        
     }
 }
 
