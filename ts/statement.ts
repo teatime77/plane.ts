@@ -45,6 +45,13 @@ export class Statement extends AbstractShape {
         return obj;
     }
 
+    makeTexUI() : layout_ts.TexUI {
+        return new layout_ts.TexUI({
+            parent : Plane.one.text_block,
+            text : ""
+        });
+    }
+
     showMathText(){
         Statement.idTimeout = undefined;
 
@@ -63,10 +70,7 @@ export class Statement extends AbstractShape {
         const tex_text = term.tex();
 
         if(this.texUI == undefined){
-            this.texUI = new layout_ts.TexUI({
-                parent : Plane.one.text_block,
-                text : tex_text
-            });
+            this.texUI = this.makeTexUI();
         }
 
         this.texUI.setText(tex_text);
