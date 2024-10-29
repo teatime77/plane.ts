@@ -15,7 +15,7 @@ export enum Mode {
     target
 }
 
-export abstract class AbstractShape extends Widget implements i18n_ts.Readable {
+export abstract class AbstractShape extends Widget implements i18n_ts.Readable, parser_ts.Highlightable {
     visible : boolean = true;
     mode : Mode = Mode.none;
     isOver : boolean = false;
@@ -79,7 +79,7 @@ export abstract class AbstractShape extends Widget implements i18n_ts.Readable {
     abstract reading() : Reading;
     highlight(on : boolean) : void {
         if(on){
-            this.setMode(Mode.depend);
+            this.setMode(Mode.target);
         }
         else{
             this.setMode(Mode.none);
@@ -281,7 +281,7 @@ export class TextBlock extends AbstractShape {
     }
 
     reading() : Reading {
-        throw new MyError();
+        return new Reading(this, "", []);
     }
 
     delete(deleted : Set<number>){

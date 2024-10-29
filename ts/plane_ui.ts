@@ -108,7 +108,7 @@ export class Plane {
             backgroundColor : "green",
         });
     
-        this.text_block = $block({
+        this.text_block = $flex({
             id : "text-block",
             children : [],
             aspectRatio : 1,

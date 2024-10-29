@@ -8,7 +8,7 @@ export class Statement extends AbstractShape {
     static idTimeout : number | undefined;
 
     mathText : string = "";
-    texDiv? : HTMLDivElement;
+    texUI? : layout_ts.TexUI;
     selectedShapes : AbstractShape[];
 
     constructor(obj : { narration? : string, shapes : AbstractShape[], mathText? : string }){
@@ -62,12 +62,14 @@ export class Statement extends AbstractShape {
         }
         const tex_text = term.tex();
 
-        if(this.texDiv == undefined){
-            this.texDiv = document.createElement("div");
-            Plane.one.text_block.div.append(this.texDiv);    
+        if(this.texUI == undefined){
+            this.texUI = new layout_ts.TexUI({
+                parent : Plane.one.text_block,
+                text : tex_text
+            });
         }
 
-        parser_ts.renderKatexSub(this.texDiv, tex_text);
+        this.texUI.setText(tex_text);
     }
 
     setMathText(value : string){
