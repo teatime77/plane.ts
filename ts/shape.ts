@@ -159,8 +159,9 @@ export class TextBlock extends AbstractShape {
 
     offset : Vec2 = new Vec2(0, 0);
 
-    constructor(obj : { text : string, isTex : boolean, offset : Vec2 }){
+    constructor(obj : { parent? : AbstractShape, text : string, isTex : boolean, offset : Vec2 }){
         super(obj);
+        this.parent = obj.parent;
         this.text  = obj.text;
         this.isTex = obj.isTex;
         this.offset = obj.offset;
@@ -169,15 +170,6 @@ export class TextBlock extends AbstractShape {
         this.div.className = "tex_div";
 
         this.setVisible(this.visible);
-
-        if(obj.isTex){
-
-            parser_ts.renderKatexSub(this.div, obj.text);
-        }
-        else{
-
-            this.div.innerText = obj.text;
-        }
 
         View.current.board.parentElement!.append(this.div);
 
@@ -202,13 +194,18 @@ export class TextBlock extends AbstractShape {
     }
 
     updateTextDiv(){
+        let text = this.text;
+        if(text == "" && this.parent instanceof Shape){
+            text = this.parent.name;
+        }
+
         if(this.isTex){
 
-            parser_ts.renderKatexSub(this.div, this.text);
+            parser_ts.renderKatexSub(this.div, text);
         }
         else{
 
-            this.div.innerText = this.text;
+            this.div.innerText = text;
         }
     }
 
@@ -228,11 +225,6 @@ export class TextBlock extends AbstractShape {
                 this.div.style.display = "none";
             }
         }
-    }
-
-    setText(text : string){
-        this.text = text;
-        this.updateTextDiv();
     }
 
     setIsTex(is_tex : boolean){
@@ -317,8 +309,15 @@ export abstract class Shape extends AbstractShape {
             this.lineWidth = obj.lineWidth;
         }
 
-        if(obj.caption != undefined){
-            this.caption = obj.caption;
+        this.caption = obj.caption;
+
+        if(this.caption == undefined && this.name != ""){
+            this.caption = this.makeCaption(this);
+        }
+
+        if(this.caption != undefined){
+            this.caption.parent = this;
+            this.caption.updateTextDiv();
         }
     }
 
@@ -348,6 +347,34 @@ export abstract class Shape extends AbstractShape {
         }
 
         return obj;
+    }
+
+    makeCaption(parent : AbstractShape) : TextBlock {
+        const x = fromXPixScale(10);
+        const y = fromYPixScale(20);
+        return new TextBlock( { parent, text : "", isTex : false, offset : new Vec2(x, y) });
+    }
+
+    setName(name : string){
+        this.name = name;
+
+        if(this.name == ""){
+
+            if(this.caption != undefined){
+                this.caption.delete(new Set<number>());
+                this.caption = undefined;
+            }
+        }
+        else{
+
+            if(this.name != "" && this.caption == undefined){
+                this.caption = this.makeCaption(this);
+            }
+
+            this.caption!.updateTextDiv();
+        }
+
+        View.current.dirty = true;
     }
 
     getProperties(){
@@ -459,16 +486,7 @@ export class Point extends Shape {
 
         Point.tempPoints.push(this);
 
-        if(this.caption == undefined){
-            const x = fromXPixScale(10);
-            const y = fromYPixScale(20);
-            this.caption = new TextBlock( { text : this.name, isTex : false, offset : new Vec2(x, y) });
-            this.caption.parent = this;
-        }
-
         this.setPosition(obj.position);
-
-        // msg(`point:${this.name}`);
     }
 
     copy() : Point {
@@ -489,12 +507,6 @@ export class Point extends Shape {
         this.updateCaption();
 
         View.current.changed.add(this);
-        View.current.dirty = true;
-    }
-
-    setName(name : string){
-        this.name = name;
-        this.caption!.setText(name);
         View.current.dirty = true;
     }
 
