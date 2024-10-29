@@ -53,6 +53,7 @@ export abstract class Property {
     }
 
     setValue(value : any){
+        msg(`set value:${this.name} ${value}`);
         const setter_name = this.setterName();
 
         const obj = this.widget as any;
@@ -146,8 +147,12 @@ class BooleanProperty extends InputProperty {
     constructor(widget : Widget, name : string, value : boolean){
         super(widget, name, "checkbox");
         this.input = $checkbox({
-            text : name
-        })
+            text : name,
+            change : async (ev : Event)=>{
+                this.valueChanged();
+            }
+        });
+
         this.input.input.checked = value;
     }
 
@@ -218,6 +223,7 @@ export class SelectedShapesProperty extends Property {
         super(statement, name);
         SelectedShapesProperty.one = this;
         this.span = document.createElement("span");
+        this.span.id = "selected-shapes-property-span";
         const buttons = value.map(x => makeShapeButton(x));
         for(const button of buttons){
             button.button.style.position = "";
@@ -240,6 +246,28 @@ function appendTitle(tbl : HTMLTableElement, nest : number, title : string){
     cell.colSpan = 2;
     cell.innerText = title;
     cell.style.paddingLeft = `${nest * 10}px`;
+    row.append(cell);    
+
+    tbl.append(row);
+}
+
+function addPopSelectedShapes(tbl : HTMLTableElement, shape : Statement){
+    const row = document.createElement("tr");
+    const cell = document.createElement("td");
+    cell.colSpan = 2;
+
+    const button = $button({
+        text : "pop shape",
+        click : async (ev : MouseEvent)=>{
+            shape.selectedShapes.pop();
+
+            const span = $("selected-shapes-property-span") as HTMLSpanElement;
+            span.removeChild(span.lastChild!);
+        }
+    });
+    button.button.style.position = "";
+
+    cell.append(button.button);
     row.append(cell);    
 
     tbl.append(row);
@@ -368,6 +396,10 @@ export function showProperty(widget : Widget, nest : number){
     // if(selected_shapes_property != undefined){
     //     selected_shapes_property.layout();
     // }
+
+    if(widget instanceof Statement){
+        addPopSelectedShapes(tbl, widget);
+    }
 
     if(widget instanceof AbstractShape){
         appendDelete(tbl, widget);

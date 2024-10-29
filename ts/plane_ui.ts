@@ -116,7 +116,6 @@ export class Plane {
         });
     
         this.canvas_block = $block({
-            id : "canvas-div",
             children : [],
             aspectRatio : 1,
             backgroundColor : "orange",
@@ -134,6 +133,13 @@ export class Plane {
             children : [],
             backgroundColor : "chocolate",
         });            
+    }
+
+    clear(){
+        const tex_divs = Array.from(this.canvas_block.div.getElementsByClassName("tex_div")) as HTMLDivElement[];
+        tex_divs.forEach(x => x.remove());
+    
+        this.text_block.div.innerHTML = "";
     }
 }
 
