@@ -31,7 +31,7 @@ export class Builder {
         }
     }
 
-    draw(view : View){        
+    drawTool(view : View){        
     }
 
     drawPendingShape(shape : Shape){
@@ -146,7 +146,7 @@ class MidpointBuilder extends Builder {
     }
 }
 
-class Circle1Builder extends Builder {
+class CircleByPointBuilder extends Builder {
     circle : CircleByPoint | undefined;
 
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
@@ -192,7 +192,7 @@ class Circle1Builder extends Builder {
 }
 
 
-class Circle2Builder extends Builder {
+class CircleByRadiusBuilder extends Builder {
     circle : CircleByRadius | undefined;
 
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
@@ -306,56 +306,75 @@ class ArcBuilder extends Builder {
     }
 }
 
-class LineByPointsBuilder extends Builder {
-    line : LineByPoints | undefined;
+export function drawTentativeLine(tool : Builder, pointA? : Point, position? : Vec2){
+    if(pointA != undefined && position != undefined){
+        pointA.draw();
 
-    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
-        if(this.line == undefined){
+        let p2 : Vec2;
 
-            let pointA : Point;
-            if(shape instanceof Point){
-
-                pointA = shape;
-            }
-            else{
-                pointA = Point.fromArgs(position);
-            }
-            pointA.setMode(Mode.depend);
-
-            const pointB = Point.fromArgs(position);
-            if(this instanceof LineSegmentBuilder){
-
-                this.line = new LineSegment({ pointA, pointB });
-            }
-            else{
-
-                this.line = new Ray({ pointA, pointB });
-            }
-
-            view.addShape(this.line);
+        if(tool instanceof LineSegmentBuilder || tool instanceof LengthSymbolBuilder){
+            p2 = position;
         }
         else{
-            if(shape instanceof Point){
-                this.line.pointB = shape;
+            const l = View.current.max.distance(View.current.min);
+            const e = position.sub(pointA.position).unit();
+            p2 = pointA.position.add(e.mul( l));
+        }
+
+        View.current.canvas.drawLine(undefined, pointA.position, p2);
+    }
+}
+
+class LineByPointsBuilder extends Builder {
+    pointA? : Point;
+    position? : Vec2;
+
+    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
+        if(this.pointA == undefined){
+
+            this.pointA = this.makePointOnClick(view, position, shape);
+            this.pointA.setMode(Mode.depend);
+        }
+        else{
+            const pointB = this.makePointOnClick(view, position, shape);
+
+            let line : LineByPoints;
+
+            if(this instanceof LineSegmentBuilder){
+
+                line = new LineSegment({ pointA: this.pointA, pointB });
+            }
+            else{
+
+                line = new Ray({ pointA: this.pointA, pointB });
             }
 
-            this.line = undefined;
+            view.addShape(line);
+
+            this.pointA = undefined;
+            this.position = undefined;
+
             this.resetTool();
         }
     }
 
     pointermove(event : PointerEvent, view : View, position : Vec2, shape : Shape | undefined){
-        if(this.line != undefined){
-            if(shape instanceof Point && shape != this.line.pointA){
+        if(this.pointA != undefined){
+            if(shape instanceof Point){
 
-                this.line.pointB = shape;
+                this.position = shape.position;
             }
             else{
 
-                this.line.pointB.setPosition(position);
-                this.line.calc();
+                this.position = position;
             }
+
+            View.current.dirty = true;
         }
+    }
+
+    drawTool(view : View){
+        drawTentativeLine(this, this.pointA, this.position);
     }
 }
 
@@ -417,7 +436,7 @@ class PolygonBuilder extends Builder {
         }
     }    
 
-    draw(view: View): void {
+    drawTool(view: View): void {
         if(this.polygon != undefined && this.lastPosition != undefined){
             
             const point = last(this.polygon.points);
@@ -667,7 +686,7 @@ class DimensionLineBuilder extends Builder {
         }
     }
 
-    draw(view: View): void {
+    drawTool(view: View): void {
         if(this.dimLine != undefined){
             this.dimLine.draw();
         }
@@ -675,32 +694,30 @@ class DimensionLineBuilder extends Builder {
 }
 
 
-class LengthSymbolBuilder extends Builder {
-    pointA : Point | undefined;
+class LengthSymbolBuilder extends LineByPointsBuilder {
 
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
         if(shape instanceof LineByPoints){
             const symbol = new LengthSymbol({line : shape, kind : 0});
             view.addShape(symbol);
         }
-        else if(shape instanceof Point){
+        else{
             if(this.pointA == undefined){
-                this.pointA = shape;
+                this.pointA = this.makePointOnClick(view, position, shape);
             }
             else{
-                const pointB = shape;
+                const pointB = this.makePointOnClick(view, position, shape);
 
                 const line = new LineSegment({ pointA : this.pointA, pointB });
                 const symbol = new LengthSymbol({ line, kind : 0});
                 view.addShape(symbol);
 
                 this.pointA      = undefined;
+                this.position = undefined;
+
                 this.resetTool();
             }    
         }
-    }
-
-    pointermove(event : PointerEvent, view : View, position : Vec2, shape : Shape | undefined){
     }
 }
 
@@ -751,8 +768,8 @@ const toolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [
     [ PolygonBuilder            , "polygon"         , TT("polygon")          , [ Polygon ] ],
     [ PerpendicularBuilder      , "perpendicular"   , TT("perpendicular")    , [ FootOfPerpendicular ] ],
     [ ParallelLineBuilder       , "parallel-line"   , TT("parallel line")    , [ ParallelLine ] ],
-    [ Circle1Builder            , "circle-by-point" , TT("circle by point")  , [ CircleByPoint ] ],
-    [ Circle2Builder            , "circle-by-radius", TT("circle by radius") , [ CircleByRadius ] ],
+    [ CircleByPointBuilder      , "circle-by-point" , TT("circle by point")  , [ CircleByPoint ] ],
+    [ CircleByRadiusBuilder     , "circle-by-radius", TT("circle by radius") , [ CircleByRadius ] ],
     [ ArcBuilder                , "arc"             , TT("arc")              , [ Arc ] ],
     [ EllipseBuilder            , "ellipse"         , TT("ellipse")          , [ Ellipse ] ],
     [ CirclePointTangentBuilder , "tangent-point"   , TT("tangent point")    , [ CirclePointTangent ] ],

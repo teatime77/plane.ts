@@ -17,8 +17,20 @@ export class Canvas {
         this.ctx.clearRect(0, 0, rc.width, rc.height);
     }
 
-    drawLine(shape : Shape, p1 : Vec2, p2 : Vec2){
-        const color = shape.modeColor();
+    drawLine(shape : Shape | undefined, p1 : Vec2, p2 : Vec2){
+        let color : string;
+        let line_width : number;
+
+        if(shape != undefined){
+
+            color      = shape.modeColor();
+            line_width = shape.modeLineWidth();
+        }
+        else{
+
+            color = fgColor;
+            line_width = 1;
+        }
 
         const pix1 = this.view.toPixPosition(p1);
         const pix2 = this.view.toPixPosition(p2);
@@ -28,7 +40,7 @@ export class Canvas {
         ctx.moveTo(pix1.x, pix1.y);
         ctx.lineTo(pix2.x, pix2.y);
         ctx.strokeStyle = color;
-        ctx.lineWidth = shape.modeLineWidth();
+        ctx.lineWidth = line_width;
         ctx.stroke();   
     }
 

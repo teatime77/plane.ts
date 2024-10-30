@@ -1,5 +1,18 @@
 namespace plane_ts {
 //
+function recalc(shape : MathEntity, changed : Set<MathEntity>){
+    const dependencies = shape.dependencies();
+    for(const dep of dependencies){
+        recalc(dep, changed);
+    }
+
+    if(shape instanceof Shape && dependencies.some(x => changed.has(x)) ){
+        shape.calc();
+
+        changed.add(shape);
+    }
+}
+
 export class View extends Widget {
     static nearThreshold = 8;
     static current : View;
@@ -138,7 +151,7 @@ export class View extends Widget {
 
     allShapes() : MathEntity[] {
         const shapes : MathEntity[] = [];
-        this.getShapes().forEach(x => x.getAllShapes(shapes));
+        this.shapes.forEach(x => x.getAllShapes(shapes));
 
         return unique(shapes);
     }
@@ -170,7 +183,7 @@ export class View extends Widget {
 
             const shapes = this.allRealShapes();
             shapes.forEach(c => c.draw());
-            Builder.tool.draw(this);
+            Builder.tool.drawTool(this);
 
             if(Plane.one.snap_to_grid.checked()){
                 this.grid.showPointer();
@@ -324,11 +337,27 @@ export class View extends Widget {
 
     updateShapes(){
         for(const shape of this.getShapes()){
-            if( shape.dependencies().some(x => this.changed.has(x)) ){
-                shape.calc();
+            let shapes : MathEntity[] = [];
+            
+            shape.getAllShapes(shapes);
 
-                this.changed.add(shape);
+            const bounded_points = shapes.filter(x => x instanceof Point && x.bound != undefined && this.changed.has(x.bound)) as Point[];
+            
+            for(const point of bounded_points){
+
+                if(point.bound instanceof LineSegment){
+
+                    const foot = calcFootOfPerpendicular(point.position, point.bound);
+                    point.setPosition(foot);
+                }
+                else if(point.bound instanceof CircleArc){
+                    point.bound.adjustPosition(point, point.position);
+                }
+
+                this.changed.add(point);
             }
+
+            recalc(shape, this.changed);
         }
     }
 

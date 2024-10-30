@@ -246,6 +246,11 @@ export class LengthSymbol extends Shape {
         return [ this.line ];
     }
 
+    getAllShapes(shapes : MathEntity[]){
+        super.getAllShapes(shapes);
+        this.line.getAllShapes(shapes);
+    }
+
     center() : Vec2 {
         const A = this.line.pointA.position;
         const B = this.line.pointB.position;

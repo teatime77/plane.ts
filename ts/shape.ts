@@ -6,7 +6,7 @@ const Reading = i18n_ts.Reading;
 namespace plane_ts {
 //
 const TT = i18n_ts.TT;
-const fgColor = "black";
+export const fgColor = "black";
 let capturedShape : MathEntity | undefined;
 
 export enum Mode {
