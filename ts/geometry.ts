@@ -42,7 +42,7 @@ export class Midpoint extends Point {
         return obj;
     }
 
-    dependencies() : Shape[] {
+    dependencies() : AbstractShape[] {
         return super.dependencies().concat([ this.pointA, this.pointB ]);
     }
 
@@ -80,7 +80,7 @@ export class FootOfPerpendicular extends Shape {
         shapes.push(this.point, this.line, this.foot);
     }
 
-    dependencies() : Shape[] {
+    dependencies() : AbstractShape[] {
         return [ this.point, this.line ];
     }
 
@@ -151,7 +151,7 @@ export class LineLineIntersection extends Point {
         return obj;
     }
 
-    dependencies() : Shape[] {
+    dependencies() : AbstractShape[] {
         return [ this.lineA, this.lineB ];
     }
 
@@ -199,7 +199,7 @@ export class LineArcIntersection extends Shape {
         shapes.push(this.pointA, this.pointB);
     }
 
-    dependencies() : Shape[] {
+    dependencies() : AbstractShape[] {
         return [ this.line, this.arc ];
     }
 
@@ -281,7 +281,7 @@ export class ArcArcIntersection extends Shape {
         shapes.push(this.pointA, this.pointB);
     }
 
-    dependencies() : Shape[] {
+    dependencies() : AbstractShape[] {
         return [ this.arc1, this.arc2 ];
     }
 
@@ -400,7 +400,7 @@ export class CircleCircleTangent extends Tangent {
         this.lines.forEach(line => line.getAllShapes(shapes));
     }
 
-    dependencies() : Shape[] {
+    dependencies() : AbstractShape[] {
         return super.dependencies().concat([ this.circle1, this.circle2 ]);
     }
 
@@ -510,7 +510,7 @@ export class CirclePointTangent extends Tangent {
         shapes.push(this.circle, this.point, ...this.tangentPoints, ...this.lines);
     }
 
-    dependencies() : Shape[] {
+    dependencies() : AbstractShape[] {
         return super.dependencies().concat([ this.circle, this.point ]);
     }
 

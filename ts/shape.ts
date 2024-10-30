@@ -97,7 +97,7 @@ export abstract class AbstractShape extends Widget implements i18n_ts.Readable, 
         return unique(shapes);
     }
 
-    dependencies() : Shape[] {
+    dependencies() : AbstractShape[] {
         return [];
     }
 
@@ -629,7 +629,7 @@ export abstract class AbstractLine extends Shape {
         return obj;
     }    
 
-    dependencies() : Shape[] {
+    dependencies() : AbstractShape[] {
         return super.dependencies().concat([ this.pointA ]);
     }
 
@@ -670,7 +670,7 @@ export abstract class LineByPoints extends AbstractLine {
         return obj;
     }
 
-    dependencies() : Shape[] {
+    dependencies() : AbstractShape[] {
         return super.dependencies().concat([ this.pointB ]);
     }
 
@@ -725,7 +725,7 @@ export class ParallelLine extends Line {
         return obj;
     }
 
-    dependencies() : Shape[] {
+    dependencies() : AbstractShape[] {
         return super.dependencies().concat([ this.line ]);
     }
 
@@ -766,7 +766,7 @@ export abstract class CircleArcEllipse extends Shape {
         shapes.push(this.center);
     }
 
-    dependencies() : Shape[] {
+    dependencies() : AbstractShape[] {
         return [ this.center ];
     }
 }
@@ -827,7 +827,7 @@ export class CircleByPoint extends Circle {
         shapes.push(this.point);
     }
 
-    dependencies() : Shape[] {
+    dependencies() : AbstractShape[] {
         return super.dependencies().concat([ this.point ]);
     }
 
@@ -892,7 +892,7 @@ export class Ellipse extends CircleArcEllipse {
         shapes.push(this.xPoint);
     }
 
-    dependencies() : Shape[] {
+    dependencies() : AbstractShape[] {
         return super.dependencies().concat([ this.center, this.xPoint ]);
     }
 
@@ -934,7 +934,7 @@ export class Arc extends CircleArc {
         shapes.push(this.pointA, this.pointB);
     }
 
-    dependencies() : Shape[] {
+    dependencies() : AbstractShape[] {
         return super.dependencies().concat([ this.pointA, this.pointB ]);
     }
 
@@ -996,7 +996,7 @@ export class Polygon extends Shape {
         return obj;
     }
 
-    dependencies() : Shape[] {
+    dependencies() : AbstractShape[] {
         return super.dependencies().concat(this.points);
     }
 

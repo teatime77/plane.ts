@@ -11,7 +11,7 @@ export class View extends Widget {
     shapes : AbstractShape[] = [];
     undoStack : AbstractShape[] = [];
 
-    changed : Set<Shape> = new Set<Shape>();
+    changed : Set<AbstractShape> = new Set<AbstractShape>();
 
     downPosition : Vec2 | undefined;
     movePosition : Vec2 | undefined;

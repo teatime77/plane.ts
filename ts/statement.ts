@@ -19,7 +19,7 @@ export class Statement extends AbstractShape {
         }
     }
 
-    dependencies() : Shape[] {
+    dependencies() : AbstractShape[] {
         return this.selectedShapes as Shape[];
     }
 
@@ -88,6 +88,21 @@ export class Statement extends AbstractShape {
         }
         
         Statement.idTimeout = setTimeout(this.showMathText.bind(this), 500);
+    }
+
+    setMode(mode : Mode){
+        super.setMode(mode);
+        if(this.texUI != undefined){
+            let color : string;
+
+            switch(mode){
+            case Mode.none   : color = "transparent"; break;
+            case Mode.depend : color = "blue"       ; break;
+            case Mode.target : color = "red"        ; break;
+            }
+
+            this.texUI.setBorderColor(color);
+        }
     }
 
     show(){    
