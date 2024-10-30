@@ -149,6 +149,12 @@ export abstract class AbstractShape extends Widget implements i18n_ts.Readable, 
             text_block.div.style.display = text_block.div.dataset.display_backup;
         }
     }
+
+    show(){        
+    }
+
+    hide(){        
+    }
 }
 
 export class TextBlock extends AbstractShape {
@@ -204,7 +210,7 @@ export class TextBlock extends AbstractShape {
             if(parser_ts.isGreek(text)){
                 text = `\\${text}`;
             }
-            
+
             parser_ts.renderKatexSub(this.div, text);
         }
         else{

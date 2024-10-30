@@ -48,7 +48,11 @@ export class Statement extends AbstractShape {
     makeTexUI() : layout_ts.TexUI {
         return new layout_ts.TexUI({
             parent : Plane.one.text_block,
-            text : ""
+            text : "",
+            click : async (ev : MouseEvent)=>{
+                const position = View.current.eventPosition(ev);
+                (Builder.tool as StatementBuilder).click(ev, View.current, position, this);
+            }
         });
     }
 
@@ -84,6 +88,18 @@ export class Statement extends AbstractShape {
         }
         
         Statement.idTimeout = setTimeout(this.showMathText.bind(this), 500);
+    }
+
+    show(){    
+        if(this.texUI != undefined){
+            this.texUI.show();
+        }
+    }
+
+    hide(){        
+        if(this.texUI != undefined){
+            this.texUI.hide();
+        }
     }
 }
 
