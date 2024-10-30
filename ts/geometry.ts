@@ -46,7 +46,7 @@ export class Midpoint extends Point {
         return super.dependencies().concat([ this.pointA, this.pointB ]);
     }
 
-    getAllShapes(shapes : Shape[]){
+    getAllShapes(shapes : AbstractShape[]){
         super.getAllShapes(shapes);
         shapes.push(this.pointA, this.pointB);
     }
@@ -75,7 +75,7 @@ export class FootOfPerpendicular extends Shape {
         this.calc();
     }
 
-    getAllShapes(shapes : Shape[]){
+    getAllShapes(shapes : AbstractShape[]){
         super.getAllShapes(shapes);
         shapes.push(this.point, this.line, this.foot);
     }
@@ -194,7 +194,7 @@ export class LineArcIntersection extends Shape {
         return obj;
     }
 
-    getAllShapes(shapes : Shape[]){
+    getAllShapes(shapes : AbstractShape[]){
         super.getAllShapes(shapes);
         shapes.push(this.pointA, this.pointB);
     }
@@ -276,7 +276,7 @@ export class ArcArcIntersection extends Shape {
         return obj;
     }
 
-    getAllShapes(shapes : Shape[]){
+    getAllShapes(shapes : AbstractShape[]){
         super.getAllShapes(shapes);
         shapes.push(this.pointA, this.pointB);
     }
@@ -394,7 +394,7 @@ export class CircleCircleTangent extends Tangent {
         return obj;
     }
 
-    getAllShapes(shapes : Shape[]){
+    getAllShapes(shapes : AbstractShape[]){
         super.getAllShapes(shapes);
         shapes.push(this.point);
         this.lines.forEach(line => line.getAllShapes(shapes));
@@ -505,7 +505,7 @@ export class CirclePointTangent extends Tangent {
         return obj;
     }
 
-    getAllShapes(shapes : Shape[]){
+    getAllShapes(shapes : AbstractShape[]){
         super.getAllShapes(shapes);
         shapes.push(this.circle, this.point, ...this.tangentPoints, ...this.lines);
     }

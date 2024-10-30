@@ -87,7 +87,7 @@ export class SelectionTool extends Builder {
                 view.min = this.minSave!.sub(diff);
                 view.max = this.maxSave!.sub(diff);
 
-                view.allShapes().forEach(x => x.updateCaption());
+                view.allRealShapes().forEach(x => x.updateCaption());
             }
             else{
 
@@ -117,7 +117,7 @@ class PointBuilder extends Builder {
             const new_point = Point.fromArgs(position);
             new_point.setBound(shape);
             new_point.updateCaption();
-            
+
             view.addShape(new_point);
 
             showProperty(new_point, 0);

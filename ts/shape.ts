@@ -86,7 +86,7 @@ export abstract class AbstractShape extends Widget implements i18n_ts.Readable, 
         }
     }
 
-    getAllShapes(shapes : Shape[]){
+    getAllShapes(shapes : AbstractShape[]){
     }
 
 
@@ -412,7 +412,7 @@ export abstract class Shape extends AbstractShape {
         return (this.isOver || this.mode != Mode.none ? 3 : this.lineWidth);
     }
 
-    getAllShapes(shapes : Shape[]){
+    getAllShapes(shapes : AbstractShape[]){
         shapes.push(this);
     }
 
@@ -473,7 +473,7 @@ export class Point extends Shape {
 
         if(this.name == ""){
 
-            const points = View.current.allShapes().filter(x => x instanceof Point).concat(Point.tempPoints);
+            const points = View.current.allRealShapes().filter(x => x instanceof Point).concat(Point.tempPoints);
 
             const upper_latin_letters = i18n_ts.upperLatinLetters;
             const idxes = points.map(x => upper_latin_letters.indexOf(x.name));
@@ -678,7 +678,7 @@ export abstract class LineByPoints extends AbstractLine {
         this.e = this.pointB.sub(this.pointA).unit();
     }
 
-    getAllShapes(shapes : Shape[]){
+    getAllShapes(shapes : AbstractShape[]){
         super.getAllShapes(shapes);
         shapes.push(this.pointA, this.pointB);
     }
@@ -729,7 +729,7 @@ export class ParallelLine extends Line {
         return super.dependencies().concat([ this.line ]);
     }
 
-    getAllShapes(shapes : Shape[]){
+    getAllShapes(shapes : AbstractShape[]){
         super.getAllShapes(shapes);
         shapes.push(this.line);
     }
@@ -761,7 +761,7 @@ export abstract class CircleArcEllipse extends Shape {
         return obj;
     }
 
-    getAllShapes(shapes : Shape[]){
+    getAllShapes(shapes : AbstractShape[]){
         super.getAllShapes(shapes);
         shapes.push(this.center);
     }
@@ -822,7 +822,7 @@ export class CircleByPoint extends Circle {
         return new CircleByPoint({ center : center, point : point, color : color })
     }
 
-    getAllShapes(shapes : Shape[]){
+    getAllShapes(shapes : AbstractShape[]){
         super.getAllShapes(shapes);
         shapes.push(this.point);
     }
@@ -887,7 +887,7 @@ export class Ellipse extends CircleArcEllipse {
         View.current.dirty = true;
     }
 
-    getAllShapes(shapes : Shape[]){
+    getAllShapes(shapes : AbstractShape[]){
         super.getAllShapes(shapes);
         shapes.push(this.xPoint);
     }
@@ -929,7 +929,7 @@ export class Arc extends CircleArc {
         return obj;
     }
 
-    getAllShapes(shapes : Shape[]){
+    getAllShapes(shapes : AbstractShape[]){
         super.getAllShapes(shapes);
         shapes.push(this.pointA, this.pointB);
     }
@@ -1003,7 +1003,7 @@ export class Polygon extends Shape {
     draw(): void {        
     }
 
-    getAllShapes(shapes : Shape[]){
+    getAllShapes(shapes : AbstractShape[]){
         super.getAllShapes(shapes);
         shapes.push(... this.points, ... this.lines);
     }

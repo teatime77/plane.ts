@@ -216,9 +216,9 @@ export function loadData(obj : any){
         throw new MyError();
     }
 
-    view.allShapes().filter(x => x instanceof Point || x instanceof DimensionLine).forEach(x => x.caption!.parent = x);
+    view.allRealShapes().filter(x => x instanceof Point || x instanceof DimensionLine).forEach(x => x.caption!.parent = x);
 
-    view.allShapes().forEach(x => x.updateCaption());
+    view.allRealShapes().forEach(x => x.updateCaption());
 
     (view.shapes.filter(x => x instanceof TextBlock) as TextBlock[]).forEach(x => x.updateTextPosition());
 

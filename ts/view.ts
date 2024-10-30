@@ -132,15 +132,19 @@ export class View extends Widget {
         return this.shapes.filter(x => x instanceof Shape) as Shape[];
     }
 
-    allShapes() : Shape[] {
-        const shapes : Shape[] = [];
+    allRealShapes() : Shape[] {
+        return this.allShapes().filter(x => x instanceof Shape) as Shape[];
+    }
+
+    allShapes() : AbstractShape[] {
+        const shapes : AbstractShape[] = [];
         this.getShapes().forEach(x => x.getAllShapes(shapes));
 
         return unique(shapes);
     }
 
     removeUnusedDivs(){
-        const used_divs = this.allShapes().filter(x => x.caption != undefined).map(x => x.caption!.div);
+        const used_divs = this.allRealShapes().filter(x => x.caption != undefined).map(x => x.caption!.div);
         const used_divs_set = new Set<HTMLDivElement>(used_divs);
         const canvas_divs = Array.from(this.board.getElementsByTagName("div"));
         const unused_divs = canvas_divs.filter(x => !used_divs_set.has);
@@ -164,7 +168,7 @@ export class View extends Widget {
 
             this.grid.showGrid(Plane.one.show_axis.checked(), Plane.one.show_grid.checked());
 
-            const shapes = this.allShapes();
+            const shapes = this.allRealShapes();
             shapes.forEach(c => c.draw());
             Builder.tool.draw(this);
 
@@ -272,7 +276,7 @@ export class View extends Widget {
 
         this.setMinMax(new Vec2(min_x, min_y), new Vec2(max_x, max_y));
 
-        this.allShapes().forEach(x => x.updateCaption());
+        this.allRealShapes().forEach(x => x.updateCaption());
 
         View.current.dirty = true;
     }
@@ -293,7 +297,7 @@ export class View extends Widget {
     }
 
     getShape(position : Vec2) : Shape | undefined {
-        const shapes = this.allShapes();
+        const shapes = this.allRealShapes();
         const point = shapes.filter(x => x instanceof Point).find(x => x.isNear(position));
         if(point != undefined){
             return point;
@@ -345,7 +349,7 @@ export class View extends Widget {
 
         const shape = this.shapes.pop()!;
 
-        const valid_shapes = new Set<Shape>(this.allShapes());
+        const valid_shapes = new Set<AbstractShape>(this.allShapes());
 
         const shapes_created_by_shape =  shape.allShapes().filter(x => ! valid_shapes.has(x));
         shapes_created_by_shape.forEach(x => x.hideTextBlock());
