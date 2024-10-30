@@ -706,6 +706,18 @@ export class LineSegment extends LineByPoints {
     }
 }
 
+export class Ray extends LineByPoints {
+    draw() : void {
+        const l = View.current.max.distance(View.current.min);
+        const p2 = this.pointA.position.add(this.e.mul( l));
+        View.current.canvas.drawLine(this, this.pointA.position, p2);
+    }
+
+    reading(): Reading {
+        return new Reading(this, TT('Draw a ray from point "A" to point "B".'), [ this.pointA, this.pointB ]);
+    }
+}
+
 export class ParallelLine extends Line {   
     line : AbstractLine;
 

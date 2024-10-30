@@ -306,8 +306,8 @@ class ArcBuilder extends Builder {
     }
 }
 
-class LineSegmentBuilder extends Builder {
-    line : LineSegment | undefined;
+class LineByPointsBuilder extends Builder {
+    line : LineByPoints | undefined;
 
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
         if(this.line == undefined){
@@ -323,7 +323,14 @@ class LineSegmentBuilder extends Builder {
             pointA.setMode(Mode.depend);
 
             const pointB = Point.fromArgs(position);
-            this.line = new LineSegment({ pointA, pointB });
+            if(this instanceof LineSegmentBuilder){
+
+                this.line = new LineSegment({ pointA, pointB });
+            }
+            else{
+
+                this.line = new Ray({ pointA, pointB });
+            }
 
             view.addShape(this.line);
         }
@@ -350,6 +357,12 @@ class LineSegmentBuilder extends Builder {
             }
         }
     }
+}
+
+class LineSegmentBuilder extends LineByPointsBuilder {
+}
+
+class RayBuilder extends LineByPointsBuilder {
 }
 
 class PolygonBuilder extends Builder {
@@ -734,6 +747,7 @@ const toolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [
     [ MidpointBuilder           , "mid-point"       , TT("mid point")        , [ Midpoint ] ],
     [ IntersectionBuilder       , "intersection"    , TT("intersection")     , [ LineLineIntersection, LineArcIntersection, ArcArcIntersection ] ],
     [ LineSegmentBuilder        , "line-segment"    , TT("line segment")     , [ LineSegment ] ],
+    [ RayBuilder                , "ray"             , TT("ray")              , [ Ray ] ],
     [ PolygonBuilder            , "polygon"         , TT("polygon")          , [ Polygon ] ],
     [ PerpendicularBuilder      , "perpendicular"   , TT("perpendicular")    , [ FootOfPerpendicular ] ],
     [ ParallelLineBuilder       , "parallel-line"   , TT("parallel line")    , [ ParallelLine ] ],

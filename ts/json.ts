@@ -102,6 +102,9 @@ export function parseObject(obj: any) : any {
     case LineSegment.name:
         return new LineSegment(obj);
 
+    case Ray.name:
+        return new Ray(obj);
+
     case Polygon.name:
         return new Polygon(obj);
 
