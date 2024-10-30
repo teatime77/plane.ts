@@ -115,7 +115,9 @@ class PointBuilder extends Builder {
         if(shape == undefined || shape instanceof LineSegment || shape instanceof Circle){
 
             const new_point = Point.fromArgs(position);
-            new_point.setBound(shape)
+            new_point.setBound(shape);
+            new_point.updateCaption();
+            
             view.addShape(new_point);
 
             showProperty(new_point, 0);

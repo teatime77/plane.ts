@@ -201,6 +201,10 @@ export class TextBlock extends AbstractShape {
 
         if(this.isTex){
 
+            if(parser_ts.isGreek(text)){
+                text = `\\${text}`;
+            }
+            
             parser_ts.renderKatexSub(this.div, text);
         }
         else{
@@ -484,6 +488,10 @@ export class Point extends Shape {
             }
         }
 
+        if(this.caption == undefined){
+            this.caption = this.makeCaption(this);
+        }
+
         Point.tempPoints.push(this);
 
         this.setPosition(obj.position);
@@ -521,7 +529,12 @@ export class Point extends Shape {
     }
 
     updateCaption(){
-        this.caption!.setTextPosition(this.position.x, this.position.y);
+        if(this.caption == undefined){
+            throw new MyError();
+        }
+
+        this.caption.updateTextDiv();
+        this.caption.setTextPosition(this.position.x, this.position.y);
     }
 
     getProperties(){
