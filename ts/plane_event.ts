@@ -85,7 +85,7 @@ export function setCaptionEvent(caption : TextBlock){
     });
 }
 
-export function deleteShapeEvent(shape : AbstractShape, button : HTMLButtonElement){
+export function deleteShapeEvent(shape : MathEntity, button : HTMLButtonElement){
     button.addEventListener("click", (ev : MouseEvent)=>{
         const ok = confirm("Are you sure to delete this shape?");
         if(ok){

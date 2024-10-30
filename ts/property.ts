@@ -219,7 +219,7 @@ export class SelectedShapesProperty extends Property {
 
     span : HTMLSpanElement;
 
-    constructor(statement : Statement, name : string, value : AbstractShape[]){
+    constructor(statement : Statement, name : string, value : MathEntity[]){
         super(statement, name);
         SelectedShapesProperty.one = this;
         this.span = document.createElement("span");
@@ -273,7 +273,7 @@ function addPopSelectedShapes(tbl : HTMLTableElement, shape : Statement){
     tbl.append(row);
 }
 
-function appendDelete(tbl : HTMLTableElement, shape : AbstractShape){
+function appendDelete(tbl : HTMLTableElement, shape : MathEntity){
     const all_dependencies = View.current.allShapes().map(x => x.dependencies()).flat();
 
     const row = document.createElement("tr");
@@ -401,7 +401,7 @@ export function showProperty(widget : Widget, nest : number){
         addPopSelectedShapes(tbl, widget);
     }
 
-    if(widget instanceof AbstractShape){
+    if(widget instanceof MathEntity){
         appendDelete(tbl, widget);
     }
 }

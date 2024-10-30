@@ -60,7 +60,7 @@ export class Angle extends Shape {
         this.angleMark = angle_mark;
     }
 
-    dependencies() : AbstractShape[] {
+    dependencies() : MathEntity[] {
         return [ this.lineA, this.lineB ];
     }
 
@@ -161,7 +161,7 @@ export class DimensionLine extends Shape {
         ])
     }
 
-    dependencies() : AbstractShape[] {
+    dependencies() : MathEntity[] {
         return [ this.pointA, this.pointB ];
     }
 
@@ -242,7 +242,7 @@ export class LengthSymbol extends Shape {
         ])
     }
 
-    dependencies() : AbstractShape[] {
+    dependencies() : MathEntity[] {
         return [ this.line ];
     }
 

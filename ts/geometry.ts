@@ -42,11 +42,11 @@ export class Midpoint extends Point {
         return obj;
     }
 
-    dependencies() : AbstractShape[] {
+    dependencies() : MathEntity[] {
         return super.dependencies().concat([ this.pointA, this.pointB ]);
     }
 
-    getAllShapes(shapes : AbstractShape[]){
+    getAllShapes(shapes : MathEntity[]){
         super.getAllShapes(shapes);
         shapes.push(this.pointA, this.pointB);
     }
@@ -75,12 +75,12 @@ export class FootOfPerpendicular extends Shape {
         this.calc();
     }
 
-    getAllShapes(shapes : AbstractShape[]){
+    getAllShapes(shapes : MathEntity[]){
         super.getAllShapes(shapes);
         shapes.push(this.point, this.line, this.foot);
     }
 
-    dependencies() : AbstractShape[] {
+    dependencies() : MathEntity[] {
         return [ this.point, this.line ];
     }
 
@@ -151,7 +151,7 @@ export class LineLineIntersection extends Point {
         return obj;
     }
 
-    dependencies() : AbstractShape[] {
+    dependencies() : MathEntity[] {
         return [ this.lineA, this.lineB ];
     }
 
@@ -194,12 +194,12 @@ export class LineArcIntersection extends Shape {
         return obj;
     }
 
-    getAllShapes(shapes : AbstractShape[]){
+    getAllShapes(shapes : MathEntity[]){
         super.getAllShapes(shapes);
         shapes.push(this.pointA, this.pointB);
     }
 
-    dependencies() : AbstractShape[] {
+    dependencies() : MathEntity[] {
         return [ this.line, this.arc ];
     }
 
@@ -276,12 +276,12 @@ export class ArcArcIntersection extends Shape {
         return obj;
     }
 
-    getAllShapes(shapes : AbstractShape[]){
+    getAllShapes(shapes : MathEntity[]){
         super.getAllShapes(shapes);
         shapes.push(this.pointA, this.pointB);
     }
 
-    dependencies() : AbstractShape[] {
+    dependencies() : MathEntity[] {
         return [ this.arc1, this.arc2 ];
     }
 
@@ -394,13 +394,13 @@ export class CircleCircleTangent extends Tangent {
         return obj;
     }
 
-    getAllShapes(shapes : AbstractShape[]){
+    getAllShapes(shapes : MathEntity[]){
         super.getAllShapes(shapes);
         shapes.push(this.point);
         this.lines.forEach(line => line.getAllShapes(shapes));
     }
 
-    dependencies() : AbstractShape[] {
+    dependencies() : MathEntity[] {
         return super.dependencies().concat([ this.circle1, this.circle2 ]);
     }
 
@@ -505,12 +505,12 @@ export class CirclePointTangent extends Tangent {
         return obj;
     }
 
-    getAllShapes(shapes : AbstractShape[]){
+    getAllShapes(shapes : MathEntity[]){
         super.getAllShapes(shapes);
         shapes.push(this.circle, this.point, ...this.tangentPoints, ...this.lines);
     }
 
-    dependencies() : AbstractShape[] {
+    dependencies() : MathEntity[] {
         return super.dependencies().concat([ this.circle, this.point ]);
     }
 

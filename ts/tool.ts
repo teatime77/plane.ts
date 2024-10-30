@@ -715,7 +715,7 @@ export class StatementBuilder extends Builder {
         showProperty(this.statement, 0);
     }
 
-    click(event : MouseEvent, view : View, position : Vec2, shape : AbstractShape | undefined){        
+    click(event : MouseEvent, view : View, position : Vec2, shape : MathEntity | undefined){        
         if(shape != undefined){
 
             this.statement.selectedShapes.push(shape);
@@ -728,7 +728,7 @@ export class StatementBuilder extends Builder {
     }
 }
 
-const toolList : [typeof Builder, string, string, (typeof AbstractShape)[]][] = [
+const toolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [
     [ SelectionTool             , "selection"       , TT("selection")        , [  ] ],
     [ PointBuilder              , "point"           , TT("point")            , [ Point ] ],
     [ MidpointBuilder           , "mid-point"       , TT("mid point")        , [ Midpoint ] ],
@@ -750,7 +750,7 @@ const toolList : [typeof Builder, string, string, (typeof AbstractShape)[]][] = 
     [ StatementBuilder          , "statement"       , TT("statement")        , [ Statement ] ],
 ];
 
-export function makeShapeButton(shape : AbstractShape) : layout_ts.Button {
+export function makeShapeButton(shape : MathEntity) : layout_ts.Button {
     let shape_img_name : string | undefined;
 
     for(const [ tool, img_name, title, shapes] of toolList){
@@ -777,7 +777,7 @@ export function makeShapeButton(shape : AbstractShape) : layout_ts.Button {
     return button;
 }
 
-export function addShapeList(shape : AbstractShape){
+export function addShapeList(shape : MathEntity){
     const button = makeShapeButton(shape);
     
     Plane.one.shapes_block.addChild(button);

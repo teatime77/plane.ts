@@ -4,14 +4,14 @@ type Term = parser_ts.Term;
 const parseMath = parser_ts.parseMath;
 const TT = i18n_ts.TT;
 
-export class Statement extends AbstractShape {
+export class Statement extends MathEntity {
     static idTimeout : number | undefined;
 
     mathText : string = "";
     texUI? : layout_ts.TexUI;
-    selectedShapes : AbstractShape[];
+    selectedShapes : MathEntity[];
 
-    constructor(obj : { narration? : string, shapes : AbstractShape[], mathText? : string }){
+    constructor(obj : { narration? : string, shapes : MathEntity[], mathText? : string }){
         super(obj);
         this.selectedShapes = obj.shapes;
         if(obj.mathText != undefined){
@@ -19,7 +19,7 @@ export class Statement extends AbstractShape {
         }
     }
 
-    dependencies() : AbstractShape[] {
+    dependencies() : MathEntity[] {
         return this.selectedShapes as Shape[];
     }
 

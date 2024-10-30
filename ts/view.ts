@@ -8,10 +8,10 @@ export class View extends Widget {
     canvas : Canvas;
     grid : Grid;
 
-    shapes : AbstractShape[] = [];
-    undoStack : AbstractShape[] = [];
+    shapes : MathEntity[] = [];
+    undoStack : MathEntity[] = [];
 
-    changed : Set<AbstractShape> = new Set<AbstractShape>();
+    changed : Set<MathEntity> = new Set<MathEntity>();
 
     downPosition : Vec2 | undefined;
     movePosition : Vec2 | undefined;
@@ -136,8 +136,8 @@ export class View extends Widget {
         return this.allShapes().filter(x => x instanceof Shape) as Shape[];
     }
 
-    allShapes() : AbstractShape[] {
-        const shapes : AbstractShape[] = [];
+    allShapes() : MathEntity[] {
+        const shapes : MathEntity[] = [];
         this.getShapes().forEach(x => x.getAllShapes(shapes));
 
         return unique(shapes);
@@ -291,7 +291,7 @@ export class View extends Widget {
         msg(`resize: w:${this.board.width} h:${this.board.height} max:${this.max}`);
     }
 
-    addShape(shape : AbstractShape){
+    addShape(shape : MathEntity){
         this.shapes.push(shape);
         addShapeList(shape);
     }
@@ -349,7 +349,7 @@ export class View extends Widget {
 
         const shape = this.shapes.pop()!;
 
-        const valid_shapes = new Set<AbstractShape>(this.allShapes());
+        const valid_shapes = new Set<MathEntity>(this.allShapes());
 
         const shapes_created_by_shape =  shape.allShapes().filter(x => ! valid_shapes.has(x));
         shapes_created_by_shape.forEach(x => x.hideTextBlock());

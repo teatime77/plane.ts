@@ -7,7 +7,7 @@ namespace plane_ts {
 //
 const TT = i18n_ts.TT;
 const fgColor = "black";
-let capturedShape : AbstractShape | undefined;
+let capturedShape : MathEntity | undefined;
 
 export enum Mode {
     none,
@@ -15,7 +15,7 @@ export enum Mode {
     target
 }
 
-export abstract class AbstractShape extends Widget implements i18n_ts.Readable, parser_ts.Highlightable {
+export abstract class MathEntity extends Widget implements i18n_ts.Readable, parser_ts.Highlightable {
     visible : boolean = true;
     mode : Mode = Mode.none;
     isOver : boolean = false;
@@ -86,7 +86,7 @@ export abstract class AbstractShape extends Widget implements i18n_ts.Readable, 
         }
     }
 
-    getAllShapes(shapes : AbstractShape[]){
+    getAllShapes(shapes : MathEntity[]){
     }
 
 
@@ -97,7 +97,7 @@ export abstract class AbstractShape extends Widget implements i18n_ts.Readable, 
         return unique(shapes);
     }
 
-    dependencies() : AbstractShape[] {
+    dependencies() : MathEntity[] {
         return [];
     }
 
@@ -113,7 +113,7 @@ export abstract class AbstractShape extends Widget implements i18n_ts.Readable, 
         deleted.add(this.id);
 
         for(let [name, val] of Object.entries(this)){
-            if(val instanceof AbstractShape){
+            if(val instanceof MathEntity){
                 val.delete(deleted);
             }
         }    
@@ -157,15 +157,15 @@ export abstract class AbstractShape extends Widget implements i18n_ts.Readable, 
     }
 }
 
-export class TextBlock extends AbstractShape {
-    parent : AbstractShape | undefined;
+export class TextBlock extends MathEntity {
+    parent : MathEntity | undefined;
     text  : string;
     isTex : boolean;
     div   : HTMLDivElement;
 
     offset : Vec2 = new Vec2(0, 0);
 
-    constructor(obj : { parent? : AbstractShape, text : string, isTex : boolean, offset : Vec2 }){
+    constructor(obj : { parent? : MathEntity, text : string, isTex : boolean, offset : Vec2 }){
         super(obj);
         this.parent = obj.parent;
         this.text  = obj.text;
@@ -296,7 +296,7 @@ export class TextBlock extends AbstractShape {
     }
 }
 
-export abstract class Shape extends AbstractShape {
+export abstract class Shape extends MathEntity {
     name      : string = "";
     color     : string = fgColor;
     lineWidth : number = 1;
@@ -359,7 +359,7 @@ export abstract class Shape extends AbstractShape {
         return obj;
     }
 
-    makeCaption(parent : AbstractShape) : TextBlock {
+    makeCaption(parent : MathEntity) : TextBlock {
         const x = fromXPixScale(10);
         const y = fromYPixScale(20);
         return new TextBlock( { parent, text : "", isTex : false, offset : new Vec2(x, y) });
@@ -412,7 +412,7 @@ export abstract class Shape extends AbstractShape {
         return (this.isOver || this.mode != Mode.none ? 3 : this.lineWidth);
     }
 
-    getAllShapes(shapes : AbstractShape[]){
+    getAllShapes(shapes : MathEntity[]){
         shapes.push(this);
     }
 
@@ -629,7 +629,7 @@ export abstract class AbstractLine extends Shape {
         return obj;
     }    
 
-    dependencies() : AbstractShape[] {
+    dependencies() : MathEntity[] {
         return super.dependencies().concat([ this.pointA ]);
     }
 
@@ -670,7 +670,7 @@ export abstract class LineByPoints extends AbstractLine {
         return obj;
     }
 
-    dependencies() : AbstractShape[] {
+    dependencies() : MathEntity[] {
         return super.dependencies().concat([ this.pointB ]);
     }
 
@@ -678,7 +678,7 @@ export abstract class LineByPoints extends AbstractLine {
         this.e = this.pointB.sub(this.pointA).unit();
     }
 
-    getAllShapes(shapes : AbstractShape[]){
+    getAllShapes(shapes : MathEntity[]){
         super.getAllShapes(shapes);
         shapes.push(this.pointA, this.pointB);
     }
@@ -725,11 +725,11 @@ export class ParallelLine extends Line {
         return obj;
     }
 
-    dependencies() : AbstractShape[] {
+    dependencies() : MathEntity[] {
         return super.dependencies().concat([ this.line ]);
     }
 
-    getAllShapes(shapes : AbstractShape[]){
+    getAllShapes(shapes : MathEntity[]){
         super.getAllShapes(shapes);
         shapes.push(this.line);
     }
@@ -761,12 +761,12 @@ export abstract class CircleArcEllipse extends Shape {
         return obj;
     }
 
-    getAllShapes(shapes : AbstractShape[]){
+    getAllShapes(shapes : MathEntity[]){
         super.getAllShapes(shapes);
         shapes.push(this.center);
     }
 
-    dependencies() : AbstractShape[] {
+    dependencies() : MathEntity[] {
         return [ this.center ];
     }
 }
@@ -822,12 +822,12 @@ export class CircleByPoint extends Circle {
         return new CircleByPoint({ center : center, point : point, color : color })
     }
 
-    getAllShapes(shapes : AbstractShape[]){
+    getAllShapes(shapes : MathEntity[]){
         super.getAllShapes(shapes);
         shapes.push(this.point);
     }
 
-    dependencies() : AbstractShape[] {
+    dependencies() : MathEntity[] {
         return super.dependencies().concat([ this.point ]);
     }
 
@@ -887,12 +887,12 @@ export class Ellipse extends CircleArcEllipse {
         View.current.dirty = true;
     }
 
-    getAllShapes(shapes : AbstractShape[]){
+    getAllShapes(shapes : MathEntity[]){
         super.getAllShapes(shapes);
         shapes.push(this.xPoint);
     }
 
-    dependencies() : AbstractShape[] {
+    dependencies() : MathEntity[] {
         return super.dependencies().concat([ this.center, this.xPoint ]);
     }
 
@@ -929,12 +929,12 @@ export class Arc extends CircleArc {
         return obj;
     }
 
-    getAllShapes(shapes : AbstractShape[]){
+    getAllShapes(shapes : MathEntity[]){
         super.getAllShapes(shapes);
         shapes.push(this.pointA, this.pointB);
     }
 
-    dependencies() : AbstractShape[] {
+    dependencies() : MathEntity[] {
         return super.dependencies().concat([ this.pointA, this.pointB ]);
     }
 
@@ -996,14 +996,14 @@ export class Polygon extends Shape {
         return obj;
     }
 
-    dependencies() : AbstractShape[] {
+    dependencies() : MathEntity[] {
         return super.dependencies().concat(this.points);
     }
 
     draw(): void {        
     }
 
-    getAllShapes(shapes : AbstractShape[]){
+    getAllShapes(shapes : MathEntity[]){
         super.getAllShapes(shapes);
         shapes.push(... this.points, ... this.lines);
     }
