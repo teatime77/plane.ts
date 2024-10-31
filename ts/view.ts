@@ -182,7 +182,19 @@ export class View extends Widget {
             this.grid.showGrid(Plane.one.show_axis.checked(), Plane.one.show_grid.checked());
 
             const shapes = this.allRealShapes();
-            shapes.forEach(c => c.draw());
+            if(Plane.one.isPlaying){
+
+                shapes.filter(x => x.visible).forEach(c => c.draw());
+            }
+            else{
+
+                shapes.forEach(c => c.draw());
+            }
+
+            const statements = this.shapes.filter(x => x instanceof Statement) as Statement[];
+            const selected_shapes = statements.map(x => x.selectedShapes.filter(y => y instanceof SelectedShape)).flat() as SelectedShape[];
+            selected_shapes.forEach(x => x.draw());
+
             Builder.tool.drawTool(this);
 
             if(Plane.one.snap_to_grid.checked()){

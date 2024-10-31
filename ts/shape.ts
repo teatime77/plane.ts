@@ -238,6 +238,14 @@ export class TextBlock extends MathEntity {
         }
     }
 
+    show(){        
+        this.div.style.display = "";
+    }
+
+    hide(){        
+        this.div.style.display = "none";
+    }
+
     setIsTex(is_tex : boolean){
         this.isTex = is_tex;
         this.updateTextDiv();
@@ -435,6 +443,18 @@ export abstract class Shape extends MathEntity {
     reading() : Reading {
         const name = (this.name != "" ? this.name : this.constructor.name);
         return new Reading(this, i18n_ts.token(name), []);
+    }
+
+    show(){        
+        if(this.caption != undefined){
+            this.caption.show()
+        }
+    }
+
+    hide(){        
+        if(this.caption != undefined){
+            this.caption.hide()
+        }
     }
 
     delete(deleted : Set<number>){        

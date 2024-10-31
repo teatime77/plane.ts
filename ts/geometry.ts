@@ -239,8 +239,6 @@ export class LineArcIntersection extends Shape {
     }
 
     draw() : void {
-        this.pointA.draw();
-        this.pointB.draw();
     }
 
     reading(): Reading {
@@ -531,6 +529,45 @@ export class CirclePointTangent extends Tangent {
     reading(): Reading {
         return new Reading(this, TT('Draw a tangent line from point "A" to the circle, and let the points of tangency be points "B" and "C".'),
             [this.point].concat(this.tangentPoints));
+    }
+}
+
+export class SelectedShape extends MathEntity {
+    specifiedShapes : Shape[];
+
+    constructor(obj : { specifiedShapes : Shape[] }){
+        super(obj);
+        this.specifiedShapes = obj.specifiedShapes;
+    }
+
+    makeObj() : any {
+        return Object.assign(super.makeObj(), {
+            specifiedShapes : this.specifiedShapes.map(x => x.toObj())
+        });
+    }
+
+    draw(){
+        if(this.specifiedShapes.every(x => x instanceof Point)){
+            this.drawPolygon();
+        }
+    }
+
+    drawPolygon(){
+        const points = this.specifiedShapes as Point[];
+        const positions : [Vec2, Vec2][] = [];
+
+        for(const [idx, pt] of points.entries()){
+            const p1 = points[idx];
+            const p2 = points[(idx + 1) % points.length];
+
+            positions.push([p1.position, p2.position]);
+        }
+
+        View.current.canvas.drawLines(positions, "red", 3);
+    }
+
+    reading() : Reading {
+        return new Reading(this, "", []);
     }
 }
 

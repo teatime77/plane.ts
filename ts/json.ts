@@ -178,6 +178,9 @@ export function parseObject(obj: any) : any {
     case Statement.name:
         return new Statement(obj);
 
+    case SelectedShape.name:
+        return new SelectedShape(obj);
+
     default:
         throw new MyError();
     }

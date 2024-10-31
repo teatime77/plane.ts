@@ -785,6 +785,7 @@ class TextBlockBuilder extends Builder {
 
 export class StatementBuilder extends Builder {
     statement : Statement;
+    specifiedShapes : Shape[] = [];
 
     constructor(){
         super();
@@ -797,10 +798,40 @@ export class StatementBuilder extends Builder {
 
     click(event : MouseEvent, view : View, position : Vec2, shape : MathEntity | undefined){        
         if(shape != undefined){
+            let selected_shape = shape;
 
-            this.statement.selectedShapes.push(shape);
+            if(event.ctrlKey){
 
-            const button = makeShapeButton(shape);
+                if(shape instanceof Shape){
+                    shape.setMode(Mode.depend);
+                    this.specifiedShapes.push(shape);
+                }
+
+                return;
+            }
+            else{
+
+                if(this.specifiedShapes.length != 0){
+
+                    if(shape instanceof Shape){
+
+                        this.specifiedShapes.push(shape);
+
+                        selected_shape = new SelectedShape({ specifiedShapes : this.specifiedShapes });
+                        this.statement.selectedShapes.push(selected_shape);
+                        this.specifiedShapes = [];
+                    }
+                    else{
+                        return;
+                    }
+                }
+                else{
+
+                    this.statement.selectedShapes.push(shape);
+                }
+            }
+
+            const button = makeShapeButton(selected_shape);
             button.button.style.position = "";
 
             SelectedShapesProperty.one.span.append(button.button);
@@ -835,16 +866,23 @@ const toolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [
 export function makeShapeButton(shape : MathEntity) : layout_ts.Button {
     let shape_img_name : string | undefined;
 
-    for(const [ tool, img_name, title, shapes] of toolList){
-        if(shapes.some(x => shape instanceof x)){
+    if(shape instanceof SelectedShape){
 
-            shape_img_name = img_name;
-            break;
-        }
+        shape_img_name = "selected-shape";
     }
+    else{
 
-    if(shape_img_name == undefined){
-        throw new MyError();
+        for(const [ tool, img_name, title, shapes] of toolList){
+            if(shapes.some(x => shape instanceof x)){
+
+                shape_img_name = img_name;
+                break;
+            }
+        }
+
+        if(shape_img_name == undefined){
+            throw new MyError();
+        }
     }
 
     const button = layout_ts.$button({
