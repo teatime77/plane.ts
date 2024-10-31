@@ -7,6 +7,7 @@ namespace plane_ts {
 //
 const TT = i18n_ts.TT;
 export const fgColor = "black";
+export const lineWidth = 1;
 let capturedShape : MathEntity | undefined;
 
 export enum Mode {
@@ -468,7 +469,7 @@ export class Point extends Shape {
         return new Point( { position } );
     }
 
-    constructor(obj : { position : Vec2 }){
+    constructor(obj : { position : Vec2, bound? : AbstractLine | CircleArc }){
         super(obj);
 
         if(this.name == ""){
@@ -494,6 +495,10 @@ export class Point extends Shape {
             }
         }
 
+        if(obj.bound != undefined){
+            this.bound = obj.bound;
+        }
+
         if(this.caption == undefined){
             this.caption = this.makeCaption(this);
         }
@@ -511,6 +516,10 @@ export class Point extends Shape {
         let obj = Object.assign(super.makeObj(), {
             position : this.position
         });
+
+        if(this.bound != undefined){
+            obj.bound = this.bound.toObj();
+        }
 
         return obj;
     }
@@ -856,22 +865,30 @@ export class CircleByPoint extends Circle {
 }
 
 export class CircleByRadius extends Circle {
-    private radius_ : number;
+    private lengthSymbol : LengthSymbol;
 
-    constructor(obj : { center : Point, radius : number }){
+    constructor(obj : { center : Point, lengthSymbol : LengthSymbol }){
         super(obj);
-        this.radius_ = obj.radius;
+        this.lengthSymbol = obj.lengthSymbol;
     }
 
-    calc(){        
+    makeObj() : any {
+        return Object.assign(super.makeObj(), {
+            lengthSymbol : this.lengthSymbol.toObj(),
+        });
+    }
+
+    getAllShapes(shapes : MathEntity[]){
+        super.getAllShapes(shapes);
+        this.lengthSymbol.getAllShapes(shapes);
+    }
+
+    dependencies() : MathEntity[] {
+        return super.dependencies().concat([ this.lengthSymbol ]);
     }
 
     radius() : number {
-        return this.radius_;
-    }
-
-    setRadius(radius : number){
-        this.radius_ = radius;
+        return this.lengthSymbol.length();
     }
 }
 
@@ -922,7 +939,7 @@ export class Ellipse extends CircleArcEllipse {
 }
 
 
-export class Arc extends CircleArc {
+export class ArcByPoint extends CircleArc {
     pointA : Point;
     pointB : Point;
 
@@ -979,13 +996,117 @@ export class Arc extends CircleArc {
     }
 
     draw(): void {
+        const stroke_color = this.modeColor();
+        const line_width = this.modeLineWidth();
+
         const [th1, th2] = this.angles();
-        const color = this.modeColor();
-        View.current.canvas.drawArc(this.center.position, this.radius(), null, color, this.lineWidth, th1, th2);
+        View.current.canvas.drawArc(this.center.position, this.radius(), null, stroke_color, line_width, th1, th2);
     }
 
     radius() : number {
         return this.center.position.distance(this.pointA.position);
+    }
+}
+
+
+export class ArcByRadius extends CircleArc {
+    private lengthSymbol : LengthSymbol;
+    startAngle : number;
+    endAngle : number;
+    pointA : Point;
+    pointB : Point;
+
+    constructor(obj : { center : Point, lengthSymbol : LengthSymbol, startAngle : number, endAngle : number  }){
+        super(obj);
+        this.lengthSymbol = obj.lengthSymbol;
+        this.startAngle   = obj.startAngle;
+        this.endAngle     = obj.endAngle;
+
+        this.pointA = new Point({ position : this.positionFromAngle(this.startAngle) });
+        this.pointB = new Point({ position : this.positionFromAngle(this.endAngle) });
+
+        this.pointA.bound = this;
+        this.pointB.bound = this;
+    }
+
+    makeObj() : any {
+        return Object.assign(super.makeObj(), {
+            lengthSymbol : this.lengthSymbol.toObj(),
+            startAngle   : this.startAngle,
+            endAngle     : this.endAngle
+        });
+    }
+
+    getAllShapes(shapes : MathEntity[]){
+        super.getAllShapes(shapes);
+        shapes.push(this.pointA, this.pointB);
+        this.lengthSymbol.getAllShapes(shapes);
+    }
+
+    dependencies() : MathEntity[] {
+        return super.dependencies().concat([ this.lengthSymbol ]);
+    }
+
+    positionFromAngle(theta : number) : Vec2 {
+        const length = this.lengthSymbol.length();
+
+        const x = this.center.position.x + length * Math.cos(theta);
+        const y = this.center.position.y + length * Math.sin(theta);
+        
+        return new Vec2(x, y);
+    }
+
+    adjustPosition(point : Point, position : Vec2){
+        const v = position.sub(this.center.position);
+        const theta = Math.atan2(v.y, v.x);
+
+        if(point == this.pointA){
+            this.startAngle = theta;
+        }
+        else{
+            this.endAngle   = theta;
+        }
+        
+        const new_pos = this.positionFromAngle(theta);
+        point.setPosition(new_pos);
+    }
+
+    calc(){        
+        this.pointA.setPosition( this.positionFromAngle(this.startAngle) )
+        this.pointB.setPosition( this.positionFromAngle(this.endAngle) )
+    }
+
+    isNear(position : Vec2) : boolean {
+        const r = position.distance(this.center.position);
+        if(View.current.isNear( Math.abs(r - this.radius()) )){
+
+            const v = position.sub(this.center.position);
+            const th = Math.atan2(v.y, v.x);
+
+            return this.startAngle <= th && th <= this.endAngle;
+        }
+
+        return false;
+    }
+
+    angles() : [number, number] {
+        const v1 = this.pointA.sub(this.center);
+        const th1 = Math.atan2(v1.y, v1.x);
+
+        const v2 = this.pointB.sub(this.center);
+        const th2 = Math.atan2(v2.y, v2.x);
+
+        return [th1, th2];
+    }
+
+    draw(): void {
+        const stroke_color = this.modeColor();
+        const line_width = this.modeLineWidth();
+        View.current.canvas.drawArc(this.center.position, this.radius(), null, stroke_color, line_width, this.startAngle, this.endAngle);
+    }
+
+    radius() : number {
+        return this.lengthSymbol.length();
     }
 }
 

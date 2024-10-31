@@ -17,6 +17,15 @@ export class Builder {
     pointerup(event : PointerEvent, view : View, position : Vec2, shape : Shape | undefined){
     }
 
+    getPosition(position : Vec2, shape : Shape | undefined) : Vec2 {
+        if(shape instanceof Point){
+            return shape.position;
+        }
+        else{
+            return position;
+        }
+    }
+
     makePointOnClick(view : View, position : Vec2, shape : Shape | undefined) : Point {
         if(shape instanceof Point){
             return shape;
@@ -193,29 +202,43 @@ class CircleByPointBuilder extends Builder {
 
 
 class CircleByRadiusBuilder extends Builder {
-    circle : CircleByRadius | undefined;
+    center?   : Point;
+    position? : Vec2;
 
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
-        if(this.circle == undefined){
+        if(this.center == undefined){
 
-            if(shape == undefined || !(shape instanceof Point)){
-                shape = Point.fromArgs(position);
-            }
-            shape.setMode(Mode.depend);
+            this.center = this.makePointOnClick(view, position, shape);
+            this.center.setMode(Mode.depend);
 
-            this.circle = new CircleByRadius({ center : (shape as Point) , radius : 0 });
-
-            view.addShape(this.circle);
+            this.position = this.center.position;
         }
         else{
-            this.circle = undefined;
-            this.resetTool();
+            if(shape instanceof LengthSymbol){
+
+                const circle = new CircleByRadius({ center : this.center , lengthSymbol : shape });
+                view.addShape(circle);
+    
+                this.center = undefined;
+                this.position = undefined;
+    
+                this.resetTool();
+            }            
         }
     }
 
-    pointermove(event : PointerEvent, view : View, position : Vec2, point : Shape | undefined){
-        if(this.circle != undefined){
-            this.circle.setRadius( position.distance(this.circle.center.position) );
+    pointermove(event : PointerEvent, view : View, position : Vec2, shape : Shape | undefined){
+        if(this.center != undefined){
+
+            this.position = this.getPosition(position, shape);
+            View.current.dirty = true;
+        }
+    }
+
+    drawTool(view : View){
+        if(this.center != undefined){
+            const radius = this.center.position.distance(this.position!);
+            View.current.canvas.drawCircle(this.center.position, radius, null, fgColor, lineWidth);
         }
     }
 }
@@ -266,8 +289,8 @@ class EllipseBuilder extends Builder {
     }
 }
 
-class ArcBuilder extends Builder {
-    arc    : Arc   | undefined;
+class ArcByPointBuilder extends Builder {
+    arc    : ArcByPoint   | undefined;
     center : Point | undefined;
     pointA : Point | undefined;
     pointB : Point | undefined;
@@ -284,7 +307,7 @@ class ArcBuilder extends Builder {
 
             this.pointB = Point.fromArgs(position);
 
-            this.arc = new Arc({ center : this.center, pointA : this.pointA, pointB : this.pointB });
+            this.arc = new ArcByPoint({ center : this.center, pointA : this.pointA, pointB : this.pointB });
             this.pointB.bound = this.arc;
 
             view.addShape(this.arc);
@@ -305,6 +328,33 @@ class ArcBuilder extends Builder {
         }
     }
 }
+
+class ArcByRadiusBuilder extends Builder {
+    center?   : Point;
+
+    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
+        if(this.center == undefined){
+
+            this.center = this.makePointOnClick(view, position, shape);
+            this.center.setMode(Mode.depend);
+        }
+        else{
+            if(shape instanceof LengthSymbol){
+
+                const startAngle = Math.PI * 1 / 6;
+                const endAngle   = Math.PI * 2 / 6;
+
+                const arc = new ArcByRadius({ center : this.center , lengthSymbol : shape, startAngle, endAngle });
+                view.addShape(arc);
+    
+                this.center = undefined;
+    
+                this.resetTool();
+            }            
+        }
+    }
+}
+
 
 export function drawTentativeLine(tool : Builder, pointA? : Point, position? : Vec2){
     if(pointA != undefined && position != undefined){
@@ -770,7 +820,8 @@ const toolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [
     [ ParallelLineBuilder       , "parallel-line"   , TT("parallel line")    , [ ParallelLine ] ],
     [ CircleByPointBuilder      , "circle-by-point" , TT("circle by point")  , [ CircleByPoint ] ],
     [ CircleByRadiusBuilder     , "circle-by-radius", TT("circle by radius") , [ CircleByRadius ] ],
-    [ ArcBuilder                , "arc"             , TT("arc")              , [ Arc ] ],
+    [ ArcByPointBuilder         , "arc-by-point"    , TT("arc by point")     , [ ArcByPoint ] ],
+    [ ArcByRadiusBuilder        , "arc-by-radius"   , TT("arc by radius")    , [ ArcByRadius ] ],
     [ EllipseBuilder            , "ellipse"         , TT("ellipse")          , [ Ellipse ] ],
     [ CirclePointTangentBuilder , "tangent-point"   , TT("tangent point")    , [ CirclePointTangent ] ],
     [ CircleCircleTangentBuilder, "tangent-circles" , TT("tangent circles")  , [ CircleCircleTangent ] ],

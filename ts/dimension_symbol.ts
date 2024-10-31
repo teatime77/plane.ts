@@ -264,6 +264,13 @@ export class LengthSymbol extends Shape {
         return View.current.isNear(real_distance);
     }
 
+    length() : number {
+        const A = this.line.pointA.position;
+        const B = this.line.pointB.position;
+
+        return A.distance(B);
+    }
+
     draw() : void {
         const A = this.line.pointA.position;
         const B = this.line.pointB.position;

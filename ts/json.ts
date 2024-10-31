@@ -119,6 +119,9 @@ export function parseObject(obj: any) : any {
 
     case DimensionLine.name:
         return new DimensionLine(obj);
+
+    case LengthSymbol.name:
+        return new LengthSymbol(obj);
     
     // case Triangle.name:
     //     return new Triangle(obj);
@@ -147,9 +150,12 @@ export function parseObject(obj: any) : any {
     case CircleCircleTangent.name:
         return new CircleCircleTangent(obj);
 
-    case Arc.name:
-        return new Arc(obj);
+    case ArcByPoint.name:
+        return new ArcByPoint(obj);
 
+    case ArcByRadius.name:
+        return new ArcByRadius(obj);
+    
     case Angle.name:
         return new Angle(obj);
 
