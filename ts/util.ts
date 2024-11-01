@@ -27,7 +27,7 @@ export function $sel(id : string) : HTMLSelectElement {
         
 export class MyError extends Error {
     constructor(text : string = ""){
-        super();
+        super(text);
     }
 }
 
@@ -146,6 +146,30 @@ export async function sleep(milliseconds : number) : Promise<void> {
             resolve();
         }, milliseconds);
     });
+}
+
+function makeName(){
+    const points = View.current.allRealShapes().filter(x => x instanceof Point).concat(Point.tempPoints);
+
+    const upper_latin_letters = i18n_ts.upperLatinLetters;
+    const idxes = points.map(x => upper_latin_letters.indexOf(x.name));
+
+    let name : string;
+    if(idxes.length == 0){
+        name = upper_latin_letters[0];
+    }
+    else{
+        const max_idx = Math.max(...idxes);
+        if(max_idx == -1){
+            name = upper_latin_letters[0];
+        }
+        else if(max_idx + 1 < upper_latin_letters.length){
+            name = upper_latin_letters[max_idx + 1];
+        }
+        else{
+            throw new MyError();
+        }
+    }
 }
 
 }

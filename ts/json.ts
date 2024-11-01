@@ -2,6 +2,8 @@ namespace plane_ts {
 
 export abstract class Widget {
     static refMap : Map<number, any> = new Map<number, any>();
+    static defferedBound : Map<number, Point>;
+    // static 
     static maxId = 0;
     static processed : Set<number>;
     id : number;
@@ -58,8 +60,10 @@ export function parseObject(obj: any) : any {
     }
 
     if(obj.ref != undefined){
-        let o = Widget.refMap.get(obj.ref);
-        console.assert(o != undefined);
+        let o = Widget.refMap.get(obj.ref);       
+        if(o == undefined){
+            throw new MyError("no-ref");
+        }
         return o;
     }
 
@@ -68,7 +72,20 @@ export function parseObject(obj: any) : any {
     }
 
     for(let [name, val] of Object.entries(obj)){
-        obj[name] = parseObject(val);
+        try{
+
+            obj[name] = parseObject(val);
+        }
+        catch(e){
+            if(e instanceof MyError && e.message == "no-ref" && name == "bound" ){
+                const id = (val as any).ref;
+                msg(`deffered bound:${id} ${obj.id}`);
+                Widget.defferedBound.set(id, obj);
+            }
+            else{
+                throw e;
+            }
+        }
     }
 
     switch(obj.typeName){
@@ -222,13 +239,22 @@ export function loadData(obj : any){
     Plane.one.clear();
 
     Widget.maxId  = -1;
-    Widget.refMap = new Map<number, any>()
+    Widget.refMap = new Map<number, any>();
+    Widget.defferedBound = new Map<number, Point>();
+
     const view = parseObject(obj) as View;
     if(!(view instanceof View)){
         throw new MyError();
     }
 
-    view.allRealShapes().filter(x => x instanceof Point || x instanceof DimensionLine).forEach(x => x.caption!.parent = x);
+    for(const [id, pt] of Widget.defferedBound.entries()){
+        pt.bound = Widget.refMap.get(id);
+        if(pt.bound == undefined){
+            throw new MyError();
+        }
+    }
+
+    view.allRealShapes().filter(x => x.caption != undefined).forEach(x => x.caption!.parent = x);
 
     view.allRealShapes().forEach(x => x.updateCaption());
 

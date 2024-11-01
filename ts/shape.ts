@@ -492,34 +492,11 @@ export class Point extends Shape {
     constructor(obj : { position : Vec2, bound? : AbstractLine | CircleArc }){
         super(obj);
 
-        if(this.name == ""){
-
-            const points = View.current.allRealShapes().filter(x => x instanceof Point).concat(Point.tempPoints);
-
-            const upper_latin_letters = i18n_ts.upperLatinLetters;
-            const idxes = points.map(x => upper_latin_letters.indexOf(x.name));
-            if(idxes.length == 0){
-                this.name = upper_latin_letters[0];
-            }
-            else{
-                const max_idx = Math.max(...idxes);
-                if(max_idx == -1){
-                    this.name = upper_latin_letters[0];
-                }
-                else if(max_idx + 1 < upper_latin_letters.length){
-                    this.name = upper_latin_letters[max_idx + 1];
-                }
-                else{
-                    throw new MyError();
-                }
-            }
-        }
-
         if(obj.bound != undefined){
             this.bound = obj.bound;
         }
 
-        if(this.caption == undefined){
+        if(this.name != "" && this.caption == undefined){
             this.caption = this.makeCaption(this);
         }
 
@@ -564,12 +541,10 @@ export class Point extends Shape {
     }
 
     updateCaption(){
-        if(this.caption == undefined){
-            throw new MyError();
+        if(this.caption != undefined){
+            this.caption.updateTextDiv();
+            this.caption.setTextPosition(this.position.x, this.position.y);
         }
-
-        this.caption.updateTextDiv();
-        this.caption.setTextPosition(this.position.x, this.position.y);
     }
 
     getProperties(){
@@ -585,7 +560,8 @@ export class Point extends Shape {
     draw() : void {
         const color = this.modeColor();
 
-        View.current.canvas.drawCircle(this.position, Point.radius, color, null, 0);
+        const radius = (this.mode == Mode.none ? 1 : 2) * Point.radius;
+        View.current.canvas.drawCircle(this.position, radius, color, null, 0);
         
         if(this.isOver){
 
@@ -743,7 +719,14 @@ export class Ray extends LineByPoints {
     }
 
     reading(): Reading {
-        return new Reading(this, TT('Draw a ray from point "A" to point "B".'), [ this.pointA, this.pointB ]);
+        if(this.pointA.name != "" && this.pointB.name != ""){
+
+            return new Reading(this, TT('Draw a ray from point "A" to point "B".'), [ this.pointA, this.pointB ]);
+        }
+        else{
+
+            return new Reading(this, TT('Draw a ray.'), []);
+        }
     }
 }
 
@@ -1026,6 +1009,10 @@ export class ArcByPoint extends CircleArc {
     radius() : number {
         return this.center.position.distance(this.pointA.position);
     }
+
+    reading(): Reading {
+        return new Reading(this, TT('Draw an arc.'), [ ]);
+    }
 }
 
 
@@ -1127,6 +1114,10 @@ export class ArcByRadius extends CircleArc {
 
     radius() : number {
         return this.lengthSymbol.length();
+    }
+
+    reading(): Reading {
+        return new Reading(this, TT("Draw an arc with the same radius."), [ ]);
     }
 }
 

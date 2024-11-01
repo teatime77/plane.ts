@@ -84,6 +84,10 @@ export class FootOfPerpendicular extends Shape {
         return [ this.point, this.line ];
     }
 
+    setMode(mode : Mode){
+        this.foot.setMode(mode);
+    }
+
     draw() : void {
         this.point.draw();
         this.line.draw();
@@ -203,6 +207,11 @@ export class LineArcIntersection extends Shape {
         return [ this.line, this.arc ];
     }
 
+    setMode(mode : Mode){
+        this.pointA.setMode(mode);
+        this.pointB.setMode(mode);
+    }
+
     calc(){        
 
         // 円/弧の中心
@@ -242,7 +251,35 @@ export class LineArcIntersection extends Shape {
     }
 
     reading(): Reading {
-        return new Reading(this, TT('Let points "A" and "B" be the intersections of the line and the circle.'), [ this.pointA, this.pointB ]);
+        const have_names = (this.pointA.name != "" && this.pointB.name != "");
+
+        if(this.arc instanceof Circle && this.arc instanceof Circle){
+
+            if(have_names){
+                return new Reading(this, TT('Let points "A" and "B" be the intersections of two circles.'), [ this.pointA, this.pointB ]);
+            }
+            else{
+                return new Reading(this, TT('Find the intersection of two circles.'), []);
+            }
+        }
+        else if(this.arc instanceof Circle || this.arc instanceof Circle){
+
+            if(have_names){
+                return new Reading(this, TT('Let points "A" and "B" be the intersections of a circle and a line.'), [ this.pointA, this.pointB ]);
+            }
+            else{
+                return new Reading(this, TT('Find the intersection of a circle and a line.'), []);
+            }
+        }
+        else{
+
+            if(have_names){
+                return new Reading(this, TT('Let points "A" and "B" be the intersections of two lines.'), [ this.pointA, this.pointB ]);
+            }
+            else{
+                return new Reading(this, TT('Find the intersection of two lines.'), []);
+            }
+        }
     }
 }
 
@@ -281,6 +318,11 @@ export class ArcArcIntersection extends Shape {
 
     dependencies() : MathEntity[] {
         return [ this.arc1, this.arc2 ];
+    }
+
+    setMode(mode : Mode){
+        this.pointA.setMode(mode);
+        this.pointB.setMode(mode);
     }
 
     calc(){        
@@ -326,12 +368,38 @@ export class ArcArcIntersection extends Shape {
     }
 
     draw() : void {
-        this.pointA.draw();
-        this.pointB.draw();
     }
 
     reading(): Reading {
-        return new Reading(this, TT('Let points "A" and "B" be the intersections of the two circles.'), [ this.pointA, this.pointB ]);
+        const have_names = (this.pointA.name != "" && this.pointB.name != "");
+
+        if(this.arc1 instanceof Circle && this.arc2 instanceof Circle){
+
+            if(have_names){
+                return new Reading(this, TT('Let points "A" and "B" be the intersections of two circles.'), [ this.pointA, this.pointB ]);
+            }
+            else{
+                return new Reading(this, TT('Draw the intersection of two circles.'), []);
+            }
+        }
+        else if(this.arc1 instanceof Circle || this.arc2 instanceof Circle){
+
+            if(have_names){
+                return new Reading(this, TT('Let points "A" and "B" be the intersections of a circle and an arc.'), [ this.pointA, this.pointB ]);
+            }
+            else{
+                return new Reading(this, TT('Draw the intersection of a circle and an arc.'), []);
+            }
+        }
+        else{
+
+            if(have_names){
+                return new Reading(this, TT('Let points "A" and "B" be the intersections of two arcs.'), [ this.pointA, this.pointB ]);
+            }
+            else{
+                return new Reading(this, TT('Draw the intersection of two arcs.'), []);
+            }
+        }
     }
 }
 
@@ -400,6 +468,10 @@ export class CircleCircleTangent extends Tangent {
 
     dependencies() : MathEntity[] {
         return super.dependencies().concat([ this.circle1, this.circle2 ]);
+    }
+
+    setMode(mode : Mode){
+        this.lines.forEach(x => x.setMode(mode));
     }
 
     draw() : void {
@@ -512,6 +584,11 @@ export class CirclePointTangent extends Tangent {
         return super.dependencies().concat([ this.circle, this.point ]);
     }
 
+    setMode(mode : Mode){
+        this.tangentPoints.forEach(x => x.setMode(mode));
+        this.lines.forEach(x => x.setMode(mode));
+    }
+
     draw() : void {
         this.tangentPoints.forEach(x => x.draw());
         this.lines.forEach(x => x.draw());
@@ -544,6 +621,10 @@ export class SelectedShape extends MathEntity {
         return Object.assign(super.makeObj(), {
             specifiedShapes : this.specifiedShapes.map(x => x.toObj())
         });
+    }
+
+    setMode(mode : Mode){
+        this.specifiedShapes.forEach(x => x.setMode(mode));
     }
 
     draw(){

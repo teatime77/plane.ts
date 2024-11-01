@@ -130,7 +130,7 @@ class NumberProperty extends InputProperty {
             min : min,
             max : max,
             change : async (ev : Event)=>{
-                this.setValue(this.input.value());
+                this.setValue(this.input.getValue());
             }
         })
     }
