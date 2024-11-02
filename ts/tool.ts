@@ -121,7 +121,7 @@ export class SelectionTool extends Builder {
 
 class PointBuilder extends Builder {
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){  
-        if(shape == undefined || shape instanceof LineByPoints || shape instanceof Circle){
+        if(shape == undefined || shape instanceof AbstractLine || shape instanceof Circle){
 
             const new_point = Point.fromArgs(position);
             new_point.setBound(shape);
@@ -392,11 +392,11 @@ class LineByPointsBuilder extends Builder {
 
             if(this instanceof LineSegmentBuilder){
 
-                line = makeLineSegment({ pointA: this.pointA, pointB });
+                line = makeLineSegment(this.pointA, pointB);
             }
             else{
 
-                line = makeRay({ pointA: this.pointA, pointB });
+                line = makeRay(this.pointA, pointB);
             }
 
             view.addShape(line);
@@ -457,7 +457,7 @@ class PolygonBuilder extends Builder {
         if(3 <= this.polygon.points.length && this.polygon.points[0] == point){
 
             const pointA = last(this.polygon.points);
-            const line = makeLineSegment({ pointA, pointB : point });
+            const line = makeLineSegment(pointA, point);
 
             this.polygon.lines.push(line);
 
@@ -471,7 +471,7 @@ class PolygonBuilder extends Builder {
 
             if(2 <= this.polygon.points.length){
                 const [pointA, pointB] = this.polygon.points.slice(this.polygon.points.length - 2);
-                const line = makeLineSegment({ pointA, pointB });
+                const line = makeLineSegment(pointA, pointB);
 
                 this.polygon.lines.push(line);
             }
@@ -512,7 +512,7 @@ class ParallelLineBuilder extends Builder {
 
         if(this.line != undefined && this.point != undefined){
 
-            const parallel_line = new ParallelLine( { pointA : this.point, line : this.line } );
+            const parallel_line = new ParallelLine( { kind : LineKind.line, pointA : this.point, line : this.line } );
             view.addShape(parallel_line);
 
             this.line  = undefined;
@@ -544,6 +544,18 @@ class PerpendicularBuilder extends Builder {
                 this.point = undefined;
                 this.resetTool();
             }
+        }
+    }
+}
+
+class PerpendicularLineBuilder extends Builder {
+    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
+        if(shape instanceof Point){
+
+            const line = new PerpendicularLine({ kind : LineKind.line, pointA : shape });
+            view.addShape(line);
+
+            this.resetTool();
         }
     }
 }
@@ -838,26 +850,27 @@ export class StatementBuilder extends Builder {
 }
 
 const toolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [
-    [ SelectionTool             , "selection"       , TT("selection")        , [  ] ],
-    [ PointBuilder              , "point"           , TT("point")            , [ Point ] ],
-    [ MidpointBuilder           , "mid-point"       , TT("mid point")        , [ Midpoint ] ],
-    [ IntersectionBuilder       , "intersection"    , TT("intersection")     , [ LineLineIntersection, LineArcIntersection, ArcArcIntersection ] ],
-    [ LineSegmentBuilder        , "line-segment"    , TT("line segment")     , [ LineByPoints ] ],
-    [ PolygonBuilder            , "polygon"         , TT("polygon")          , [ Polygon ] ],
-    [ PerpendicularBuilder      , "perpendicular"   , TT("perpendicular")    , [ FootOfPerpendicular ] ],
-    [ ParallelLineBuilder       , "parallel-line"   , TT("parallel line")    , [ ParallelLine ] ],
-    [ CircleByPointBuilder      , "circle-by-point" , TT("circle by point")  , [ CircleByPoint ] ],
-    [ CircleByRadiusBuilder     , "circle-by-radius", TT("circle by radius") , [ CircleByRadius ] ],
-    [ ArcByPointBuilder         , "arc-by-point"    , TT("arc by point")     , [ ArcByPoint ] ],
-    [ ArcByRadiusBuilder        , "arc-by-radius"   , TT("arc by radius")    , [ ArcByRadius ] ],
-    [ EllipseBuilder            , "ellipse"         , TT("ellipse")          , [ Ellipse ] ],
-    [ CirclePointTangentBuilder , "tangent-point"   , TT("tangent point")    , [ CirclePointTangent ] ],
-    [ CircleCircleTangentBuilder, "tangent-circles" , TT("tangent circles")  , [ CircleCircleTangent ] ],
-    [ AngleBuilder              , "angle"           , TT("angle")            , [ Angle ] ],
-    [ DimensionLineBuilder      , "dimension-line"  , TT("dimension line")   , [ DimensionLine ] ],
-    [ LengthSymbolBuilder       , "length-symbol"   , TT("length symbol")    , [ LengthSymbol ] ],
-    [ TextBlockBuilder          , "text"            , TT("text")             , [ TextBlock ] ],
-    [ StatementBuilder          , "statement"       , TT("statement")        , [ Statement ] ],
+    [ SelectionTool             , "selection"         , TT("selection")        , [  ] ],
+    [ PointBuilder              , "point"             , TT("point")            , [ Point ] ],
+    [ MidpointBuilder           , "mid-point"         , TT("mid point")        , [ Midpoint ] ],
+    [ IntersectionBuilder       , "intersection"      , TT("intersection")     , [ LineLineIntersection, LineArcIntersection, ArcArcIntersection ] ],
+    [ LineSegmentBuilder        , "line-segment"      , TT("line segment")     , [ LineByPoints ] ],
+    [ PolygonBuilder            , "polygon"           , TT("polygon")          , [ Polygon ] ],
+    [ PerpendicularBuilder      , "perpendicular"     , TT("perpendicular")    , [ FootOfPerpendicular ] ],
+    [ PerpendicularLineBuilder  , "perpendicular-line", TT("perpendicular")    , [ PerpendicularLine ] ],
+    [ ParallelLineBuilder       , "parallel-line"     , TT("parallel line")    , [ ParallelLine ] ],
+    [ CircleByPointBuilder      , "circle-by-point"   , TT("circle by point")  , [ CircleByPoint ] ],
+    [ CircleByRadiusBuilder     , "circle-by-radius"  , TT("circle by radius") , [ CircleByRadius ] ],
+    [ ArcByPointBuilder         , "arc-by-point"      , TT("arc by point")     , [ ArcByPoint ] ],
+    [ ArcByRadiusBuilder        , "arc-by-radius"     , TT("arc by radius")    , [ ArcByRadius ] ],
+    [ EllipseBuilder            , "ellipse"           , TT("ellipse")          , [ Ellipse ] ],
+    [ CirclePointTangentBuilder , "tangent-point"     , TT("tangent point")    , [ CirclePointTangent ] ],
+    [ CircleCircleTangentBuilder, "tangent-circles"   , TT("tangent circles")  , [ CircleCircleTangent ] ],
+    [ AngleBuilder              , "angle"             , TT("angle")            , [ Angle ] ],
+    [ DimensionLineBuilder      , "dimension-line"    , TT("dimension line")   , [ DimensionLine ] ],
+    [ LengthSymbolBuilder       , "length-symbol"     , TT("length symbol")    , [ LengthSymbol ] ],
+    [ TextBlockBuilder          , "text"              , TT("text")             , [ TextBlock ] ],
+    [ StatementBuilder          , "statement"         , TT("statement")        , [ Statement ] ],
 ];
 
 export function makeShapeButton(shape : MathEntity) : layout_ts.Button {

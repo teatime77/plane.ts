@@ -149,6 +149,9 @@ export function parseObject(obj: any) : any {
     case FootOfPerpendicular.name:
         return new FootOfPerpendicular(obj);
 
+    case PerpendicularLine.name:
+        return new PerpendicularLine(obj);
+
     case ParallelLine.name:
         return new ParallelLine(obj);
 

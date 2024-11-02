@@ -355,7 +355,7 @@ export class View extends Widget {
             
             for(const point of bounded_points){
 
-                if(point.bound instanceof LineByPoints){
+                if(point.bound instanceof AbstractLine){
 
                     const foot = calcFootOfPerpendicular(point.position, point.bound);
                     point.setPosition(foot);

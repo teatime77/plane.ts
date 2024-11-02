@@ -104,6 +104,28 @@ export class FootOfPerpendicular extends Shape {
     }
 }
 
+
+export class PerpendicularLine extends AbstractLine {
+    constructor(obj : { kind : number, pointA:Point }){
+        super(obj);
+
+        this.calc();
+    }
+
+    calc(){
+        const line = this.pointA.bound as AbstractLine;
+        assert(line instanceof AbstractLine);
+
+        this.e = line.e.rot90().unit();
+    }
+
+    reading() : Reading {
+        return new Reading(this, TT('draw a perpendicular line.'), []);
+    }
+}
+
+
+
 export function calcLineLineIntersection(l1 : AbstractLine, l2 : AbstractLine) : Vec2 {
     l1.calc();
     l2.calc();
@@ -439,8 +461,8 @@ export class CircleCircleTangent extends Tangent {
             this.lines = data.lines;
         }
         else{
-            const line_a = makeLineSegment( { pointA : Point.zero(), pointB : Point.zero() });
-            const line_b = makeLineSegment( { pointA : Point.zero(), pointB : Point.zero() });
+            const line_a = makeLineSegment( Point.zero(), Point.zero());
+            const line_b = makeLineSegment( Point.zero(), Point.zero());
             this.lines = [ line_a, line_b ];
         }
 
@@ -554,8 +576,8 @@ export class CirclePointTangent extends Tangent {
             this.lines = data.lines;
         }
         else{
-            const line_a = makeLineSegment( { pointA : this.point, pointB : Point.zero() });
-            const line_b = makeLineSegment( { pointA : this.point, pointB : Point.zero() });
+            const line_a = makeLineSegment(this.point, Point.zero());
+            const line_b = makeLineSegment(this.point, Point.zero());
             this.lines = [ line_a, line_b ];
         }
 
