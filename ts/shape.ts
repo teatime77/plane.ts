@@ -533,7 +533,7 @@ export class Point extends Shape {
     setBound(bound : AbstractLine | CircleArc | undefined){
         this.bound = bound;
 
-        if(bound instanceof LineSegment){
+        if(bound instanceof LineByPoints){
 
             const new_position = calcFootOfPerpendicular(this.position, bound);
             this.setPosition(new_position);
@@ -595,7 +595,7 @@ export class Point extends Shape {
     }
 
     shapePointermove(position : Vec2, diff : Vec2){
-        if(this.bound instanceof LineSegment){
+        if(this.bound instanceof LineByPoints){
 
             this.setPosition(calcFootOfPerpendicular(position, this.bound));
         }
@@ -616,18 +616,31 @@ export class Point extends Shape {
     }
 }
 
+export enum LineKind {
+    line = 0,
+    ray  = 1,
+    ray_reverse = 2,
+    line_segment = 3
+}
+
 export abstract class AbstractLine extends Shape {
+    kind : number;
     pointA : Point;
     e!     : Vec2;
 
-    constructor(obj : { pointA: Point }){
+    constructor(obj : { kind? : number, pointA: Point }){
         super(obj);
+        if(obj.kind == undefined){
+            throw new MyError("line kind is undefined.")
+        }
+        this.kind = obj.kind;
         this.pointA = obj.pointA;
     }
 
 
     makeObj() : any {
         let obj = Object.assign(super.makeObj(), {
+            kind   : this.kind,
             pointA : this.pointA.toObj()
         });
 
@@ -657,10 +670,10 @@ export class Line extends AbstractLine {
     }
 }
 
-export abstract class LineByPoints extends AbstractLine {
+export class LineByPoints extends AbstractLine {
     pointB   : Point;
 
-    constructor(obj : { pointA: Point, pointB: Point }){
+    constructor(obj : { kind? : number, pointA: Point, pointB: Point }){
         super(obj);
         this.pointB = obj.pointB;
 
@@ -699,41 +712,60 @@ export abstract class LineByPoints extends AbstractLine {
 
         return 0 <= n && n <= AB;
     }
-}
 
-export class LineSegment extends LineByPoints {
     draw() : void {
-        View.current.canvas.drawLine(this, this.pointA.position, this.pointB.position);
-    }
+        if(this.kind == LineKind.line_segment){
 
-    reading(): Reading {
-        return new Reading(this, TT('Draw a line from point "A" to point "B".'), [ this.pointA, this.pointB ]);
-    }
-}
-
-export class Ray extends LineByPoints {
-    draw() : void {
-        const l = View.current.max.distance(View.current.min);
-        const p2 = this.pointA.position.add(this.e.mul( l));
-        View.current.canvas.drawLine(this, this.pointA.position, p2);
-    }
-
-    reading(): Reading {
-        if(this.pointA.name != "" && this.pointB.name != ""){
-
-            return new Reading(this, TT('Draw a ray from point "A" to point "B".'), [ this.pointA, this.pointB ]);
+            View.current.canvas.drawLine(this, this.pointA.position, this.pointB.position);
+        }
+        else if(this.kind == LineKind.ray){
+            
+            const l = View.current.max.distance(View.current.min);
+            const p2 = this.pointA.position.add(this.e.mul( l));
+            View.current.canvas.drawLine(this, this.pointA.position, p2);
         }
         else{
+            throw new MyError();
+        }
+    }
 
-            return new Reading(this, TT('Draw a ray.'), []);
+    reading(): Reading {
+        if(this.kind == LineKind.line_segment){
+
+            return new Reading(this, TT('Draw a line from point "A" to point "B".'), [ this.pointA, this.pointB ]);
+        }
+        else if(this.kind == LineKind.ray){
+            
+            if(this.pointA.name != "" && this.pointB.name != ""){
+
+                return new Reading(this, TT('Draw a ray from point "A" to point "B".'), [ this.pointA, this.pointB ]);
+            }
+            else{
+
+                return new Reading(this, TT('Draw a ray.'), []);
+            }
+        }
+        else{
+            throw new MyError();
         }
     }
 }
+
+export function makeLineSegment(obj : { kind? : number, pointA: Point, pointB: Point }){
+    obj.kind = LineKind.line_segment;
+    return new LineByPoints(obj);
+}
+
+export function makeRay(obj : { kind? : number, pointA: Point, pointB: Point }){
+    obj.kind = LineKind.ray;
+    return new LineByPoints(obj);
+}
+
 
 export class ParallelLine extends Line {   
     line : AbstractLine;
 
-    constructor(obj : { pointA: Point, line: AbstractLine }){
+    constructor(obj : { kind? : number, pointA: Point, line: AbstractLine }){
         super(obj);
 
         this.line = obj.line;
@@ -1124,9 +1156,9 @@ export class ArcByRadius extends CircleArc {
 
 export class Polygon extends Shape {
     points : Point[] = [];
-    lines  : LineSegment[] = [];
+    lines  : LineByPoints[] = [];
 
-    constructor(obj : { points : Point[], lines  : LineSegment[] }){
+    constructor(obj : { points : Point[], lines  : LineByPoints[] }){
         super(obj);
         this.points = obj.points;
         this.lines  = obj.lines;

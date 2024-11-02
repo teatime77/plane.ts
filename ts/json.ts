@@ -116,11 +116,8 @@ export function parseObject(obj: any) : any {
     case Point.name:
         return new Point(obj);
 
-    case LineSegment.name:
-        return new LineSegment(obj);
-
-    case Ray.name:
-        return new Ray(obj);
+    case LineByPoints.name:
+        return new LineByPoints(obj);
 
     case Polygon.name:
         return new Polygon(obj);

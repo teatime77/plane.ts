@@ -411,7 +411,7 @@ export class CircleCircleTangent extends Tangent {
     circle2 : Circle;    
 
     point   : Point;
-    lines   : LineSegment[] = [];
+    lines   : LineByPoints[] = [];
 
     constructor(obj : { circle1 : Circle, circle2 : Circle }){
         super(obj);
@@ -439,8 +439,8 @@ export class CircleCircleTangent extends Tangent {
             this.lines = data.lines;
         }
         else{
-            const line_a = new LineSegment( { pointA : Point.zero(), pointB : Point.zero() });
-            const line_b = new LineSegment( { pointA : Point.zero(), pointB : Point.zero() });
+            const line_a = makeLineSegment( { pointA : Point.zero(), pointB : Point.zero() });
+            const line_b = makeLineSegment( { pointA : Point.zero(), pointB : Point.zero() });
             this.lines = [ line_a, line_b ];
         }
 
@@ -534,7 +534,7 @@ export class CirclePointTangent extends Tangent {
     circle : Circle;
     point  : Point;
     tangentPoints : Point[] = [];
-    lines   : LineSegment[] = [];
+    lines   : LineByPoints[] = [];
 
     constructor( obj : { circle : Circle, point : Point }){
         super(obj);
@@ -554,8 +554,8 @@ export class CirclePointTangent extends Tangent {
             this.lines = data.lines;
         }
         else{
-            const line_a = new LineSegment( { pointA : this.point, pointB : Point.zero() });
-            const line_b = new LineSegment( { pointA : this.point, pointB : Point.zero() });
+            const line_a = makeLineSegment( { pointA : this.point, pointB : Point.zero() });
+            const line_b = makeLineSegment( { pointA : this.point, pointB : Point.zero() });
             this.lines = [ line_a, line_b ];
         }
 

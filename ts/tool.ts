@@ -121,7 +121,7 @@ export class SelectionTool extends Builder {
 
 class PointBuilder extends Builder {
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){  
-        if(shape == undefined || shape instanceof LineSegment || shape instanceof Circle){
+        if(shape == undefined || shape instanceof LineByPoints || shape instanceof Circle){
 
             const new_point = Point.fromArgs(position);
             new_point.setBound(shape);
@@ -392,11 +392,11 @@ class LineByPointsBuilder extends Builder {
 
             if(this instanceof LineSegmentBuilder){
 
-                line = new LineSegment({ pointA: this.pointA, pointB });
+                line = makeLineSegment({ pointA: this.pointA, pointB });
             }
             else{
 
-                line = new Ray({ pointA: this.pointA, pointB });
+                line = makeRay({ pointA: this.pointA, pointB });
             }
 
             view.addShape(line);
@@ -457,7 +457,7 @@ class PolygonBuilder extends Builder {
         if(3 <= this.polygon.points.length && this.polygon.points[0] == point){
 
             const pointA = last(this.polygon.points);
-            const line = new LineSegment({ pointA, pointB : point });
+            const line = makeLineSegment({ pointA, pointB : point });
 
             this.polygon.lines.push(line);
 
@@ -471,7 +471,7 @@ class PolygonBuilder extends Builder {
 
             if(2 <= this.polygon.points.length){
                 const [pointA, pointB] = this.polygon.points.slice(this.polygon.points.length - 2);
-                const line = new LineSegment({ pointA, pointB });
+                const line = makeLineSegment({ pointA, pointB });
 
                 this.polygon.lines.push(line);
             }
@@ -747,7 +747,7 @@ class DimensionLineBuilder extends Builder {
 class LengthSymbolBuilder extends LineByPointsBuilder {
 
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
-        if(shape instanceof LineSegment){
+        if(shape instanceof LineByPoints){
             const symbol = new LengthSymbol({pointA : shape.pointA, pointB : shape.pointB, kind : 0});
             view.addShape(symbol);
         }
@@ -842,8 +842,7 @@ const toolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [
     [ PointBuilder              , "point"           , TT("point")            , [ Point ] ],
     [ MidpointBuilder           , "mid-point"       , TT("mid point")        , [ Midpoint ] ],
     [ IntersectionBuilder       , "intersection"    , TT("intersection")     , [ LineLineIntersection, LineArcIntersection, ArcArcIntersection ] ],
-    [ LineSegmentBuilder        , "line-segment"    , TT("line segment")     , [ LineSegment ] ],
-    [ RayBuilder                , "ray"             , TT("ray")              , [ Ray ] ],
+    [ LineSegmentBuilder        , "line-segment"    , TT("line segment")     , [ LineByPoints ] ],
     [ PolygonBuilder            , "polygon"         , TT("polygon")          , [ Polygon ] ],
     [ PerpendicularBuilder      , "perpendicular"   , TT("perpendicular")    , [ FootOfPerpendicular ] ],
     [ ParallelLineBuilder       , "parallel-line"   , TT("parallel line")    , [ ParallelLine ] ],
