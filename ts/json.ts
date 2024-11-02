@@ -266,7 +266,10 @@ export function loadData(obj : any){
     const all_real_shapes = view.allRealShapes();
     for(const angle of all_real_shapes.filter(x => x instanceof Angle && x.intersection == undefined) as Angle[] ){
         angle.intersection = getCommonPointOfLines(angle.lineA, angle.lineB)!;
-        assert(angle.intersection != undefined);
+        if(angle.intersection == undefined){
+
+            throw new MyError();
+        }
     }
 
     all_real_shapes.filter(x => x.caption != undefined).forEach(x => x.caption!.parent = x);

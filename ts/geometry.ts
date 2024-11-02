@@ -667,12 +667,15 @@ export function getCommonPointOfLines(lineA : AbstractLine, lineB : AbstractLine
 
     const point_pair_to_lines = new Map<string, LineByPoints>();
 
-    const lines_by_points = all_shapes.filter(x => x instanceof LineByPoints) as LineByPoints[];
-    for(const line of lines_by_points){
+    const all_lines = all_shapes.filter(x => x instanceof AbstractLine) as AbstractLine[];
+    for(const line of all_lines){
         add_line_to_points(line, line.pointA);
-        add_line_to_points(line, line.pointB);
+        if(line instanceof LineByPoints){
 
-        point_pair_to_lines.set(pairKey(line.pointA, line.pointB), line);
+            add_line_to_points(line, line.pointB);
+
+            point_pair_to_lines.set(pairKey(line.pointA, line.pointB), line);
+        }
     }
 
     for(const shape of all_shapes){
