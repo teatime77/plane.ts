@@ -979,10 +979,11 @@ export class ArcByPoint extends CircleArc {
         if(View.current.isNear( Math.abs(r - this.radius()) )){
 
             const v = position.sub(this.center.position);
-            const th = Math.atan2(v.y, v.x);
+            let theta = Math.atan2(v.y, v.x);
 
-            const [th1, th2] = this.angles();
-            return th1 <= th && th <= th2;
+            let [start_angle, end_angle] = this.angles();
+
+            return isBetweenAngles(start_angle, theta, end_angle);
         }
 
         return false;

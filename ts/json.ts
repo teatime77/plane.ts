@@ -2,7 +2,7 @@ namespace plane_ts {
 
 export abstract class Widget {
     static refMap : Map<number, any> = new Map<number, any>();
-    static defferedBound : Map<number, Point>;
+    static defferedBound : [number, number][];
     // static 
     static maxId = 0;
     static processed : Set<number>;
@@ -78,9 +78,9 @@ export function parseObject(obj: any) : any {
         }
         catch(e){
             if(e instanceof MyError && e.message == "no-ref" && name == "bound" ){
-                const id = (val as any).ref;
-                msg(`deffered bound:${id} ${obj.id}`);
-                Widget.defferedBound.set(id, obj);
+                const ref_id = (val as any).ref;
+                msg(`deffered bound:${ref_id} ${obj.id}`);
+                Widget.defferedBound.push([obj.id, ref_id]);
             }
             else{
                 throw e;
@@ -240,23 +240,35 @@ export function loadData(obj : any){
 
     Widget.maxId  = -1;
     Widget.refMap = new Map<number, any>();
-    Widget.defferedBound = new Map<number, Point>();
+    Widget.defferedBound = [];
 
     const view = parseObject(obj) as View;
     if(!(view instanceof View)){
         throw new MyError();
     }
 
-    for(const [id, pt] of Widget.defferedBound.entries()){
-        pt.bound = Widget.refMap.get(id);
-        if(pt.bound == undefined){
+    const all_shapes = view.allShapes();
+    for(const [obj_id, ref_id] of Widget.defferedBound){
+        const obj = all_shapes.find(x => x.id == obj_id);
+        const ref = all_shapes.find(x => x.id == ref_id);
+        if(obj instanceof Point && ref instanceof Shape){
+            obj.bound = ref as (AbstractLine | CircleArc);
+        }
+        else{
+
             throw new MyError();
         }
     }
 
-    view.allRealShapes().filter(x => x.caption != undefined).forEach(x => x.caption!.parent = x);
+    const all_real_shapes = view.allRealShapes();
+    for(const angle of all_real_shapes.filter(x => x instanceof Angle && x.intersection == undefined) as Angle[] ){
+        angle.intersection = getCommonPointOfLines(angle.lineA, angle.lineB)!;
+        assert(angle.intersection != undefined);
+    }
 
-    view.allRealShapes().forEach(x => x.updateCaption());
+    all_real_shapes.filter(x => x.caption != undefined).forEach(x => x.caption!.parent = x);
+
+    all_real_shapes.forEach(x => x.updateCaption());
 
     (view.shapes.filter(x => x instanceof TextBlock) as TextBlock[]).forEach(x => x.updateTextPosition());
 

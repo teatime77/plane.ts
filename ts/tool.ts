@@ -747,8 +747,8 @@ class DimensionLineBuilder extends Builder {
 class LengthSymbolBuilder extends LineByPointsBuilder {
 
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
-        if(shape instanceof LineByPoints){
-            const symbol = new LengthSymbol({line : shape, kind : 0});
+        if(shape instanceof LineSegment){
+            const symbol = new LengthSymbol({pointA : shape.pointA, pointB : shape.pointB, kind : 0});
             view.addShape(symbol);
         }
         else{
@@ -758,12 +758,10 @@ class LengthSymbolBuilder extends LineByPointsBuilder {
             else{
                 const pointB = this.makePointOnClick(view, position, shape);
 
-                const line = new LineSegment({ pointA : this.pointA, pointB });
-                const symbol = new LengthSymbol({ line, kind : 0});
+                const symbol = new LengthSymbol({ pointA : this.pointA, pointB, kind : 0});
                 view.addShape(symbol);
 
                 this.pointA      = undefined;
-                this.position = undefined;
 
                 this.resetTool();
             }    

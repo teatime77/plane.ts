@@ -141,8 +141,6 @@ export class LineLineIntersection extends Point {
         this.lineA = obj.lineA;
         this.lineB = obj.lineB;
 
-        View.current.relation.setIntersections(this.lineA, this.lineB, [this]);
-
         this.calc();
     }
 
@@ -652,58 +650,64 @@ export class SelectedShape extends MathEntity {
     }
 }
 
-export class Relation {
-    lineLineIntersections = new Map<string, Point[]>();
-
-    setIntersections(a : AbstractLine | CircleArcEllipse, b : AbstractLine | CircleArcEllipse, points : Point[]){
-        const key = pairKey(a, b);
-        if(a instanceof AbstractLine && b instanceof AbstractLine){
-
-            this.lineLineIntersections.set(key, points);
-        }
-    }
-
-    getIntersections(a : AbstractLine | CircleArcEllipse, b : AbstractLine | CircleArcEllipse) : Point[] {
-        const key = pairKey(a, b);
-        if(a instanceof AbstractLine && b instanceof AbstractLine){
-
-            
-            const points = this.lineLineIntersections.get(key);
-            if(points != undefined){
-                return points;
-            }
-        }
-
-        return [];
-    }
-
-}
-
 export function getCommonPointOfLines(lineA : AbstractLine, lineB : AbstractLine) : Point | undefined {
-    const points = View.current.relation.getIntersections(lineA, lineB);
-    if(points.length == 1){
-        return points[0];
+    const line_to_points = new Map<AbstractLine, Set<Point>>();
+    const add_line_to_points = (line : AbstractLine, point:Point)=>{
+        let points = line_to_points.get(line);
+        
+        if(points == undefined){
+            points = new Set<Point>();
+            line_to_points.set(line, points);
+        }
+
+        points.add(point);
     }
-    else{
 
-        const lineA_points = [ lineA.pointA ];
-        if(lineA instanceof LineByPoints){
-            lineA_points.push(lineA.pointB);
-        }
+    const all_shapes = View.current.allRealShapes();
 
-        const lineB_points = [ lineB.pointA ];
-        if(lineB instanceof LineByPoints){
-            lineB_points.push(lineB.pointB);
-        }
+    const point_pair_to_lines = new Map<string, LineByPoints>();
 
-        for(const point of lineA_points){
-            if(lineB_points.includes(point)){
-                return point;
+    const lines_by_points = all_shapes.filter(x => x instanceof LineByPoints) as LineByPoints[];
+    for(const line of lines_by_points){
+        add_line_to_points(line, line.pointA);
+        add_line_to_points(line, line.pointB);
+
+        point_pair_to_lines.set(pairKey(line.pointA, line.pointB), line);
+    }
+
+    for(const shape of all_shapes){
+        if(shape instanceof Midpoint){
+            const line = point_pair_to_lines.get(pairKey(shape.pointA, shape.pointB));
+            if(line != undefined){
+                add_line_to_points(line, shape);
             }
         }
+        else if(shape instanceof FootOfPerpendicular){
+            add_line_to_points(shape.line, shape.foot);
+        }
+        else if(shape instanceof LineLineIntersection){
+            add_line_to_points(shape.lineA, shape);
+            add_line_to_points(shape.lineB, shape);
+        }
+        else if(shape instanceof LineArcIntersection){
+            add_line_to_points(shape.line, shape.pointA);
+            add_line_to_points(shape.line, shape.pointB);
+        }
+
+        if(shape instanceof Point && shape.bound instanceof AbstractLine){
+            add_line_to_points(shape.bound, shape);
+        }
     }
 
-    return undefined;
+    const pointsA = line_to_points.get(lineA);
+    const pointsB = line_to_points.get(lineB);
+
+    if(pointsA == undefined || pointsB == undefined){
+        return undefined;
+    }
+
+    const common_point = Array.from(pointsA.values()).find(x => pointsB.has(x));
+    return common_point;
 }
 
 }

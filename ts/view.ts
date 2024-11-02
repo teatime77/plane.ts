@@ -34,8 +34,6 @@ export class View extends Widget {
 
     dirty : boolean = false;
 
-    relation = new Relation();
-
     static getJson() : string {
     
         Widget.processed = new Set<number>();

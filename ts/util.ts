@@ -148,6 +148,18 @@ export async function sleep(milliseconds : number) : Promise<void> {
     });
 }
 
+function normalizeAngle(theta : number) : number {
+    return 0 <= theta ? theta : theta + 2 * Math.PI;
+}
+
+export function isBetweenAngles(start : number, theta : number, end : number ){
+    theta  = normalizeAngle(theta - start);
+    end    = normalizeAngle(end - start);
+
+    assert(0 <= theta && 0 <= end);
+    return theta <= end;
+}
+
 function makeName(){
     const points = View.current.allRealShapes().filter(x => x instanceof Point).concat(Point.tempPoints);
 

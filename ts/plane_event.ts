@@ -89,6 +89,13 @@ export function deleteShapeEvent(shape : MathEntity, button : HTMLButtonElement)
     button.addEventListener("click", (ev : MouseEvent)=>{
         const ok = confirm("Are you sure to delete this shape?");
         if(ok){
+            const idx = View.current.shapes.indexOf(shape);
+            if(idx == -1){
+                throw new MyError();
+            }
+            const button = Plane.one.shapes_block.children[idx];
+            Plane.one.shapes_block.removeChild(button);
+
             remove(View.current.shapes, shape);
             shape.delete(new Set<number>());
             View.current.dirty = true;

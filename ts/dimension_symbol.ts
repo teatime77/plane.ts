@@ -16,7 +16,7 @@ export class Angle extends Shape {
     lineB       : AbstractLine;
     directionB  : number;
 
-    intersection : Point;
+    intersection! : Point;
 
     constructor(obj : { angleMark : number, lineA : AbstractLine, directionA : number, lineB : AbstractLine, directionB : number }){
         super(obj);
@@ -32,7 +32,8 @@ export class Angle extends Shape {
 
         const point = getCommonPointOfLines(this.lineA, this.lineB);
         if(point == undefined){
-            throw new MyError();
+            msg("intersection of Angle is deffered.");
+            return;
         }
         
         this.intersection = point;
@@ -218,18 +219,21 @@ export class DimensionLine extends Shape {
 }
 
 export class LengthSymbol extends Shape {
-    line : LineByPoints;
+    pointA : Point;
+    pointB : Point;
     kind : number;
 
-    constructor(obj : { line : LineByPoints, kind : number }){
+    constructor(obj : { pointA : Point, pointB : Point, kind : number }){
         super(obj);
-        this.line = obj.line;
+        this.pointA = obj.pointA;
+        this.pointB = obj.pointB;
         this.kind = obj.kind;
     }
 
     makeObj() : any {
         let obj = Object.assign(super.makeObj(), {
-            line : this.line.toObj(),
+            pointA : this.pointA.toObj(),
+            pointB : this.pointB.toObj(),
             kind : this.kind
         });
 
@@ -243,17 +247,17 @@ export class LengthSymbol extends Shape {
     }
 
     dependencies() : MathEntity[] {
-        return [ this.line ];
+        return [ this.pointA, this.pointB ];
     }
 
     getAllShapes(shapes : MathEntity[]){
         super.getAllShapes(shapes);
-        this.line.getAllShapes(shapes);
+        shapes.push(this.pointA, this.pointB);
     }
 
     center() : Vec2 {
-        const A = this.line.pointA.position;
-        const B = this.line.pointB.position;
+        const A = this.pointA.position;
+        const B = this.pointB.position;
 
         return A.add(B).mul(0.5);
     }
@@ -265,15 +269,17 @@ export class LengthSymbol extends Shape {
     }
 
     length() : number {
-        const A = this.line.pointA.position;
-        const B = this.line.pointB.position;
+        const A = this.pointA.position;
+        const B = this.pointB.position;
 
         return A.distance(B);
     }
 
     draw() : void {
-        const A = this.line.pointA.position;
-        const B = this.line.pointB.position;
+        View.current.canvas.drawLine(this, this.pointA.position, this.pointB.position);
+
+        const A = this.pointA.position;
+        const B = this.pointB.position;
         const AB = B.sub(A);
 
         const normal = AB.rot90().unit();
