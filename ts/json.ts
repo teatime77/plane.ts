@@ -131,6 +131,9 @@ export function parseObject(obj: any) : any {
     case CircleByPoint.name:
         return new CircleByPoint(obj);
 
+    case CircleByRadius.name:
+        return new CircleByRadius(obj);
+
     case Ellipse.name:
         return new Ellipse(obj);
 
