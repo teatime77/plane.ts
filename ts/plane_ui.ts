@@ -31,6 +31,7 @@ export class Plane {
     snap_to_grid! : CheckBox;
 
     isPlaying : boolean = false;
+    isPlayingAll : boolean = false;
 
     static one : Plane;
 

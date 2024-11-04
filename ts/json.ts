@@ -3,6 +3,9 @@ namespace plane_ts {
 export abstract class Widget {
     static refMap : Map<number, any> = new Map<number, any>();
     static defferedBound : [number, number][];
+    static defferedCalc : Shape[];
+    static isLoading : boolean = false;
+
     // static 
     static maxId = 0;
     static processed : Set<number>;
@@ -94,12 +97,6 @@ export function parseObject(obj: any) : any {
 
     // case Speech.name:
     //     return new Speech(obj);
-
-    case View.name:
-        for(let [name, val] of Object.entries(obj)){
-            (View.current as any)[name] = val;
-        }
-        return View.current;
 
     // case Simulation.name:
     //     return new Simulation(obj);
@@ -243,34 +240,54 @@ export function loadData(obj : any){
 
     Widget.maxId  = -1;
     Widget.refMap = new Map<number, any>();
-    Widget.defferedBound = [];
+    Widget.defferedBound = [];    
 
-    const view = parseObject(obj) as View;
-    if(!(view instanceof View)){
-        throw new MyError();
+    const view = View.current;
+    for(let [name, val] of Object.entries(obj)){
+        if(name != "shapes"){
+            (view as any)[name] = parseObject(val);
+        }
     }
 
-    const all_shapes = view.allShapes();
-    for(const [obj_id, ref_id] of Widget.defferedBound){
-        const obj = all_shapes.find(x => x.id == obj_id);
-        const ref = all_shapes.find(x => x.id == ref_id);
-        if(obj instanceof Point && ref instanceof Shape){
-            obj.bound = ref as (AbstractLine | CircleArc);
-        }
-        else{
+    view.shapes = [];
+    const all_shapes : MathEntity[] = [];
+    for(const shape_obj of obj.shapes){
+        Widget.defferedCalc = [];
 
-            throw new MyError();
+        Widget.isLoading = true;
+        const shape = parseObject(shape_obj) as MathEntity;
+        Widget.isLoading = false;
+
+        view.shapes.push( shape );
+
+        shape.getAllShapes(all_shapes);
+
+        while(Widget.defferedBound.length != 0){
+            const [obj_id, ref_id] = Widget.defferedBound.pop()!;
+            const obj = all_shapes.find(x => x.id == obj_id);
+            const ref = all_shapes.find(x => x.id == ref_id);
+            if(obj instanceof Point && ref instanceof Shape){
+                obj.bound = ref as (AbstractLine | CircleArc);
+            }
+            else{
+    
+                throw new MyError();
+            }
+        }
+
+        Widget.defferedCalc.forEach(x => x.calc());
+
+        const deffered_angles = all_shapes.filter(x => x instanceof Angle && x.intersection == undefined) as Angle[];
+        for(const angle of deffered_angles){
+            angle.intersection = getCommonPointOfLines(angle.lineA, angle.lineB)!;
+            if(angle.intersection == undefined){
+
+                throw new MyError();
+            }
         }
     }
 
     const all_real_shapes = view.allRealShapes();
-    for(const angle of all_real_shapes.filter(x => x instanceof Angle && x.intersection == undefined) as Angle[] ){
-        angle.intersection = getCommonPointOfLines(angle.lineA, angle.lineB)!;
-        if(angle.intersection == undefined){
-
-            throw new MyError();
-        }
-    }
 
     all_real_shapes.filter(x => x.caption != undefined).forEach(x => x.caption!.parent = x);
 

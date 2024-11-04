@@ -76,7 +76,7 @@ export class TextAreaProperty extends Property {
         this.textArea = $textarea({
             id   : "text-block-text-area",
             cols : 20,
-            rows : (name == "narration" || name == "mathText" ? 1 : 10),
+            rows : (name == "narration" || name == "mathText" ? 3 : 10),
             value : value,
             change : async (ev : Event)=>{
                 this.setValue(this.textArea.getValue());

@@ -113,10 +113,26 @@ export class PerpendicularLine extends AbstractLine {
     }
 
     calc(){
-        const line = this.pointA.bound as AbstractLine;
-        assert(line instanceof AbstractLine);
 
-        this.e = line.e.rot90().unit();
+        const [line_to_points, point_to_lines] = makeLinePointMap();
+        const lines_set = point_to_lines.get(this.pointA);
+        if(lines_set != undefined){
+            const lines = Array.from(lines_set.values());
+            if(lines.length == 1){
+                const line = lines[0];
+                this.e = line.e.rot90().unit();
+                return;
+            }
+        }
+        if(Widget.isLoading){
+            
+            msg(`deffered calc: perpendicularLine ${this.id}`);
+            Widget.defferedCalc.push(this);
+        }
+        else{
+
+            throw new MyError();
+        }
     }
 
     reading() : Reading {
@@ -672,8 +688,10 @@ export class SelectedShape extends MathEntity {
     }
 }
 
-export function getCommonPointOfLines(lineA : AbstractLine, lineB : AbstractLine) : Point | undefined {
+export function makeLinePointMap() : [Map<AbstractLine, Set<Point>>, Map<Point, Set<AbstractLine>>] {
     const line_to_points = new Map<AbstractLine, Set<Point>>();
+    const point_to_lines = new Map<Point, Set<AbstractLine>>();
+
     const add_line_to_points = (line : AbstractLine, point:Point)=>{
         let points = line_to_points.get(line);
         
@@ -683,6 +701,14 @@ export function getCommonPointOfLines(lineA : AbstractLine, lineB : AbstractLine
         }
 
         points.add(point);
+
+        let lines = point_to_lines.get(point);
+        if(lines == undefined){
+            lines = new Set<AbstractLine>();
+            point_to_lines.set(point, lines);
+        }
+
+        lines.add(line);
     }
 
     const all_shapes = View.current.allRealShapes();
@@ -722,7 +748,13 @@ export function getCommonPointOfLines(lineA : AbstractLine, lineB : AbstractLine
         if(shape instanceof Point && shape.bound instanceof AbstractLine){
             add_line_to_points(shape.bound, shape);
         }
-    }
+    }    
+
+    return [line_to_points, point_to_lines];
+}
+
+export function getCommonPointOfLines(lineA : AbstractLine, lineB : AbstractLine) : Point | undefined {
+    const [line_to_points, point_to_lines] = makeLinePointMap();
 
     const pointsA = line_to_points.get(lineA);
     const pointsB = line_to_points.get(lineB);
