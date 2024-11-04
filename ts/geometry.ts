@@ -106,7 +106,7 @@ export class FootOfPerpendicular extends Shape {
 
 
 export class PerpendicularLine extends AbstractLine {
-    constructor(obj : { kind : number, pointA:Point }){
+    constructor(obj : { lineKind : number, pointA:Point }){
         super(obj);
 
         this.calc();

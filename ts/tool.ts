@@ -161,13 +161,11 @@ class CircleByPointBuilder extends Builder {
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
         if(this.circle == undefined){
 
-            if(shape == undefined || !(shape instanceof Point)){
-                shape = Point.fromArgs(position);
-            }
-            shape.setMode(Mode.depend);
+            const center = this.makePointOnClick(view, position, shape);
+            center.setMode(Mode.depend);
 
             const point = Point.fromArgs(position);
-            this.circle = CircleByPoint.fromArgs(shape as Point, point);
+            this.circle = CircleByPoint.fromArgs(center, point);
 
             view.addShape(this.circle);
         }
@@ -445,14 +443,7 @@ class PolygonBuilder extends Builder {
             view.addShape(this.polygon);
         }
 
-        let point : Point;
-        if(shape instanceof Point){
-
-            point = shape;
-        }
-        else{
-            point = Point.fromArgs(position);
-        }
+        const point = this.makePointOnClick(view, position, shape);
 
         if(3 <= this.polygon.points.length && this.polygon.points[0] == point){
 
@@ -502,7 +493,7 @@ class ParallelLineBuilder extends Builder {
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
         if(shape instanceof Point){
 
-            this.point = shape;
+            this.point  = this.makePointOnClick(view, position, shape);
             this.point.setMode(Mode.depend);
         }
         else if(shape instanceof AbstractLine){
@@ -512,7 +503,7 @@ class ParallelLineBuilder extends Builder {
 
         if(this.line != undefined && this.point != undefined){
 
-            const parallel_line = new ParallelLine( { kind : LineKind.line, pointA : this.point, line : this.line } );
+            const parallel_line = new ParallelLine( { lineKind : LineKind.line, pointA : this.point, line : this.line } );
             view.addShape(parallel_line);
 
             this.line  = undefined;
@@ -532,7 +523,7 @@ class PerpendicularBuilder extends Builder {
         if(this.point == undefined){
             if(shape instanceof Point){
 
-                this.point = shape;
+                this.point  = this.makePointOnClick(view, position, shape);
                 this.point.setMode(Mode.depend);
             }
         }
@@ -552,7 +543,8 @@ class PerpendicularLineBuilder extends Builder {
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
         if(shape instanceof Point){
 
-            const line = new PerpendicularLine({ kind : LineKind.line, pointA : shape });
+            const pointA = this.makePointOnClick(view, position, shape);
+            const line = new PerpendicularLine({ lineKind : LineKind.line, pointA });
             view.addShape(line);
 
             this.resetTool();
@@ -626,7 +618,7 @@ class CirclePointTangentBuilder extends Builder {
         }
 
         if(shape instanceof Point){
-            this.point = shape;
+            this.point = this.makePointOnClick(view, position, shape);
         }
 
         if(this.circle != undefined && this.point != undefined){
@@ -711,11 +703,11 @@ class DimensionLineBuilder extends Builder {
             if(shape instanceof Point){
 
                 if(this.pointA == undefined){
-                    this.pointA = shape;
+                    this.pointA = this.makePointOnClick(view, position, shape);
                     this.pointA.setMode(Mode.depend);
                 }
                 else{
-                    this.pointB = shape;
+                    this.pointB = this.makePointOnClick(view, position, shape);
                     this.pointB.setMode(Mode.depend);
 
                     const normal = this.pointB.sub(this.pointA).rot90().unit();
@@ -760,7 +752,7 @@ class LengthSymbolBuilder extends LineByPointsBuilder {
 
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
         if(shape instanceof LineByPoints){
-            const symbol = new LengthSymbol({pointA : shape.pointA, pointB : shape.pointB, kind : 0});
+            const symbol = new LengthSymbol({pointA : shape.pointA, pointB : shape.pointB, lengthKind : 0});
             view.addShape(symbol);
         }
         else{
@@ -770,7 +762,7 @@ class LengthSymbolBuilder extends LineByPointsBuilder {
             else{
                 const pointB = this.makePointOnClick(view, position, shape);
 
-                const symbol = new LengthSymbol({ pointA : this.pointA, pointB, kind : 0});
+                const symbol = new LengthSymbol({ pointA : this.pointA, pointB, lengthKind : 0});
                 view.addShape(symbol);
 
                 this.pointA      = undefined;

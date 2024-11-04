@@ -624,24 +624,24 @@ export enum LineKind {
 }
 
 export abstract class AbstractLine extends Shape {
-    kind : number;
+    lineKind : number;
     pointA : Point;
     e!     : Vec2;
 
-    constructor(obj : { kind : number, pointA: Point }){
+    constructor(obj : { lineKind : number, pointA: Point }){
         super(obj);
-        if(obj.kind == undefined){
+        if(obj.lineKind == undefined){
             throw new MyError("line kind is undefined.")
         }
-        this.kind = obj.kind;
+        this.lineKind = obj.lineKind;
         this.pointA = obj.pointA;
     }
 
 
     makeObj() : any {
         let obj = Object.assign(super.makeObj(), {
-            kind   : this.kind,
-            pointA : this.pointA.toObj()
+            lineKind : this.lineKind,
+            pointA   : this.pointA.toObj()
         });
 
         return obj;
@@ -654,6 +654,12 @@ export abstract class AbstractLine extends Shape {
     getAllShapes(shapes : MathEntity[]){
         super.getAllShapes(shapes);
         shapes.push(this.pointA);
+    }
+
+    getProperties(){
+        return super.getProperties().concat([
+            "lineKind"
+        ]);
     }
 
     normal() : Vec2 {
@@ -670,7 +676,8 @@ export abstract class AbstractLine extends Shape {
         const p_minus = this.pointA.position.add(this.e.mul(-l));
         const p_plus  = this.pointA.position.add(this.e.mul( l));
         
-        switch(this.kind){
+        switch(this.lineKind){
+        case LineKind.line_segment:
         case LineKind.line:
             View.current.canvas.drawLine(this, p_minus, p_plus); 
             break;
@@ -689,7 +696,7 @@ export abstract class AbstractLine extends Shape {
 export class LineByPoints extends AbstractLine {
     pointB   : Point;
 
-    constructor(obj : { kind : number, pointA: Point, pointB: Point }){
+    constructor(obj : { lineKind : number, pointA: Point, pointB: Point }){
         super(obj);
         this.pointB = obj.pointB;
 
@@ -730,27 +737,35 @@ export class LineByPoints extends AbstractLine {
     }
 
     draw() : void {
-        if(this.kind == LineKind.line_segment){
+        const l = View.current.max.distance(View.current.min);
+        const p_plus = this.pointA.position.add(this.e.mul( l));
+        const p_minus = this.pointA.position.add(this.e.mul(-l));
 
+        switch(this.lineKind){
+        case LineKind.line_segment:
             View.current.canvas.drawLine(this, this.pointA.position, this.pointB.position);
-        }
-        else if(this.kind == LineKind.ray){
-            
-            const l = View.current.max.distance(View.current.min);
-            const p2 = this.pointA.position.add(this.e.mul( l));
-            View.current.canvas.drawLine(this, this.pointA.position, p2);
-        }
-        else{
-            throw new MyError();
+            break;
+
+        case LineKind.ray:
+            View.current.canvas.drawLine(this, this.pointA.position, p_plus);
+            break;
+
+        case LineKind.ray_reverse:
+            View.current.canvas.drawLine(this, this.pointA.position, p_minus);
+            break;
+
+        case LineKind.line:
+            View.current.canvas.drawLine(this, p_minus, p_plus);
+            break;
         }
     }
 
     reading(): Reading {
-        if(this.kind == LineKind.line_segment){
+        if(this.lineKind == LineKind.line_segment){
 
             return new Reading(this, TT('Draw a line from point "A" to point "B".'), [ this.pointA, this.pointB ]);
         }
-        else if(this.kind == LineKind.ray){
+        else if(this.lineKind == LineKind.ray){
             
             if(this.pointA.name != "" && this.pointB.name != ""){
 
@@ -768,18 +783,18 @@ export class LineByPoints extends AbstractLine {
 }
 
 export function makeLineSegment(pointA: Point, pointB: Point){
-    return new LineByPoints({ kind : LineKind.line_segment, pointA, pointB });
+    return new LineByPoints({ lineKind : LineKind.line_segment, pointA, pointB });
 }
 
 export function makeRay(pointA: Point, pointB: Point){
-    return new LineByPoints({ kind : LineKind.ray, pointA, pointB });
+    return new LineByPoints({ lineKind : LineKind.ray, pointA, pointB });
 }
 
 
 export class ParallelLine extends AbstractLine {   
     line : AbstractLine;
 
-    constructor(obj : { kind : number, pointA: Point, line: AbstractLine }){
+    constructor(obj : { lineKind : number, pointA: Point, line: AbstractLine }){
         super(obj);
 
         this.line = obj.line;

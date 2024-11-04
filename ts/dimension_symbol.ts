@@ -221,20 +221,25 @@ export class DimensionLine extends Shape {
 export class LengthSymbol extends Shape {
     pointA : Point;
     pointB : Point;
-    kind : number;
+    lengthKind : number;
 
-    constructor(obj : { pointA : Point, pointB : Point, kind : number }){
+    constructor(obj : { pointA : Point, pointB : Point, lengthKind : number }){
         super(obj);
+        if(obj.lengthKind == undefined){
+            throw new MyError("length kind is undefined.")
+        }
+
+
         this.pointA = obj.pointA;
         this.pointB = obj.pointB;
-        this.kind = obj.kind;
+        this.lengthKind = obj.lengthKind;
     }
 
     makeObj() : any {
         let obj = Object.assign(super.makeObj(), {
             pointA : this.pointA.toObj(),
             pointB : this.pointB.toObj(),
-            kind : this.kind
+            lengthKind : this.lengthKind
         });
 
         return obj;
@@ -242,7 +247,7 @@ export class LengthSymbol extends Shape {
 
     getProperties(){
         return super.getProperties().concat([
-            "kind"
+            "lengthKind"
         ])
     }
 

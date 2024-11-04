@@ -122,10 +122,10 @@ class StringProperty extends InputProperty {
 class NumberProperty extends InputProperty {
     input : InputNumber;
 
-    constructor(widget : Widget, name : string, value : number, step? : number, min? : number, max? : number){
+    constructor(widget : Widget, name : string, value : number, step : number, min : number, max : number){
         super(widget, name, "number");
         this.input = $input_number({
-            step : 0.1,
+            step : step,
             value : value,
             min : min,
             max : max,
@@ -354,10 +354,16 @@ export function showProperty(widget : Widget, nest : number){
                     
                 case "number":
                     if(name == "interval"){
-                        property = new NumberProperty(widget, name, value, 0.1, 0);
+                        property = new NumberProperty(widget, name, value, 0.1, 0, 10000);
+                    }
+                    else if(name == "lineKind"){
+                        property = new NumberProperty(widget, name, value, 1, 0, 3);
+                    }
+                    else if(name == "lengthKind"){
+                        property = new NumberProperty(widget, name, value, 1, 0, 3);
                     }
                     else{
-                        property = new NumberProperty(widget, name, value);
+                        property = new NumberProperty(widget, name, value, 0.1, -100, 100);
                     }
                     break;
                     
