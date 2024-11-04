@@ -737,27 +737,7 @@ export class LineByPoints extends AbstractLine {
     }
 
     draw() : void {
-        const l = View.current.max.distance(View.current.min);
-        const p_plus = this.pointA.position.add(this.e.mul( l));
-        const p_minus = this.pointA.position.add(this.e.mul(-l));
-
-        switch(this.lineKind){
-        case LineKind.line_segment:
-            View.current.canvas.drawLine(this, this.pointA.position, this.pointB.position);
-            break;
-
-        case LineKind.ray:
-            View.current.canvas.drawLine(this, this.pointA.position, p_plus);
-            break;
-
-        case LineKind.ray_reverse:
-            View.current.canvas.drawLine(this, this.pointA.position, p_minus);
-            break;
-
-        case LineKind.line:
-            View.current.canvas.drawLine(this, p_minus, p_plus);
-            break;
-        }
+        View.current.canvas.drawLineWith2Points(this, this.pointB);
     }
 
     reading(): Reading {

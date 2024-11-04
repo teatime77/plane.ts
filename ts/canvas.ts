@@ -44,6 +44,30 @@ export class Canvas {
         ctx.stroke();   
     }
 
+    drawLineWith2Points(line : AbstractLine, pointB : Point){
+        const l = View.current.max.distance(View.current.min);
+        const p_plus  = line.pointA.position.add(line.e.mul( l));
+        const p_minus = line.pointA.position.add(line.e.mul(-l));
+
+        switch(line.lineKind){
+        case LineKind.line_segment:
+            View.current.canvas.drawLine(line, line.pointA.position, pointB.position);
+            break;
+
+        case LineKind.ray:
+            View.current.canvas.drawLine(line, line.pointA.position, p_plus);
+            break;
+
+        case LineKind.ray_reverse:
+            View.current.canvas.drawLine(line, line.pointA.position, p_minus);
+            break;
+
+        case LineKind.line:
+            View.current.canvas.drawLine(line, p_minus, p_plus);
+            break;
+        }
+    }
+
     drawLines(lines : [Vec2, Vec2][], color : string, line_width : number){
         const ctx = this.ctx;
 

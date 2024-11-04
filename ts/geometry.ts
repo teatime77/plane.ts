@@ -61,46 +61,50 @@ export class Midpoint extends Point {
     }
 }
 
-export class FootOfPerpendicular extends Shape {
-    point:Point;
+export class FootOfPerpendicular extends AbstractLine {
     line: AbstractLine;
     foot : Point;
 
-    constructor(obj : { point:Point, line: AbstractLine }){
+    constructor(obj : { lineKind : number, pointA: Point, line: AbstractLine }){
         super(obj);
-        this.point = obj.point;
         this.line  = obj.line;
+        this.foot  = Point.fromArgs(Vec2.nan());
 
-        this.foot = Point.fromArgs(Vec2.zero());
         this.calc();
+    }
+    makeObj() : any {
+        return Object.assign(super.makeObj(), {
+            line  : this.line.toObj(),
+        });
     }
 
     getAllShapes(shapes : MathEntity[]){
         super.getAllShapes(shapes);
-        shapes.push(this.point, this.line, this.foot);
+        shapes.push(this.line, this.foot);
     }
 
     dependencies() : MathEntity[] {
-        return [ this.point, this.line ];
+        return super.dependencies().concat([ this.line ]);
     }
 
     setMode(mode : Mode){
+        super.setMode(mode);
         this.foot.setMode(mode);
     }
 
-    draw() : void {
-        this.point.draw();
-        this.line.draw();
-        this.foot.draw();
+    calc(){
+        const foot_pos = calcFootOfPerpendicular(this.pointA.position, this.line);
+        this.foot.setPosition(foot_pos);
+
+        this.e = this.line.e.rot90().unit();
     }
 
-    calc(){
-        const foot_pos = calcFootOfPerpendicular(this.point.position, this.line);
-        this.foot.setPosition(foot_pos);
+    draw() : void {
+        View.current.canvas.drawLineWith2Points(this, this.foot);
     }
 
     reading() : Reading {
-        return new Reading(this, TT('Let "A" be the foot of the perpendicular line drawn from point "B" to the line "C".'), [ this.foot, this.point, this.line]);
+        return new Reading(this, TT('Draw a perpendicular line from the point to the line.'), []);
     }
 }
 

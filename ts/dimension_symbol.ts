@@ -225,10 +225,13 @@ export class LengthSymbol extends Shape {
 
     constructor(obj : { pointA : Point, pointB : Point, lengthKind : number }){
         super(obj);
+        if((obj as any).mute == undefined){
+            this.mute = true;
+        }
+
         if(obj.lengthKind == undefined){
             throw new MyError("length kind is undefined.")
         }
-
 
         this.pointA = obj.pointA;
         this.pointB = obj.pointB;

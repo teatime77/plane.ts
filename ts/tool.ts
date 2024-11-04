@@ -49,8 +49,13 @@ export class Builder {
         shapes.forEach(x => x.draw());
     }
 
-    resetTool(){
+    resetTool(shape : MathEntity | undefined){
         View.current.resetMode();
+
+        if(shape != undefined){
+
+            showProperty(shape, 0);
+        }
     }
 }
 
@@ -62,7 +67,7 @@ export class SelectionTool extends Builder {
     maxSave : Vec2 | undefined;
 
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){ 
-        this.resetTool();
+        this.resetTool(undefined);
         if(shape != undefined){
 
             shape.setMode(Mode.target);
@@ -129,8 +134,7 @@ class PointBuilder extends Builder {
 
             view.addShape(new_point);
 
-            showProperty(new_point, 0);
-            this.resetTool();
+            this.resetTool(new_point);
         }
     }
 }
@@ -150,7 +154,7 @@ class MidpointBuilder extends Builder {
             const mid_point = new Midpoint( { position:Vec2.zero(), pointA : this.pointA, pointB : shape  } );
             view.addShape(mid_point);
             this.pointA      = undefined;
-            this.resetTool();
+            this.resetTool(mid_point);
         }
     }
 }
@@ -179,8 +183,8 @@ class CircleByPointBuilder extends Builder {
                 this.circle.point.setPosition(position);
             }
 
+            this.resetTool(this.circle);
             this.circle = undefined;
-            this.resetTool();
         }
     }
 
@@ -220,7 +224,7 @@ class CircleByRadiusBuilder extends Builder {
                 this.center = undefined;
                 this.position = undefined;
     
-                this.resetTool();
+                this.resetTool(circle);
             }            
         }
     }
@@ -262,10 +266,10 @@ class EllipseBuilder extends Builder {
         else{
             this.ellipse!.radiusY = this.getRadiusY(position);
 
+            this.resetTool(this.ellipse);
             this.ellipse = undefined;
             this.center = undefined;
             this.xPoint = undefined;
-            this.resetTool();
         }
     }
 
@@ -312,11 +316,12 @@ class ArcByPointBuilder extends Builder {
         }
         else{
 
+            this.resetTool(this.arc);
+
             this.arc = undefined;
             this.center = undefined;
             this.pointA = undefined;
             this.pointB = undefined;
-            this.resetTool();
         }
     }
 
@@ -347,7 +352,7 @@ class ArcByRadiusBuilder extends Builder {
     
                 this.center = undefined;
     
-                this.resetTool();
+                this.resetTool(arc);
             }            
         }
     }
@@ -402,7 +407,7 @@ class LineByPointsBuilder extends Builder {
             this.pointA = undefined;
             this.position = undefined;
 
-            this.resetTool();
+            this.resetTool(line);
         }
     }
 
@@ -452,8 +457,8 @@ class PolygonBuilder extends Builder {
 
             this.polygon.lines.push(line);
 
+            this.resetTool(this.polygon);
             this.polygon = undefined;
-            this.resetTool();
         }
         else{
             point.setMode(Mode.depend);
@@ -508,7 +513,8 @@ class ParallelLineBuilder extends Builder {
 
             this.line  = undefined;
             this.point = undefined;
-            this.resetTool();
+
+            this.resetTool(parallel_line);
         }
     }
 
@@ -518,24 +524,27 @@ class ParallelLineBuilder extends Builder {
 
 class PerpendicularBuilder extends Builder {
     point : Point | undefined;
+    line  : AbstractLine | undefined;
 
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
-        if(this.point == undefined){
-            if(shape instanceof Point){
-
-                this.point  = this.makePointOnClick(view, position, shape);
-                this.point.setMode(Mode.depend);
-            }
+        if(this.point == undefined && shape instanceof Point){
+            this.point  = this.makePointOnClick(view, position, shape);
+            this.point.setMode(Mode.depend);
         }
-        else{
-            if(shape instanceof AbstractLine){
-                const foot = new FootOfPerpendicular({ point : this.point, line : shape });
-                view.addShape(foot);
-
-                this.point = undefined;
-                this.resetTool();
-            }
+        else if(shape instanceof AbstractLine){
+            this.line = shape;
         }
+
+        if(this.point != undefined && this.line != undefined){
+
+            const foot = new FootOfPerpendicular({ lineKind : 3, pointA : this.point, line : this.line });
+            view.addShape(foot);
+
+            this.point = undefined;
+            this.line  = undefined;
+
+            this.resetTool(foot);
+    }
     }
 }
 
@@ -547,7 +556,7 @@ class PerpendicularLineBuilder extends Builder {
             const line = new PerpendicularLine({ lineKind : LineKind.line, pointA });
             view.addShape(line);
 
-            this.resetTool();
+            this.resetTool(line);
         }
     }
 }
@@ -598,7 +607,7 @@ class IntersectionBuilder extends Builder {
                 view.addShape(new_shape);
 
                 this.shape1 = undefined;
-                this.resetTool();
+                this.resetTool(new_shape);
             }
 
         }
@@ -628,7 +637,7 @@ class CirclePointTangentBuilder extends Builder {
 
             this.circle = undefined;
             this.point  = undefined;
-            this.resetTool();
+            this.resetTool(tangent);
         }
     }
 }
@@ -648,7 +657,7 @@ class CircleCircleTangentBuilder extends Builder {
                 view.addShape(tangent);
     
                 this.circle = undefined;
-                this.resetTool();
+                this.resetTool(tangent);
             }
         }
     }
@@ -687,7 +696,7 @@ class AngleBuilder extends Builder {
                 view.addShape(angle);
 
                 this.line1 = undefined;
-                this.resetTool();
+                this.resetTool(angle);
             }
         }
     }
@@ -723,11 +732,11 @@ class DimensionLineBuilder extends Builder {
         else{
 
             view.addShape(this.dimLine);
+            this.resetTool(this.dimLine);
 
             this.pointA  = undefined;
             this.pointB  = undefined;
             this.dimLine = undefined;
-            this.resetTool();
         }
     }
 
@@ -767,7 +776,7 @@ class LengthSymbolBuilder extends LineByPointsBuilder {
 
                 this.pointA      = undefined;
 
-                this.resetTool();
+                this.resetTool(symbol);
             }    
         }
     }
@@ -780,7 +789,7 @@ class TextBlockBuilder extends Builder {
         text_block.updateTextPosition();
 
         view.addShape(text_block);
-        this.resetTool();
+        this.resetTool(text_block);
     }
 }
 
