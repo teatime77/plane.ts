@@ -738,6 +738,7 @@ export function makeLinePointMap() : [Map<AbstractLine, Set<Point>>, Map<Point, 
             }
         }
         else if(shape instanceof FootOfPerpendicular){
+            add_line_to_points(shape, shape.foot);
             add_line_to_points(shape.line, shape.foot);
         }
         else if(shape instanceof LineLineIntersection){

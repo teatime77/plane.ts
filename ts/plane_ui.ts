@@ -24,6 +24,7 @@ export class Plane {
     canvas_block : Block;
     property_block : Block;
     shapes_block : Block;
+    narration_box : layout_ts.TextBox;
     editMode : boolean;
 
     show_axis! : CheckBox;
@@ -135,7 +136,14 @@ export class Plane {
             width : "100%",
             children : [],
             backgroundColor : "chocolate",
-        });            
+        });       
+        
+        this.narration_box = layout_ts.$textbox({
+            id : "narration-box",
+            text : "Hellor World",
+            backgroundColor : "khaki",
+            fontSize : "48px",
+        })
     }
 
     clear(){
@@ -143,6 +151,7 @@ export class Plane {
         tex_divs.forEach(x => x.remove());
     
         this.text_block.div.innerHTML = "";
+        this.narration_box.div.innerHTML = "";
     }
 }
 
@@ -238,7 +247,7 @@ export function drawLine(shape : Shape, p1 : Vec2, p2 : Vec2){
 
 export function makeGrid(plane : Plane){
     const root = $grid({
-        rows     : "25px 100% 25px",
+        rows     : "25px 100% 25px 80px",
         children:[
             $grid({
                 children: [
@@ -261,6 +270,8 @@ export function makeGrid(plane : Plane){
             })
             ,
             plane.shapes_block
+            ,
+            plane.narration_box
         ]
     });
 

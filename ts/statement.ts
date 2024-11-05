@@ -8,7 +8,7 @@ export class Statement extends MathEntity {
     static idTimeout : number | undefined;
 
     mathText : string = "";
-    texUI? : layout_ts.TexUI;
+    latexBox? : layout_ts.LaTeXBox;
     selectedShapes : MathEntity[];
 
     constructor(obj : { narration? : string, shapes : MathEntity[], mathText? : string }){
@@ -45,8 +45,8 @@ export class Statement extends MathEntity {
         return obj;
     }
 
-    makeTexUI() : layout_ts.TexUI {
-        return new layout_ts.TexUI({
+    makeTexUI() : layout_ts.LaTeXBox {
+        return new layout_ts.LaTeXBox({
             parent : Plane.one.text_block,
             text : "",
             click : async (ev : MouseEvent)=>{
@@ -73,11 +73,11 @@ export class Statement extends MathEntity {
         }
         const tex_text = term.tex();
 
-        if(this.texUI == undefined){
-            this.texUI = this.makeTexUI();
+        if(this.latexBox == undefined){
+            this.latexBox = this.makeTexUI();
         }
 
-        this.texUI.setText(tex_text);
+        this.latexBox.setText(tex_text);
     }
 
     setMathText(value : string){
@@ -92,7 +92,7 @@ export class Statement extends MathEntity {
 
     setMode(mode : Mode){
         super.setMode(mode);
-        if(this.texUI != undefined){
+        if(this.latexBox != undefined){
             let color : string;
 
             switch(mode){
@@ -101,19 +101,19 @@ export class Statement extends MathEntity {
             case Mode.target : color = "red"        ; break;
             }
 
-            this.texUI.setBorderColor(color);
+            this.latexBox.setBorderColor(color);
         }
     }
 
     show(){    
-        if(this.texUI != undefined){
-            this.texUI.show();
+        if(this.latexBox != undefined){
+            this.latexBox.show();
         }
     }
 
     hide(){        
-        if(this.texUI != undefined){
-            this.texUI.hide();
+        if(this.latexBox != undefined){
+            this.latexBox.hide();
         }
     }
 }
