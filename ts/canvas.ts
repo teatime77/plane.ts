@@ -12,12 +12,7 @@ export class Canvas {
         assert(this.ctx != null);
     }
 
-    clear(){
-        const rc = this.canvas.getBoundingClientRect();
-        this.ctx.clearRect(0, 0, rc.width, rc.height);
-    }
-
-    drawLine(shape : Shape | undefined, p1 : Vec2, p2 : Vec2){
+    getAttributes(shape : Shape | undefined) : [string, number]{
         let color : string;
         let line_width : number;
 
@@ -31,6 +26,17 @@ export class Canvas {
             color = fgColor;
             line_width = 1;
         }
+
+        return [color, line_width];
+    }
+
+    clear(){
+        const rc = this.canvas.getBoundingClientRect();
+        this.ctx.clearRect(0, 0, rc.width, rc.height);
+    }
+
+    drawLine(shape : Shape | undefined, p1 : Vec2, p2 : Vec2){
+        const [color, line_width] = this.getAttributes(shape);
 
         const pix1 = this.view.toPixPosition(p1);
         const pix2 = this.view.toPixPosition(p2);
@@ -141,5 +147,23 @@ export class Canvas {
         ctx.strokeText(text, pos_pix.x, pos_pix.y);
     }
 
+    drawRect(shape : Shape | undefined, p1 : Vec2, p2 : Vec2){
+        const [color, line_width] = this.getAttributes(shape);
+
+        const pix1 = this.view.toPixPosition(p1);
+        const pix2 = this.view.toPixPosition(p2);
+
+        const x = Math.min(pix1.x, pix2.x);
+        const y = Math.min(pix1.y, pix2.y);
+        const w = Math.abs(pix1.x - pix2.x);
+        const h = Math.abs(pix1.y - pix2.y);
+
+        const ctx = this.ctx;
+        ctx.beginPath();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = line_width;
+        ctx.rect(x, y, w, h);
+        ctx.stroke();   
+    }
 }
 }

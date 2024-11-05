@@ -124,6 +124,64 @@ export class SelectionTool extends Builder {
     }
 }
 
+export class RangeTool extends Builder {
+    selections : Shape[] = [];
+    downPosition? : Vec2;
+    movePosition? : Vec2;
+
+    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){ 
+        msg("range click");
+        if(event.ctrlKey){
+
+        }
+        else{
+
+        }
+    }
+
+    pointerdown(event : PointerEvent, view : View, position : Vec2, shape : Shape | undefined){
+        msg("range down");
+        this.resetTool(undefined);
+        this.downPosition = position;
+        this.movePosition = undefined;
+    }
+
+    pointermove(event : PointerEvent, view : View, position : Vec2, shape : Shape | undefined){
+        msg(`move ${event.buttons}`)
+        if(this.downPosition == undefined || event.buttons != 1){
+            return;
+        }
+
+        this.movePosition = position;
+
+        const [ min_x, min_y, max_x, max_y ] = MinMaxXY(this.downPosition, this.movePosition);
+        const points : Point[] = [];
+        for(const shape of View.current.allShapes()){
+            if(shape instanceof Point){
+                const pos = shape.position;
+                if(min_x <= pos.x && pos.x <= max_x && min_y <= pos.y && pos.y <= max_y){
+                    points.push(shape);
+                    shape.setMode(Mode.depend);
+                }
+            }
+        }
+
+        view.dirty = true;
+    }
+
+    pointerup(event : PointerEvent, view : View, position : Vec2, shape : Shape | undefined){
+        msg("range up");
+    }
+
+    drawTool(view: View): void {
+        if(this.downPosition == undefined || this.movePosition == undefined){
+            return;
+        }
+
+        View.current.canvas.drawRect(undefined, this.downPosition, this.movePosition);
+    }
+}
+
 class PointBuilder extends Builder {
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){  
         if(shape == undefined || shape instanceof AbstractLine || shape instanceof Circle){
@@ -852,6 +910,7 @@ export class StatementBuilder extends Builder {
 
 const toolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [
     [ SelectionTool             , "selection"         , TT("selection")        , [  ] ],
+    [ RangeTool                 , "range"             , TT("range")            , [  ] ],
     [ PointBuilder              , "point"             , TT("point")            , [ Point ] ],
     [ MidpointBuilder           , "mid-point"         , TT("mid point")        , [ Midpoint ] ],
     [ IntersectionBuilder       , "intersection"      , TT("intersection")     , [ LineLineIntersection, LineArcIntersection, ArcArcIntersection ] ],

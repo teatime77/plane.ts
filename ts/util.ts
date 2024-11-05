@@ -135,6 +135,16 @@ export function linear(src_min : number, src_val : number, src_max : number, dst
     return dst_val;
 }
 
+export function MinMaxXY(p1 : Vec2, p2 : Vec2) : [number,number,number,number] {
+    const min_x = Math.min(p1.x, p2.x);
+    const min_y = Math.min(p1.y, p2.y);
+
+    const max_x = Math.max(p1.x, p2.x);
+    const max_y = Math.max(p1.y, p2.y);
+
+    return [ min_x, min_y, max_x, max_y ];
+}
+
 export function pairKey(a : Widget, b : Widget) : string {
     return a.id <= b.id ? `${a.id}:${b.id}` : `${b.id}:${a.id}`;
 }
