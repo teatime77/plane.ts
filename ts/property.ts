@@ -307,8 +307,6 @@ export function showProperty(widget : Widget, nest : number){
 
     appendTitle(tbl, nest, widget.constructor.name);
 
-    let selected_shapes_property : SelectedShapesProperty | undefined;
-
     for(const property_name of properties){
 
         if(typeof property_name == "string"){
@@ -334,8 +332,6 @@ export function showProperty(widget : Widget, nest : number){
             else if(name == "selectedShapes" && widget instanceof Statement){
 
                 property = new SelectedShapesProperty(widget as Statement, name, value);
-                // property = selected_shapes_property;
-                // property_element  = property.flex.div;
                 property_element  = property.span;
 
             }
@@ -398,10 +394,6 @@ export function showProperty(widget : Widget, nest : number){
             throw new MyError();
         }
     }
-
-    // if(selected_shapes_property != undefined){
-    //     selected_shapes_property.layout();
-    // }
 
     if(widget instanceof Statement){
         addPopSelectedShapes(tbl, widget);
