@@ -144,6 +144,7 @@ export class RangeTool extends Builder {
         this.resetTool(undefined);
         this.downPosition = position;
         this.movePosition = undefined;
+        this.selections = [];
     }
 
     pointermove(event : PointerEvent, view : View, position : Vec2, shape : Shape | undefined){
@@ -155,12 +156,12 @@ export class RangeTool extends Builder {
         this.movePosition = position;
 
         const [ min_x, min_y, max_x, max_y ] = MinMaxXY(this.downPosition, this.movePosition);
-        const points : Point[] = [];
+        this.selections = [];
         for(const shape of View.current.allShapes()){
             if(shape instanceof Point){
                 const pos = shape.position;
                 if(min_x <= pos.x && pos.x <= max_x && min_y <= pos.y && pos.y <= max_y){
-                    points.push(shape);
+                    this.selections.push(shape);
                     shape.setMode(Mode.depend);
                 }
             }
@@ -171,6 +172,10 @@ export class RangeTool extends Builder {
 
     pointerup(event : PointerEvent, view : View, position : Vec2, shape : Shape | undefined){
         msg("range up");
+        if(this.selections.length != 0){
+
+            showProperty(this.selections, 0);
+        }
     }
 
     drawTool(view: View): void {

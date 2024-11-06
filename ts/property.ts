@@ -40,11 +40,11 @@ function appendRow(tbl : HTMLTableElement, nest : number, name : string, value :
 }
 
 export abstract class Property {
-    widget : Widget;
+    widgets : Widget[];
     name   : string;
 
-    constructor(widget : Widget, name : string){
-        this.widget = widget;
+    constructor(widgets : Widget[], name : string){
+        this.widgets = widgets;
         this.name   = name;
     }
 
@@ -56,12 +56,15 @@ export abstract class Property {
         msg(`set value:${this.name} ${value}`);
         const setter_name = this.setterName();
 
-        const obj = this.widget as any;
-        if(obj[setter_name] != undefined){
-            obj[setter_name](value);
-        }
-        else{
-            obj[this.name] = value;
+        for(const widget of this.widgets){
+
+            const obj = widget as any;
+            if(obj[setter_name] != undefined){
+                obj[setter_name](value);
+            }
+            else{
+                obj[this.name] = value;
+            }
         }
 
         View.current.dirty = true;
@@ -71,8 +74,8 @@ export abstract class Property {
 export class TextAreaProperty extends Property {
     textArea : TextArea;
 
-    constructor(widget : Widget, name : string, value : string){
-        super(widget, name);
+    constructor(widgets : Widget[], name : string, value : string){
+        super(widgets, name);
         this.textArea = $textarea({
             id   : "text-block-text-area",
             cols : 20,
@@ -80,9 +83,12 @@ export class TextAreaProperty extends Property {
             value : value,
             change : async (ev : Event)=>{
                 this.setValue(this.textArea.getValue());
-                if(this.widget instanceof TextBlock){
+                for(const widget of this.widgets){
 
-                    this.widget.div.innerText = this.textArea.getValue();
+                    if(widget instanceof TextBlock){
+
+                        widget.div.innerText = this.textArea.getValue();
+                    }
                 }
             }
         });
@@ -92,8 +98,8 @@ export class TextAreaProperty extends Property {
 export abstract class InputProperty extends Property {
     abstract getInput()  : HTMLInputElement;
 
-    constructor(widget : Widget, name : string, input_type : string){
-        super(widget, name);
+    constructor(widgets : Widget[], name : string, input_type : string){
+        super(widgets, name);
     }
 
     valueChanged() : void {
@@ -104,8 +110,8 @@ export abstract class InputProperty extends Property {
 class StringProperty extends InputProperty {
     input : InputText;
 
-    constructor(widget : Widget, name : string, value : string){
-        super(widget, name, "text");
+    constructor(widgets : Widget[], name : string, value : string){
+        super(widgets, name, "text");
         this.input = $input_text({
             text : value,
             change : async (ev : Event)=>{
@@ -122,8 +128,8 @@ class StringProperty extends InputProperty {
 class NumberProperty extends InputProperty {
     input : InputNumber;
 
-    constructor(widget : Widget, name : string, value : number, step : number, min : number, max : number){
-        super(widget, name, "number");
+    constructor(widgets : Widget[], name : string, value : number, step : number, min : number, max : number){
+        super(widgets, name, "number");
         this.input = $input_number({
             step : step,
             value : value,
@@ -144,8 +150,8 @@ class NumberProperty extends InputProperty {
 class BooleanProperty extends InputProperty {
     input : CheckBox;
 
-    constructor(widget : Widget, name : string, value : boolean){
-        super(widget, name, "checkbox");
+    constructor(widgets : Widget[], name : string, value : boolean){
+        super(widgets, name, "checkbox");
         this.input = $checkbox({
             text : name,
             change : async (ev : Event)=>{
@@ -168,8 +174,8 @@ class BooleanProperty extends InputProperty {
 class ColorProperty extends InputProperty {
     input : InputColor;
 
-    constructor(widget : Widget, name : string, value : string){
-        super(widget, name, "color");
+    constructor(widgets : Widget[], name : string, value : string){
+        super(widgets, name, "color");
         this.input = $input_color({
             text : value
         });
@@ -187,8 +193,8 @@ export class AngleMarkProperty extends Property {
     img : HTMLImageElement;
     imgButtons : HTMLImageElement[];
 
-    constructor(angle : Angle, name : string, value : number){
-        super(angle, name);
+    constructor(angles : Angle[], name : string, value : number){
+        super(angles, name);
 
         const [ origin, , ] = i18n_ts.parseURL();
 
@@ -196,7 +202,7 @@ export class AngleMarkProperty extends Property {
 
         const button_img_urls = range(Angle.numMarks).map(i => `${origin}/lib/plane/img/angle-${i}.png`) as string[];
     
-        [this.img, this.dlg, this.imgButtons] = makeImageButtons(this.span, `${origin}/lib/plane/img/angle-${angle.angleMark}.png`, button_img_urls);
+        [this.img, this.dlg, this.imgButtons] = makeImageButtons(this.span, `${origin}/lib/plane/img/angle-${angles[0].angleMark}.png`, button_img_urls);
     
         this.img.addEventListener("click", (ev:MouseEvent)=>{
             this.dlg.showModal();
@@ -219,8 +225,8 @@ export class SelectedShapesProperty extends Property {
 
     span : HTMLSpanElement;
 
-    constructor(statement : Statement, name : string, value : MathEntity[]){
-        super(statement, name);
+    constructor(statements : Statement[], name : string, value : MathEntity[]){
+        super(statements, name);
         SelectedShapesProperty.one = this;
         this.span = document.createElement("span");
         this.span.id = "selected-shapes-property-span";
@@ -297,21 +303,41 @@ function appendDelete(tbl : HTMLTableElement, shape : MathEntity){
     tbl.append(row);
 }
 
-export function showProperty(widget : Widget, nest : number){
-    const properties = widget.getProperties();
+export function showProperty(widget : Widget | Widget[], nest : number){
+    let widgets : Widget[];
+    if(widget instanceof Widget){
+        widgets = [widget];
+    }
+    else{
+        widgets = widget;
+    }
+
+    let properties : string[] = [];
+    for(const [idx, w] of widgets.entries() ){
+        const names = w.getProperties();
+        if(idx == 0){
+            properties = names;
+        }
+        else{
+            properties = properties.filter(x => names.includes(x));
+        }
+    }
 
     const tbl = $("property-list") as HTMLTableElement;
     if(nest == 0){
         tbl.innerHTML = "";
     }
 
-    appendTitle(tbl, nest, widget.constructor.name);
+    const constructor_names = unique(widgets.map(x => x.constructor.name));
+    for(const constructor_name of constructor_names){
+        appendTitle(tbl, nest, constructor_name);
+    }
 
     for(const property_name of properties){
 
         if(typeof property_name == "string"){
             const name = property_name;
-            const value = (widget as any)[name];
+            const value = (widgets[0] as any)[name];
             if(value == undefined){
                 continue;
             }
@@ -321,17 +347,19 @@ export function showProperty(widget : Widget, nest : number){
 
             if(name == "narration" || name == "mathText" || name == "text" && widget instanceof TextBlock){
 
-                property = new TextAreaProperty(widget, name, value as string);
+                property = new TextAreaProperty(widgets, name, value as string);
                 property_element = property.textArea.textArea;
             }
-            else if(name == "angleMark" && widget instanceof Angle){
+            else if(name == "angleMark"){
 
-                property = new AngleMarkProperty(widget as Angle, name, value);
+                const angles = widgets.filter(x => x instanceof Angle) as Angle[];
+                property = new AngleMarkProperty(angles, name, value);
                 property_element  = property.span;
             }
             else if(name == "selectedShapes" && widget instanceof Statement){
 
-                property = new SelectedShapesProperty(widget as Statement, name, value);
+                const statements = widgets.filter(x => x instanceof Statement) as Statement[];
+                property = new SelectedShapesProperty(statements, name, value);
                 property_element  = property.span;
 
             }
@@ -340,31 +368,31 @@ export function showProperty(widget : Widget, nest : number){
                 case "string":
                     if(name == "color"){
 
-                        property = new ColorProperty(widget, name, value);
+                        property = new ColorProperty(widgets, name, value);
                     }
                     else{
 
-                        property = new StringProperty(widget, name, value);
+                        property = new StringProperty(widgets, name, value);
                     }
                     break;
                     
                 case "number":
                     if(name == "interval"){
-                        property = new NumberProperty(widget, name, value, 0.1, 0, 10000);
+                        property = new NumberProperty(widgets, name, value, 0.1, 0, 10000);
                     }
                     else if(name == "lineKind"){
-                        property = new NumberProperty(widget, name, value, 1, 0, 3);
+                        property = new NumberProperty(widgets, name, value, 1, 0, 3);
                     }
                     else if(name == "lengthKind"){
-                        property = new NumberProperty(widget, name, value, 1, 0, 3);
+                        property = new NumberProperty(widgets, name, value, 1, 0, 3);
                     }
                     else{
-                        property = new NumberProperty(widget, name, value, 0.1, -100, 100);
+                        property = new NumberProperty(widgets, name, value, 0.1, -100, 100);
                     }
                     break;
                     
                 case "boolean":
-                    property = new BooleanProperty(widget, name, value);
+                    property = new BooleanProperty(widgets, name, value);
                     break;
                     
                 case "object":

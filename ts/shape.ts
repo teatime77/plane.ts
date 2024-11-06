@@ -561,7 +561,14 @@ export class Point extends Shape {
         const color = this.modeColor();
 
         const radius = (this.mode == Mode.none ? 1 : 2) * Point.radius;
-        View.current.canvas.drawCircle(this.position, radius, color, null, 0);
+        if(this.visible){
+
+            View.current.canvas.drawCircle(this.position, radius, color, null, 0);
+        }
+        else{
+
+            View.current.canvas.drawCircle(this.position, radius, null, color, 0);
+        }
         
         if(this.isOver){
 
