@@ -173,7 +173,7 @@ export class View extends Widget {
         if(this.dirty){
             this.dirty = false;
 
-            msg("redraw");
+            // msg("redraw");
 
             this.canvas.clear();
 
