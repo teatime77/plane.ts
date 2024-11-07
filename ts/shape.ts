@@ -750,7 +750,12 @@ export class LineByPoints extends AbstractLine {
     reading(): Reading {
         if(this.lineKind == LineKind.line_segment){
 
-            return new Reading(this, TT('Draw a line from point "A" to point "B".'), [ this.pointA, this.pointB ]);
+            if(this.pointA.name != "" && this.pointB.name != ""){
+                return new Reading(this, TT('Draw a line from point "A" to point "B".'), [ this.pointA, this.pointB ]);
+            }
+            else{
+                return new Reading(this, TT('Draw a line.'), []);
+            }
         }
         else if(this.lineKind == LineKind.ray){
             

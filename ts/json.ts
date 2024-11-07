@@ -198,6 +198,12 @@ export function parseObject(obj: any) : any {
     case SelectedShape.name:
         return new SelectedShape(obj);
 
+    case PropertyChange.name:
+        return new PropertyChange(obj);
+
+    case Motion.name:
+        return new Motion(obj);
+
     default:
         throw new MyError();
     }

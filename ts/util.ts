@@ -194,4 +194,31 @@ function makeName(){
     }
 }
 
+
+function setterName(name : string) : string {
+    return "set" + name[0].toUpperCase() + name.substring(1);
+}
+
+export function setProperty(obj : any, property_name : string, newValue : any){
+    const setter_name = setterName(property_name);
+    if(obj[setter_name] != undefined){
+        obj[setter_name](newValue);
+    }
+    else{
+        obj[property_name] = newValue;
+    }
+}
+
+export function anyToObj(obj : any) : any {
+    if(Array.isArray(obj)){
+        return obj.map(x => anyToObj(x));
+    }
+    else if(obj instanceof Widget){
+        return obj.toObj();
+    }
+    else{
+        return obj;
+    }
+}
+
 }

@@ -48,22 +48,17 @@ export abstract class Property {
         this.name   = name;
     }
 
-    setterName() : string {
-        return "set" + this.name[0].toUpperCase() + this.name.substring(1);
-    }
-
-    setValue(value : any){
-        msg(`set value:${this.name} ${value}`);
-        const setter_name = this.setterName();
+    setValue(newValue : any){
+        msg(`set value:${this.name} ${newValue}`);
 
         for(const widget of this.widgets){
 
             const obj = widget as any;
-            if(obj[setter_name] != undefined){
-                obj[setter_name](value);
-            }
-            else{
-                obj[this.name] = value;
+            const oldValue = obj[this.name];
+            setProperty(widget, this.name, newValue);
+
+            if(Builder.tool instanceof MotionBuilder && !(widget instanceof Motion)){
+                Builder.tool.animation.addPropertyChange(widget, this.name, oldValue, newValue);
             }
         }
 

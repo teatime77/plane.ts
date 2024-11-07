@@ -414,6 +414,11 @@ export class View extends Widget {
 
         this.dirty = true;
     }
+
+    restoreView(){
+        const motions = this.shapes.filter(x => x instanceof Motion) as Motion[];
+        motions.reverse().forEach(x => x.restorePropertyChanges());
+    }
 }
 
 class Grid {

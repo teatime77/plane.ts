@@ -107,5 +107,12 @@ export class Vec2 {
         return new Vec2(cs * (this.x - this.y), cs * (this.x + this.y));
     }
 
+    static interpolate(p1 : Vec2, p2 : Vec2, rate : number){
+        assert(0 <= rate && rate <= 1);
+        const x = (1 - rate) * p1.x + rate * p2.x;
+        const y = (1 - rate) * p1.y + rate * p2.y;
+
+        return new Vec2(x, y);
+    }
 }
 }

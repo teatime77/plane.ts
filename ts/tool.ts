@@ -65,6 +65,7 @@ export class SelectionTool extends Builder {
     selectedShape : Shape | undefined;
     minSave : Vec2 | undefined;
     maxSave : Vec2 | undefined;
+    oldPosition? : Vec2;
 
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){ 
         this.resetTool(undefined);
@@ -85,6 +86,10 @@ export class SelectionTool extends Builder {
         if(shape != undefined){
 
             shape.shapePointerdown(position);
+
+            if(shape instanceof Point){
+                this.oldPosition = shape.position;
+            }
         }
     }
 
@@ -117,6 +122,11 @@ export class SelectionTool extends Builder {
     }
 
     pointerup(event : PointerEvent, view : View, position : Vec2, shape : Shape | undefined){
+        if(this instanceof MotionBuilder && this.selectedShape instanceof Point && !this.selectedShape.position.equals(this.oldPosition!)){
+            msg(`position changed:`)
+            this.animation.addPropertyChange(this.selectedShape, "position", this.oldPosition, this.selectedShape.position);
+        }
+
         this.downOffset    = undefined;
         this.selectedShape = undefined;
         this.minSave = undefined;
@@ -913,7 +923,19 @@ export class StatementBuilder extends Builder {
     }
 }
 
-export class AnimationBuilder extends Builder {    
+export class MotionBuilder extends SelectionTool { 
+    animation : Motion;
+
+    constructor(){
+        super();
+
+        this.animation = new Motion({ propertyChanges : [] });
+        View.current.addShape(this.animation);
+
+        showProperty(this.animation, 0);
+    }
+
+
 }
 
 const toolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [
@@ -939,7 +961,7 @@ const toolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [
     [ LengthSymbolBuilder       , "length-symbol"     , TT("length symbol")    , [ LengthSymbol ] ],
     [ TextBlockBuilder          , "text"              , TT("text")             , [ TextBlock ] ],
     [ StatementBuilder          , "statement"         , TT("statement")        , [ Statement ] ],
-    [ AnimationBuilder          , "animation"         , TT("animation")        , [ Animation ] ],
+    [ MotionBuilder             , "animation"         , TT("animation")        , [ Motion ] ],
 ];
 
 export function makeShapeButton(shape : MathEntity) : layout_ts.Button {

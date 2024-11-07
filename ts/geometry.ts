@@ -692,10 +692,89 @@ export class SelectedShape extends MathEntity {
     }
 }
 
-export class Animation extends MathEntity {
+export class PropertyChange {
+    widget : Widget;
+    propertyName : string;
+    oldValue : any;
+    newValue : any;
+
+    constructor(obj : { widget : Widget, propertyName : string, oldValue : any, newValue : any }){
+        this.widget = obj.widget;
+        this.propertyName = obj.propertyName;
+        this.oldValue = obj.oldValue;
+        this.newValue = obj.newValue;
+    }
+
+    makeObj() : any {
+        return {
+            typeName: this.constructor.name,
+            widget : this.widget.toObj(),
+            propertyName : this.propertyName,
+            oldValue : anyToObj(this.oldValue),
+            newValue : anyToObj(this.newValue)
+        }
+    }
+
+    restore(){
+        setProperty(this.widget, this.propertyName, this.oldValue);
+    }
+}
+
+export class Motion extends MathEntity {
+    propertyChanges : PropertyChange[] = [];
+
+    constructor(obj : { propertyChanges : PropertyChange[] }){
+        super(obj);
+        this.propertyChanges = obj.propertyChanges;
+    }
+
+    makeObj() : any {
+        return Object.assign(super.makeObj(), {
+            propertyChanges : this.propertyChanges.map(x => x.makeObj()),
+        });
+    }    
+
+    addPropertyChange(widget : Widget, propertyName : string, oldValue : any, newValue : any){
+        msg(`add Property Change ${propertyName} ${oldValue}=>${newValue}`);
+        this.propertyChanges.push( new PropertyChange({ widget, propertyName, oldValue, newValue }) );
+    }
+
     reading(): Reading {
-        throw new Error("Method not implemented.");
+        return new Reading(this, "", []);
     }   
+
+    async animate(speech : i18n_ts.AbstractSpeech){
+        if(this.narration != ""){
+            speech.speak(this.narration);
+        }
+
+        const startTime = Date.now();
+        while(true){
+            const endTime = Date.now();
+            const rate = (endTime - startTime) / 3000;
+            if(1 < rate){
+                break;
+            }
+
+            for(const property_change of this.propertyChanges){
+
+                if(property_change.widget instanceof Point && property_change.propertyName == "position"){
+                    const point = property_change.widget;
+
+                    const midway_position = Vec2.interpolate(property_change.oldValue, property_change.newValue, rate);
+                    point.setPosition(midway_position);
+                }
+            }
+
+            View.current.dirty = true;
+            View.current.updateShapes();
+            await sleep(10);
+        }
+    }
+
+    restorePropertyChanges(){
+        this.propertyChanges.reverse().forEach(x => x.restore());
+    }
 }
 
 export function makeLinePointMap() : [Map<AbstractLine, Set<Point>>, Map<Point, Set<AbstractLine>>] {
