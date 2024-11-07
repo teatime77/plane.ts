@@ -692,6 +692,12 @@ export class SelectedShape extends MathEntity {
     }
 }
 
+export class Animation extends MathEntity {
+    reading(): Reading {
+        throw new Error("Method not implemented.");
+    }   
+}
+
 export function makeLinePointMap() : [Map<AbstractLine, Set<Point>>, Map<Point, Set<AbstractLine>>] {
     const line_to_points = new Map<AbstractLine, Set<Point>>();
     const point_to_lines = new Map<Point, Set<AbstractLine>>();

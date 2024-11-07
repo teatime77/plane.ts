@@ -913,6 +913,9 @@ export class StatementBuilder extends Builder {
     }
 }
 
+export class AnimationBuilder extends Builder {    
+}
+
 const toolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [
     [ SelectionTool             , "selection"         , TT("selection")        , [  ] ],
     [ RangeTool                 , "range"             , TT("range")            , [  ] ],
@@ -936,6 +939,7 @@ const toolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [
     [ LengthSymbolBuilder       , "length-symbol"     , TT("length symbol")    , [ LengthSymbol ] ],
     [ TextBlockBuilder          , "text"              , TT("text")             , [ TextBlock ] ],
     [ StatementBuilder          , "statement"         , TT("statement")        , [ Statement ] ],
+    [ AnimationBuilder          , "animation"         , TT("animation")        , [ Animation ] ],
 ];
 
 export function makeShapeButton(shape : MathEntity) : layout_ts.Button {

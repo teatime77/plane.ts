@@ -105,9 +105,10 @@ export class Plane {
             backgroundColor : "lime",
         });
     
-        this.tool_block = $flex({
+        this.tool_block = $grid({
             id : "tool-block",
-            direction : "column",
+            columns  : "36px 36px",
+            rows     : "auto",
             children : tool_buttons,
             backgroundColor : "green",
         });
