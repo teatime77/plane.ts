@@ -259,6 +259,8 @@ function addPopSelectedShapes(tbl : HTMLTableElement, shape : Statement){
 
     const button = $button({
         text : "pop shape",
+        color : fgColor,
+        backgroundColor : bgColor,
         click : async (ev : MouseEvent)=>{
             shape.selectedShapes.pop();
 
@@ -283,6 +285,8 @@ function appendDelete(tbl : HTMLTableElement, shape : MathEntity){
 
     const button = document.createElement("button");
     button.innerText = "delete";
+    button.style.color = fgColor;
+    button.style.backgroundColor = bgColor;
 
     if(all_dependencies.includes(shape as Shape)){
         button.disabled = true;

@@ -151,7 +151,13 @@ export class View extends Widget {
         const shapes : MathEntity[] = [];
         this.shapes.forEach(x => x.getAllShapes(shapes));
 
-        return unique(shapes);
+        const unique_shapes = unique(shapes);
+
+        for(const [i, x] of unique_shapes.entries()){
+            x.order = i;
+        }
+
+        return unique_shapes;
     }
 
     removeUnusedDivs(){
@@ -512,7 +518,7 @@ class Grid {
                 }
             }        
 
-            this.view.canvas.drawLines(axis_lines, "black", 1.0);
+            this.view.canvas.drawLines(axis_lines, fgColor, 1.0);
             this.view.canvas.drawLines(main_lines, "gray", 0.5);
             this.view.canvas.drawLines(sub_lines , "gray", 0.2);
         }
@@ -526,11 +532,11 @@ class Grid {
 
                 const text = (n == 0 ? "0" : a.toFixed(fraction_digits));
                 if(axis == "X"){                    
-                    this.view.canvas.drawText(new Vec2(a, 0), text, "black");
+                    this.view.canvas.drawText(new Vec2(a, 0), text, fgColor);
                 }
                 else{
 
-                    this.view.canvas.drawText(new Vec2(0, a), text, "black");
+                    this.view.canvas.drawText(new Vec2(0, a), text, fgColor);
                 }
             }
         }

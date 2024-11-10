@@ -6,7 +6,8 @@ const Reading = i18n_ts.Reading;
 namespace plane_ts {
 //
 const TT = i18n_ts.TT;
-export const fgColor = "black";
+export const fgColor = "white";
+export const bgColor = "#003000";
 export const lineWidth = 1;
 let capturedShape : MathEntity | undefined;
 
@@ -88,6 +89,7 @@ export abstract class MathEntity extends Widget implements i18n_ts.Readable, par
     }
 
     getAllShapes(shapes : MathEntity[]){
+        shapes.push(this);
     }
 
 
@@ -419,10 +421,6 @@ export abstract class Shape extends MathEntity {
 
     modeLineWidth() : number {
         return (this.isOver || this.mode != Mode.none ? 3 : this.lineWidth);
-    }
-
-    getAllShapes(shapes : MathEntity[]){
-        shapes.push(this);
     }
 
     calc(){        

@@ -121,7 +121,7 @@ export class PerpendicularLine extends AbstractLine {
         const [line_to_points, point_to_lines] = makeLinePointMap();
         const lines_set = point_to_lines.get(this.pointA);
         if(lines_set != undefined){
-            const lines = Array.from(lines_set.values());
+            const lines = Array.from(lines_set.values()).filter(x => x.order < this.pointA.order);
             if(lines.length == 1){
                 const line = lines[0];
                 this.e = line.e.rot90().unit();

@@ -10,6 +10,7 @@ export abstract class Widget {
     static maxId = 0;
     static processed : Set<number>;
     id : number;
+    order : number = NaN;
 
     constructor(obj : any){        
         if(obj.id != undefined){

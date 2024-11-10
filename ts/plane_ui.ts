@@ -123,7 +123,8 @@ export class Plane {
         this.canvas_block = $block({
             children : [],
             aspectRatio : 1,
-            backgroundColor : "orange",
+            color : fgColor,
+            backgroundColor : bgColor,
         });
     
         this.property_block = $block({
@@ -142,9 +143,12 @@ export class Plane {
         this.narration_box = layout_ts.$textbox({
             id : "narration-box",
             text : "Hellor World",
-            backgroundColor : "khaki",
+            color : fgColor,
+            backgroundColor : bgColor,
+            padding : "20px",
+            textAlign : "center",
             fontSize : "48px",
-        })
+        });this.text_block.div.style.color
     }
 
     clear(){
@@ -159,7 +163,8 @@ export class Plane {
 export function makePropertyTable(div : HTMLElement){
     const table = document.createElement("table");
     table.id = "property-list";
-    table.style.backgroundColor = "white";
+    table.style.color = fgColor;
+    table.style.backgroundColor = bgColor;
     table.style.height = "min-content";
 
     div.append(table);
@@ -197,7 +202,6 @@ export function makeCanvas(div : HTMLElement) : HTMLCanvasElement {
     const canvas = document.createElement("canvas");
     canvas.style.width  = "100%";
     canvas.style.height = "100%";
-    canvas.style.backgroundColor = "bisque";
 
     div.append(canvas);
 
