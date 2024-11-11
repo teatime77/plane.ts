@@ -135,6 +135,7 @@ export class Plane {
     
         this.shapes_block = $flex({
             id : "shapes-block",
+            direction : "column",
             width : "100%",
             children : [],
             backgroundColor : "chocolate",

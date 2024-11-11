@@ -313,7 +313,7 @@ class CircleByRadiusBuilder extends Builder {
     drawTool(view : View){
         if(this.center != undefined){
             const radius = this.center.position.distance(this.position!);
-            View.current.canvas.drawCircle(this.center.position, radius, null, fgColor, lineWidth);
+            View.current.canvas.drawCircleRaw(this.center.position, radius, fgColor, defaultLineWidth);
         }
     }
 }

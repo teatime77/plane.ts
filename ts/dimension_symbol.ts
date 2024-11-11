@@ -100,9 +100,6 @@ export class Angle extends Shape {
 
     draw() : void {
         const [start, end] = this.startEndAngle();
-
-        const color = this.modeColor();
-        const line_width = (this.isOver || this.mode != Mode.none ? 3 : 1);
         
         for(const i of range(Angle.numMarks)){
             if(this.angleMark < i){
@@ -111,7 +108,7 @@ export class Angle extends Shape {
 
             const scales = [1, 0.8, 1.2, 1.4];
             let radius = Angle.radius1 * scales[i];
-            View.current.canvas.drawArc(this.intersection.position, radius, null, color, line_width, start, end);
+            View.current.canvas.drawArc(this, this.intersection.position, radius, start, end);
         }
     }
 

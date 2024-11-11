@@ -24,7 +24,7 @@ export class Canvas {
         else{
 
             color = fgColor;
-            line_width = 1;
+            line_width = defaultLineWidth;
         }
 
         return [color, line_width];
@@ -57,19 +57,19 @@ export class Canvas {
 
         switch(line.lineKind){
         case LineKind.line_segment:
-            View.current.canvas.drawLine(line, line.pointA.position, pointB.position);
+            this.drawLine(line, line.pointA.position, pointB.position);
             break;
 
         case LineKind.ray:
-            View.current.canvas.drawLine(line, line.pointA.position, p_plus);
+            this.drawLine(line, line.pointA.position, p_plus);
             break;
 
         case LineKind.ray_reverse:
-            View.current.canvas.drawLine(line, line.pointA.position, p_minus);
+            this.drawLine(line, line.pointA.position, p_minus);
             break;
 
         case LineKind.line:
-            View.current.canvas.drawLine(line, p_minus, p_plus);
+            this.drawLine(line, p_minus, p_plus);
             break;
         }
     }
@@ -90,9 +90,7 @@ export class Canvas {
         }
     }
 
-    drawArc(center : Vec2, radius : number, 
-            fill_style : string | null, stroke_style : string | null, line_width : number, 
-            start_angle : number, end_angle : number){
+    drawArcRaw(center : Vec2, radius : number, start_angle : number, end_angle : number, color : string, line_width? : number){
         const ctx = this.ctx;
         const pix = this.view.toPixPosition(center);
 
@@ -105,22 +103,30 @@ export class Canvas {
         ctx.beginPath();
         ctx.arc(pix.x, pix.y, radius_pix, start_angle, end_angle, true);
 
-        if(fill_style != null){
+        if(line_width == undefined){
 
-            ctx.fillStyle = fill_style;
+            ctx.fillStyle = color;
             ctx.fill();
         }
-
-        if(stroke_style != null){
+        else{
 
             ctx.lineWidth   = line_width;
-            ctx.strokeStyle = stroke_style;
+            ctx.strokeStyle = color;
             ctx.stroke();
         }
     }
 
-    drawCircle(center : Vec2, radius : number, fill_style : string | null, stroke_style : string | null, line_width : number){
-        this.drawArc(center, radius, fill_style, stroke_style, line_width, 0, 2 * Math.PI)
+    drawCircleRaw(center : Vec2, radius : number, color : string, line_width? : number){
+        this.drawArcRaw(center, radius, 0, 2 * Math.PI, color, line_width)
+    }
+
+    drawArc(shape : Shape, center : Vec2, radius : number, start_angle : number, end_angle : number){
+        const [color, line_width] = this.getAttributes(shape);
+        this.drawArcRaw(center, radius, start_angle, end_angle, color, line_width)
+    }
+
+    drawCircle(shape : Shape, center : Vec2, radius : number){
+        this.drawArc(shape, center, radius, 0, 2 * Math.PI)
     }
 
     drawEllipse(center : Vec2, radius_x : number, radius_y : number, rotation : number, color : string, line_width : number){

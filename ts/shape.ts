@@ -8,7 +8,7 @@ namespace plane_ts {
 const TT = i18n_ts.TT;
 export const fgColor = "white";
 export const bgColor = "#003000";
-export const lineWidth = 1;
+export const defaultLineWidth = 2;
 let capturedShape : MathEntity | undefined;
 
 export enum Mode {
@@ -310,7 +310,7 @@ export class TextBlock extends MathEntity {
 export abstract class Shape extends MathEntity {
     name      : string = "";
     color     : string = fgColor;
-    lineWidth : number = 1;
+    lineWidth : number = defaultLineWidth;
     caption   : TextBlock | undefined;
     depends   : Shape[] = [];
 
@@ -355,7 +355,7 @@ export abstract class Shape extends MathEntity {
             obj.color = this.color;
         }
 
-        if(this.lineWidth != 1){
+        if(this.lineWidth != defaultLineWidth){
             obj.lineWidth = this.lineWidth;
         }
 
@@ -561,16 +561,16 @@ export class Point extends Shape {
         const radius = (this.mode == Mode.none ? 1 : 2) * Point.radius;
         if(this.visible){
 
-            View.current.canvas.drawCircle(this.position, radius, color, null, 0);
+            View.current.canvas.drawCircleRaw(this.position, radius, color);
         }
         else{
 
-            View.current.canvas.drawCircle(this.position, radius, null, color, 0);
+            View.current.canvas.drawCircleRaw(this.position, radius, color, defaultLineWidth);
         }
         
         if(this.isOver){
 
-            View.current.canvas.drawCircle(this.position, 3 * Point.radius, null, "gray", 1);
+            View.current.canvas.drawCircleRaw(this.position, 3 * Point.radius, "gray", defaultLineWidth);
         }
     }
 
@@ -873,7 +873,7 @@ export abstract class Circle extends CircleArc {
     draw() : void {
         const stroke_color = this.modeColor();
         const line_width = this.modeLineWidth();
-        View.current.canvas.drawCircle(this.center.position, this.radius(), null, stroke_color, line_width)
+        View.current.canvas.drawCircle(this, this.center.position, this.radius());
     }
 }
 
@@ -1051,11 +1051,8 @@ export class ArcByPoint extends CircleArc {
     }
 
     draw(): void {
-        const stroke_color = this.modeColor();
-        const line_width = this.modeLineWidth();
-
         const [th1, th2] = this.angles();
-        View.current.canvas.drawArc(this.center.position, this.radius(), null, stroke_color, line_width, th1, th2);
+        View.current.canvas.drawArc(this, this.center.position, this.radius(), th1, th2);
     }
 
     radius() : number {
@@ -1159,9 +1156,7 @@ export class ArcByRadius extends CircleArc {
     }
 
     draw(): void {
-        const stroke_color = this.modeColor();
-        const line_width = this.modeLineWidth();
-        View.current.canvas.drawArc(this.center.position, this.radius(), null, stroke_color, line_width, this.startAngle, this.endAngle);
+        View.current.canvas.drawArc(this, this.center.position, this.radius(), this.startAngle, this.endAngle);
     }
 
     radius() : number {
