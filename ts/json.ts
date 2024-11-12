@@ -243,7 +243,7 @@ export function handleFileSelect(ev: DragEvent) {
 }
 
 export function loadData(obj : any){
-    Plane.one.clear();
+    Plane.one.clearPlane();
 
     Widget.maxId  = -1;
     Widget.refMap = new Map<number, any>();

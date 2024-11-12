@@ -684,7 +684,7 @@ export class SelectedShape extends MathEntity {
             positions.push([p1.position, p2.position]);
         }
 
-        View.current.canvas.drawLines(positions, "red", 3);
+        View.current.canvas.drawLinesRaw(positions, "red", 3);
     }
 
     reading() : Reading {

@@ -74,7 +74,36 @@ export class Canvas {
         }
     }
 
-    drawLines(lines : [Vec2, Vec2][], color : string, line_width : number){
+    drawPolygonRaw(positions : Vec2[], color : string, line_width : number){
+        const ctx = this.ctx;
+
+        ctx.beginPath();
+        ctx.strokeStyle = color;
+        ctx.lineWidth   = line_width;
+
+        for(const [idx, position] of positions.entries()){
+            const pix = this.view.toPixPosition(position);
+
+            if(idx == 0){
+
+                ctx.moveTo(pix.x, pix.y);
+            }
+            else{
+
+                ctx.lineTo(pix.x, pix.y);
+            }
+        }
+
+        ctx.closePath();
+        ctx.stroke();
+    }
+
+    drawPolygon(shape : Shape, positions : Vec2[]){
+        const [color, line_width] = this.getAttributes(shape);
+        this.drawPolygonRaw(positions, color, line_width);
+    }
+
+    drawLinesRaw(lines : [Vec2, Vec2][], color : string, line_width : number){
         const ctx = this.ctx;
 
         for(const [p1, p2] of lines){
@@ -88,6 +117,11 @@ export class Canvas {
             ctx.lineWidth   = line_width;
             ctx.stroke();
         }
+    }
+
+    drawLines(shape : Shape, lines : [Vec2, Vec2][]){
+        const [color, line_width] = this.getAttributes(shape);
+        this.drawLinesRaw(lines, color, line_width);
     }
 
     drawArcRaw(center : Vec2, radius : number, start_angle : number, end_angle : number, color : string, line_width? : number){

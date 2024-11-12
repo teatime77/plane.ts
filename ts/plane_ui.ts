@@ -152,7 +152,7 @@ export class Plane {
         });this.text_block.div.style.color
     }
 
-    clear(){
+    clearPlane(){
         const tex_divs = Array.from(this.canvas_block.div.getElementsByClassName("tex_div")) as HTMLDivElement[];
         tex_divs.forEach(x => x.remove());
     

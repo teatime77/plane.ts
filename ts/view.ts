@@ -518,9 +518,9 @@ class Grid {
                 }
             }        
 
-            this.view.canvas.drawLines(axis_lines, fgColor, 1.0);
-            this.view.canvas.drawLines(main_lines, "gray", 0.5);
-            this.view.canvas.drawLines(sub_lines , "gray", 0.2);
+            this.view.canvas.drawLinesRaw(axis_lines, fgColor, 1.0);
+            this.view.canvas.drawLinesRaw(main_lines, "gray", 0.5);
+            this.view.canvas.drawLinesRaw(sub_lines , "gray", 0.2);
         }
 
         if(show_axis){
@@ -575,7 +575,7 @@ class Grid {
             [ new Vec2(position.x, position.y - this.subSpanY), new Vec2(position.x, position.y + this.subSpanY) ]
         ]
 
-        this.view.canvas.drawLines(lines, "blue", 1);
+        this.view.canvas.drawLinesRaw(lines, "blue", 1);
     }
 
     snap(position : Vec2) : Vec2 {

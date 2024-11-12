@@ -7,7 +7,7 @@ const TT = i18n_ts.TT;
 export class Angle extends Shape {
     static radius1Pix = 20;
     static radius1 : number;
-    static numMarks = 4;
+    static numMarks = 5;
 
     angleMark   : number;
     lineA       : AbstractLine;
@@ -99,16 +99,29 @@ export class Angle extends Shape {
     }
 
     draw() : void {
+        assert(this.angleMark < Angle.numMarks);
+
         const [start, end] = this.startEndAngle();
         
-        for(const i of range(Angle.numMarks)){
-            if(this.angleMark < i){
-                break;
-            }
+        const center = this.intersection.position;
 
-            const scales = [1, 0.8, 1.2, 1.4];
-            let radius = Angle.radius1 * scales[i];
-            View.current.canvas.drawArc(this, this.intersection.position, radius, start, end);
+        if(this.angleMark == 0){
+
+            const vx = (new Vec2(Angle.radius1, 0)).rot(start);
+            const vy = (new Vec2(Angle.radius1, 0)).rot(end);
+            const positions : Vec2[] = [
+                center, center.add(vx), center.add(vx).add(vy), center.add(vy)
+            ];
+            View.current.canvas.drawPolygon(this, positions);
+        }
+        else{
+
+            const scales = [ 1, 0.6, 1.4, 2.0];
+
+            for(const i of range(this.angleMark)){    
+                let radius = Angle.radius1 * scales[i];
+                View.current.canvas.drawArc(this, center, radius, start, end);
+            }
         }
     }
 
