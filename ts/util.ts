@@ -71,6 +71,10 @@ export function sum(v : number[]) : number {
     return v.reduce((acc, cur) => acc + cur, 0);
 }
 
+export function average(v : number[]) : number {
+    return sum(v) / v.length;
+}
+
 export async function fetchText(fileURL: string) {
     const response = await fetch(fileURL);
     const text = await response!.text();

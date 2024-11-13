@@ -296,20 +296,38 @@ export class LengthSymbol extends Shape {
     draw() : void {
         View.current.canvas.drawLine(this, this.pointA.position, this.pointB.position);
 
+        const tick_half_length = fromXPixScale(10);
+
         const A = this.pointA.position;
         const B = this.pointB.position;
         const AB = B.sub(A);
 
-        const normal = AB.rot90().unit();
+        const e = AB.unit()
+        const normal = e.rot90();
+        const normal_minus = normal.mul(- tick_half_length);
+        const normal_plus  = normal.mul(  tick_half_length);
 
         const center = this.center();
 
-        const tick_half_length = fromXPixScale(10);
+        let shifts : number[];
+        if(this.lengthKind % 2 == 0){
 
-        const tick_1 = center.add( normal.mul(- tick_half_length) );
-        const tick_2 = center.add( normal.mul(  tick_half_length) );
+            shifts = [ 0, 1, -1, 2, -2 ];
+        }
+        else{
+            shifts = [ 0.5, -0.5, 1.5, -1.5, 2.5, -2.5 ];
+        }
+        assert(this.lengthKind < shifts.length);
 
-        drawLine(this, tick_1, tick_2);
+        for(const idx of range(this.lengthKind + 1)){
+            const shift = shifts[idx];
+            const pos = center.add(e.mul(shift * tick_half_length));
+
+            const tick_1 = pos.add( normal_minus );
+            const tick_2 = pos.add( normal_plus );
+    
+            drawLine(this, tick_1, tick_2);
+        }
     }
 }
 
