@@ -8,7 +8,8 @@ namespace plane_ts {
 const TT = i18n_ts.TT;
 export const fgColor = "white";
 export const bgColor = "#003000";
-export const defaultLineWidth = 2;
+export const defaultLineWidth = 3;
+export const OverLineWidth = 4;
 let capturedShape : MathEntity | undefined;
 
 export enum Mode {
@@ -177,6 +178,7 @@ export class TextBlock extends MathEntity {
 
         this.div   = document.createElement("div");
         this.div.className = "tex_div";
+        this.div.style.fontSize = "x-large";
 
         this.setVisible(this.visible);
 
@@ -400,7 +402,7 @@ export abstract class Shape extends MathEntity {
 
     getProperties(){
         return super.getProperties().concat([
-            "name", "caption", "color", "lineWidth"
+            "name", "color", "lineWidth", "caption"
         ]);
     }
 
@@ -420,7 +422,7 @@ export abstract class Shape extends MathEntity {
     }
 
     modeLineWidth() : number {
-        return (this.isOver || this.mode != Mode.none ? 3 : this.lineWidth);
+        return (this.isOver ? OverLineWidth : this.lineWidth);
     }
 
     calc(){        
@@ -746,7 +748,7 @@ export class LineByPoints extends AbstractLine {
     }
 
     reading(): Reading {
-        if(this.lineKind == LineKind.line_segment){
+        if(this.lineKind == LineKind.line_segment || this.lineKind == LineKind.line){
 
             if(this.pointA.name != "" && this.pointB.name != ""){
                 return new Reading(this, TT('Draw a line from point "A" to point "B".'), [ this.pointA, this.pointB ]);
@@ -992,8 +994,10 @@ export class Ellipse extends CircleArcEllipse {
     }
 }
 
+export abstract class Arc extends CircleArc {
+}
 
-export class ArcByPoint extends CircleArc {
+export class ArcByPoint extends Arc {
     pointA : Point;
     pointB : Point;
 
@@ -1065,7 +1069,7 @@ export class ArcByPoint extends CircleArc {
 }
 
 
-export class ArcByRadius extends CircleArc {
+export class ArcByRadius extends Arc {
     private lengthSymbol : LengthSymbol;
     startAngle : number;
     endAngle : number;
@@ -1081,6 +1085,9 @@ export class ArcByRadius extends CircleArc {
         this.pointA = new Point({ position : this.positionFromAngle(this.startAngle) });
         this.pointB = new Point({ position : this.positionFromAngle(this.endAngle) });
 
+        this.pointA.visible = false;
+        this.pointB.visible = false;
+        
         this.pointA.bound = this;
         this.pointB.bound = this;
     }

@@ -291,34 +291,16 @@ export class LineArcIntersection extends Shape {
     }
 
     reading(): Reading {
-        const have_names = (this.pointA.name != "" && this.pointB.name != "");
+        if(this.arc instanceof Circle){
 
-        if(this.arc instanceof Circle && this.arc instanceof Circle){
-
-            if(have_names){
-                return new Reading(this, TT('Let points "A" and "B" be the intersections of two circles.'), [ this.pointA, this.pointB ]);
-            }
-            else{
-                return new Reading(this, TT('Find the intersection of two circles.'), []);
-            }
+            return new Reading(this, TT('Find the intersection of the circle and the line.'), []);
         }
-        else if(this.arc instanceof Circle || this.arc instanceof Circle){
+        else if(this.arc instanceof Arc){
 
-            if(have_names){
-                return new Reading(this, TT('Let points "A" and "B" be the intersections of a circle and a line.'), [ this.pointA, this.pointB ]);
-            }
-            else{
-                return new Reading(this, TT('Find the intersection of a circle and a line.'), []);
-            }
+            return new Reading(this, TT('Find the intersection of the arc and the line.'), []);
         }
         else{
-
-            if(have_names){
-                return new Reading(this, TT('Let points "A" and "B" be the intersections of two lines.'), [ this.pointA, this.pointB ]);
-            }
-            else{
-                return new Reading(this, TT('Find the intersection of two lines.'), []);
-            }
+            throw new MyError();
         }
     }
 }
@@ -411,34 +393,14 @@ export class ArcArcIntersection extends Shape {
     }
 
     reading(): Reading {
-        const have_names = (this.pointA.name != "" && this.pointB.name != "");
-
         if(this.arc1 instanceof Circle && this.arc2 instanceof Circle){
-
-            if(have_names){
-                return new Reading(this, TT('Let points "A" and "B" be the intersections of two circles.'), [ this.pointA, this.pointB ]);
-            }
-            else{
-                return new Reading(this, TT('Draw the intersection of two circles.'), []);
-            }
+            return new Reading(this, TT('Find the intersection of two circles.'), []);
         }
-        else if(this.arc1 instanceof Circle || this.arc2 instanceof Circle){
-
-            if(have_names){
-                return new Reading(this, TT('Let points "A" and "B" be the intersections of a circle and an arc.'), [ this.pointA, this.pointB ]);
-            }
-            else{
-                return new Reading(this, TT('Draw the intersection of a circle and an arc.'), []);
-            }
+        else if(this.arc1 instanceof Arc && this.arc2 instanceof Arc){
+            return new Reading(this, TT('Find the intersection of two arcs.'), []);
         }
         else{
-
-            if(have_names){
-                return new Reading(this, TT('Let points "A" and "B" be the intersections of two arcs.'), [ this.pointA, this.pointB ]);
-            }
-            else{
-                return new Reading(this, TT('Draw the intersection of two arcs.'), []);
-            }
+            return new Reading(this, TT('Find the intersection of the circle and the arc.'), []);
         }
     }
 }

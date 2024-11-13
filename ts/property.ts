@@ -23,6 +23,8 @@ const $input_color = layout_ts.$input_color;
 
 const TT = i18n_ts.TT;
 
+let used_property_names : Set<string>;
+
 function appendRow(tbl : HTMLTableElement, nest : number, name : string, value : HTMLElement){
     const row = document.createElement("tr");
 
@@ -80,7 +82,7 @@ export class TextAreaProperty extends Property {
                 this.setValue(this.textArea.getValue());
                 for(const widget of this.widgets){
 
-                    if(widget instanceof TextBlock){
+                    if(widget instanceof TextBlock && !widget.isTex){
 
                         widget.div.innerText = this.textArea.getValue();
                     }
@@ -303,6 +305,10 @@ function appendDelete(tbl : HTMLTableElement, shape : MathEntity){
 }
 
 export function showProperty(widget : Widget | Widget[], nest : number){
+    if(nest == 0){
+        used_property_names = new Set<string>();
+    }
+
     let widgets : Widget[];
     if(widget instanceof Widget){
         widgets = [widget];
@@ -333,6 +339,9 @@ export function showProperty(widget : Widget | Widget[], nest : number){
     }
 
     for(const property_name of properties){
+        if(used_property_names.has(property_name)){
+            continue;
+        }
 
         if(typeof property_name == "string"){
             const name = property_name;
@@ -416,6 +425,8 @@ export function showProperty(widget : Widget | Widget[], nest : number){
             }
 
             appendRow(tbl, nest + 1, property.name, property_element);
+
+            used_property_names.add(property_name);
         }
         else{
             throw new MyError();
@@ -426,7 +437,7 @@ export function showProperty(widget : Widget | Widget[], nest : number){
         addPopSelectedShapes(tbl, widget);
     }
 
-    if(widget instanceof MathEntity){
+    if(nest == 0 && widget instanceof MathEntity){
         appendDelete(tbl, widget);
     }
 }

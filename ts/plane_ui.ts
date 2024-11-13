@@ -159,6 +159,10 @@ export class Plane {
         this.text_block.div.innerHTML = "";
         this.narration_box.div.innerHTML = "";
     }
+
+    clearNarrationBox(){
+        this.narration_box.div.innerHTML = "";
+    }
 }
 
 export function makePropertyTable(div : HTMLElement){
