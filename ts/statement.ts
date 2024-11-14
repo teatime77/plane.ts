@@ -4,16 +4,54 @@ type Term = parser_ts.Term;
 const parseMath = parser_ts.parseMath;
 const TT = i18n_ts.TT;
 
+export enum Reason {
+    none,
+    side_side_side,
+    side_angle_side,
+    angle_side_angle,
+};
+
+export const reasonTexts : string[] = [
+    "none",
+    "side-side-side",
+    "side-angle-side",
+    "angle-side-angle",
+];
+
+
+export enum ImplicationCode {
+    none,
+    equal_angles,
+    equal_lengths,
+};
+
+export const ImplicationTexts : string[] = [
+    "none",
+    "equal-angles",
+    "equal-lengths",
+];
+
 export class Statement extends MathEntity {
     static idTimeout : number | undefined;
 
+    reason : number = 0;
+    implication : number = 0;
     mathText : string = "";
     latexBox? : layout_ts.LaTeXBox;
     selectedShapes : MathEntity[];
 
-    constructor(obj : { narration? : string, shapes : MathEntity[], mathText? : string }){
+    constructor(obj : { narration? : string, reason? : number, implication? : number, shapes : MathEntity[], mathText? : string }){
         super(obj);
         this.selectedShapes = obj.shapes;
+
+        if(obj.reason != undefined){
+            this.reason = obj.reason;
+        }
+
+        if(obj.implication != undefined){
+            this.implication = obj.implication;
+        }
+
         if(obj.mathText != undefined){
             this.mathText = obj.mathText;
         }
@@ -25,7 +63,7 @@ export class Statement extends MathEntity {
 
     getProperties(){
         return super.getProperties().concat([
-            "selectedShapes", "mathText"
+            "reason", "implication", "selectedShapes", "mathText"
         ]);
     }
 
@@ -37,6 +75,14 @@ export class Statement extends MathEntity {
         let obj = Object.assign(super.makeObj(), {
             shapes : this.selectedShapes.map(x => x.toObj())
         });
+
+        if(this.reason != 0){
+            obj.reason = this.reason;
+        }
+
+        if(this.implication != 0){
+            obj.implication = this.implication;
+        }
 
         if(this.mathText != ""){
             obj.mathText = this.mathText;
@@ -116,7 +162,16 @@ export class Statement extends MathEntity {
             this.latexBox.hide();
         }
     }
+
+    setIndex(){
+        const selected_shapes =  this.selectedShapes.filter(x => x instanceof SelectedShape) as SelectedShape[];
+        for(const [idx, shape] of selected_shapes.entries()){
+            shape.index = idx;
+        }
+    }
 }
+
+
 
 /*
 These two lines are parallel.

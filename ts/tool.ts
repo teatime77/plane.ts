@@ -1,3 +1,5 @@
+///<reference path="inference.ts" />
+
 namespace plane_ts {
 //
 const TT = i18n_ts.TT;
@@ -871,11 +873,25 @@ export class StatementBuilder extends Builder {
     statement : Statement;
     specifiedShapes : Shape[] = [];
 
-    constructor(){
+    constructor(statement? : Statement){
         super();
 
-        this.statement = new Statement({ shapes : [] });
-        View.current.addShape(this.statement);
+        if(statement == undefined){
+
+            if(this instanceof TriangleCongruenceBuilder){
+
+                this.statement = new TriangleCongruence({ shapes : [] });
+            }
+            else{
+
+                this.statement = new Statement({ shapes : [] });
+            }
+
+            View.current.addShape(this.statement);
+        }
+        else{
+            this.statement = statement;
+        }
 
         showProperty(this.statement, 0);
     }
@@ -903,6 +919,8 @@ export class StatementBuilder extends Builder {
 
                         selected_shape = new SelectedShape({ specifiedShapes : this.specifiedShapes });
                         this.statement.selectedShapes.push(selected_shape);
+
+                        this.specifiedShapes.forEach(x => x.setMode(Mode.none));
                         this.specifiedShapes = [];
                     }
                     else{
@@ -923,6 +941,9 @@ export class StatementBuilder extends Builder {
     }
 }
 
+export class TriangleCongruenceBuilder extends StatementBuilder { 
+}
+
 export class MotionBuilder extends SelectionTool { 
     animation : Motion;
 
@@ -939,29 +960,30 @@ export class MotionBuilder extends SelectionTool {
 }
 
 const toolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [
-    [ SelectionTool             , "selection"         , TT("selection")        , [  ] ],
-    [ RangeTool                 , "range"             , TT("range")            , [  ] ],
-    [ PointBuilder              , "point"             , TT("point")            , [ Point ] ],
-    [ MidpointBuilder           , "mid-point"         , TT("mid point")        , [ Midpoint ] ],
-    [ IntersectionBuilder       , "intersection"      , TT("intersection")     , [ LineLineIntersection, LineArcIntersection, ArcArcIntersection ] ],
-    [ LineSegmentBuilder        , "line-segment"      , TT("line segment")     , [ LineByPoints ] ],
-    [ PolygonBuilder            , "polygon"           , TT("polygon")          , [ Polygon ] ],
-    [ PerpendicularBuilder      , "perpendicular"     , TT("perpendicular")    , [ FootOfPerpendicular ] ],
-    [ PerpendicularLineBuilder  , "perpendicular-line", TT("perpendicular")    , [ PerpendicularLine ] ],
-    [ ParallelLineBuilder       , "parallel-line"     , TT("parallel line")    , [ ParallelLine ] ],
-    [ CircleByPointBuilder      , "circle-by-point"   , TT("circle by point")  , [ CircleByPoint ] ],
-    [ CircleByRadiusBuilder     , "circle-by-radius"  , TT("circle by radius") , [ CircleByRadius ] ],
-    [ ArcByPointBuilder         , "arc-by-point"      , TT("arc by point")     , [ ArcByPoint ] ],
-    [ ArcByRadiusBuilder        , "arc-by-radius"     , TT("arc by radius")    , [ ArcByRadius ] ],
-    [ EllipseBuilder            , "ellipse"           , TT("ellipse")          , [ Ellipse ] ],
-    [ CirclePointTangentBuilder , "tangent-point"     , TT("tangent point")    , [ CirclePointTangent ] ],
-    [ CircleCircleTangentBuilder, "tangent-circles"   , TT("tangent circles")  , [ CircleCircleTangent ] ],
-    [ AngleBuilder              , "angle"             , TT("angle")            , [ Angle ] ],
-    [ DimensionLineBuilder      , "dimension-line"    , TT("dimension line")   , [ DimensionLine ] ],
-    [ LengthSymbolBuilder       , "length-symbol"     , TT("length symbol")    , [ LengthSymbol ] ],
-    [ TextBlockBuilder          , "text"              , TT("text")             , [ TextBlock ] ],
-    [ StatementBuilder          , "statement"         , TT("statement")        , [ Statement ] ],
-    [ MotionBuilder             , "animation"         , TT("animation")        , [ Motion ] ],
+    [ SelectionTool             , "selection"          , TT("selection")          , [  ] ],
+    [ RangeTool                 , "range"              , TT("range")              , [  ] ],
+    [ PointBuilder              , "point"              , TT("point")              , [ Point ] ],
+    [ MidpointBuilder           , "mid-point"          , TT("mid point")          , [ Midpoint ] ],
+    [ IntersectionBuilder       , "intersection"       , TT("intersection")       , [ LineLineIntersection, LineArcIntersection, ArcArcIntersection ] ],
+    [ LineSegmentBuilder        , "line-segment"       , TT("line segment")       , [ LineByPoints ] ],
+    [ PolygonBuilder            , "polygon"            , TT("polygon")            , [ Polygon ] ],
+    [ PerpendicularBuilder      , "perpendicular"      , TT("perpendicular")      , [ FootOfPerpendicular ] ],
+    [ PerpendicularLineBuilder  , "perpendicular-line" , TT("perpendicular")      , [ PerpendicularLine ] ],
+    [ ParallelLineBuilder       , "parallel-line"      , TT("parallel line")      , [ ParallelLine ] ],
+    [ CircleByPointBuilder      , "circle-by-point"    , TT("circle by point")    , [ CircleByPoint ] ],
+    [ CircleByRadiusBuilder     , "circle-by-radius"   , TT("circle by radius")   , [ CircleByRadius ] ],
+    [ ArcByPointBuilder         , "arc-by-point"       , TT("arc by point")       , [ ArcByPoint ] ],
+    [ ArcByRadiusBuilder        , "arc-by-radius"      , TT("arc by radius")      , [ ArcByRadius ] ],
+    [ EllipseBuilder            , "ellipse"            , TT("ellipse")            , [ Ellipse ] ],
+    [ CirclePointTangentBuilder , "tangent-point"      , TT("tangent point")      , [ CirclePointTangent ] ],
+    [ CircleCircleTangentBuilder, "tangent-circles"    , TT("tangent circles")    , [ CircleCircleTangent ] ],
+    [ AngleBuilder              , "angle"              , TT("angle")              , [ Angle ] ],
+    [ DimensionLineBuilder      , "dimension-line"     , TT("dimension line")     , [ DimensionLine ] ],
+    [ LengthSymbolBuilder       , "length-symbol"      , TT("length symbol")      , [ LengthSymbol ] ],
+    [ TextBlockBuilder          , "text"               , TT("text")               , [ TextBlock ] ],
+    [ StatementBuilder          , "statement"          , TT("statement")          , [ Statement ] ],
+    [ TriangleCongruenceBuilder , "triangle-congruence", TT("triangle congruence"), [ TriangleCongruence ] ],
+    [ MotionBuilder             , "animation"          , TT("animation")          , [ Motion ] ],
 ];
 
 export function makeShapeButton(shape : MathEntity) : layout_ts.Button {
@@ -990,10 +1012,24 @@ export function makeShapeButton(shape : MathEntity) : layout_ts.Button {
         url    : `${urlOrigin}/lib/plane/img/${shape_img_name}.png`,
         width  : "20px",
         height : "20px",
-        click : async (ev : MouseEvent)=>{
-            showProperty(shape, 0);
-        }
     });
+
+    button.click = async (ev : MouseEvent)=>{
+        if(button.parent == Plane.one.shapes_block && shape instanceof Statement){
+            if(shape instanceof TriangleCongruence){
+
+                msg("set Triangle Congruence Builder");
+                Builder.tool = new TriangleCongruenceBuilder(shape);
+            }
+            else{
+
+                msg("set Statement Builder");
+                Builder.tool = new StatementBuilder(shape);
+            }
+        }
+
+        showProperty(shape, 0);
+    };
 
     return button;
 }

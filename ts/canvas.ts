@@ -35,9 +35,7 @@ export class Canvas {
         this.ctx.clearRect(0, 0, rc.width, rc.height);
     }
 
-    drawLine(shape : Shape | undefined, p1 : Vec2, p2 : Vec2){
-        const [color, line_width] = this.getAttributes(shape);
-
+    drawLineRaw(p1 : Vec2, p2 : Vec2, color : string, line_width : number){
         const pix1 = this.view.toPixPosition(p1);
         const pix2 = this.view.toPixPosition(p2);
 
@@ -48,6 +46,11 @@ export class Canvas {
         ctx.strokeStyle = color;
         ctx.lineWidth = line_width;
         ctx.stroke();   
+    }
+
+    drawLine(shape : Shape | undefined, p1 : Vec2, p2 : Vec2){
+        const [color, line_width] = this.getAttributes(shape);
+        this.drawLineRaw(p1, p2, color, line_width);
     }
 
     drawLineWith2Points(line : AbstractLine, pointB : Point){
@@ -74,12 +77,20 @@ export class Canvas {
         }
     }
 
-    drawPolygonRaw(positions : Vec2[], color : string, line_width : number){
+    drawPolygonRaw(positions : Vec2[], color : string, line_width : number, fill : boolean = false){
         const ctx = this.ctx;
 
         ctx.beginPath();
-        ctx.strokeStyle = color;
-        ctx.lineWidth   = line_width;
+        if(fill){
+
+            ctx.globalAlpha = 0.5;
+            ctx.fillStyle = color;
+        }
+        else{
+
+            ctx.strokeStyle = color;
+            ctx.lineWidth   = line_width;
+        }
 
         for(const [idx, position] of positions.entries()){
             const pix = this.view.toPixPosition(position);
@@ -95,7 +106,16 @@ export class Canvas {
         }
 
         ctx.closePath();
-        ctx.stroke();
+
+        if(fill){
+
+            ctx.fill();
+            ctx.globalAlpha = 1;
+        }
+        else{
+
+            ctx.stroke();
+        }
     }
 
     drawPolygon(shape : Shape, positions : Vec2[]){

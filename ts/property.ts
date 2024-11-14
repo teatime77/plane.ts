@@ -144,6 +144,30 @@ class NumberProperty extends InputProperty {
 }
 
 
+class SelectProperty extends Property {
+    select : HTMLSelectElement;
+
+    constructor(widgets : Widget[], name : string, value : number, option_texts:string[]){
+        super(widgets, name);
+        this.select = document.createElement("select");
+        for(const text of option_texts){
+            const option = document.createElement("option");
+            option.innerText = text;
+            this.select.append(option);
+        }
+
+        assert(0 <= value && value < option_texts.length);
+        this.select.selectedIndex = value;
+
+        this.select.addEventListener("change", (ev : Event)=>{
+            const idx = this.select.selectedIndex;
+            this.setValue(idx);
+            msg(`select ${idx} ${option_texts[idx]}`);
+        });
+    }
+}
+
+
 class BooleanProperty extends InputProperty {
     input : CheckBox;
 
@@ -350,7 +374,7 @@ export function showProperty(widget : Widget | Widget[], nest : number){
                 continue;
             }
 
-            let property : InputProperty | TextAreaProperty | AngleMarkProperty | SelectedShapesProperty;
+            let property : InputProperty | TextAreaProperty | SelectProperty | AngleMarkProperty | SelectedShapesProperty;
             let property_element : HTMLElement;
 
             if(name == "narration" || name == "mathText" || name == "text" && widget instanceof TextBlock){
@@ -363,6 +387,14 @@ export function showProperty(widget : Widget | Widget[], nest : number){
                 const angles = widgets.filter(x => x instanceof Angle) as Angle[];
                 property = new AngleMarkProperty(angles, name, value);
                 property_element  = property.span;
+            }
+            else if(name == "reason"){
+                property = new SelectProperty(widgets, name, value, reasonTexts);
+                property_element  = property.select;
+            }
+            else if(name == "implication"){
+                property = new SelectProperty(widgets, name, value, ImplicationTexts);
+                property_element  = property.select;
             }
             else if(name == "selectedShapes" && widget instanceof Statement){
 

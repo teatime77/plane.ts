@@ -8,6 +8,8 @@ namespace plane_ts {
 const TT = i18n_ts.TT;
 export const fgColor = "white";
 export const bgColor = "#003000";
+export const dependColor = "blue";
+export const targetColor = "red";
 export const defaultLineWidth = 3;
 export const OverLineWidth = 4;
 let capturedShape : MathEntity | undefined;
@@ -20,6 +22,7 @@ export enum Mode {
 
 export abstract class MathEntity extends Widget implements i18n_ts.Readable, parser_ts.Highlightable {
     visible : boolean = true;
+    visible2 : boolean = false;
     mode : Mode = Mode.none;
     isOver : boolean = false;
     mute : boolean = false;
@@ -415,9 +418,9 @@ export abstract class Shape extends MathEntity {
         case Mode.none:
             return this.color;
         case Mode.depend:
-            return "blue";
+            return dependColor;
         case Mode.target:
-            return "red";
+            return targetColor;
         }
     }
 
@@ -1087,7 +1090,7 @@ export class ArcByRadius extends Arc {
 
         this.pointA.visible = false;
         this.pointB.visible = false;
-        
+
         this.pointA.bound = this;
         this.pointB.bound = this;
     }

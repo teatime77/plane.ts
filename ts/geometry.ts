@@ -611,7 +611,9 @@ export class CirclePointTangent extends Tangent {
     }
 }
 
-export class SelectedShape extends MathEntity {
+export class SelectedShape extends Shape {
+    index : number = NaN;
+    highlightMode : number = 0;
     specifiedShapes : Shape[];
 
     constructor(obj : { specifiedShapes : Shape[] }){
@@ -630,27 +632,53 @@ export class SelectedShape extends MathEntity {
     }
 
     draw(){
-        if(this.specifiedShapes.every(x => x instanceof Point)){
-            this.drawPolygon();
+        if(this.isTriangle()){
+            this.drawTriangle();
         }
     }
 
-    drawPolygon(){
+    drawTriangle(){
         const points = this.specifiedShapes as Point[];
-        const positions : [Vec2, Vec2][] = [];
+        const positions = points.map(x => x.position);
 
-        for(const [idx, pt] of points.entries()){
-            const p1 = points[idx];
-            const p2 = points[(idx + 1) % points.length];
+        const center_x = average(positions.map(p => p.x));
+        const center_y = average(positions.map(p => p.y));
+        const center = new Vec2(center_x, center_y);
 
-            positions.push([p1.position, p2.position]);
+        const offset_len = View.current.fromXPixScale(2 * OverLineWidth);
+        const offset_positions : Vec2[] = [];
+        for(const p of positions){
+            const offset = center.sub(p).unit().mul(offset_len);
+            offset_positions.push(p.add(offset));
         }
 
-        View.current.canvas.drawLinesRaw(positions, "red", 3);
+        const color = [ "orange", "lime", "pink"  ][this.index];
+        View.current.canvas.drawPolygonRaw(offset_positions, color, NaN, true);
+
+        let side_points : Point[];
+        switch(this.highlightMode){
+        case 0: return;
+        case 1: side_points = [ points[0], points[1] ]; break;
+        case 2: side_points = [ points[1], points[2] ]; break;
+        case 3: side_points = [ points[2], points[0] ]; break;
+        default : throw new MyError();
+        }
+
+        try{
+
+            View.current.canvas.drawLineRaw(side_points[0].position, side_points[1].position, dependColor, OverLineWidth);
+        }
+        catch(e){
+            msg(`${e}`);
+        }
     }
 
     reading() : Reading {
         return new Reading(this, "", []);
+    }
+
+    isTriangle() : boolean {
+        return this.specifiedShapes.length == 3 && this.specifiedShapes.every(x => x instanceof Point);
     }
 }
 

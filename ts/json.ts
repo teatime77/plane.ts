@@ -196,6 +196,9 @@ export function parseObject(obj: any) : any {
     case Statement.name:
         return new Statement(obj);
 
+    case TriangleCongruence.name:
+        return new TriangleCongruence(obj);
+
     case SelectedShape.name:
         return new SelectedShape(obj);
 
