@@ -187,11 +187,11 @@ export class View extends Widget {
             this.grid.showGrid(Plane.one.show_axis.checked(), Plane.one.show_grid.checked());
 
             const shapes = this.allRealShapes();
+            const visible_shapes = shapes.filter(x => x.visible || x.visible2);
             
             if(Plane.one.isPlaying){
 
-                shapes.filter(x => x.visible || x.visible2).forEach(c => c.draw());
-                shapes.filter(x => x.mode != Mode.none).forEach(c => c.draw());
+                visible_shapes.forEach(c => c.draw());
             }
             else{
 
@@ -199,6 +199,7 @@ export class View extends Widget {
             }
 
             this.attentionShapes.forEach(x => x.draw());
+            visible_shapes.filter(x =>  x.mode != Mode.none).forEach(c => c.draw());
 
             Builder.tool.drawTool(this);
 

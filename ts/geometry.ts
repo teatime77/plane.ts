@@ -653,7 +653,7 @@ export class SelectedShape extends Shape {
         }
 
         const color = [ "orange", "lime", "pink"  ][this.index];
-        View.current.canvas.drawPolygonRaw(offset_positions, color, NaN, true);
+        View.current.canvas.drawPolygonRaw(positions, color, NaN, true);
 
         let side_points : Point[];
         switch(this.highlightMode){

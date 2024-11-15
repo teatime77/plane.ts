@@ -3,6 +3,7 @@
 namespace plane_ts {
 //
 const TT = i18n_ts.TT;
+const TTs = i18n_ts.TTs;
 
 export class TriangleCongruence extends Statement {
 
@@ -48,8 +49,9 @@ export class TriangleCongruence extends Statement {
             triangles.forEach(x => x.highlightMode = 0);
             View.current.dirty = true;
             
-            await speech.speak_waitEnd(TT("So the lengths of the three sides are equal."));
-            await speech.speak_waitEnd(TT("Therefore, the two triangles are congruent."));
+            for(const s of TTs("Because the three corresponding sides are equal,\nthe two triangles are congruent.")){
+                await speech.speak_waitEnd(s);
+            }
         }
 
         if(this.implication == ImplicationCode.equal_angles && 4 <= this.selectedShapes.length && this.selectedShapes.slice(2, 4).every(x => x instanceof Angle)){
