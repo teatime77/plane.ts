@@ -17,6 +17,12 @@ const $checkbox = layout_ts.$checkbox;
 
 const TT = i18n_ts.TT;
 
+export enum PlayMode {
+    stop,
+    normal,
+    playAll,
+}
+
 export class Plane {
     menu_block : Block;
     tool_block : Block;
@@ -31,8 +37,7 @@ export class Plane {
     show_grid! : CheckBox;
     snap_to_grid! : CheckBox;
 
-    isPlaying : boolean = false;
-    isPlayingAll : boolean = false;
+    playMode : PlayMode = PlayMode.stop;
 
     static one : Plane;
 

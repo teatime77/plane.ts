@@ -189,7 +189,7 @@ export class View extends Widget {
             const shapes = this.allRealShapes();
             const visible_shapes = shapes.filter(x => x.visible || x.visible2);
             
-            if(Plane.one.isPlaying){
+            if(Plane.one.playMode != PlayMode.stop){
 
                 visible_shapes.forEach(c => c.draw());
             }
