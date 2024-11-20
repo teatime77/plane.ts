@@ -15,8 +15,6 @@ const $input_number = layout_ts.$input_number;
 type CheckBox = layout_ts.CheckBox;
 const $checkbox = layout_ts.$checkbox;
 
-const TT = i18n_ts.TT;
-
 export enum PlayMode {
     stop,
     normal,

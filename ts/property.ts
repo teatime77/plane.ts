@@ -21,8 +21,6 @@ const $checkbox = layout_ts.$checkbox;
 const $input_text = layout_ts.$input_text;
 const $input_color = layout_ts.$input_color;
 
-const TT = i18n_ts.TT;
-
 let used_property_names : Set<string>;
 
 function appendRow(tbl : HTMLTableElement, nest : number, name : string, value : HTMLElement){

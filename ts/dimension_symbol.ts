@@ -2,7 +2,8 @@
 
 namespace plane_ts {
 //
-const TT = i18n_ts.TT;
+export const TT = i18n_ts.TT;
+export const TTs = i18n_ts.TTs;
 
 export class Angle extends Shape {
     static radius1Pix = 20;

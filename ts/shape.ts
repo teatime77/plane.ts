@@ -5,7 +5,6 @@ const Reading = i18n_ts.Reading;
 
 namespace plane_ts {
 //
-const TT = i18n_ts.TT;
 export const fgColor = "white";
 export const bgColor = "#003000";
 export const dependColor = "blue";
@@ -764,11 +763,11 @@ export class LineByPoints extends AbstractLine {
             
             if(this.pointA.name != "" && this.pointB.name != ""){
 
-                return new Reading(this, TT('Draw a ray from point "A" to point "B".'), [ this.pointA, this.pointB ]);
+                return new Reading(this, TT('Draw a half-line from point "A" to point "B".'), [ this.pointA, this.pointB ]);
             }
             else{
 
-                return new Reading(this, TT('Draw a ray.'), []);
+                return new Reading(this, TT('Draw a half-line.'), []);
             }
         }
         else{

@@ -1,7 +1,6 @@
 ///<reference path="shape.ts" />
 
 namespace plane_ts {
-const TT = i18n_ts.TT;
 
 export function calcFootFrom2Pos(position : Vec2, pos1 : Vec2, e : Vec2) : Vec2 {
     const v = position.sub(pos1);
@@ -735,7 +734,7 @@ export class Motion extends MathEntity {
 
     async animate(speech : i18n_ts.AbstractSpeech){
         if(this.narration != ""){
-            speech.speak(this.narration);
+            speech.speak(TT(this.narration));
         }
 
         const startTime = Date.now();

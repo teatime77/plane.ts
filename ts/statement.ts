@@ -2,7 +2,6 @@ namespace plane_ts {
 //
 type Term = parser_ts.Term;
 const parseMath = parser_ts.parseMath;
-const TT = i18n_ts.TT;
 
 export enum Reason {
     none,

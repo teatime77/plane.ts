@@ -2,8 +2,6 @@
 
 namespace plane_ts {
 //
-const TT = i18n_ts.TT;
-const TTs = i18n_ts.TTs;
 
 export class TriangleCongruence extends Statement {
 
@@ -24,11 +22,13 @@ export class TriangleCongruence extends Statement {
 
         const triangles = this.selectedShapes.slice(0, 2) as SelectedShape[] 
         triangles.forEach(x => x.mode = 0);
-        speech.speak(TT("For two triangles"));
+        speech.speak(TT("We show that the two triangles are congruent."));
         for(const selected of triangles){
             View.current.attentionShapes.push(selected);
             View.current.dirty = true;
-            await sleep(1000);
+            if(Plane.one.playMode == PlayMode.normal){
+                await sleep(1000);
+            }
         }
         await speech.waitEnd();
 

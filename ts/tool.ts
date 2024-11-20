@@ -2,7 +2,6 @@
 
 namespace plane_ts {
 //
-const TT = i18n_ts.TT;
 
 export class Builder {
     static tool : Builder;
