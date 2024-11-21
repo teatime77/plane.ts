@@ -148,9 +148,15 @@ class SelectProperty extends Property {
     constructor(widgets : Widget[], name : string, value : number, option_texts:string[]){
         super(widgets, name);
         this.select = document.createElement("select");
+        this.select.style.color = fgColor;
+        this.select.style.backgroundColor = bgColor;
+
         for(const text of option_texts){
             const option = document.createElement("option");
             option.innerText = text;
+            option.style.color = fgColor;
+            option.style.backgroundColor = bgColor;
+
             this.select.append(option);
         }
 

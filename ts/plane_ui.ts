@@ -105,7 +105,6 @@ export class Plane {
                 ,
                 save_anchor
             ],
-            backgroundColor : "lime",
         });
     
         this.tool_block = $grid({
@@ -113,27 +112,23 @@ export class Plane {
             columns  : "36px 36px",
             rows     : "auto",
             children : tool_buttons,
-            backgroundColor : "green",
         });
     
         this.text_block = $flex({
             id : "text-block",
             children : [],
             aspectRatio : 1,
-            backgroundColor : "lightyellow",
         });
     
         this.canvas_block = $block({
             children : [],
             aspectRatio : 1,
             color : fgColor,
-            backgroundColor : bgColor,
         });
     
         this.property_block = $block({
             id : "property-div",
             children : [],
-            backgroundColor : "cyan",
         });
     
         this.shapes_block = $flex({
@@ -141,14 +136,12 @@ export class Plane {
             direction : "column",
             width : "100%",
             children : [],
-            backgroundColor : "chocolate",
         });       
         
         this.narration_box = layout_ts.$textbox({
             id : "narration-box",
             text : "Hellor World",
             color : fgColor,
-            backgroundColor : bgColor,
             padding : "20px",
             textAlign : "center",
             fontSize : "48px",
