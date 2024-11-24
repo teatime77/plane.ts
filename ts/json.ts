@@ -83,7 +83,7 @@ export function parseObject(obj: any) : any {
         catch(e){
             if(e instanceof MyError && e.message == "no-ref" && name == "bound" ){
                 const ref_id = (val as any).ref;
-                msg(`deffered bound:${ref_id} ${obj.id}`);
+                // msg(`deffered bound:${ref_id} ${obj.id}`);
                 Widget.defferedBound.push([obj.id, ref_id]);
             }
             else{
