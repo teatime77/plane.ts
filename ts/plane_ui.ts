@@ -140,7 +140,7 @@ export class Plane {
         
         this.narration_box = layout_ts.$textbox({
             id : "narration-box",
-            text : "Hellor World",
+            text : "",
             color : fgColor,
             padding : "20px",
             textAlign : "center",
