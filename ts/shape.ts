@@ -5,8 +5,8 @@ const Reading = i18n_ts.Reading;
 
 namespace plane_ts {
 //
-export const fgColor = "white";
-export const bgColor = "#003000";
+export const fgColor = layout_ts.fgColor;
+export const bgColor = layout_ts.bgColor;
 export const dependColor = "blue";
 export const targetColor = "red";
 export const defaultLineWidth = 3;
