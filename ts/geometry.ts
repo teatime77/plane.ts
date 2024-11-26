@@ -740,7 +740,10 @@ export class Motion extends MathEntity {
         const startTime = Date.now();
         while(true){
             const endTime = Date.now();
-            const rate = (endTime - startTime) / 3000;
+            let rate = (endTime - startTime) / 3000;
+            if(Plane.one.playMode == PlayMode.playAll){
+                rate *= 3;
+            }
             if(1 < rate){
                 break;
             }

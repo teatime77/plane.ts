@@ -117,13 +117,12 @@ export class Plane {
         this.text_block = $flex({
             id : "text-block",
             children : [],
-            aspectRatio : 1,
         });
     
         this.canvas_block = $block({
             children : [],
-            aspectRatio : 1,
             color : fgColor,
+            // backgroundColor : "cornsilk"
         });
     
         this.property_block = $block({
@@ -201,6 +200,7 @@ export function makeImageButtons(span : HTMLSpanElement, img_url : string, butto
 
 export function makeCanvas(div : HTMLElement) : HTMLCanvasElement {
     const canvas = document.createElement("canvas");
+    canvas.id = "main-canvas";
     canvas.style.width  = "100%";
     canvas.style.height = "100%";
 
