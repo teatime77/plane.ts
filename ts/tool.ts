@@ -1037,12 +1037,12 @@ export function addShapeList(shape : MathEntity){
     const button = makeShapeButton(shape);
     
     Plane.one.shapes_block.addChild(button);
-    Plane.one.shapes_block.updateLayout();
+    layout_ts.Layout.updateRootLayout();
 }
 
 export function popShapeList(){
     Plane.one.shapes_block.popChild();
-    Plane.one.shapes_block.updateLayout();
+    layout_ts.Layout.updateRootLayout();
 }
 
 export function makeToolButtons() : layout_ts.RadioButton[] {

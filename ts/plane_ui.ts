@@ -110,7 +110,6 @@ export class Plane {
         this.tool_block = $grid({
             id : "tool-block",
             columns  : "36px 36px",
-            rows     : "auto",
             children : tool_buttons,
         });
     
@@ -133,7 +132,6 @@ export class Plane {
         this.shapes_block = $flex({
             id : "shapes-block",
             direction : "column",
-            width : "100%",
             children : [],
         });       
         

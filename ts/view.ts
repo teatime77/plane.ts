@@ -81,7 +81,7 @@ export class View extends Widget {
 
         View.current = this;
 
-        this.resize();
+        this.resizeView();
     }
 
     setMinMax(min : Vec2, max : Vec2){
@@ -312,7 +312,7 @@ export class View extends Widget {
         View.current.dirty = true;
     }
 
-    resize(){
+    resizeView(){
         this.board.width  = this.board.clientWidth;
         this.board.height = this.board.clientHeight;
 

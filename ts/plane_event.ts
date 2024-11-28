@@ -29,7 +29,7 @@ export function bodyOnLoad(){
 
     const plane = new Plane();
     const root = makeGrid(plane);
-    layout_ts.initLayout(root);
+    layout_ts.Layout.initLayout(root);
     
     initPlane(plane, root);
 }
@@ -41,7 +41,7 @@ export function viewEvent(view : View){
     view.board.addEventListener("pointerup"  , view.pointerup.bind(view));   
     view.board.addEventListener("click"      , view.click.bind(view));   
 
-    window.addEventListener("resize", view.resize.bind(view));
+    window.addEventListener("resize", view.resizeView.bind(view));
 
     // Passive event listeners
     // https://github.com/WICG/EventListenerOptions/blob/gh-pages/explainer.md
