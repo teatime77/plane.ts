@@ -1,7 +1,6 @@
 namespace plane_ts {
 //
 type Block = layout_ts.Block;
-type Dialog = layout_ts.Dialog
 type CheckBox = layout_ts.CheckBox;
 type InputNumber = layout_ts.InputNumber;
 type InputText = layout_ts.InputText;
@@ -12,7 +11,6 @@ const $flex = layout_ts.$flex;
 const $grid = layout_ts.$grid;
 const $block = layout_ts.$block;
 const $button = layout_ts.$button;
-const $dialog = layout_ts.$dialog;
 const $popup = layout_ts.$popup;
 const $textarea = layout_ts.$textarea;
 const $label = layout_ts.$label;
