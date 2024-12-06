@@ -49,7 +49,7 @@ export abstract class Widget {
     }
 }
 
-export function parseObject(obj: any) : any {
+export function parseObject(obj: any, parse_other_object? : (o : any)=>any) : any {
     if(obj == undefined || obj == null || typeof obj != "object"){
         return obj;
     }
@@ -209,6 +209,9 @@ export function parseObject(obj: any) : any {
         return new Motion(obj);
 
     default:
+        if(parse_other_object != undefined){
+            return parse_other_object(obj);
+        }
         throw new MyError();
     }
 }
