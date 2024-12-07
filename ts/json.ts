@@ -59,7 +59,7 @@ export function parseObject(obj: any, parse_other_object? : (o : any)=>any) : an
     // }
 
     if(Array.isArray(obj)){
-        let v = obj.map(x => parseObject(x));
+        let v = obj.map(x => parseObject(x, parse_other_object));
         return v;
     }
 
@@ -78,7 +78,7 @@ export function parseObject(obj: any, parse_other_object? : (o : any)=>any) : an
     for(let [name, val] of Object.entries(obj)){
         try{
 
-            obj[name] = parseObject(val);
+            obj[name] = parseObject(val, parse_other_object);
         }
         catch(e){
             if(e instanceof MyError && e.message == "no-ref" && name == "bound" ){
