@@ -288,15 +288,6 @@ export function loadData(obj : any){
                 throw new MyError();
             }
         }
-
-        const deffered_angles = all_shapes.filter(x => x instanceof Angle && x.intersection == undefined) as Angle[];
-        for(const angle of deffered_angles){
-            angle.intersection = getCommonPointOfLines(angle.lineA, angle.lineB)!;
-            if(angle.intersection == undefined){
-
-                throw new MyError();
-            }
-        }
     }
 
     const all_real_shapes = view.allRealShapes();

@@ -30,14 +30,8 @@ export class Angle extends Shape {
 
         this.lineB       = obj.lineB;
         this.directionB  = obj.directionB;
-
-        const point = getCommonPointOfLines(this.lineA, this.lineB);
-        if(point == undefined){
-            msg("intersection of Angle is deffered.");
-            return;
-        }
         
-        this.intersection = point;
+        this.intersection = getCommonPointOfLines(this.lineA, this.lineB);
     }
 
     makeObj() : any {

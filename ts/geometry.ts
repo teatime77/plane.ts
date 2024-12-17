@@ -119,6 +119,12 @@ export class FootOfPerpendicular extends AbstractPerpendicularLine {
     reading() : Reading {
         return new Reading(this, TT('Draw a perpendicular line from the point to the line.'), []);
     }
+
+    setRelations(): void {
+        super.setRelations();
+        addPointOnLines(this.foot, this);
+        addPointOnLines(this.foot, this.line);
+    }
 }
 
 
@@ -792,84 +798,24 @@ export class Motion extends MathEntity {
     }
 }
 
-export function makeLinePointMap() : [Map<AbstractLine, Set<Point>>, Map<Point, Set<AbstractLine>>] {
-    const line_to_points = new Map<AbstractLine, Set<Point>>();
-    const point_to_lines = new Map<Point, Set<AbstractLine>>();
-
-    const add_line_to_points = (line : AbstractLine, point:Point)=>{
-        let points = line_to_points.get(line);
-        
-        if(points == undefined){
-            points = new Set<Point>();
-            line_to_points.set(line, points);
-        }
-
-        points.add(point);
-
-        let lines = point_to_lines.get(point);
-        if(lines == undefined){
-            lines = new Set<AbstractLine>();
-            point_to_lines.set(point, lines);
-        }
-
-        lines.add(line);
-    }
-
-    const all_shapes = View.current.allRealShapes();
-
-    const point_pair_to_lines = new Map<string, LineByPoints>();
-
-    const all_lines = all_shapes.filter(x => x instanceof AbstractLine) as AbstractLine[];
-    for(const line of all_lines){
-        add_line_to_points(line, line.pointA);
-        if(line instanceof LineByPoints){
-
-            add_line_to_points(line, line.pointB);
-
-            point_pair_to_lines.set(pairKey(line.pointA, line.pointB), line);
-        }
-    }
-
-    for(const shape of all_shapes){
-        if(shape instanceof Midpoint){
-            const line = point_pair_to_lines.get(pairKey(shape.pointA, shape.pointB));
-            if(line != undefined){
-                add_line_to_points(line, shape);
-            }
-        }
-        else if(shape instanceof FootOfPerpendicular){
-            add_line_to_points(shape, shape.foot);
-            add_line_to_points(shape.line, shape.foot);
-        }
-        else if(shape instanceof LineLineIntersection){
-            add_line_to_points(shape.lineA, shape);
-            add_line_to_points(shape.lineB, shape);
-        }
-        else if(shape instanceof LineArcIntersection){
-            add_line_to_points(shape.line, shape.pointA);
-            add_line_to_points(shape.line, shape.pointB);
-        }
-
-        if(shape instanceof Point && shape.bound instanceof AbstractLine){
-            add_line_to_points(shape.bound, shape);
-        }
-    }    
-
-    return [line_to_points, point_to_lines];
+function getPointsFromLine(line : AbstractLine) : Set<Point>{
+    const points = Array.from(pointOnLines.entries()).filter(x => x[1].has(line)).map(x => x[0]);
+    return new Set<Point>(points);
 }
 
-export function getCommonPointOfLines(lineA : AbstractLine, lineB : AbstractLine) : Point | undefined {
-    const [line_to_points, point_to_lines] = makeLinePointMap();
+function intersection<T>(set1 : Set<T>, set2 : Set<T>) : T[] {
+    return Array.from(set1.values()).filter(x => set2.has(x));
+}
 
-    const pointsA = line_to_points.get(lineA);
-    const pointsB = line_to_points.get(lineB);
-
-    if(pointsA == undefined || pointsB == undefined){
-        return undefined;
+export function getCommonPointOfLines(lineA : AbstractLine, lineB : AbstractLine) : Point {
+    const pointsA = getPointsFromLine(lineA);
+    const pointsB = getPointsFromLine(lineB);
+    const common_points = intersection<Point>(pointsA, pointsB);
+    if(common_points.length == 1){
+        return common_points[0];
     }
 
-    const common_point = Array.from(pointsA.values()).find(x => pointsB.has(x));
-    return common_point;
+    throw new MyError();
 }
 
 }

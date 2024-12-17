@@ -860,6 +860,7 @@ export class ParallelLine extends AbstractLine {
     }
 
     setRelations(): void {
+        super.setRelations();
         addParallelLines(this, this.line);
     }
 }
@@ -1298,6 +1299,12 @@ export class Polygon extends Shape {
         }
 
         throw new MyError();
+    }
+
+    setRelations(): void {
+        super.setRelations();
+        this.points.forEach(x => x.setRelations());
+        this.lines.forEach(x => x.setRelations());
     }
 }
 
