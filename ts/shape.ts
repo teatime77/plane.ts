@@ -161,6 +161,9 @@ export abstract class MathEntity extends Widget implements i18n_ts.Readable, par
 
     hide(){        
     }
+
+    setRelations(){
+    }
 }
 
 export class TextBlock extends MathEntity {
@@ -623,6 +626,20 @@ export class Point extends Shape {
     shapePointerup(position : Vec2){
         this.positionSave = undefined;
     }
+
+    setRelations(): void {
+        super.setRelations();
+
+        if(this.bound instanceof AbstractLine){
+            addPointOnLines(this, this.bound);
+        }
+        else if(this.bound instanceof CircleArc){
+            addPointOnCircleArcEllipses(this, this.bound);
+        }
+        else if(this.bound != undefined){
+            throw new MyError();
+        }
+    }
 }
 
 export enum LineKind {
@@ -700,6 +717,22 @@ export abstract class AbstractLine extends Shape {
             break;
         }
     }
+
+    setRelations(): void {
+        super.setRelations();
+        addPointOnLines(this.pointA, this);
+    }
+
+    includesPoint(point : Point) : boolean {
+        let line_set = pointOnLines.get(point);
+
+        if(line_set != undefined){
+            return line_set.has(this);
+        }
+        else{
+            return false;
+        }
+    }
 }
 
 export class LineByPoints extends AbstractLine {
@@ -774,6 +807,11 @@ export class LineByPoints extends AbstractLine {
             throw new MyError();
         }
     }
+
+    setRelations(): void {
+        super.setRelations();
+        addPointOnLines(this.pointB, this);
+    }
 }
 
 export function makeLineSegment(pointA: Point, pointB: Point){
@@ -820,9 +858,11 @@ export class ParallelLine extends AbstractLine {
     reading(): Reading {
         return new Reading(this, TT('Draw a line through point "A" that is parallel to line "B".'), []);
     }
+
+    setRelations(): void {
+        addParallelLines(this, this.line);
+    }
 }
-
-
 
 export abstract class CircleArcEllipse extends Shape {
     center : Point;
@@ -847,6 +887,22 @@ export abstract class CircleArcEllipse extends Shape {
 
     dependencies() : MathEntity[] {
         return [ this.center ];
+    }
+
+    includesPoint(point : Point) : boolean {
+        let circle_arc_ellipse_set = pointOnCircleArcEllipses.get(point);
+
+        if(circle_arc_ellipse_set != undefined){
+            return circle_arc_ellipse_set.has(this);
+        }
+        else{
+            return false;
+        }
+    }
+
+    setRelations(): void {
+        super.setRelations();
+        addCenterOfCircleArcEllipses(this.center, this);
     }
 }
 
@@ -919,6 +975,12 @@ export class CircleByPoint extends Circle {
 
     reading(): Reading {
         return new Reading(this, TT('Draw a circle with point "A" as the center.'), [ this.center ]);
+    }
+
+    setRelations(): void {
+        super.setRelations();
+
+        addPointOnCircleArcEllipses(this.point, this);
     }
 }
 
@@ -994,6 +1056,11 @@ export class Ellipse extends CircleArcEllipse {
 
         View.current.canvas.drawEllipse(this.center.position, radius_x, this.radiusY, rotation, color, line_width);
     }
+
+    setRelations(): void {
+        super.setRelations();
+        addPointOnCircleArcEllipses(this.xPoint, this);
+    }
 }
 
 export abstract class Arc extends CircleArc {
@@ -1067,6 +1134,13 @@ export class ArcByPoint extends Arc {
 
     reading(): Reading {
         return new Reading(this, TT('Draw an arc.'), [ ]);
+    }
+
+    setRelations(): void {
+        super.setRelations();
+
+        addPointOnCircleArcEllipses(this.pointA, this);
+        addPointOnCircleArcEllipses(this.pointB, this);
     }
 }
 
@@ -1174,6 +1248,13 @@ export class ArcByRadius extends Arc {
 
     reading(): Reading {
         return new Reading(this, TT("Draw an arc with the same radius."), [ ]);
+    }
+
+    setRelations(): void {
+        super.setRelations();
+
+        addPointOnCircleArcEllipses(this.pointA, this);
+        addPointOnCircleArcEllipses(this.pointB, this);        
     }
 }
 

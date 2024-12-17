@@ -3,7 +3,6 @@ namespace plane_ts {
 export abstract class Widget {
     static refMap : Map<number, any> = new Map<number, any>();
     static defferedBound : [number, number][];
-    static defferedCalc : Shape[];
     static isLoading : boolean = false;
 
     // static 
@@ -264,14 +263,16 @@ export function loadData(obj : any){
 
     view.shapes = [];
     const all_shapes : MathEntity[] = [];
+    plane_ts.initRelations();
     for(const shape_obj of obj.shapes){
-        Widget.defferedCalc = [];
 
         Widget.isLoading = true;
         const shape = parseObject(shape_obj) as MathEntity;
         Widget.isLoading = false;
 
         view.shapes.push( shape );
+
+        shape.setRelations();
 
         shape.getAllShapes(all_shapes);
 
@@ -287,8 +288,6 @@ export function loadData(obj : any){
                 throw new MyError();
             }
         }
-
-        Widget.defferedCalc.forEach(x => x.calc());
 
         const deffered_angles = all_shapes.filter(x => x instanceof Angle && x.intersection == undefined) as Angle[];
         for(const angle of deffered_angles){

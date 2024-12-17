@@ -60,21 +60,35 @@ export class Midpoint extends Point {
     }
 }
 
-export class FootOfPerpendicular extends AbstractLine {
+abstract class AbstractPerpendicularLine extends AbstractLine {
     line: AbstractLine;
-    foot : Point;
 
-    constructor(obj : { lineKind : number, pointA: Point, line: AbstractLine }){
+    constructor(obj : { lineKind : number, pointA : Point, line : AbstractLine }){
         super(obj);
-        this.line  = obj.line;
-        this.foot  = Point.fromArgs(Vec2.nan());
 
-        this.calc();
+        this.line = obj.line;
     }
+    
     makeObj() : any {
         return Object.assign(super.makeObj(), {
             line  : this.line.toObj(),
         });
+    }
+
+    setRelations(): void {
+        super.setRelations();
+        addPerpendicularPairs(this, this.line);
+    }
+}
+
+export class FootOfPerpendicular extends AbstractPerpendicularLine {
+    foot : Point;
+
+    constructor(obj : { lineKind : number, pointA : Point, line : AbstractLine }){
+        super(obj);
+        this.foot  = Point.fromArgs(Vec2.nan());
+
+        this.calc();
     }
 
     getAllShapes(shapes : MathEntity[]){
@@ -108,34 +122,17 @@ export class FootOfPerpendicular extends AbstractLine {
 }
 
 
-export class PerpendicularLine extends AbstractLine {
-    constructor(obj : { lineKind : number, pointA:Point }){
+export class PerpendicularLine extends AbstractPerpendicularLine {
+
+    constructor(obj : { lineKind : number, pointA : Point, line : AbstractLine }){
         super(obj);
 
         this.calc();
     }
 
+
     calc(){
-
-        const [line_to_points, point_to_lines] = makeLinePointMap();
-        const lines_set = point_to_lines.get(this.pointA);
-        if(lines_set != undefined){
-            const lines = Array.from(lines_set.values()).filter(x => x.order < this.pointA.order);
-            if(lines.length == 1){
-                const line = lines[0];
-                this.e = line.e.rot90().unit();
-                return;
-            }
-        }
-        if(Widget.isLoading){
-            
-            msg(`deffered calc: perpendicularLine ${this.id}`);
-            Widget.defferedCalc.push(this);
-        }
-        else{
-
-            throw new MyError();
-        }
+        this.e = this.line.e.rot90().unit();
     }
 
     reading() : Reading {
@@ -206,6 +203,12 @@ export class LineLineIntersection extends Point {
 
     reading(): Reading {
         return new Reading(this, TT('There is one intersection between the two lines.'), []);
+    }
+
+    setRelations(): void {
+        super.setRelations();
+        addPointOnLines(this, this.lineA);
+        addPointOnLines(this, this.lineB);
     }
 }
 
@@ -301,6 +304,16 @@ export class LineArcIntersection extends Shape {
         else{
             throw new MyError();
         }
+    }
+
+    setRelations(): void {
+        super.setRelations();
+
+        addPointOnLines(this.pointA, this.line);
+        addPointOnLines(this.pointB, this.line);
+
+        addPointOnCircleArcEllipses(this.pointA, this.arc);
+        addPointOnCircleArcEllipses(this.pointB, this.arc);
     }
 }
 
@@ -401,6 +414,16 @@ export class ArcArcIntersection extends Shape {
         else{
             return new Reading(this, TT('Find the intersection of the circle and the arc.'), []);
         }
+    }
+
+    setRelations(): void {
+        super.setRelations();
+
+        addPointOnCircleArcEllipses(this.pointA, this.arc1);
+        addPointOnCircleArcEllipses(this.pointB, this.arc1);
+
+        addPointOnCircleArcEllipses(this.pointA, this.arc2);
+        addPointOnCircleArcEllipses(this.pointB, this.arc2);
     }
 }
 

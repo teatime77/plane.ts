@@ -2,6 +2,10 @@
 
 namespace plane_ts {
 //
+function addShapeSetRelations(view : View, shape : MathEntity){
+    view.addShape(shape);
+    shape.setRelations();
+}
 
 export class Builder {
     static tool : Builder;
@@ -206,7 +210,7 @@ class PointBuilder extends Builder {
             new_point.setBound(shape);
             new_point.updateCaption();
 
-            view.addShape(new_point);
+            addShapeSetRelations(view, new_point);
 
             this.resetTool(new_point);
         }
@@ -226,7 +230,7 @@ class MidpointBuilder extends Builder {
         }
         else if(shape instanceof Point){
             const mid_point = new Midpoint( { position:Vec2.zero(), pointA : this.pointA, pointB : shape  } );
-            view.addShape(mid_point);
+            addShapeSetRelations(view, mid_point);
             this.pointA      = undefined;
             this.resetTool(mid_point);
         }
@@ -245,7 +249,7 @@ class CircleByPointBuilder extends Builder {
             const point = Point.fromArgs(position);
             this.circle = CircleByPoint.fromArgs(center, point);
 
-            view.addShape(this.circle);
+            addShapeSetRelations(view, this.circle);
         }
         else{
             if(shape instanceof Point){
@@ -293,7 +297,7 @@ class CircleByRadiusBuilder extends Builder {
             if(shape instanceof LengthSymbol){
 
                 const circle = new CircleByRadius({ center : this.center , lengthSymbol : shape });
-                view.addShape(circle);
+                addShapeSetRelations(view, circle);
     
                 this.center = undefined;
                 this.position = undefined;
@@ -335,7 +339,7 @@ class EllipseBuilder extends Builder {
             this.xPoint.setMode(Mode.depend);
 
             this.ellipse = new Ellipse({ center : this.center, xPoint : this.xPoint, radiusY : 0 });
-            view.addShape(this.ellipse);
+            addShapeSetRelations(view, this.ellipse);
         }
         else{
             this.ellipse!.radiusY = this.getRadiusY(position);
@@ -386,7 +390,7 @@ class ArcByPointBuilder extends Builder {
             this.arc = new ArcByPoint({ center : this.center, pointA : this.pointA, pointB : this.pointB });
             this.pointB.bound = this.arc;
 
-            view.addShape(this.arc);
+            addShapeSetRelations(view, this.arc);
         }
         else{
 
@@ -422,7 +426,7 @@ class ArcByRadiusBuilder extends Builder {
                 const endAngle   = Math.PI * 2 / 6;
 
                 const arc = new ArcByRadius({ center : this.center , lengthSymbol : shape, startAngle, endAngle });
-                view.addShape(arc);
+                addShapeSetRelations(view, arc);
     
                 this.center = undefined;
     
@@ -476,7 +480,7 @@ class LineByPointsBuilder extends Builder {
                 line = makeRay(this.pointA, pointB);
             }
 
-            view.addShape(line);
+            addShapeSetRelations(view, line);
 
             this.pointA = undefined;
             this.position = undefined;
@@ -519,7 +523,7 @@ class PolygonBuilder extends Builder {
         if(this.polygon == undefined){
 
             this.polygon = new Polygon({ points : [], lines : [] });
-            view.addShape(this.polygon);
+            addShapeSetRelations(view, this.polygon);
         }
 
         const point = this.makePointOnClick(view, position, shape);
@@ -583,7 +587,7 @@ class ParallelLineBuilder extends Builder {
         if(this.line != undefined && this.point != undefined){
 
             const parallel_line = new ParallelLine( { lineKind : LineKind.line, pointA : this.point, line : this.line } );
-            view.addShape(parallel_line);
+            addShapeSetRelations(view, parallel_line);
 
             this.line  = undefined;
             this.point = undefined;
@@ -612,7 +616,7 @@ class PerpendicularBuilder extends Builder {
         if(this.point != undefined && this.line != undefined){
 
             const foot = new FootOfPerpendicular({ lineKind : 3, pointA : this.point, line : this.line });
-            view.addShape(foot);
+            addShapeSetRelations(view, foot);
 
             this.point = undefined;
             this.line  = undefined;
@@ -623,14 +627,34 @@ class PerpendicularBuilder extends Builder {
 }
 
 class PerpendicularLineBuilder extends Builder {
+    line   : AbstractLine | undefined;
+    pointA : Point | undefined;
+
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
-        if(shape instanceof Point){
+        if(shape instanceof AbstractLine){
+            this.line = shape;
+        }
+        else if(shape instanceof Point){
 
-            const pointA = this.makePointOnClick(view, position, shape);
-            const line = new PerpendicularLine({ lineKind : LineKind.line, pointA });
-            view.addShape(line);
+            this.pointA = shape;
+        }
 
-            this.resetTool(line);
+        if(this.line != undefined && this.pointA != undefined){
+
+            if(this.line.includesPoint(this.pointA)){
+
+                const line = new PerpendicularLine({ lineKind : LineKind.line, line : this.line, pointA : this.pointA });
+                addShapeSetRelations(view, line);
+
+                this.line  = undefined;
+                this.pointA = undefined;
+                
+                this.resetTool(line);
+            }
+            else{
+
+                msg("The point is not on the line.");
+            }
         }
     }
 }
@@ -678,7 +702,7 @@ class IntersectionBuilder extends Builder {
                     new_shape = new LineArcIntersection( { line, arc : circle, pointA, pointB });
                 }
 
-                view.addShape(new_shape);
+                addShapeSetRelations(view, new_shape);
 
                 this.shape1 = undefined;
                 this.resetTool(new_shape);
@@ -707,7 +731,7 @@ class CirclePointTangentBuilder extends Builder {
         if(this.circle != undefined && this.point != undefined){
 
             const tangent = new CirclePointTangent( { circle : this.circle, point : this.point });
-            view.addShape(tangent);
+            addShapeSetRelations(view, tangent);
 
             this.circle = undefined;
             this.point  = undefined;
@@ -728,7 +752,7 @@ class CircleCircleTangentBuilder extends Builder {
             }
             else{
                 const tangent = new CircleCircleTangent( { circle1 : this.circle, circle2 : shape });
-                view.addShape(tangent);
+                addShapeSetRelations(view, tangent);
     
                 this.circle = undefined;
                 this.resetTool(tangent);
@@ -767,7 +791,7 @@ class AngleBuilder extends Builder {
                 const directionB = Math.sign(pos2.sub(common_point.position).dot(lineB.e));
 
                 const angle = new Angle({ angleMark : 0, lineA, directionA, lineB, directionB });
-                view.addShape(angle);
+                addShapeSetRelations(view, angle);
 
                 this.line1 = undefined;
                 this.resetTool(angle);
@@ -805,7 +829,7 @@ class DimensionLineBuilder extends Builder {
         }
         else{
 
-            view.addShape(this.dimLine);
+            addShapeSetRelations(view, this.dimLine);
             this.resetTool(this.dimLine);
 
             this.pointA  = undefined;
@@ -836,7 +860,7 @@ class LengthSymbolBuilder extends LineByPointsBuilder {
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
         if(shape instanceof LineByPoints){
             const symbol = new LengthSymbol({pointA : shape.pointA, pointB : shape.pointB, lengthKind : 0});
-            view.addShape(symbol);
+            addShapeSetRelations(view, symbol);
         }
         else{
             if(this.pointA == undefined){
@@ -846,7 +870,7 @@ class LengthSymbolBuilder extends LineByPointsBuilder {
                 const pointB = this.makePointOnClick(view, position, shape);
 
                 const symbol = new LengthSymbol({ pointA : this.pointA, pointB, lengthKind : 0});
-                view.addShape(symbol);
+                addShapeSetRelations(view, symbol);
 
                 this.pointA      = undefined;
 
@@ -862,7 +886,7 @@ class TextBlockBuilder extends Builder {
         const text_block = new TextBlock({ text : "Text", isTex : false, offset : position });
         text_block.updateTextPosition();
 
-        view.addShape(text_block);
+        addShapeSetRelations(view, text_block);
         this.resetTool(text_block);
     }
 }
