@@ -634,7 +634,7 @@ export class Point extends Shape {
             addPointOnLines(this, this.bound);
         }
         else if(this.bound instanceof CircleArc){
-            addPointOnCircleArcEllipses(this, this.bound);
+            addPointOnCircleArcs(this, this.bound);
         }
         else if(this.bound != undefined){
             throw new MyError();
@@ -889,22 +889,6 @@ export abstract class CircleArcEllipse extends Shape {
     dependencies() : MathEntity[] {
         return [ this.center ];
     }
-
-    includesPoint(point : Point) : boolean {
-        let circle_arc_ellipse_set = pointOnCircleArcEllipses.get(point);
-
-        if(circle_arc_ellipse_set != undefined){
-            return circle_arc_ellipse_set.has(this);
-        }
-        else{
-            return false;
-        }
-    }
-
-    setRelations(): void {
-        super.setRelations();
-        addCenterOfCircleArcEllipses(this.center, this);
-    }
 }
 
 export abstract class CircleArc extends CircleArcEllipse {
@@ -918,6 +902,22 @@ export abstract class CircleArc extends CircleArcEllipse {
         
         const new_pos = this.center.position.add( new Vec2(x, y) );
         point.setPosition(new_pos);
+    }
+
+    includesPoint(point : Point) : boolean {
+        let circle_arc_set = pointOnCircleArcs.get(point);
+
+        if(circle_arc_set != undefined){
+            return circle_arc_set.has(this);
+        }
+        else{
+            return false;
+        }
+    }
+
+    setRelations(): void {
+        super.setRelations();
+        addCenterOfCircleArcs(this.center, this);
     }
 }
 
@@ -981,7 +981,7 @@ export class CircleByPoint extends Circle {
     setRelations(): void {
         super.setRelations();
 
-        addPointOnCircleArcEllipses(this.point, this);
+        addPointOnCircleArcs(this.point, this);
     }
 }
 
@@ -1010,6 +1010,14 @@ export class CircleByRadius extends Circle {
 
     radius() : number {
         return this.lengthSymbol.length();
+    }
+
+    setRelations(): void {
+        super.setRelations();
+
+        if(this.lengthSymbol.circle != undefined){
+            addEqualCircleArcs(this, this.lengthSymbol.circle);
+        }
     }
 }
 
@@ -1056,11 +1064,6 @@ export class Ellipse extends CircleArcEllipse {
         const line_width = (this.isOver || this.mode != Mode.none ? 3 : 1);
 
         View.current.canvas.drawEllipse(this.center.position, radius_x, this.radiusY, rotation, color, line_width);
-    }
-
-    setRelations(): void {
-        super.setRelations();
-        addPointOnCircleArcEllipses(this.xPoint, this);
     }
 }
 
@@ -1140,8 +1143,8 @@ export class ArcByPoint extends Arc {
     setRelations(): void {
         super.setRelations();
 
-        addPointOnCircleArcEllipses(this.pointA, this);
-        addPointOnCircleArcEllipses(this.pointB, this);
+        addPointOnCircleArcs(this.pointA, this);
+        addPointOnCircleArcs(this.pointB, this);
     }
 }
 
@@ -1254,8 +1257,8 @@ export class ArcByRadius extends Arc {
     setRelations(): void {
         super.setRelations();
 
-        addPointOnCircleArcEllipses(this.pointA, this);
-        addPointOnCircleArcEllipses(this.pointB, this);        
+        addPointOnCircleArcs(this.pointA, this);
+        addPointOnCircleArcs(this.pointB, this);        
     }
 }
 

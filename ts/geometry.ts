@@ -318,8 +318,8 @@ export class LineArcIntersection extends Shape {
         addPointOnLines(this.pointA, this.line);
         addPointOnLines(this.pointB, this.line);
 
-        addPointOnCircleArcEllipses(this.pointA, this.arc);
-        addPointOnCircleArcEllipses(this.pointB, this.arc);
+        addPointOnCircleArcs(this.pointA, this.arc);
+        addPointOnCircleArcs(this.pointB, this.arc);
     }
 }
 
@@ -425,11 +425,11 @@ export class ArcArcIntersection extends Shape {
     setRelations(): void {
         super.setRelations();
 
-        addPointOnCircleArcEllipses(this.pointA, this.arc1);
-        addPointOnCircleArcEllipses(this.pointB, this.arc1);
+        addPointOnCircleArcs(this.pointA, this.arc1);
+        addPointOnCircleArcs(this.pointB, this.arc1);
 
-        addPointOnCircleArcEllipses(this.pointA, this.arc2);
-        addPointOnCircleArcEllipses(this.pointB, this.arc2);
+        addPointOnCircleArcs(this.pointA, this.arc2);
+        addPointOnCircleArcs(this.pointB, this.arc2);
     }
 }
 
@@ -796,26 +796,6 @@ export class Motion extends MathEntity {
     restorePropertyChanges(){
         this.propertyChanges.reverse().forEach(x => x.restore());
     }
-}
-
-function getPointsFromLine(line : AbstractLine) : Set<Point>{
-    const points = Array.from(pointOnLines.entries()).filter(x => x[1].has(line)).map(x => x[0]);
-    return new Set<Point>(points);
-}
-
-function intersection<T>(set1 : Set<T>, set2 : Set<T>) : T[] {
-    return Array.from(set1.values()).filter(x => set2.has(x));
-}
-
-export function getCommonPointOfLines(lineA : AbstractLine, lineB : AbstractLine) : Point {
-    const pointsA = getPointsFromLine(lineA);
-    const pointsB = getPointsFromLine(lineB);
-    const common_points = intersection<Point>(pointsA, pointsB);
-    if(common_points.length == 1){
-        return common_points[0];
-    }
-
-    throw new MyError();
 }
 
 }

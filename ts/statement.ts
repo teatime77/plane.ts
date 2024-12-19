@@ -17,6 +17,12 @@ export const reasonTexts : string[] = [
     "angle-side-angle",
 ];
 
+export enum EqualLengthReason {
+    none,
+    radii_equal,
+    common_circle,
+    parallel_lines
+}
 
 export enum ImplicationCode {
     none,
@@ -37,9 +43,10 @@ export class Statement extends MathEntity {
     implication : number = 0;
     mathText : string = "";
     latexBox? : layout_ts.LaTeXBox;
+    auxiliaryShapes : MathEntity[] = [];
     selectedShapes : MathEntity[];
 
-    constructor(obj : { narration? : string, reason? : number, implication? : number, shapes : MathEntity[], mathText? : string }){
+    constructor(obj : { narration? : string, reason? : number, implication? : number, auxiliary_shapes? : MathEntity[], shapes : MathEntity[], mathText? : string }){
         super(obj);
         this.selectedShapes = obj.shapes;
 
@@ -49,6 +56,10 @@ export class Statement extends MathEntity {
 
         if(obj.implication != undefined){
             this.implication = obj.implication;
+        }
+
+        if(obj.auxiliary_shapes != undefined){
+            this.auxiliaryShapes = obj.auxiliary_shapes;
         }
 
         if(obj.mathText != undefined){

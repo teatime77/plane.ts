@@ -534,6 +534,7 @@ class PolygonBuilder extends Builder {
             const line = makeLineSegment(pointA, point);
 
             this.polygon.lines.push(line);
+            this.polygon.lines.forEach(x => x.setRelations());
 
             this.resetTool(this.polygon);
             this.polygon = undefined;
@@ -783,9 +784,6 @@ class AngleBuilder extends Builder {
                 lineB.calc();
 
                 const common_point = getCommonPointOfLines(lineA, lineB);
-                if(common_point == undefined){
-                    throw new MyError();
-                }
 
                 const directionA = Math.sign(pos1.sub(common_point.position).dot(lineA.e));
                 const directionB = Math.sign(pos2.sub(common_point.position).dot(lineB.e));
@@ -967,6 +965,34 @@ export class StatementBuilder extends Builder {
 export class TriangleCongruenceBuilder extends StatementBuilder { 
 }
 
+export class EqualLengthBuilder extends StatementBuilder {
+    lengthSymbolA? : LengthSymbol;
+
+    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
+        if(shape instanceof LengthSymbol){
+            if(this.lengthSymbolA == undefined){
+                this.lengthSymbolA = shape;
+                shape.setMode(Mode.depend);
+            }
+            else{
+
+                const equal_length = makeEqualLength(this.lengthSymbolA, shape);
+                if(equal_length != undefined){
+
+                    addShapeSetRelations(view, equal_length);
+                    this.lengthSymbolA = undefined;
+                    this.resetTool(equal_length);
+                }
+                else{
+
+                    this.lengthSymbolA.setMode(Mode.none);
+                    this.lengthSymbolA = undefined;
+                }
+            }
+        }
+    }
+}
+
 export class MotionBuilder extends SelectionTool { 
     animation : Motion;
 
@@ -1006,6 +1032,7 @@ const toolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [
     [ TextBlockBuilder          , "text"               , TT("text")               , [ TextBlock ] ],
     [ StatementBuilder          , "statement"          , TT("statement")          , [ Statement ] ],
     [ TriangleCongruenceBuilder , "triangle-congruence", TT("triangle congruence"), [ TriangleCongruence ] ],
+    [ EqualLengthBuilder        , "equal-length"       , TT("equal length")       , [ EqualLength ] ],
     [ MotionBuilder             , "animation"          , TT("animation")          , [ Motion ] ],
 ];
 

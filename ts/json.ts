@@ -198,6 +198,9 @@ export function parseObject(obj: any, parse_other_object? : (o : any)=>any) : an
     case TriangleCongruence.name:
         return new TriangleCongruence(obj);
 
+    case EqualLength.name:
+        return new EqualLength(obj);
+
     case SelectedShape.name:
         return new SelectedShape(obj);
 
@@ -211,7 +214,7 @@ export function parseObject(obj: any, parse_other_object? : (o : any)=>any) : an
         if(parse_other_object != undefined){
             return parse_other_object(obj);
         }
-        throw new MyError();
+        throw new MyError(`parse Object: unknown type:[${obj.typeName}]`);
     }
 }
 

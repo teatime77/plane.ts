@@ -396,6 +396,8 @@ export class View extends Widget {
 
         const shape = this.shapes.pop()!;
 
+        recalcRelations(this);
+
         const valid_shapes = new Set<MathEntity>(this.allShapes());
 
         const shapes_created_by_shape =  shape.allShapes().filter(x => ! valid_shapes.has(x));
@@ -417,6 +419,8 @@ export class View extends Widget {
         shape.allShapes().forEach(x => x.restoreTextBlock());
 
         this.shapes.push(shape);
+
+        recalcRelations(this);
 
         addShapeList(shape);
 

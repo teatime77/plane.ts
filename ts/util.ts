@@ -225,4 +225,26 @@ export function anyToObj(obj : any) : any {
     }
 }
 
+export function list<T>(set : Set<T> | undefined) : T[] {
+    if(set == undefined){
+        return [];
+    }
+    else{
+
+        return Array.from(set);
+    }
+}
+
+export function intersection<T>(set1 : Set<T> | undefined, set2 : Set<T> | undefined) : T[] {
+    if(set1 == undefined || set2 == undefined){
+        return [];
+    }
+
+    return Array.from(set1.values()).filter(x => set2.has(x));
+}
+
+export function pairs<T>(a : T, b : T) : [[T, T], [T, T]] {
+    return [ [a, b], [b, a] ];
+}
+
 }

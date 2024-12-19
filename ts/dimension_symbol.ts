@@ -227,6 +227,7 @@ export class LengthSymbol extends Shape {
     pointA : Point;
     pointB : Point;
     lengthKind : number;
+    circle? : CircleArc;
 
     constructor(obj : { pointA : Point, pointB : Point, lengthKind : number }){
         super(obj);
@@ -322,6 +323,26 @@ export class LengthSymbol extends Shape {
             const tick_2 = pos.add( normal_plus );
     
             drawLine(this, tick_1, tick_2);
+        }
+    }
+
+    setRelations(): void {
+        super.setRelations();
+
+        this.pointA.setRelations();
+        this.pointB.setRelations();
+
+        this.circle = undefined;
+
+        for(const [center, point] of [[this.pointA, this.pointB], [this.pointB, this.pointA]]){
+            const circles = list(centerOfCircleArcs.get(center));
+            if(circles.length != 0){
+    
+                this.circle = circles.find(x => x.includesPoint(point));
+                if(this.circle != undefined){
+                    break;
+                }
+            }
         }
     }
 }
