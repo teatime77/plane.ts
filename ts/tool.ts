@@ -993,6 +993,37 @@ export class EqualLengthBuilder extends StatementBuilder {
     }
 }
 
+export class EqualAngleBuilder extends StatementBuilder {
+    angleA? : Angle;
+
+    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
+        if(shape instanceof Angle){
+            if(this.angleA == undefined){
+                this.angleA = shape;
+                shape.setMode(Mode.depend);
+            }
+            else{
+
+                const equal_angle = makeEqualAngle(this.angleA, shape);
+                if(equal_angle != undefined){
+
+                    addShapeSetRelations(view, equal_angle);
+                    this.angleA = undefined;
+                    this.resetTool(equal_angle);
+                }
+                else{
+
+                    this.angleA.setMode(Mode.none);
+                    this.angleA = undefined;
+                }
+            }
+        }
+    }
+    
+}
+
+
+
 export class MotionBuilder extends SelectionTool { 
     animation : Motion;
 
@@ -1033,6 +1064,7 @@ const toolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [
     [ StatementBuilder          , "statement"          , TT("statement")          , [ Statement ] ],
     [ TriangleCongruenceBuilder , "triangle-congruence", TT("triangle congruence"), [ TriangleCongruence ] ],
     [ EqualLengthBuilder        , "equal-length"       , TT("equal length")       , [ EqualLength ] ],
+    [ EqualAngleBuilder         , "equal-angle"        , TT("equal angle")        , [ EqualAngle ] ],
     [ MotionBuilder             , "animation"          , TT("animation")          , [ Motion ] ],
 ];
 

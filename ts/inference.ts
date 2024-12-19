@@ -323,16 +323,65 @@ export function makeEqualLength(lengthSymbolA : LengthSymbol, lengthSymbolB : Le
     return undefined;
 }
 
-
 export class EqualLength extends Statement {
     constructor(obj : { narration? : string, reason? : number, implication? : number, auxiliary_shapes? : MathEntity[], shapes : MathEntity[], mathText? : string }){
         super(obj);
     }
 
-
     async asyncPlay(speech : i18n_ts.AbstractSpeech){
+    }
+}
 
+export function makeEqualAngle(angleA : Angle, angleB : Angle){
+    const e_AA = angleA.lineA.e.mul(angleA.directionA);
+    const e_AB = angleA.lineB.e.mul(angleA.directionB);
+    const e_BA = angleB.lineA.e.mul(angleB.directionA);
+    const e_BB = angleB.lineB.e.mul(angleB.directionB);
+
+    let cross_sign : number;
+    let parallel_sign : number;
+
+    if(angleA.lineA == angleB.lineA){
+        msg("lineA == lineA");
+        if(! isParallel(angleA.lineB, angleB.lineB)){
+            msg("");
+            return undefined;
+        }
+    
+        cross_sign    = Math.sign(e_AA.dot(e_BA));
+        parallel_sign = Math.sign(e_AB.dot(e_BB));
+    }
+    else if(angleA.lineB == angleB.lineB){
+        msg("lineB == lineB");
+        if(! isParallel(angleA.lineA, angleB.lineA)){
+            msg("");
+            return undefined;
+        }
+
+        cross_sign    = Math.sign(e_AB.dot(e_BB));
+        parallel_sign = Math.sign(e_AA.dot(e_BA));
+    }
+    else{
+        msg("illegal angle");
+        return undefined;
     }
 
+    if(cross_sign * parallel_sign == 1){
+        msg(`equal ange:parallel lines`);
+    }
+    else{
+        msg("");
+        return undefined;
+    }
 }
+
+export class EqualAngle extends Statement {
+    constructor(obj : { narration? : string, reason? : number, implication? : number, auxiliary_shapes? : MathEntity[], shapes : MathEntity[], mathText? : string }){
+        super(obj);
+    }
+
+    async asyncPlay(speech : i18n_ts.AbstractSpeech){
+    }
+}
+
 }
