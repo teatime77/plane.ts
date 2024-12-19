@@ -1,4 +1,6 @@
 ///<reference path="inference.ts" />
+///<reference path="deduction/equal_length.ts" />
+///<reference path="deduction/equal_angle.ts" />
 
 namespace plane_ts {
 //
