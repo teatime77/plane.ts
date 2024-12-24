@@ -3,25 +3,24 @@ namespace plane_ts {
 type Term = parser_ts.Term;
 const parseMath = parser_ts.parseMath;
 
-export enum Reason {
+export enum TriangleCongruenceReason {
     none,
     side_side_side,
     side_angle_side,
     angle_side_angle,
 };
 
-export const reasonTexts : string[] = [
-    "none",
-    "side-side-side",
-    "side-angle-side",
-    "angle-side-angle",
-];
-
-export enum EqualLengthReason {
-    none,
+export enum LengthEqualityReason {
+    none = 100,
     radii_equal,
     common_circle,
     parallel_lines
+}
+
+export enum AngleEqualityReason {
+    none = 200,
+    vertical_angle,
+    parallel_lines,
 }
 
 export enum ImplicationCode {
@@ -36,6 +35,22 @@ export const ImplicationTexts : string[] = [
     "equal-lengths",
 ];
 
+export const textMap = new Map<number,string>([
+    [ TriangleCongruenceReason.none, "none" ],
+    [ TriangleCongruenceReason.side_side_side, "side_side_side" ],
+    [ TriangleCongruenceReason.side_angle_side, "side_angle_side" ],
+    [ TriangleCongruenceReason.angle_side_angle, "angle_side_angle" ],
+
+    [ LengthEqualityReason.none, "none" ],
+    [ LengthEqualityReason.radii_equal, "radii_equal" ],
+    [ LengthEqualityReason.common_circle, "common_circle" ],
+    [ LengthEqualityReason.parallel_lines, "parallel_lines" ],
+
+    [ AngleEqualityReason.none, "none" ],
+    [ AngleEqualityReason.vertical_angle, "vertical_angle" ],
+    [ AngleEqualityReason.parallel_lines, "parallel_lines" ],
+]);
+
 export class Statement extends MathEntity {
     static idTimeout : number | undefined;
 
@@ -46,7 +61,7 @@ export class Statement extends MathEntity {
     auxiliaryShapes : MathEntity[] = [];
     selectedShapes : MathEntity[];
 
-    constructor(obj : { narration? : string, reason? : number, implication? : number, auxiliary_shapes? : MathEntity[], shapes : MathEntity[], mathText? : string }){
+    constructor(obj : { narration? : string, reason? : number, implication? : number, shapes : MathEntity[], auxiliaryShapes? : MathEntity[], mathText? : string }){
         super(obj);
         this.selectedShapes = obj.shapes;
 
@@ -58,8 +73,8 @@ export class Statement extends MathEntity {
             this.implication = obj.implication;
         }
 
-        if(obj.auxiliary_shapes != undefined){
-            this.auxiliaryShapes = obj.auxiliary_shapes;
+        if(obj.auxiliaryShapes != undefined){
+            this.auxiliaryShapes = obj.auxiliaryShapes;
         }
 
         if(obj.mathText != undefined){
@@ -73,7 +88,7 @@ export class Statement extends MathEntity {
 
     getProperties(){
         return super.getProperties().concat([
-            "reason", "implication", "selectedShapes", "mathText"
+            "reason", "implication", "selectedShapes", "auxiliaryShapes", "mathText"
         ]);
     }
 
@@ -88,6 +103,10 @@ export class Statement extends MathEntity {
 
         if(this.reason != 0){
             obj.reason = this.reason;
+        }
+
+        if(this.auxiliaryShapes.length != 0){
+            obj.auxiliaryShapes = this.auxiliaryShapes.map(x => x.toObj());
         }
 
         if(this.implication != 0){

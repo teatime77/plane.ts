@@ -90,6 +90,10 @@ export class Vec2 {
         return new Vec2(x, y);
     }
 
+    cross(a : Vec2) : number {
+        return this.x * a.y - this.y * a.x;
+    }
+
     rot(th : number) : Vec2 {
         const cs = Math.cos(th);
         const sn = Math.sin(th);

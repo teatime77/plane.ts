@@ -24,6 +24,8 @@ let used_property_names : Set<string>;
 function appendRow(tbl : HTMLTableElement, nest : number, name : string, value : HTMLElement){
     const row = document.createElement("tr");
 
+    value.style.position = "";
+
     const span = document.createElement("span");
     span.innerText = name;
     span.style.paddingLeft = `${nest * 10}px`;
@@ -250,10 +252,16 @@ export class SelectedShapesProperty extends Property {
 
     constructor(statements : Statement[], name : string, value : MathEntity[]){
         super(statements, name);
-        SelectedShapesProperty.one = this;
+
         this.span = document.createElement("span");
-        this.span.id = "selected-shapes-property-span";
-        const buttons = value.map(x => makeShapeButton(x));
+
+        if(name == "selectedShapes"){
+
+            SelectedShapesProperty.one = this;
+            this.span.id = "selected-shapes-property-span";
+        }
+
+        const buttons = value.map(x => makeShapeButton(x, false));
         for(const button of buttons){
             button.button.style.position = "";
             this.span.append(button.button);
@@ -391,14 +399,17 @@ export function showProperty(widget : Widget | Widget[], nest : number){
                 property_element  = property.span;
             }
             else if(name == "reason"){
-                property = new SelectProperty(widgets, name, value, reasonTexts);
-                property_element  = property.select;
+
+                const text = textMap.get(value) as string;
+                assert(text != undefined);
+                makeConstantProperty(tbl, nest + 1, name, text);
+                continue;
             }
             else if(name == "implication"){
                 property = new SelectProperty(widgets, name, value, ImplicationTexts);
                 property_element  = property.select;
             }
-            else if(name == "selectedShapes" && widget instanceof Statement){
+            else if(name == "selectedShapes" || name == "auxiliaryShapes"){
 
                 const statements = widgets.filter(x => x instanceof Statement) as Statement[];
                 property = new SelectedShapesProperty(statements, name, value);
@@ -427,6 +438,10 @@ export function showProperty(widget : Widget | Widget[], nest : number){
                     }
                     else if(name == "lengthKind"){
                         property = new NumberProperty(widgets, name, value, 1, 0, 3);
+                    }
+                    else if(name == "id"){
+                        makeConstantProperty(tbl, nest + 1, name, `${value}`);
+                        continue;
                     }
                     else{
                         property = new NumberProperty(widgets, name, value, 0.1, -100, 100);

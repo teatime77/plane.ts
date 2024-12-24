@@ -1,5 +1,17 @@
 namespace plane_ts {
 //
+function addEqualLengths(lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol){
+    let set = equalLengths.find(x => x.has(lengthSymbolA) || x.has(lengthSymbolB));
+    if(set == undefined){
+        set = new Set<LengthSymbol>([ lengthSymbolA, lengthSymbolB ]);
+        equalLengths.push(set);
+    }
+    else{
+        set.add(lengthSymbolA);
+        set.add(lengthSymbolB);
+    }
+}
+
 function getCommonPoint(lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol) : [Point, Point, Point] | undefined {
     const [AA, AB] = [ lengthSymbolA.pointA, lengthSymbolA.pointB ];
     const [BA, BB] = [ lengthSymbolB.pointA, lengthSymbolB.pointB ];
@@ -56,7 +68,7 @@ function findParallelLinesOfLengthSymbols(lengthSymbolA : LengthSymbol, lengthSy
     return undefined;
 }
 
-export function makeEqualLength(lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol) : EqualLength | undefined {
+export function makeEqualLength(lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol) : LengthEquality | undefined {
     const all_shapes = View.current.allRealShapes();
     const all_circle_arcs = all_shapes.filter(x => x instanceof CircleArc) as CircleArc[];
 
@@ -72,9 +84,9 @@ export function makeEqualLength(lengthSymbolA : LengthSymbol, lengthSymbolB : Le
                 // if A is the center of the circle which includes B and C
 
                 msg(`common-circle`);
-                return new EqualLength({
-                    reason : EqualLengthReason.common_circle,
-                    auxiliary_shapes : [ circle_arc_center_A_includes_B_C ],
+                return new LengthEquality({
+                    reason : LengthEqualityReason.common_circle,
+                    auxiliaryShapes : [ circle_arc_center_A_includes_B_C ],
                     shapes : [ lengthSymbolA, lengthSymbolB ]
                 });
             }
@@ -85,9 +97,9 @@ export function makeEqualLength(lengthSymbolA : LengthSymbol, lengthSymbolB : Le
         const circle = equalCircleArcs.find(x => x.has(lengthSymbolA.circle!) && x.has(lengthSymbolB.circle!) );
         if(circle != undefined){
             msg(`radii-equal`);
-            return new EqualLength({
-                reason : EqualLengthReason.radii_equal,
-                auxiliary_shapes : [ lengthSymbolA.circle, lengthSymbolB.circle ],
+            return new LengthEquality({
+                reason : LengthEqualityReason.radii_equal,
+                auxiliaryShapes : [ lengthSymbolA.circle, lengthSymbolB.circle ],
                 shapes : [ lengthSymbolA, lengthSymbolB ]                
             });
         }
@@ -96,9 +108,9 @@ export function makeEqualLength(lengthSymbolA : LengthSymbol, lengthSymbolB : Le
     const parallel_lines = findParallelLinesOfLengthSymbols(lengthSymbolA, lengthSymbolB);
     if(parallel_lines != undefined){
         msg(`parallel-lines`);
-        return new EqualLength({
-            reason : EqualLengthReason.parallel_lines,
-            auxiliary_shapes : parallel_lines,
+        return new LengthEquality({
+            reason : LengthEqualityReason.parallel_lines,
+            auxiliaryShapes : parallel_lines,
             shapes : [ lengthSymbolA, lengthSymbolB ]            
         });
     }
@@ -107,13 +119,29 @@ export function makeEqualLength(lengthSymbolA : LengthSymbol, lengthSymbolB : Le
     return undefined;
 }
 
-export class EqualLength extends Statement {
-    constructor(obj : { narration? : string, reason? : number, implication? : number, auxiliary_shapes? : MathEntity[], shapes : MathEntity[], mathText? : string }){
+export class LengthEquality extends Statement {
+    constructor(obj : { narration? : string, reason? : number, implication? : number, auxiliaryShapes? : MathEntity[], shapes : MathEntity[], mathText? : string }){
         super(obj);
     }
 
     async asyncPlay(speech : i18n_ts.AbstractSpeech){
     }
+
+    setRelations(): void {
+        super.setRelations();
+
+        const [ lengthSymbolA, lengthSymbolB ] = this.selectedShapes as LengthSymbol[];
+        addEqualLengths(lengthSymbolA, lengthSymbolB);
+    }
+}
+
+export function isEqualLength(lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol) : boolean {
+    if(lengthSymbolA == lengthSymbolB){
+        return true;
+    }
+
+    return equalLengths.find(x => x.has(lengthSymbolA) && x.has(lengthSymbolB)) != undefined;
+    
 }
 
 }

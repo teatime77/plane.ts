@@ -6,10 +6,15 @@ namespace plane_ts {
 export let perpendicularPairs : [Set<AbstractLine>, Set<AbstractLine>][] = [];
 export let supplementaryAngles : [Set<Angle>, Set<Angle>][];
 
+export const pointsToLengthSymbol = new Map<string, LengthSymbol>();
 export const centerOfCircleArcs = new Map<Point,Set<CircleArc>>();
 export const pointOnCircleArcs = new Map<Point,Set<CircleArc>>();
 export const pointOnLines = new Map<Point,Set<AbstractLine>>();
+export const angleMap = new Map<string,Angle>();
+
+export let equalLengths : Set<LengthSymbol>[] = [];
 export let equalCircleArcs : Set<CircleArc>[] = [];
+
 
 function addSetMap<T, V>(a : T, b : V, map:Map<T, Set<V>>){
     let set = map.get(a);
@@ -24,9 +29,13 @@ export function initRelations(){
     perpendicularPairs = [];
     supplementaryAngles = [];
 
+    pointsToLengthSymbol.clear();
     centerOfCircleArcs.clear();
     pointOnCircleArcs.clear();
     pointOnLines.clear();
+    angleMap.clear();
+
+    equalLengths = [];
     equalCircleArcs = [];
 }
 
@@ -162,8 +171,6 @@ export function getCommonPointOfLines(lineA : AbstractLine, lineB : AbstractLine
 export function getLineFromPoints(lines : AbstractLine[], pointA : Point, pointB : Point) : AbstractLine | undefined {
     return lines.find(x => x.includesPoint(pointA) && x.includesPoint(pointB));
 }
-
-
 
 
 

@@ -901,14 +901,7 @@ export class StatementBuilder extends Builder {
 
         if(statement == undefined){
 
-            if(this instanceof TriangleCongruenceBuilder){
-
-                this.statement = new TriangleCongruence({ shapes : [] });
-            }
-            else{
-
-                this.statement = new Statement({ shapes : [] });
-            }
+            this.statement = new Statement({ shapes : [] });
 
             View.current.addShape(this.statement);
         }
@@ -956,7 +949,7 @@ export class StatementBuilder extends Builder {
                 }
             }
 
-            const button = makeShapeButton(selected_shape);
+            const button = makeShapeButton(selected_shape, false);
             button.button.style.position = "";
 
             SelectedShapesProperty.one.span.append(button.button);
@@ -964,11 +957,78 @@ export class StatementBuilder extends Builder {
     }
 }
 
-export class TriangleCongruenceBuilder extends StatementBuilder { 
+export class TriangleCongruenceBuilder extends Builder { 
+    pointA? : Point;
+    pointB? : Point;
+    triangleA? : Triangle;
+
+    constructor(triangleCongruence? : TriangleCongruence){
+        super();
+    }
+
+    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
+        if(shape instanceof Point){
+            shape.setMode(Mode.depend);
+
+            if(this.pointA == undefined){
+                this.pointA = shape;
+            }
+            else if(this.pointB == undefined){
+                this.pointB = shape;
+            }
+            else{
+
+                if(this.triangleA == undefined){
+                    this.triangleA = new Triangle({
+                        points : [ this.pointA, this.pointB, shape ],
+                        lines : []
+                    });
+
+                    this.pointA = undefined;
+                    this.pointB = undefined;
+                    
+                    this.resetTool(undefined);
+                }
+                else{
+                    const triangleB = new Triangle({
+                        points : [ this.pointA, this.pointB, shape ],
+                        lines : []
+                    });
+
+                    const triangleCongruence = makeTriangleCongruence(this.triangleA, triangleB);
+                    if(triangleCongruence != undefined){
+
+                        addShapeSetRelations(view, triangleCongruence);
+
+                        this.resetTool(triangleCongruence);
+                    }
+                    else{
+    
+                        this.resetTool(undefined);
+                    }
+                        
+                    this.pointA = undefined;
+                    this.pointB = undefined;
+                    this.triangleA = undefined;
+                }
+            }
+        }
+    }
+
+    drawTool(view : View){  
+        if(this.triangleA != undefined){
+            this.triangleA.draw();
+        }
+    }
+
 }
 
-export class EqualLengthBuilder extends StatementBuilder {
+export class LengthEqualityBuilder extends Builder {
     lengthSymbolA? : LengthSymbol;
+
+    constructor(lengthEquality? : LengthEquality){
+        super();
+    }
 
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
         if(shape instanceof LengthSymbol){
@@ -978,12 +1038,12 @@ export class EqualLengthBuilder extends StatementBuilder {
             }
             else{
 
-                const equal_length = makeEqualLength(this.lengthSymbolA, shape);
-                if(equal_length != undefined){
+                const lengthEquality = makeEqualLength(this.lengthSymbolA, shape);
+                if(lengthEquality != undefined){
 
-                    addShapeSetRelations(view, equal_length);
+                    addShapeSetRelations(view, lengthEquality);
                     this.lengthSymbolA = undefined;
-                    this.resetTool(equal_length);
+                    this.resetTool(lengthEquality);
                 }
                 else{
 
@@ -995,8 +1055,12 @@ export class EqualLengthBuilder extends StatementBuilder {
     }
 }
 
-export class EqualAngleBuilder extends StatementBuilder {
+export class AngleEqualityBuilder extends Builder {
     angleA? : Angle;
+
+    constructor(angleEquality? : AngleEquality){
+        super();
+    }
 
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
         if(shape instanceof Angle){
@@ -1006,12 +1070,12 @@ export class EqualAngleBuilder extends StatementBuilder {
             }
             else{
 
-                const equal_angle = makeEqualAngle(this.angleA, shape);
-                if(equal_angle != undefined){
+                const angleEquality = makeEqualAngle(this.angleA, shape);
+                if(angleEquality != undefined){
 
-                    addShapeSetRelations(view, equal_angle);
+                    addShapeSetRelations(view, angleEquality);
                     this.angleA = undefined;
-                    this.resetTool(equal_angle);
+                    this.resetTool(angleEquality);
                 }
                 else{
 
@@ -1065,12 +1129,12 @@ const toolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [
     [ TextBlockBuilder          , "text"               , TT("text")               , [ TextBlock ] ],
     [ StatementBuilder          , "statement"          , TT("statement")          , [ Statement ] ],
     [ TriangleCongruenceBuilder , "triangle-congruence", TT("triangle congruence"), [ TriangleCongruence ] ],
-    [ EqualLengthBuilder        , "equal-length"       , TT("equal length")       , [ EqualLength ] ],
-    [ EqualAngleBuilder         , "equal-angle"        , TT("equal angle")        , [ EqualAngle ] ],
+    [ LengthEqualityBuilder     , "equal-length"       , TT("equal length")       , [ LengthEquality ] ],
+    [ AngleEqualityBuilder      , "equal-angle"        , TT("equal angle")        , [ AngleEquality ] ],
     [ MotionBuilder             , "animation"          , TT("animation")          , [ Motion ] ],
 ];
 
-export function makeShapeButton(shape : MathEntity) : layout_ts.Button {
+export function makeShapeButton(shape : MathEntity, add_to_view_shapes : boolean) : layout_ts.Button {
     let shape_img_name : string | undefined;
 
     if(shape instanceof SelectedShape){
@@ -1099,27 +1163,43 @@ export function makeShapeButton(shape : MathEntity) : layout_ts.Button {
     });
 
     button.click = async (ev : MouseEvent)=>{
-        if(button.parent == Plane.one.shapes_block && shape instanceof Statement){
-            if(shape instanceof TriangleCongruence){
+        if(add_to_view_shapes){
 
-                msg("set Triangle Congruence Builder");
-                Builder.tool = new TriangleCongruenceBuilder(shape);
-            }
-            else{
+            if(button.parent == Plane.one.shapes_block && shape instanceof Statement){
+                if(shape instanceof TriangleCongruence){
 
-                msg("set Statement Builder");
-                Builder.tool = new StatementBuilder(shape);
+                    msg("set Triangle Congruence Builder");
+                    Builder.tool = new TriangleCongruenceBuilder(shape);
+                }
+                else if(shape instanceof LengthEquality){
+
+                    msg("set Equal Length Builder");
+                    Builder.tool = new LengthEqualityBuilder(shape);
+                }
+                else if(shape instanceof AngleEquality){
+
+                    msg("set Equal Angle Builder");
+                    Builder.tool = new AngleEqualityBuilder(shape);
+                }
+                else{
+
+                    msg("set Statement Builder");
+                    Builder.tool = new StatementBuilder(shape);
+                }
             }
+
+            showProperty(shape, 0);
         }
 
-        showProperty(shape, 0);
+        View.current.resetMode();
+        shape.setMode(Mode.target);
     };
 
     return button;
 }
 
-export function addShapeList(shape : MathEntity){
-    const button = makeShapeButton(shape);
+export function addToViewShapesList(shape : MathEntity){
+    const button = makeShapeButton(shape, true);
     
     Plane.one.shapes_block.addChild(button);
     layout_ts.Layout.root.updateRootLayout();

@@ -123,6 +123,13 @@ export class Angle extends Shape {
     reading() : Reading {
         return new Reading(this, TT('Draw the angle formed by intersecting two lines.'), []);
     }
+
+    setRelations(): void {
+        super.setRelations();
+
+        const key = angleKey(this.lineA, this.directionA, this.lineB, this.directionB, this.intersection);
+        angleMap.set(key, this);
+    }
 }
 
 
@@ -331,6 +338,9 @@ export class LengthSymbol extends Shape {
 
         this.pointA.setRelations();
         this.pointB.setRelations();
+
+        const key = pairKey(this.pointA, this.pointB);
+        pointsToLengthSymbol.set(key, this);
 
         this.circle = undefined;
 

@@ -183,6 +183,7 @@ export class View extends Widget {
             // msg("redraw");
 
             this.canvas.clear();
+            Polygon.colorIndex = 0;
 
             this.grid.showGrid(Plane.one.show_axis.checked(), Plane.one.show_grid.checked());
 
@@ -220,6 +221,30 @@ export class View extends Widget {
         Point.tempPoints = [];
         const shape = this.getShape(position);
         Builder.tool.click(event, this, position, shape);
+    }
+
+    dblclick(event : MouseEvent){
+        if(Builder.tool instanceof SelectionTool){
+
+            let position = this.eventPosition(event);
+            const shape = this.getShape(position);
+            if(shape instanceof LengthSymbol){
+                const length_symbols = equalLengths.find(x => x.has(shape));
+                if(length_symbols != undefined){
+                    this.resetMode();
+                    Array.from(length_symbols.values()).forEach(x => x.setMode(Mode.depend));
+                    this.dirty = true;
+                }
+            }
+            else if(shape instanceof Angle){
+                const angles = Array.from(supplementaryAngles.flat()).find(x => x.has(shape));
+                if(angles != undefined){
+                    this.resetMode();
+                    angles.forEach(x => x.setMode(Mode.depend));
+                    this.dirty = true;
+                }
+            }
+        }
     }
 
 
@@ -324,7 +349,7 @@ export class View extends Widget {
 
     addShape(shape : MathEntity){
         this.shapes.push(shape);
-        addShapeList(shape);
+        addToViewShapesList(shape);
     }
 
     getShape(position : Vec2) : Shape | undefined {
@@ -422,7 +447,7 @@ export class View extends Widget {
 
         recalcRelations(this);
 
-        addShapeList(shape);
+        addToViewShapesList(shape);
 
         this.dirty = true;
     }

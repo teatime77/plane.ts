@@ -172,6 +172,9 @@ export function parseObject(obj: any, parse_other_object? : (o : any)=>any) : an
 
     case ArcByRadius.name:
         return new ArcByRadius(obj);
+
+    case Triangle.name:
+        return new Triangle(obj);
     
     case Angle.name:
         return new Angle(obj);
@@ -198,8 +201,12 @@ export function parseObject(obj: any, parse_other_object? : (o : any)=>any) : an
     case TriangleCongruence.name:
         return new TriangleCongruence(obj);
 
-    case EqualLength.name:
-        return new EqualLength(obj);
+    case "EqualLength":
+    case LengthEquality.name:
+        return new LengthEquality(obj);
+
+    case AngleEquality.name:
+        return new AngleEquality(obj);
 
     case SelectedShape.name:
         return new SelectedShape(obj);
@@ -302,7 +309,7 @@ export function loadData(obj : any){
     (view.shapes.filter(x => x instanceof TextBlock) as TextBlock[]).forEach(x => x.updateTextPosition());
 
     Plane.one.shapes_block.clear();
-    view.shapes.forEach(x => addShapeList(x));
+    view.shapes.forEach(x => addToViewShapesList(x));
 }
 
 export function handleDragOver(evt: DragEvent) {

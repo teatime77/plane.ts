@@ -975,7 +975,7 @@ export class CircleByPoint extends Circle {
     }
 
     reading(): Reading {
-        return new Reading(this, TT('Draw a circle with point "A" as the center.'), [ this.center ]);
+        return new Reading(this, TT('Draw a circle.'), []);
     }
 
     setRelations(): void {
@@ -1263,6 +1263,7 @@ export class ArcByRadius extends Arc {
 }
 
 export class Polygon extends Shape {
+    static colorIndex : number = 0;
     points : Point[] = [];
     lines  : LineByPoints[] = [];
 
@@ -1285,7 +1286,12 @@ export class Polygon extends Shape {
         return super.dependencies().concat(this.points);
     }
 
-    draw(): void {        
+    draw(): void {
+        const positions = this.points.map(x => x.position);
+
+        const colors = [ "orange", "lime", "pink" ];
+        const idx = Polygon.colorIndex++ % colors.length;
+        View.current.canvas.drawPolygonRaw(positions, colors[idx], NaN, true);
     }
 
     getAllShapes(shapes : MathEntity[]){
@@ -1309,6 +1315,9 @@ export class Polygon extends Shape {
         this.points.forEach(x => x.setRelations());
         this.lines.forEach(x => x.setRelations());
     }
+}
+
+export class Triangle extends Polygon {    
 }
 
 }

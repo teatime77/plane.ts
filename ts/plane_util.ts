@@ -247,4 +247,16 @@ export function pairs<T>(a : T, b : T) : [[T, T], [T, T]] {
     return [ [a, b], [b, a] ];
 }
 
+export function isClockwise(points : Point[]) : boolean {
+    assert(points.length == 3);
+    const [A, B, C] = points.map(x => x.position);
+    const AB = B.sub(A);
+    const AC = C.sub(A);
+    
+    const cross_product = AB.cross(AC);
+    assert(cross_product != 0);
+
+    return 0 < cross_product;
+}
+
 }

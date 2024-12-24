@@ -40,6 +40,7 @@ export function viewEvent(view : View){
     view.board.addEventListener('pointermove', view.pointermove.bind(view));
     view.board.addEventListener("pointerup"  , view.pointerup.bind(view));   
     view.board.addEventListener("click"      , view.click.bind(view));   
+    view.board.addEventListener("dblclick"   , view.dblclick.bind(view));
 
     window.addEventListener("resize", view.resizeView.bind(view));
 
