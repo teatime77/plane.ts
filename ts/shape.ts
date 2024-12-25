@@ -986,7 +986,7 @@ export class CircleByPoint extends Circle {
 }
 
 export class CircleByRadius extends Circle {
-    private lengthSymbol : LengthSymbol;
+    lengthSymbol : LengthSymbol;
 
     constructor(obj : { center : Point, lengthSymbol : LengthSymbol }){
         super(obj);
@@ -1150,7 +1150,7 @@ export class ArcByPoint extends Arc {
 
 
 export class ArcByRadius extends Arc {
-    private lengthSymbol : LengthSymbol;
+    lengthSymbol : LengthSymbol;
     startAngle : number;
     endAngle : number;
     pointA : Point;
@@ -1259,6 +1259,10 @@ export class ArcByRadius extends Arc {
 
         addPointOnCircleArcs(this.pointA, this);
         addPointOnCircleArcs(this.pointB, this);        
+
+        if(this.lengthSymbol.circle != undefined){
+            addEqualCircleArcs(this, this.lengthSymbol.circle);
+        }
     }
 }
 

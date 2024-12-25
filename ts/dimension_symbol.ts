@@ -234,7 +234,7 @@ export class LengthSymbol extends Shape {
     pointA : Point;
     pointB : Point;
     lengthKind : number;
-    circle? : CircleArc;
+    circle? : CircleByRadius | ArcByRadius;
 
     constructor(obj : { pointA : Point, pointB : Point, lengthKind : number }){
         super(obj);
@@ -348,7 +348,7 @@ export class LengthSymbol extends Shape {
             const circles = list(centerOfCircleArcs.get(center));
             if(circles.length != 0){
     
-                this.circle = circles.find(x => x.includesPoint(point));
+                this.circle = circles.find(x => x.includesPoint(point)) as CircleByRadius | ArcByRadius;
                 if(this.circle != undefined){
                     break;
                 }

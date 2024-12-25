@@ -87,6 +87,9 @@ export class TriangleCongruence extends Statement {
         case TriangleCongruenceReason.side_side_side:
         case TriangleCongruenceReason.side_angle_side:
         case TriangleCongruenceReason.angle_side_angle:
+            if(this.selectedShapes.every(x => x instanceof Triangle)){
+                return;
+            }
             if(2 <= this.selectedShapes.length && this.selectedShapes.slice(0, 2).every(x => x instanceof SelectedShape && x.isTriangle())){
                 break;
             }

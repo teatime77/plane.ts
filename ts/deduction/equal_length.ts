@@ -93,6 +93,18 @@ export function makeEqualLength(lengthSymbolA : LengthSymbol, lengthSymbolB : Le
         }
     }
 
+    for(const [lengthSymbol1, lengthSymbol2] of [[lengthSymbolA, lengthSymbolB], [lengthSymbolB, lengthSymbolA]]){
+        if(lengthSymbol1.circle != undefined && lengthSymbol1.circle.lengthSymbol == lengthSymbol2){
+
+            msg(`circle-by-radius`);
+            return new LengthEquality({
+                reason : LengthEqualityReason.circle_by_radius,
+                auxiliaryShapes : [ lengthSymbol1.circle ],
+                shapes : [ lengthSymbolA, lengthSymbolB ]                
+            });
+        }
+    }
+
     if(lengthSymbolA.circle != undefined && lengthSymbolB.circle != undefined){
         const circle = equalCircleArcs.find(x => x.has(lengthSymbolA.circle!) && x.has(lengthSymbolB.circle!) );
         if(circle != undefined){

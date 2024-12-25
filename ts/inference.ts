@@ -113,7 +113,7 @@ export function isParallel(lineA : AbstractLine, lineB : AbstractLine) : boolean
     return false;
 }
 
-export function addEqualCircleArcs(circle1 : CircleArc, circle2 : CircleArc){
+export function addEqualCircleArcs(circle1 : CircleByRadius | ArcByRadius, circle2 : CircleByRadius | ArcByRadius){
     const circle_set1 = equalCircleArcs.find(x => x.has(circle1));
     const circle_set2 = equalCircleArcs.find(x => x.has(circle2));
 

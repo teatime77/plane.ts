@@ -14,7 +14,8 @@ export enum LengthEqualityReason {
     none = 100,
     radii_equal,
     common_circle,
-    parallel_lines
+    parallel_lines,
+    circle_by_radius,
 }
 
 export enum AngleEqualityReason {
@@ -45,6 +46,7 @@ export const textMap = new Map<number,string>([
     [ LengthEqualityReason.radii_equal, "radii_equal" ],
     [ LengthEqualityReason.common_circle, "common_circle" ],
     [ LengthEqualityReason.parallel_lines, "parallel_lines" ],
+    [ LengthEqualityReason.circle_by_radius, "circle_by_radius" ],
 
     [ AngleEqualityReason.none, "none" ],
     [ AngleEqualityReason.vertical_angle, "vertical_angle" ],
