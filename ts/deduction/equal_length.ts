@@ -69,6 +69,34 @@ function findParallelLinesOfLengthSymbols(lengthSymbolA : LengthSymbol, lengthSy
 }
 
 export function makeEqualLength(lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol) : LengthEquality | undefined {
+    for(const map of congruentTriangles.values()){
+        let idxA : number = -1;
+        let idxB : number = -1;
+        let triangleA : Triangle;
+        let triangleB : Triangle;
+
+        for(const triangle of map.values()){
+            if(idxA == -1){
+                idxA = triangle.lengthSymbolIndex(lengthSymbolA);
+                triangleA = triangle;
+            }
+            if(idxB == -1){
+                idxB = triangle.lengthSymbolIndex(lengthSymbolB);
+                triangleB = triangle;
+            }
+
+            if(idxA != -1 && idxB != -1 && idxA == idxB){
+                msg(`equal length:congruent triangles`);
+                return new AngleEquality({
+                    reason          : LengthEqualityReason.congruent_triangles,
+                    auxiliaryShapes : [ triangleA!, triangleB! ],
+                    shapes          : [ lengthSymbolA, lengthSymbolB ]
+                });
+            }
+        }
+    }
+
+
     const all_shapes = View.current.allRealShapes();
     const all_circle_arcs = all_shapes.filter(x => x instanceof CircleArc) as CircleArc[];
 

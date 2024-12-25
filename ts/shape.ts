@@ -1346,6 +1346,18 @@ export class Triangle extends Polygon {
         return -1;
     }
 
+    lengthSymbolIndex(lengthSymbol : LengthSymbol) : number {
+        for(const [i1, i2] of [[0,1], [1,2], [2,0]]){
+            for(const [p1, p2] of pairs<Point>(this.points[i1], this.points[i2])){
+                if(lengthSymbol.pointA == p1 && lengthSymbol.pointB == p2){
+                    return i1;
+                }
+            }
+        }
+
+        return -1;
+    }
+
     key() : string {
         return this.points.map(x => `${x.id}`).join(":");
     }
