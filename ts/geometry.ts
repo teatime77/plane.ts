@@ -639,6 +639,45 @@ export class CirclePointTangent extends Tangent {
     }
 }
 
+export class AngleBisector extends AbstractLine {
+    lineA       : AbstractLine;
+    directionA  : number;
+
+    lineB       : AbstractLine;
+    directionB  : number;
+
+    constructor(obj : { lineKind : number, lineA : AbstractLine, directionA : number, lineB : AbstractLine, directionB : number }){
+        (obj as any).pointA = getCommonPointOfLines(obj.lineA, obj.lineB); 
+        super(obj as any);
+        this.lineA       = obj.lineA;
+        this.directionA  = obj.directionA;
+
+        this.lineB       = obj.lineB;
+        this.directionB  = obj.directionB;
+
+        this.calc();
+    }
+
+    makeObj() : any {
+        let obj = Object.assign(super.makeObj(), {
+            lineA      : this.lineA.toObj(),
+            directionA : this.directionA,
+            lineB      : this.lineB.toObj(),
+            directionB : this.directionB
+        });
+
+        return obj;
+    }
+
+    dependencies() : MathEntity[] {
+        return [ this.lineA, this.lineB ];
+    }
+
+    calc(): void {
+        this.e = this.lineA.e.mul(this.directionA).add(this.lineB.e.mul(this.directionB)).mul(0.5);
+    }
+}
+
 export class SelectedShape extends Shape {
     index : number = NaN;
     highlightMode : number = 0;

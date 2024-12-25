@@ -765,7 +765,7 @@ class CircleCircleTangentBuilder extends Builder {
 }
 
 
-class AngleBuilder extends Builder {
+abstract class AbstractAngleBuilder extends Builder {
     line1 : AbstractLine | undefined;
     pos1  : Vec2 | undefined;
 
@@ -790,14 +790,45 @@ class AngleBuilder extends Builder {
                 const directionA = Math.sign(pos1.sub(common_point.position).dot(lineA.e));
                 const directionB = Math.sign(pos2.sub(common_point.position).dot(lineB.e));
 
-                const angle = new Angle({ angleMark : 0, lineA, directionA, lineB, directionB });
-                addShapeSetRelations(view, angle);
+                let target : Angle | AngleBisector;
+
+                if(this instanceof AngleBuilder){
+
+                    target = new Angle({ angleMark : 1, lineA, directionA, lineB, directionB });
+
+                    addShapeSetRelations(view, target);
+                }
+                else{
+
+                    target = new AngleBisector({ lineKind : 0, lineA, directionA, lineB, directionB });
+
+                    addShapeSetRelations(view, target);
+
+                    const angleA = new Angle({ angleMark : 1, lineA, directionA, lineB : target, directionB : 1 });
+                    const angleB = new Angle({ angleMark : 1, lineA : target, directionA : 1, lineB, directionB });
+
+                    const angle_bisector = new AngleEquality({
+                        reason          : AngleEqualityReason.angle_bisector,
+                        auxiliaryShapes : [ lineA, lineB, target ],
+                        shapes          : [ angleA, angleB ]
+                    });
+
+                    addShapeSetRelations(view, angleA);
+                    addShapeSetRelations(view, angleB);
+                    addShapeSetRelations(view, angle_bisector);
+                }
 
                 this.line1 = undefined;
-                this.resetTool(angle);
+                this.resetTool(target);
             }
         }
     }
+}
+
+class AngleBuilder extends AbstractAngleBuilder {
+}
+
+class AngleBisectorBuilder extends AbstractAngleBuilder {
 }
 
 class DimensionLineBuilder extends Builder {
@@ -986,7 +1017,7 @@ export class TriangleCongruenceBuilder extends Builder {
 
                     this.pointA = undefined;
                     this.pointB = undefined;
-                    
+
                     this.resetTool(undefined);
                 }
                 else{
@@ -1116,6 +1147,7 @@ const toolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [
     [ PerpendicularBuilder      , "perpendicular"      , TT("perpendicular")      , [ FootOfPerpendicular ] ],
     [ PerpendicularLineBuilder  , "perpendicular-line" , TT("perpendicular")      , [ PerpendicularLine ] ],
     [ ParallelLineBuilder       , "parallel-line"      , TT("parallel line")      , [ ParallelLine ] ],
+    [ AngleBisectorBuilder      , "angle-bisector"     , TT("angle bisector")     , [ AngleBisector ]],
     [ CircleByPointBuilder      , "circle-by-point"    , TT("circle by point")    , [ CircleByPoint ] ],
     [ CircleByRadiusBuilder     , "circle-by-radius"   , TT("circle by radius")   , [ CircleByRadius ] ],
     [ ArcByPointBuilder         , "arc-by-point"       , TT("arc by point")       , [ ArcByPoint ] ],

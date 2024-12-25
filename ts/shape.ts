@@ -1306,9 +1306,9 @@ export class Polygon extends Shape {
     reading(): Reading {
         switch(this.points.length){
         case 3:
-            return new Reading(this, TT('Draw a triangle with vertices "A", "B", and "C".'), this.points);
+            return new Reading(this, TT('Draw a triangle.'), []);
         case 4:
-            return new Reading(this, TT('Draw a quadrilateral with vertices "A", "B", "C" and "D".'), this.points);        
+            return new Reading(this, TT('Draw a quadrilateral.'), []);        
         }
 
         throw new MyError();

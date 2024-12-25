@@ -22,6 +22,7 @@ export enum AngleEqualityReason {
     none = 200,
     vertical_angle,
     parallel_lines,
+    angle_bisector,
 }
 
 export enum ImplicationCode {
@@ -51,6 +52,7 @@ export const textMap = new Map<number,string>([
     [ AngleEqualityReason.none, "none" ],
     [ AngleEqualityReason.vertical_angle, "vertical_angle" ],
     [ AngleEqualityReason.parallel_lines, "parallel_lines" ],
+    [ AngleEqualityReason.angle_bisector, "angle_bisector" ],
 ]);
 
 export class Statement extends MathEntity {

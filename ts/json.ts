@@ -179,6 +179,9 @@ export function parseObject(obj: any, parse_other_object? : (o : any)=>any) : an
     case Angle.name:
         return new Angle(obj);
 
+    case AngleBisector.name:
+        return new AngleBisector(obj);
+
     // case Image.name:
     //     return new Image(obj);
 
