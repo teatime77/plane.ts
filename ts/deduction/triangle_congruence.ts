@@ -138,6 +138,12 @@ export class TriangleCongruence extends Statement {
             await speech.speak_waitEnd(TT("These corresponding angles are equal."));
         }
     }
+
+    setRelations(): void {
+        super.setRelations();
+        const triangles = this.selectedShapes as Triangle[];
+        addCongruentTriangles(triangles[0], triangles[1]);
+    }
 }
 
 }

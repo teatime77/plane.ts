@@ -1293,9 +1293,18 @@ export class Polygon extends Shape {
     draw(): void {
         const positions = this.points.map(x => x.position);
 
-        const colors = [ "orange", "lime", "pink" ];
-        const idx = Polygon.colorIndex++ % colors.length;
-        View.current.canvas.drawPolygonRaw(positions, colors[idx], NaN, true);
+        let color : string;
+        if(this.mode == Mode.none){
+
+            const colors = [ "orange", "lime", "pink" ];
+            const idx = Polygon.colorIndex++ % colors.length;
+            color = colors[idx];
+        }
+        else{
+            color = this.modeColor();
+        }
+
+        View.current.canvas.drawPolygonRaw(positions, color, NaN, true);
     }
 
     getAllShapes(shapes : MathEntity[]){
@@ -1322,6 +1331,24 @@ export class Polygon extends Shape {
 }
 
 export class Triangle extends Polygon {    
+    angleIndex(angle : Angle) : number {
+        const idx = this.points.indexOf(angle.intersection);
+        if(idx != -1){
+        
+            const other_points = [0, 1, 2].filter(i => i != idx).map(i => this.points[i]);
+            for(const [p1, p2] of pairs<Point>(other_points[0], other_points[1])){
+                if(angle.lineA.includesPoint(p1) && angle.lineB.includesPoint(p2)){
+                    return idx;
+                }
+            }
+        }
+
+        return -1;
+    }
+
+    key() : string {
+        return this.points.map(x => `${x.id}`).join(":");
+    }
 }
 
 }

@@ -23,6 +23,7 @@ export enum AngleEqualityReason {
     vertical_angle,
     parallel_lines,
     angle_bisector,
+    congruent_triangles,
 }
 
 export enum ImplicationCode {
@@ -53,9 +54,10 @@ export const textMap = new Map<number,string>([
     [ AngleEqualityReason.vertical_angle, "vertical_angle" ],
     [ AngleEqualityReason.parallel_lines, "parallel_lines" ],
     [ AngleEqualityReason.angle_bisector, "angle_bisector" ],
+    [ AngleEqualityReason.congruent_triangles, "congruent_triangles" ],
 ]);
 
-export class Statement extends MathEntity {
+export class Statement extends Shape {
     static idTimeout : number | undefined;
 
     reason : number = 0;
@@ -135,6 +137,12 @@ export class Statement extends MathEntity {
         });
     }
 
+    getAllShapes(shapes : MathEntity[]){
+        super.getAllShapes(shapes);
+        shapes.push(... this.selectedShapes);
+        shapes.push(... this.auxiliaryShapes);
+    }
+
     showMathText(){
         Statement.idTimeout = undefined;
 
@@ -182,6 +190,11 @@ export class Statement extends MathEntity {
 
             this.latexBox.setBorderColor(color);
         }
+    }
+
+    draw() : void {
+        const shapes = this.auxiliaryShapes.concat(this.selectedShapes).filter(x => x instanceof Shape) as Shape[];
+        shapes.filter(x => x.mode != Mode.none).forEach(x => x.draw());
     }
 
     show(){    

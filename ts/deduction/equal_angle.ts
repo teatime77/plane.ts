@@ -99,6 +99,38 @@ export function isEqualAnglePoints(angle_pointsA : Point[], angle_pointsB : Poin
 }
 
 export function makeEqualAngle(angleA : Angle, angleB : Angle) : AngleEquality | undefined {
+    for(const map of congruentTriangles.values()){
+        let idxA : number = -1;
+        let idxB : number = -1;
+        let triangleA : Triangle;
+        let triangleB : Triangle;
+
+        for(const triangle of map.values()){
+            if(idxA == -1){
+                idxA = triangle.angleIndex(angleA);
+                triangleA = triangle;
+            }
+            if(idxB == -1){
+                idxB = triangle.angleIndex(angleB);
+                triangleB = triangle;
+            }
+
+            if(idxA != -1 && idxB != -1 && idxA == idxB){
+                msg(`equal angle:congruent triangles`);
+                return new AngleEquality({
+                    reason : AngleEqualityReason.congruent_triangles,
+                    auxiliaryShapes : [
+                        triangleA!, triangleB!
+                    ],
+                    shapes : [
+                        angleA, angleB
+                    ]
+                });
+
+            }
+        }
+    }
+
     const e_AA = angleA.lineA.e.mul(angleA.directionA);
     const e_AB = angleA.lineB.e.mul(angleA.directionB);
     const e_BA = angleB.lineA.e.mul(angleB.directionA);
@@ -115,7 +147,7 @@ export function makeEqualAngle(angleA : Angle, angleB : Angle) : AngleEquality |
         if(angleA.lineA == angleB.lineA && angleA.lineB == angleB.lineB){
             msg("lineAA == lineBB & lineAB == lineBB");
             if(Math.sign(e_AA.dot(e_BA)) == -1 && Math.sign(e_AB.dot(e_BB)) == -1){
-                msg(`equal ange:vertical angle`);
+                msg(`equal angle:vertical angle`);
                 return new AngleEquality({
                     reason : AngleEqualityReason.vertical_angle,
                     auxiliaryShapes : [

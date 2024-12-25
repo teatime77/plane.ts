@@ -14,6 +14,7 @@ export const angleMap = new Map<string,Angle>();
 
 export let equalLengths : Set<LengthSymbol>[] = [];
 export let equalCircleArcs : Set<CircleArc>[] = [];
+export let congruentTriangles : Map<string,Triangle>[] = [];
 
 
 function addSetMap<T, V>(a : T, b : V, map:Map<T, Set<V>>){
@@ -37,6 +38,7 @@ export function initRelations(){
 
     equalLengths = [];
     equalCircleArcs = [];
+    congruentTriangles = [];
 }
 
 export function recalcRelations(view : View){
@@ -172,6 +174,24 @@ export function getLineFromPoints(lines : AbstractLine[], pointA : Point, pointB
     return lines.find(x => x.includesPoint(pointA) && x.includesPoint(pointB));
 }
 
+export function addCongruentTriangles(triangle1 : Triangle, triangle2 : Triangle){
+    if(!(triangle1 instanceof Triangle && triangle2 instanceof Triangle)){
+        msg("old Congruent Triangles")
+        return;
+    }
 
+    const key1 = triangle1.key();
+    const key2 = triangle2.key();
+
+    let map = congruentTriangles.find(x => x.has(key1) || x.has(key2));
+    if(map == undefined){
+        map = new Map<string,Triangle>([[key1, triangle1], [key2, triangle2]]);
+        congruentTriangles.push(map);
+    }
+    else{
+        map.set(key1, triangle1);
+        map.set(key2, triangle2);
+    }
+}
 
 }
