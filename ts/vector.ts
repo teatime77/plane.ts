@@ -94,6 +94,10 @@ export class Vec2 {
         return this.x * a.y - this.y * a.x;
     }
 
+    project(a : Vec2) : Vec2 {
+        return this.mul(this.dot(a));
+    }
+
     rot(th : number) : Vec2 {
         const cs = Math.cos(th);
         const sn = Math.sin(th);

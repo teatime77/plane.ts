@@ -4,6 +4,7 @@ export abstract class Widget {
     static refMap : Map<number, any> = new Map<number, any>();
     static defferedBound : [number, number][];
     static isLoading : boolean = false;
+    static maxOrder : number = 0;
 
     // static 
     static maxId = 0;
@@ -24,6 +25,8 @@ export abstract class Widget {
             this.id = ++Widget.maxId;
         }
         assert(this.id <= Widget.maxId);
+
+        this.order = ++Widget.maxOrder;
     }
 
     getProperties(){
@@ -217,6 +220,15 @@ export function parseObject(obj: any, parse_other_object? : (o : any)=>any) : an
     case PropertyChange.name:
         return new PropertyChange(obj);
 
+    case LengthEqualityConstraint.name:
+        return new LengthEqualityConstraint(obj);
+
+    case ParallelConstraint.name:
+        return new ParallelConstraint(obj);
+
+    case PerpendicularConstraint.name:
+        return new PerpendicularConstraint(obj);
+
     case Motion.name:
         return new Motion(obj);
 
@@ -264,6 +276,7 @@ export function loadData(obj : any){
     Plane.one.clearPlane();
 
     Widget.maxId  = -1;
+    Widget.maxOrder = -1;
     Widget.refMap = new Map<number, any>();
     Widget.defferedBound = [];    
 

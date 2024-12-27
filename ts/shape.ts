@@ -320,6 +320,7 @@ export abstract class Shape extends MathEntity {
     lineWidth : number = defaultLineWidth;
     caption   : TextBlock | undefined;
     depends   : Shape[] = [];
+    constraints : Constraint[] = [];
 
     abstract draw() : void;
 
@@ -430,7 +431,8 @@ export abstract class Shape extends MathEntity {
         return (this.isOver ? OverLineWidth : this.lineWidth);
     }
 
-    calc(){        
+    calc(){      
+        this.constraints.forEach(x => x.applyConstraint(this));
     }
 
     updateCaption(){ 
@@ -470,6 +472,12 @@ export abstract class Shape extends MathEntity {
         super.delete(deleted);
         if(this.caption != undefined){
             this.caption.delete(deleted);
+        }
+    }
+
+    addConstraint(constraint : Constraint){
+        if(! this.constraints.includes(constraint)){
+            this.constraints.push(constraint);
         }
     }
 }
@@ -621,6 +629,9 @@ export class Point extends Shape {
                 this.setPosition(this.positionSave.add(diff));
             }
         }
+
+        this.position = position;
+        this.calc();
     }
 
     shapePointerup(position : Vec2){
@@ -764,6 +775,10 @@ export class LineByPoints extends AbstractLine {
     getAllShapes(shapes : MathEntity[]){
         super.getAllShapes(shapes);
         shapes.push(this.pointB);
+    }
+
+    length() : number {
+        return this.pointA.distance(this.pointB);
     }
 
     isNear(position : Vec2) : boolean {

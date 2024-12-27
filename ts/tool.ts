@@ -1,6 +1,7 @@
 ///<reference path="inference.ts" />
 ///<reference path="deduction/equal_length.ts" />
 ///<reference path="deduction/equal_angle.ts" />
+///<reference path="constraint.ts" />
 
 namespace plane_ts {
 //
@@ -1086,40 +1087,77 @@ export class LengthEqualityBuilder extends Builder {
     }
 }
 
-export class AngleEqualityBuilder extends Builder {
-    angleA? : Angle;
-
-    constructor(angleEquality? : AngleEquality){
-        super();
-    }
+export class EqualityConstraintBuilder extends Builder {
+    lengthSymbolA? : LengthSymbol;
 
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
-        if(shape instanceof Angle){
-            if(this.angleA == undefined){
-                this.angleA = shape;
+        if(shape instanceof LengthSymbol){
+            if(this.lengthSymbolA == undefined){
+                this.lengthSymbolA = shape;
                 shape.setMode(Mode.depend);
             }
             else{
 
-                const angleEquality = makeEqualAngle(this.angleA, shape);
-                if(angleEquality != undefined){
+                const constraint = new LengthEqualityConstraint({
+                    lengthSymbolA : this.lengthSymbolA,
+                    lengthSymbolB : shape
+                });
 
-                    addShapeSetRelations(view, angleEquality);
-                    this.angleA = undefined;
-                    this.resetTool(angleEquality);
-                }
-                else{
+                addShapeSetRelations(view, constraint);
+                this.lengthSymbolA = undefined;
+                this.resetTool(constraint);
 
-                    this.angleA.setMode(Mode.none);
-                    this.angleA = undefined;
-                }
             }
         }
     }
-    
 }
 
 
+abstract class ParallelPerpendicularLineBuilder extends Builder {
+    line  : AbstractLine | undefined;
+
+    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
+        if(shape instanceof AbstractLine){
+            if(this.line == undefined){
+
+                this.line = shape;
+                this.line.setMode(Mode.depend);
+            }
+            else{
+                const [lineA, lineB] = sortShape<AbstractLine>([this.line, shape]);
+                if(lineB instanceof LineByPoints){
+
+                    let constraint : ParallelPerpendicularConstraint;
+
+                    if(this instanceof ParallelConstraintBuilder){
+
+                        constraint = new ParallelConstraint({ lineA, lineB });
+                    }
+                    else{
+                        constraint = new PerpendicularConstraint({ lineA, lineB });
+                    }
+
+                    addShapeSetRelations(view, constraint);
+
+                    this.line  = undefined;
+        
+                    this.resetTool(constraint);    
+                }
+                else{
+                    this.line.setMode(Mode.none);
+                    this.line = undefined;
+                }
+
+            }
+        }
+    }
+}
+
+class ParallelConstraintBuilder extends ParallelPerpendicularLineBuilder {
+}
+
+class PerpendicularConstraintBuilder extends ParallelPerpendicularLineBuilder {
+}
 
 export class MotionBuilder extends SelectionTool { 
     animation : Motion;
@@ -1162,7 +1200,9 @@ const toolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [
     [ StatementBuilder          , "statement"          , TT("statement")          , [ Statement ] ],
     [ TriangleCongruenceBuilder , "triangle-congruence", TT("triangle congruence"), [ TriangleCongruence ] ],
     [ LengthEqualityBuilder     , "equal-length"       , TT("equal length")       , [ LengthEquality ] ],
-    [ AngleEqualityBuilder      , "equal-angle"        , TT("equal angle")        , [ AngleEquality ] ],
+    [ EqualityConstraintBuilder , "equality-constraint", TT("equality constraint"), [ LengthEqualityConstraint ] ],
+    [ ParallelConstraintBuilder , "parallel-line"      , TT("parallel constraint"), [ ParallelConstraint ]],
+    [ PerpendicularConstraintBuilder , "perpendicular-line" , TT("perpendicular constraint"), [ PerpendicularConstraint ]],
     [ MotionBuilder             , "animation"          , TT("animation")          , [ Motion ] ],
 ];
 
@@ -1207,11 +1247,6 @@ export function makeShapeButton(shape : MathEntity, add_to_view_shapes : boolean
 
                     msg("set Equal Length Builder");
                     Builder.tool = new LengthEqualityBuilder(shape);
-                }
-                else if(shape instanceof AngleEquality){
-
-                    msg("set Equal Angle Builder");
-                    Builder.tool = new AngleEqualityBuilder(shape);
                 }
                 else{
 
