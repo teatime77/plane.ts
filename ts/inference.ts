@@ -61,6 +61,26 @@ export function addPointOnLines(point : Point, line : AbstractLine){
     assert(pointOnLines.get(point) != undefined);
 }
 
+export function getLinesByPoint(point : Point) : AbstractLine[] {
+    const lines = pointOnLines.get(point);
+    if(lines == undefined){
+        return [];
+    }
+    else{
+        return Array.from(lines);
+    }
+}
+
+export function getCircleArcsByPoint(point : Point) : CircleArc[] {
+    const circles = pointOnCircleArcs.get(point);
+    if(circles == undefined){
+        return [];
+    }
+    else{
+        return Array.from(circles);
+    }
+}
+
 //------------------------------------------------------------ perpendicular / parallel lines
 
 export function addPerpendicularPairs(line1 : AbstractLine, line2 : AbstractLine){

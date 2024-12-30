@@ -20,6 +20,7 @@ export enum Mode {
 }
 
 export abstract class MathEntity extends Widget implements i18n_ts.Readable, parser_ts.Highlightable {
+    static orderSet = new Set<MathEntity>();
     visible : boolean = true;
     visible2 : boolean = false;
     mode : Mode = Mode.none;
@@ -105,6 +106,20 @@ export abstract class MathEntity extends Widget implements i18n_ts.Readable, par
 
     dependencies() : MathEntity[] {
         return [];
+    }
+
+    setOrder(){
+        if(MathEntity.orderSet.has(this)){
+            assert(!isNaN(this.order));
+            return;
+        }
+        for(const dep of this.dependencies()){
+            dep.setOrder();
+        }
+
+        assert(!MathEntity.orderSet.has(this));
+        this.order = MathEntity.orderSet.size;
+        MathEntity.orderSet.add(this);
     }
 
     setMode(mode : Mode){
@@ -490,7 +505,6 @@ export class Point extends Shape {
 
     position! : Vec2;
     positionSave : Vec2 | undefined;
-    bound : AbstractLine | CircleArc | undefined;
 
     origin : Point | undefined;
 
@@ -502,12 +516,8 @@ export class Point extends Shape {
         return new Point( { position } );
     }
 
-    constructor(obj : { position : Vec2, bound? : AbstractLine | CircleArc }){
+    constructor(obj : { position : Vec2 }){
         super(obj);
-
-        if(obj.bound != undefined){
-            this.bound = obj.bound;
-        }
 
         if(this.name != "" && this.caption == undefined){
             this.caption = this.makeCaption(this);
@@ -527,10 +537,6 @@ export class Point extends Shape {
             position : this.position
         });
 
-        if(this.bound != undefined){
-            obj.bound = this.bound.toObj();
-        }
-
         return obj;
     }
 
@@ -543,13 +549,34 @@ export class Point extends Shape {
         View.current.dirty = true;
     }
 
+    getBounds() : (AbstractLine | CircleArc)[] {
+        const lines   = getLinesByPoint(this) as (AbstractLine | CircleArc)[];
+        const circles = getCircleArcsByPoint(this);
+
+        return lines.concat(circles).filter(x => x.order < this.order);
+    }
+
     setBound(bound : AbstractLine | CircleArc | undefined){
-        this.bound = bound;
+        if(bound instanceof AbstractLine){
+            addPointOnLines(this, bound);
+            // msg(`set relation point:${this.id} line:${bound.id}`);
+            
+            if(bound instanceof LineByPoints){
 
-        if(bound instanceof LineByPoints){
-
-            const new_position = calcFootOfPerpendicular(this.position, bound);
-            this.setPosition(new_position);
+                const new_position = calcFootOfPerpendicular(this.position, bound);
+                this.setPosition(new_position);
+            }
+        }
+        else if(bound instanceof CircleArc){
+            addPointOnCircleArcs(this, bound);
+            // msg(`set relation point:${this.id}[${this.id2}] circle:${bound.id}[${bound.id2}]`);
+            const circles = pointOnCircleArcs.get(this);
+            if(!(circles != undefined && circles.has(bound))){
+                throw new MyError(`no relation point:${this.id} circle:${bound.id}`);
+            }
+        }
+        else if(bound != undefined){
+            throw new MyError();
         }
     }
 
@@ -615,12 +642,24 @@ export class Point extends Shape {
     }
 
     shapePointermove(position : Vec2, diff : Vec2){
-        if(this.bound instanceof AbstractLine){
+        const bounds = this.getBounds();
 
-            this.setPosition(calcFootOfPerpendicular(position, this.bound));
+        if(2 <= bounds.length){
+            return;
         }
-        else if(this.bound instanceof CircleArc){
-            this.bound.adjustPosition(this, position);
+        else if(bounds.length == 1){
+
+            const bound = bounds[0];
+            if(bound instanceof AbstractLine){
+
+                this.setPosition(calcFootOfPerpendicular(position, bound));
+            }
+            else if(bound instanceof CircleArc){
+                bound.adjustPosition(this, position);
+            }
+            else{
+                throw new MyError();
+            }
         }
         else{
 
@@ -628,34 +667,16 @@ export class Point extends Shape {
 
                 this.setPosition(this.positionSave.add(diff));
             }
+            else{
+                this.setPosition(position);
+            }
         }
 
-        this.position = position;
         this.calc();
     }
 
     shapePointerup(position : Vec2){
         this.positionSave = undefined;
-    }
-
-    setRelations(): void {
-        super.setRelations();
-
-        if(this.bound instanceof AbstractLine){
-            addPointOnLines(this, this.bound);
-            // msg(`set relation point:${this.id} line:${this.bound.id}`);
-        }
-        else if(this.bound instanceof CircleArc){
-            addPointOnCircleArcs(this, this.bound);
-            // msg(`set relation point:${this.id}[${this.id2}] circle:${this.bound.id}[${this.bound.id2}]`);
-            const circles = pointOnCircleArcs.get(this);
-            if(!(circles != undefined && circles.has(this.bound))){
-                throw new MyError(`no relation point:${this.id} circle:${this.bound.id}`);
-            }
-        }
-        else if(this.bound != undefined){
-            throw new MyError();
-        }
     }
 }
 
@@ -1188,9 +1209,6 @@ export class ArcByRadius extends Arc {
 
         this.pointA.visible = false;
         this.pointB.visible = false;
-
-        this.pointA.bound = this;
-        this.pointB.bound = this;
     }
 
     makeObj() : any {
@@ -1308,7 +1326,7 @@ export class Polygon extends Shape {
     }
 
     dependencies() : MathEntity[] {
-        return super.dependencies().concat(this.points);
+        return super.dependencies().concat(this.lines).concat(this.points);
     }
 
     draw(): void {

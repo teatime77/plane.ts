@@ -154,10 +154,6 @@ export class View extends Widget {
 
         const unique_shapes = unique(shapes);
 
-        for(const [i, x] of unique_shapes.entries()){
-            x.order = i;
-        }
-
         return unique_shapes;
     }
 
@@ -174,6 +170,12 @@ export class View extends Widget {
     resetMode(){
         this.allShapes().forEach(x =>{ x.setMode(Mode.none); x.isOver = false; });
         this.dirty = true;
+    }
+
+    resetOrders(){
+        MathEntity.orderSet.clear();
+        this.allShapes().forEach(x => x.order = NaN);
+        this.shapes.forEach(x => x.setOrder());
     }
 
     drawShapes(){
@@ -282,7 +284,7 @@ export class View extends Widget {
 
             if(near_shape != undefined){
                 near_shape.isOver = true;
-                msg(`over:${near_shape.constructor.name}`);
+                // msg(`over:${near_shape.constructor.name}`);
             }
 
             this.dirty = true;
@@ -349,6 +351,7 @@ export class View extends Widget {
 
     addShape(shape : MathEntity){
         this.shapes.push(shape);
+        shape.setOrder();
         addToViewShapesList(shape);
     }
 
@@ -384,20 +387,27 @@ export class View extends Widget {
             
             shape.getAllShapes(shapes);
 
-            const bounded_points = shapes.filter(x => x instanceof Point && x.bound != undefined && this.changed.has(x.bound)) as Point[];
+            const points = shapes.filter(x => x instanceof Point) as Point[];
             
-            for(const point of bounded_points){
+            for(const point of points){
+                const bounds = point.getBounds();
+                if(bounds.length == 1){
+                    const bound = bounds[0];
 
-                if(point.bound instanceof AbstractLine){
+                    if(bound instanceof AbstractLine){
 
-                    const foot = calcFootOfPerpendicular(point.position, point.bound);
-                    point.setPosition(foot);
+                        const foot = calcFootOfPerpendicular(point.position, bound);
+                        point.setPosition(foot);
+                    }
+                    else if(bound instanceof CircleArc){
+                        bound.adjustPosition(point, point.position);
+                    }
+                    else{
+                        throw new MyError();
+                    }
+
+                    this.changed.add(point);
                 }
-                else if(point.bound instanceof CircleArc){
-                    point.bound.adjustPosition(point, point.position);
-                }
-
-                this.changed.add(point);
             }
 
             recalc(shape, this.changed);
@@ -445,6 +455,7 @@ export class View extends Widget {
 
         this.shapes.push(shape);
 
+        this.resetOrders();
         recalcRelations(this);
 
         addToViewShapesList(shape);

@@ -439,7 +439,7 @@ export function showProperty(widget : Widget | Widget[], nest : number){
                     else if(name == "lengthKind"){
                         property = new NumberProperty(widgets, name, value, 1, 0, 3);
                     }
-                    else if(name == "id"){
+                    else if(name == "id" || name == "order"){
                         makeConstantProperty(tbl, nest + 1, name, `${value}`);
                         continue;
                     }

@@ -56,25 +56,25 @@ export function addSupplementaryAngles(angle1 : Angle, angle2 : Angle){
 }
 
 function addEqualAngles(angle1 : Angle, angle2 : Angle){
-    const line_sets = supplementaryAngles.flat().filter(x => x.has(angle1) || x.has(angle2));
+    const angle_sets = supplementaryAngles.flat().filter(x => x.has(angle1) || x.has(angle2));
 
-    let line_set : Set<Angle>; 
+    let angle_set : Set<Angle>; 
 
-    switch(line_sets.length){
+    switch(angle_sets.length){
     case 0 : 
-        line_set = new Set<Angle>(); 
-        supplementaryAngles.push([line_set, new Set<Angle>()]);
+        angle_set = new Set<Angle>(); 
+        supplementaryAngles.push([angle_set, new Set<Angle>()]);
         break;
 
     case 1 : 
-        line_set = line_sets[0]; 
+        angle_set = angle_sets[0]; 
         break;
     default : 
         throw new MyError();
     }
 
-    line_set.add(angle1);
-    line_set.add(angle2);
+    angle_set.add(angle1);
+    angle_set.add(angle2);
 }
 
 export function isEqualAngle(angleA : Angle, angleB : Angle) : boolean {

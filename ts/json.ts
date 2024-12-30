@@ -4,9 +4,7 @@ let idMap = new Map<number, Widget>();
 
 export abstract class Widget {
     static refMap : Map<number, any> = new Map<number, any>();
-    static defferedBound : [number, number][];
     static isLoading : boolean = false;
-    static maxOrder : number = 0;
 
     // static 
     static maxId = 0;
@@ -28,12 +26,10 @@ export abstract class Widget {
         }
         assert(this.id <= Widget.maxId && !idMap.has(this.id));
         idMap.set(this.id, this);
-
-        this.order = ++Widget.maxOrder;
     }
 
     getProperties(){
-        return [ "id" ];
+        return [ "id", "order" ];
     }
 
     makeObj() : any{
@@ -81,20 +77,10 @@ export function parseObject(obj: any, parse_other_object? : (o : any)=>any) : an
     }
 
     for(let [name, val] of Object.entries(obj)){
-        try{
-
-            obj[name] = parseObject(val, parse_other_object);
+        if(name == "bound"){
+            continue;
         }
-        catch(e){
-            if(e instanceof MyError && e.message == "no-ref" && name == "bound" ){
-                const ref_id = (val as any).ref;
-                msg(`deffered bound:${ref_id} ${obj.id}`);
-                Widget.defferedBound.push([obj.id, ref_id]);
-            }
-            else{
-                throw e;
-            }
-        }
+        obj[name] = parseObject(val, parse_other_object);
     }
 
     switch(obj.typeName){
@@ -279,10 +265,9 @@ export function loadData(obj : any){
     Plane.one.clearPlane();
 
     Widget.maxId  = -1;
-    Widget.maxOrder = -1;
     idMap = new Map<number, Widget>();
     Widget.refMap = new Map<number, any>();
-    Widget.defferedBound = [];    
+    MathEntity.orderSet.clear();
 
     const view = View.current;
     for(let [name, val] of Object.entries(obj)){
@@ -302,22 +287,10 @@ export function loadData(obj : any){
 
         view.shapes.push( shape );
 
+        shape.setOrder();
         shape.setRelations();
 
         shape.getAllShapes(all_shapes);
-
-        while(Widget.defferedBound.length != 0){
-            const [obj_id, ref_id] = Widget.defferedBound.pop()!;
-            const obj = all_shapes.find(x => x.id == obj_id);
-            const ref = all_shapes.find(x => x.id == ref_id);
-            if(obj instanceof Point && ref instanceof Shape){
-                obj.bound = ref as (AbstractLine | CircleArc);
-            }
-            else{
-    
-                throw new MyError();
-            }
-        }
     }
 
     const all_real_shapes = view.allRealShapes();
@@ -330,27 +303,6 @@ export function loadData(obj : any){
 
     Plane.one.shapes_block.clear();
     view.shapes.forEach(x => addToViewShapesList(x));
-
-    for(const point of all_real_shapes.filter(x => x instanceof Point && x.bound != undefined) as Point[]){
-        if(point.bound instanceof AbstractLine){
-
-            const lines = pointOnLines.get(point);
-            if(!(lines != undefined && lines.has(point.bound))){
-
-                throw new MyError(`no relation point:${point.id}[${point}] line:${point.bound.id}[${point.bound}]`);
-            }
-        }
-        else if(point.bound instanceof CircleArc){
-            const circles = pointOnCircleArcs.get(point);
-            if(!(circles != undefined && circles.has(point.bound))){
-                throw new MyError(`no relation point:${point.id} circle:${point.bound.id}`);
-            }
-        }
-        else{
-
-            throw new MyError();
-        }
-    }
 }
 
 export function handleDragOver(evt: DragEvent) {

@@ -391,7 +391,6 @@ class ArcByPointBuilder extends Builder {
             this.pointB = Point.fromArgs(position);
 
             this.arc = new ArcByPoint({ center : this.center, pointA : this.pointA, pointB : this.pointB });
-            this.pointB.bound = this.arc;
 
             addShapeSetRelations(view, this.arc);
         }
@@ -1088,6 +1087,39 @@ export class LengthEqualityBuilder extends Builder {
     }
 }
 
+export class AngleEqualityBuilder extends Builder {
+    angleA? : Angle;
+
+    constructor(angleEquality? : AngleEquality){
+        super();
+    }
+
+    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
+        if(shape instanceof Angle){
+            if(this.angleA == undefined){
+                this.angleA = shape;
+                shape.setMode(Mode.depend);
+            }
+            else{
+
+                const angleEquality = makeEqualAngle(this.angleA, shape);
+                if(angleEquality != undefined){
+
+                    addShapeSetRelations(view, angleEquality);
+                    this.angleA = undefined;
+                    this.resetTool(angleEquality);
+                }
+                else{
+
+                    this.angleA.setMode(Mode.none);
+                    this.angleA = undefined;
+                }
+            }
+        }
+    }
+}
+
+
 export class EqualityConstraintBuilder extends Builder {
     lengthSymbolA? : LengthSymbol;
 
@@ -1201,6 +1233,7 @@ const toolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [
     [ StatementBuilder          , "statement"          , TT("statement")          , [ Statement ] ],
     [ TriangleCongruenceBuilder , "triangle-congruence", TT("triangle congruence"), [ TriangleCongruence ] ],
     [ LengthEqualityBuilder     , "equal-length"       , TT("equal length")       , [ LengthEquality ] ],
+    [ AngleEqualityBuilder      , "equal-angle"        , TT("equal angle")        , [ AngleEquality ] ],
     [ EqualityConstraintBuilder , "equality-constraint", TT("equality constraint"), [ LengthEqualityConstraint ] ],
     [ ParallelConstraintBuilder , "parallel-line"      , TT("parallel constraint"), [ ParallelConstraint ]],
     [ PerpendicularConstraintBuilder , "perpendicular-line" , TT("perpendicular constraint"), [ PerpendicularConstraint ]],
