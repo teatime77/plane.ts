@@ -643,9 +643,15 @@ export class Point extends Shape {
 
         if(this.bound instanceof AbstractLine){
             addPointOnLines(this, this.bound);
+            // msg(`set relation point:${this.id} line:${this.bound.id}`);
         }
         else if(this.bound instanceof CircleArc){
             addPointOnCircleArcs(this, this.bound);
+            // msg(`set relation point:${this.id}[${this.id2}] circle:${this.bound.id}[${this.bound.id2}]`);
+            const circles = pointOnCircleArcs.get(this);
+            if(!(circles != undefined && circles.has(this.bound))){
+                throw new MyError(`no relation point:${this.id} circle:${this.bound.id}`);
+            }
         }
         else if(this.bound != undefined){
             throw new MyError();

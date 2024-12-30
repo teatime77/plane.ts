@@ -1,5 +1,7 @@
 namespace plane_ts {
 
+let idMap = new Map<number, Widget>();
+
 export abstract class Widget {
     static refMap : Map<number, any> = new Map<number, any>();
     static defferedBound : [number, number][];
@@ -24,7 +26,8 @@ export abstract class Widget {
 
             this.id = ++Widget.maxId;
         }
-        assert(this.id <= Widget.maxId);
+        assert(this.id <= Widget.maxId && !idMap.has(this.id));
+        idMap.set(this.id, this);
 
         this.order = ++Widget.maxOrder;
     }
@@ -85,7 +88,7 @@ export function parseObject(obj: any, parse_other_object? : (o : any)=>any) : an
         catch(e){
             if(e instanceof MyError && e.message == "no-ref" && name == "bound" ){
                 const ref_id = (val as any).ref;
-                // msg(`deffered bound:${ref_id} ${obj.id}`);
+                msg(`deffered bound:${ref_id} ${obj.id}`);
                 Widget.defferedBound.push([obj.id, ref_id]);
             }
             else{
@@ -277,6 +280,7 @@ export function loadData(obj : any){
 
     Widget.maxId  = -1;
     Widget.maxOrder = -1;
+    idMap = new Map<number, Widget>();
     Widget.refMap = new Map<number, any>();
     Widget.defferedBound = [];    
 
@@ -326,6 +330,27 @@ export function loadData(obj : any){
 
     Plane.one.shapes_block.clear();
     view.shapes.forEach(x => addToViewShapesList(x));
+
+    for(const point of all_real_shapes.filter(x => x instanceof Point && x.bound != undefined) as Point[]){
+        if(point.bound instanceof AbstractLine){
+
+            const lines = pointOnLines.get(point);
+            if(!(lines != undefined && lines.has(point.bound))){
+
+                throw new MyError(`no relation point:${point.id}[${point}] line:${point.bound.id}[${point.bound}]`);
+            }
+        }
+        else if(point.bound instanceof CircleArc){
+            const circles = pointOnCircleArcs.get(point);
+            if(!(circles != undefined && circles.has(point.bound))){
+                throw new MyError(`no relation point:${point.id} circle:${point.bound.id}`);
+            }
+        }
+        else{
+
+            throw new MyError();
+        }
+    }
 }
 
 export function handleDragOver(evt: DragEvent) {

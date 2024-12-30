@@ -90,7 +90,7 @@ abstract class LineConstraint extends Constraint {
 
     constructor(obj : { lineA : AbstractLine, lineB : LineByPoints }){
         super(obj);
-
+        assert(obj.lineA.order < obj.lineB.order);
         this.lineA = obj.lineA;
         this.lineB = obj.lineB;
     }

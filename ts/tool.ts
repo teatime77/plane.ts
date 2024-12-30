@@ -619,13 +619,14 @@ class PerpendicularBuilder extends Builder {
 
         if(this.point != undefined && this.line != undefined){
 
-            const foot = new FootOfPerpendicular({ lineKind : 3, pointA : this.point, line : this.line });
-            addShapeSetRelations(view, foot);
+            const foot  = Point.fromArgs(Vec2.nan());
+            const perpendicular = new FootOfPerpendicular({ lineKind : 3, pointA : this.point, line : this.line, foot });
+            addShapeSetRelations(view, perpendicular);
 
             this.point = undefined;
             this.line  = undefined;
 
-            this.resetTool(foot);
+            this.resetTool(perpendicular);
     }
     }
 }

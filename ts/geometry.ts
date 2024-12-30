@@ -84,11 +84,17 @@ abstract class AbstractPerpendicularLine extends AbstractLine {
 export class FootOfPerpendicular extends AbstractPerpendicularLine {
     foot : Point;
 
-    constructor(obj : { lineKind : number, pointA : Point, line : AbstractLine }){
+    constructor(obj : { lineKind : number, pointA : Point, line : AbstractLine, foot : Point }){
         super(obj);
-        this.foot  = Point.fromArgs(Vec2.nan());
+        this.foot = obj.foot;
 
         this.calc();
+    }
+    
+    makeObj() : any {
+        return Object.assign(super.makeObj(), {
+            foot  : this.foot.toObj(),
+        });
     }
 
     getAllShapes(shapes : MathEntity[]){
