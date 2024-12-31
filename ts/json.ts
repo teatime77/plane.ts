@@ -163,7 +163,11 @@ export function parseObject(obj: any, parse_other_object? : (o : any)=>any) : an
         return new ArcByPoint(obj);
 
     case ArcByRadius.name:
-        return new ArcByRadius(obj);
+    case ArcByLengthSymbol.name:
+        return new ArcByLengthSymbol(obj);
+
+    case ArcByCircle.name:
+        return new ArcByCircle(obj);
 
     case Triangle.name:
         return new Triangle(obj);

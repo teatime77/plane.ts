@@ -391,10 +391,11 @@ class ArcByPointBuilder extends Builder {
             this.pointB = Point.fromArgs(position);
 
             this.arc = new ArcByPoint({ center : this.center, pointA : this.pointA, pointB : this.pointB });
-
-            addShapeSetRelations(view, this.arc);
+            this.arc.setMode(Mode.depend);
         }
         else{
+
+            addShapeSetRelations(view, this.arc!);
 
             this.resetTool(this.arc);
 
@@ -410,31 +411,82 @@ class ArcByPointBuilder extends Builder {
             this.arc.adjustPosition(this.pointB, position);
         }
     }
+
+    drawTool(view: View): void {
+        [this.center, this.pointA, this.pointB, this.arc].filter(x => x != undefined).forEach(x => x.draw());
+    }
 }
 
 class ArcByRadiusBuilder extends Builder {
     center?   : Point;
+    lengthSymbol? : LengthSymbol;
+    circle? : CircleArc;
+    pointA? : Point;
+    arc? : ArcByLengthSymbol | ArcByCircle;
 
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
-        if(this.center == undefined){
+        if(shape instanceof LengthSymbol){
+            this.lengthSymbol = shape;
+            shape.setMode(Mode.depend);
+        }
+        else if(shape instanceof CircleArc){
+            this.circle = shape;
+            shape.setMode(Mode.depend);
+        }        
+        else if(this.center == undefined){
 
             this.center = this.makePointOnClick(view, position, shape);
             this.center.setMode(Mode.depend);
         }
-        else{
-            if(shape instanceof LengthSymbol){
+        else if((this.lengthSymbol != undefined || this.circle != undefined) && this.center != undefined){
+            if(this.pointA == undefined){
+                this.pointA = this.makePointOnClick(view, position, shape);
+                this.pointA.setMode(Mode.depend);
 
-                const startAngle = Math.PI * 1 / 6;
-                const endAngle   = Math.PI * 2 / 6;
+                const [startAngle, endAngle] = Arc.getAngles(this.center!, this.pointA, this.pointA);
+                if(this.lengthSymbol != undefined){
 
-                const arc = new ArcByRadius({ center : this.center , lengthSymbol : shape, startAngle, endAngle });
-                addShapeSetRelations(view, arc);
-    
+                    this.arc = new ArcByLengthSymbol({ center : this.center , lengthSymbol : this.lengthSymbol, startAngle, endAngle });
+                }   
+                else{
+
+                    this.arc = new ArcByCircle({ center : this.center , circle : this.circle!, startAngle, endAngle });
+                }
+
+                this.arc.adjustPosition(this.arc.pointA, position);
+
+                this.arc.setMode(Mode.depend);
+            }
+            else{
+
+                addShapeSetRelations(view, this.arc!);
+        
+                this.arc = undefined;
                 this.center = undefined;
+                this.lengthSymbol = undefined;
+                this.circle = undefined;
+                this.pointA = undefined;
     
-                this.resetTool(arc);
-            }            
+                this.resetTool(this.arc);
+            }
         }
+    }
+
+    pointermove(event : PointerEvent, view : View, position : Vec2, shape : Shape | undefined){
+        if(this.arc != undefined){
+
+            this.arc.adjustPosition(this.arc.pointB, position);
+        }
+    }
+
+    drawTool(view: View): void {
+        const shapes : (Shape | undefined)[] = [this.center, this.pointA];
+
+        if(this.arc != undefined){
+            shapes.push(this.arc, this.arc.pointB)
+        }
+
+        shapes.filter(x => x != undefined).forEach(x => x.draw());
     }
 }
 
@@ -1222,7 +1274,7 @@ const toolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [
     [ CircleByPointBuilder      , "circle-by-point"    , TT("circle by point")    , [ CircleByPoint ] ],
     [ CircleByRadiusBuilder     , "circle-by-radius"   , TT("circle by radius")   , [ CircleByRadius ] ],
     [ ArcByPointBuilder         , "arc-by-point"       , TT("arc by point")       , [ ArcByPoint ] ],
-    [ ArcByRadiusBuilder        , "arc-by-radius"      , TT("arc by radius")      , [ ArcByRadius ] ],
+    [ ArcByRadiusBuilder        , "arc-by-radius"      , TT("arc by radius")      , [ ArcByLengthSymbol, ArcByCircle ] ],
     [ EllipseBuilder            , "ellipse"            , TT("ellipse")            , [ Ellipse ] ],
     [ CirclePointTangentBuilder , "tangent-point"      , TT("tangent point")      , [ CirclePointTangent ] ],
     [ CircleCircleTangentBuilder, "tangent-circles"    , TT("tangent circles")    , [ CircleCircleTangent ] ],

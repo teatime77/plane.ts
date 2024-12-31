@@ -1110,6 +1110,13 @@ export class Ellipse extends CircleArcEllipse {
 }
 
 export abstract class Arc extends CircleArc {
+    static getAngles(center : Point | Vec2, pointA : Point | Vec2, pointB : Point | Vec2) : [number, number] {
+        const center_pos = (center instanceof Point ? center.position : center);
+        const pointA_pos = (pointA instanceof Point ? pointA.position : pointA);
+        const pointB_pos = (pointB instanceof Point ? pointB.position : pointB);
+
+        return [pointA_pos, pointB_pos].map(p => p.sub(center_pos)).map(v => Math.atan2(v.y, v.x)) as [number, number];
+    }
 }
 
 export class ArcByPoint extends Arc {
@@ -1151,27 +1158,17 @@ export class ArcByPoint extends Arc {
             const v = position.sub(this.center.position);
             let theta = Math.atan2(v.y, v.x);
 
-            let [start_angle, end_angle] = this.angles();
+            const [startAngle, endAngle] = Arc.getAngles(this.center, this.pointA, this.pointB);
 
-            return isBetweenAngles(start_angle, theta, end_angle);
+            return isBetweenAngles(startAngle, theta, endAngle);
         }
 
         return false;
     }
 
-    angles() : [number, number] {
-        const v1 = this.pointA.sub(this.center);
-        const th1 = Math.atan2(v1.y, v1.x);
-
-        const v2 = this.pointB.sub(this.center);
-        const th2 = Math.atan2(v2.y, v2.x);
-
-        return [th1, th2];
-    }
-
     draw(): void {
-        const [th1, th2] = this.angles();
-        View.current.canvas.drawArc(this, this.center.position, this.radius(), th1, th2);
+        const [startAngle, endAngle] = Arc.getAngles(this.center, this.pointA, this.pointB);
+        View.current.canvas.drawArc(this, this.center.position, this.radius(), startAngle, endAngle);
     }
 
     radius() : number {
@@ -1191,21 +1188,19 @@ export class ArcByPoint extends Arc {
 }
 
 
-export class ArcByRadius extends Arc {
-    lengthSymbol : LengthSymbol;
+export abstract class ArcByRadius extends Arc {
     startAngle : number;
     endAngle : number;
     pointA : Point;
     pointB : Point;
 
-    constructor(obj : { center : Point, lengthSymbol : LengthSymbol, startAngle : number, endAngle : number  }){
+    constructor(obj : { center : Point, startAngle : number, endAngle : number  }){
         super(obj);
-        this.lengthSymbol = obj.lengthSymbol;
         this.startAngle   = obj.startAngle;
         this.endAngle     = obj.endAngle;
 
-        this.pointA = new Point({ position : this.positionFromAngle(this.startAngle) });
-        this.pointB = new Point({ position : this.positionFromAngle(this.endAngle) });
+        this.pointA = Point.zero();
+        this.pointB = Point.zero();
 
         this.pointA.visible = false;
         this.pointB.visible = false;
@@ -1213,7 +1208,6 @@ export class ArcByRadius extends Arc {
 
     makeObj() : any {
         return Object.assign(super.makeObj(), {
-            lengthSymbol : this.lengthSymbol.toObj(),
             startAngle   : this.startAngle,
             endAngle     : this.endAngle
         });
@@ -1222,15 +1216,24 @@ export class ArcByRadius extends Arc {
     getAllShapes(shapes : MathEntity[]){
         super.getAllShapes(shapes);
         shapes.push(this.pointA, this.pointB);
-        this.lengthSymbol.getAllShapes(shapes);
     }
 
-    dependencies() : MathEntity[] {
-        return super.dependencies().concat([ this.lengthSymbol ]);
+
+    setOrder(){
+        if(MathEntity.orderSet.has(this)){
+            return;
+        }
+
+        this.order = MathEntity.orderSet.size;
+        MathEntity.orderSet.add(this);
+
+        this.pointA.setOrder();
+        this.pointB.setOrder();
     }
+
 
     positionFromAngle(theta : number) : Vec2 {
-        const length = this.lengthSymbol.length();
+        const length = this.radius();
 
         const x = this.center.position.x + length * Math.cos(theta);
         const y = this.center.position.y + length * Math.sin(theta);
@@ -1285,10 +1288,6 @@ export class ArcByRadius extends Arc {
         View.current.canvas.drawArc(this, this.center.position, this.radius(), this.startAngle, this.endAngle);
     }
 
-    radius() : number {
-        return this.lengthSymbol.length();
-    }
-
     reading(): Reading {
         return new Reading(this, TT("Draw an arc with the same radius."), [ ]);
     }
@@ -1298,12 +1297,82 @@ export class ArcByRadius extends Arc {
 
         addPointOnCircleArcs(this.pointA, this);
         addPointOnCircleArcs(this.pointB, this);        
+    }
+}
+
+export class ArcByLengthSymbol extends ArcByRadius {
+    lengthSymbol : LengthSymbol;
+
+    constructor(obj : { center : Point, lengthSymbol : LengthSymbol, startAngle : number, endAngle : number  }){
+        super(obj);
+        this.lengthSymbol = obj.lengthSymbol;
+
+        this.calc();
+    }
+
+    makeObj() : any {
+        return Object.assign(super.makeObj(), {
+            lengthSymbol : this.lengthSymbol.toObj(),
+        });
+    }
+
+    getAllShapes(shapes : MathEntity[]){
+        super.getAllShapes(shapes);
+        this.lengthSymbol.getAllShapes(shapes);
+    }
+
+    dependencies() : MathEntity[] {
+        return super.dependencies().concat([ this.lengthSymbol ]);
+    }
+
+    radius() : number {
+        return this.lengthSymbol.length();
+    }
+
+    setRelations(): void {
+        super.setRelations();
 
         if(this.lengthSymbol.circle != undefined){
             addEqualCircleArcs(this, this.lengthSymbol.circle);
         }
     }
 }
+
+export class ArcByCircle extends ArcByRadius {
+    circle : CircleArc;
+
+    constructor(obj : { center : Point, circle : CircleArc, startAngle : number, endAngle : number  }){
+        super(obj);
+        this.circle = obj.circle;
+
+        this.calc();
+    }
+
+    makeObj() : any {
+        return Object.assign(super.makeObj(), {
+            circle : this.circle.toObj(),
+        });
+    }
+
+    getAllShapes(shapes : MathEntity[]){
+        super.getAllShapes(shapes);
+        this.circle.getAllShapes(shapes);
+    }
+
+    dependencies() : MathEntity[] {
+        return super.dependencies().concat([ this.circle ]);
+    }
+
+    radius() : number {
+        return this.circle.radius();
+    }
+
+    setRelations(): void {
+        super.setRelations();
+        addEqualCircleArcs(this, this.circle);
+    }
+}
+
 
 export class Polygon extends Shape {
     static colorIndex : number = 0;

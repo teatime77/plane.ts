@@ -122,7 +122,7 @@ export function makeEqualLength(lengthSymbolA : LengthSymbol, lengthSymbolB : Le
     }
 
     for(const [lengthSymbol1, lengthSymbol2] of [[lengthSymbolA, lengthSymbolB], [lengthSymbolB, lengthSymbolA]]){
-        if(lengthSymbol1.circle != undefined && lengthSymbol1.circle.lengthSymbol == lengthSymbol2){
+        if((lengthSymbol1.circle instanceof ArcByLengthSymbol || lengthSymbol1.circle instanceof CircleByRadius) && lengthSymbol1.circle.lengthSymbol == lengthSymbol2){
 
             msg(`circle-by-radius`);
             return new LengthEquality({
