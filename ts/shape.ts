@@ -505,6 +505,7 @@ export class Point extends Shape {
 
     position! : Vec2;
     positionSave : Vec2 | undefined;
+    bound : AbstractLine | CircleArc | undefined;
 
     origin : Point | undefined;
 
@@ -516,16 +517,23 @@ export class Point extends Shape {
         return new Point( { position } );
     }
 
-    constructor(obj : { position : Vec2 }){
+    constructor(obj : { position : Vec2, bound? : AbstractLine | CircleArc }){
         super(obj);
+
+        this.position = obj.position;
 
         if(this.name != "" && this.caption == undefined){
             this.caption = this.makeCaption(this);
         }
 
-        Point.tempPoints.push(this);
+        if(obj.bound != undefined){
+            this.setBound(obj.bound);
+        }
+        else{
+            this.setPosition(obj.position);
+        }
 
-        this.setPosition(obj.position);
+        Point.tempPoints.push(this);
     }
 
     copy() : Point {
@@ -536,6 +544,10 @@ export class Point extends Shape {
         let obj = Object.assign(super.makeObj(), {
             position : this.position
         });
+
+        if(this.bound != undefined){
+            obj.bound = this.bound.toObj();
+        }
 
         return obj;
     }
@@ -556,24 +568,16 @@ export class Point extends Shape {
         return lines.concat(circles).filter(x => x.order < this.order);
     }
 
-    setBound(bound : AbstractLine | CircleArc | undefined){
+    setBound(bound : AbstractLine | CircleArc){
+        this.bound = bound;
+
+        this.bound.adjustPosition(this, this.position);
+
         if(bound instanceof AbstractLine){
             addPointOnLines(this, bound);
-            // msg(`set relation point:${this.id} line:${bound.id}`);
-            
-            if(bound instanceof LineByPoints){
-
-                const new_position = calcFootOfPerpendicular(this.position, bound);
-                this.setPosition(new_position);
-            }
         }
         else if(bound instanceof CircleArc){
             addPointOnCircleArcs(this, bound);
-            // msg(`set relation point:${this.id}[${this.id2}] circle:${bound.id}[${bound.id2}]`);
-            const circles = pointOnCircleArcs.get(this);
-            if(!(circles != undefined && circles.has(bound))){
-                throw new MyError(`no relation point:${this.id} circle:${bound.id}`);
-            }
         }
         else if(bound != undefined){
             throw new MyError();
@@ -754,6 +758,11 @@ export abstract class AbstractLine extends Shape {
             View.current.canvas.drawLine(this, this.pointA.position, p_minus); 
             break;
         }
+    }
+
+    adjustPosition(point : Point, position : Vec2){
+        const foot = calcFootOfPerpendicular(point.position, this);
+        point.setPosition(foot);
     }
 
     setRelations(): void {

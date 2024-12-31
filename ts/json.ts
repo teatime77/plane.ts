@@ -77,7 +77,9 @@ export function parseObject(obj: any, parse_other_object? : (o : any)=>any) : an
     }
 
     for(let [name, val] of Object.entries(obj)){
-        if(name == "bound"){
+        if(name == "bound" && (val as any).ref != undefined && Widget.refMap.get((val as any).ref) == undefined){
+            msg(`no bound:${obj.id}`);
+            obj.bound = undefined;
             continue;
         }
         obj[name] = parseObject(val, parse_other_object);
@@ -284,7 +286,6 @@ export function loadData(obj : any){
     const all_shapes : MathEntity[] = [];
     plane_ts.initRelations();
     for(const shape_obj of obj.shapes){
-
         Widget.isLoading = true;
         const shape = parseObject(shape_obj) as MathEntity;
         Widget.isLoading = false;

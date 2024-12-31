@@ -210,7 +210,9 @@ class PointBuilder extends Builder {
         if(shape == undefined || shape instanceof AbstractLine || shape instanceof Circle){
 
             const new_point = Point.fromArgs(position);
-            new_point.setBound(shape);
+            if(shape != undefined){
+                new_point.setBound(shape);
+            }
             new_point.updateCaption();
 
             addShapeSetRelations(view, new_point);

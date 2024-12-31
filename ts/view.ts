@@ -394,17 +394,7 @@ export class View extends Widget {
                 if(bounds.length == 1){
                     const bound = bounds[0];
 
-                    if(bound instanceof AbstractLine){
-
-                        const foot = calcFootOfPerpendicular(point.position, bound);
-                        point.setPosition(foot);
-                    }
-                    else if(bound instanceof CircleArc){
-                        bound.adjustPosition(point, point.position);
-                    }
-                    else{
-                        throw new MyError();
-                    }
+                    bound.adjustPosition(point, point.position);
 
                     this.changed.add(point);
                 }
