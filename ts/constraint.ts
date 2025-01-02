@@ -136,9 +136,18 @@ export abstract class ParallelPerpendicularConstraint extends LineConstraint {
 }
 
 export class ParallelConstraint extends ParallelPerpendicularConstraint {
+    setRelations(){
+        super.setRelations();
+        addParallelLines(this.lineA, this.lineB);
+    }
+    
 }
 
 export class PerpendicularConstraint extends ParallelPerpendicularConstraint {
+    setRelations(){
+        super.setRelations();
+        addPerpendicularPairs(this.lineA, this.lineB);
+    }
 }
 
 }

@@ -11,7 +11,44 @@ function addShapeSetRelations(view : View, shape : MathEntity){
 }
 
 export class Builder {
+    static toolName : string;
     static tool : Builder;
+    static shape : Statement | undefined;
+
+    static setToolByName(tool_name : string){
+        Builder.shape = undefined;
+        Builder.toolName = tool_name;
+        Builder.tool = makeToolByType(tool_name);
+    }
+
+    static setToolByShape(shape : Statement){
+        if(shape instanceof TriangleCongruence){
+
+            msg("set Triangle Congruence Builder");
+            Builder.tool = new TriangleCongruenceBuilder(shape);
+        }
+        else if(shape instanceof LengthEquality){
+
+            msg("set Equal Length Builder");
+            Builder.tool = new LengthEqualityBuilder(shape);
+        }
+        else{
+
+            msg("set Statement Builder");
+            Builder.tool = new StatementBuilder(shape);
+        }
+    }
+
+    static resetTool(){
+        Builder.tool.resetTool(undefined);
+        
+        if(Builder.shape != undefined){
+            Builder.setToolByShape(Builder.shape);
+        }
+        else{
+            Builder.setToolByName(Builder.toolName);
+        }
+    }
 
     click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){        
     }
@@ -1326,21 +1363,7 @@ export function makeShapeButton(shape : MathEntity, add_to_view_shapes : boolean
         if(add_to_view_shapes){
 
             if(button.parent == Plane.one.shapes_block && shape instanceof Statement){
-                if(shape instanceof TriangleCongruence){
-
-                    msg("set Triangle Congruence Builder");
-                    Builder.tool = new TriangleCongruenceBuilder(shape);
-                }
-                else if(shape instanceof LengthEquality){
-
-                    msg("set Equal Length Builder");
-                    Builder.tool = new LengthEqualityBuilder(shape);
-                }
-                else{
-
-                    msg("set Statement Builder");
-                    Builder.tool = new StatementBuilder(shape);
-                }
+                Builder.setToolByShape(shape);
             }
 
             showProperty(shape, 0);

@@ -125,14 +125,26 @@ export function addParallelLines(line1 : AbstractLine, line2 : AbstractLine){
     line_set.add(line2);
 }
 
-export function isParallel(lineA : AbstractLine, lineB : AbstractLine) : boolean {
-    for(const line_set of perpendicularPairs.flat()){
-        if(line_set.has(lineA)){
-            return line_set.has(lineB);
+export function getPerpendicularLines(line : AbstractLine) : Set<AbstractLine> | undefined {
+    for(const [lines1, lines2] of perpendicularPairs){
+        if(lines1.has(line)){
+            return lines2;
+        }
+        else if(lines2.has(line)){
+            return lines1;
         }
     }
 
-    return false;
+    return undefined;
+}
+
+export function getParallelLines(line : AbstractLine) : Set<AbstractLine> | undefined {
+    return perpendicularPairs.flat().find(x => x.has(line));
+}
+
+export function isParallel(lineA : AbstractLine, lineB : AbstractLine) : boolean {
+    const line_set = getParallelLines(lineA);
+    return line_set != undefined && line_set.has(lineB);
 }
 
 export function addEqualCircleArcs(circle1 : CircleArc, circle2 : CircleArc){
@@ -174,7 +186,7 @@ export function getCommonLineOfPoints(pointA : Point, pointB : Point) : Abstract
     }
 }
 
-function getPointsFromLine(line : AbstractLine) : Set<Point>{
+export function getPointsFromLine(line : AbstractLine) : Set<Point>{
     const points = Array.from(pointOnLines.entries()).filter(x => x[1].has(line)).map(x => x[0]);
     return new Set<Point>(points);
 }

@@ -227,13 +227,17 @@ export class View extends Widget {
 
     dblclick(event : MouseEvent){
         if(Builder.tool instanceof SelectionTool){
+            this.resetMode();
 
             let position = this.eventPosition(event);
             const shape = this.getShape(position);
+            if(shape == undefined){
+                return;
+            }
+
             if(shape instanceof LengthSymbol){
                 const length_symbols = equalLengths.find(x => x.has(shape));
                 if(length_symbols != undefined){
-                    this.resetMode();
                     Array.from(length_symbols.values()).forEach(x => x.setMode(Mode.depend));
                     this.dirty = true;
                 }
@@ -246,6 +250,22 @@ export class View extends Widget {
                     this.dirty = true;
                 }
             }
+            else if(shape instanceof AbstractLine){
+                const points = getPointsFromLine(shape);
+                points.forEach(x => x.setMode(Mode.depend));
+
+                const parallel_lines = getParallelLines(shape);
+                if(parallel_lines != undefined){
+                    parallel_lines.forEach(x => x.setMode(Mode.target));
+                }
+
+                const perpendicular_lines = getPerpendicularLines(shape);
+                if(perpendicular_lines != undefined){
+                    perpendicular_lines.forEach(x => x.setMode(Mode.depend));
+                }
+            }
+
+            shape.setMode(Mode.target);
         }
     }
 

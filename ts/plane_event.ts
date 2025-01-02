@@ -9,7 +9,7 @@ export function initPlane(plane : Plane, root : layout_ts.Grid){
 
     plane.tool_block.onChange = (ui : layout_ts.UI)=>{
         const button = ui as layout_ts.RadioButton;
-        Builder.tool = makeToolByType(button.button.value);
+        Builder.setToolByName(button.button.value);
     }
 
     const canvas = makeCanvas(plane.canvas_block.div);
@@ -20,8 +20,7 @@ export function initPlane(plane : Plane, root : layout_ts.Grid){
 
     viewEvent(view);
 
-    Builder.tool = new SelectionTool();
-
+    Builder.setToolByName(SelectionTool.name);
 }
 
 export function bodyOnLoad(){
@@ -41,6 +40,13 @@ export function viewEvent(view : View){
     view.board.addEventListener("pointerup"  , view.pointerup.bind(view));   
     view.board.addEventListener("click"      , view.click.bind(view));   
     view.board.addEventListener("dblclick"   , view.dblclick.bind(view));
+
+    document.addEventListener('keydown', (ev : KeyboardEvent) => {
+        if (ev.key === "Escape") {
+            msg("Escape key pressed!");
+            Builder.resetTool();
+        }
+    });    
 
     window.addEventListener("resize", view.resizeView.bind(view));
 
