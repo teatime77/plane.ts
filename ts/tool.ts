@@ -990,9 +990,17 @@ class LengthSymbolBuilder extends LineByPointsBuilder {
                 this.pointA = this.makePointOnClick(view, position, shape);
             }
             else{
-                const pointB = this.makePointOnClick(view, position, shape);
+                const clicked_point = this.makePointOnClick(view, position, shape);
+                const [pointA, pointB] = sortShape<Point>([ this.pointA, clicked_point ]);
 
-                const symbol = new LengthSymbol({ pointA : this.pointA, pointB, lengthKind : 0});
+                let line = getCommonLineOfPoints(pointA, pointB);
+                if(line == undefined){
+
+                    line = makeLineSegment(pointA, pointB);
+                    addShapeSetRelations(view, line);
+                }
+
+                const symbol = new LengthSymbol({ pointA, pointB, lengthKind : 0});
                 addShapeSetRelations(view, symbol);
 
                 this.pointA      = undefined;

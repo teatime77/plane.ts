@@ -32,7 +32,8 @@ export class Canvas {
 
     clear(){
         const rc = this.canvas.getBoundingClientRect();
-        this.ctx.clearRect(0, 0, rc.width, rc.height);
+        this.ctx.fillStyle = bgColor;
+        this.ctx.fillRect(0, 0, rc.width, rc.height);
     }
 
     drawLineRaw(p1 : Vec2, p2 : Vec2, color : string, line_width : number){
