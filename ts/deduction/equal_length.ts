@@ -1,6 +1,6 @@
 namespace plane_ts {
 //
-function addEqualLengths(lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol){
+export function addEqualLengths(lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol){
     let set = equalLengths.find(x => x.has(lengthSymbolA) || x.has(lengthSymbolB));
     if(set == undefined){
         set = new Set<LengthSymbol>([ lengthSymbolA, lengthSymbolB ]);
@@ -33,35 +33,46 @@ function getCommonPoint(lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymb
     }
 }
 
+function getParallelLinesByPointsPair(As : [Point, Point], Bs : [Point, Point]) : [AbstractLine, AbstractLine] | undefined {
+    const lineA = getCommonLineOfPoints(As[0], As[1]);
+    const lineB = getCommonLineOfPoints(Bs[0], Bs[1]);
+    if(lineA == undefined || lineB == undefined){
+        return undefined;
+    }
+
+    if(isParallel(lineA, lineB)){
+        return [lineA, lineB];
+    }
+    else{
+        return undefined;
+    }
+}
+
 function findParallelLinesOfLengthSymbols(lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol) : [AbstractLine, AbstractLine] | undefined{
-    const As = [lengthSymbolA.pointA, lengthSymbolA.pointB];
-    const Bs = [lengthSymbolB.pointA, lengthSymbolB.pointB];
+    const As : [Point, Point] = [lengthSymbolA.pointA, lengthSymbolA.pointB];
+    const Bs : [Point, Point] = [lengthSymbolB.pointA, lengthSymbolB.pointB];
 
-    for(const line_set_pair of perpendicularPairs){
-        for(const [lines1, lines2] of pairs(line_set_pair[0], line_set_pair[1])){
-            const lineA = getLineFromPoints(list(lines1), As[0], As[1]);
-            if(lineA == undefined){
-                continue;
-            }
+    const line_pair1 = getParallelLinesByPointsPair(As, Bs);
+    if(line_pair1 == undefined){
+        return undefined;
+    }
+    
+    for(const idx of [0, 1]){        
+        let Cs : [Point, Point];
+        let Ds : [Point, Point];
 
-            const lineB = getLineFromPoints(list(lines1), Bs[0], Bs[1]);
-            if(lineB == undefined){
-                continue;
-            }
+        if(idx == 0){
+            Cs = [As[0], Bs[0]];
+            Ds = [As[1], Bs[1]];
+        }
+        else{
+            Cs = [As[0], Bs[1]];
+            Ds = [As[1], Bs[0]];
+        }
 
-            for(const [i, j] of [[0, 1], [1, 0]]){
-                const A0Bi = getLineFromPoints(list(lines2), As[0], Bs[i]);
-                if(A0Bi == undefined){
-                    continue
-                }
-
-                const A1Bj = getLineFromPoints(list(lines2), As[1], Bs[j]);
-                if(A1Bj == undefined){
-                    continue
-                }
-
-                return [A0Bi, A1Bj];
-            }
+        const line_pair2 = getParallelLinesByPointsPair(Cs, Ds);
+        if(line_pair2 != undefined){
+            return line_pair2;
         }
     }
 
@@ -87,7 +98,7 @@ export function makeEqualLength(lengthSymbolA : LengthSymbol, lengthSymbolB : Le
 
             if(idxA != -1 && idxB != -1 && idxA == idxB){
                 msg(`equal length:congruent triangles`);
-                return new AngleEquality({
+                return new LengthEquality({
                     reason          : LengthEqualityReason.congruent_triangles,
                     auxiliaryShapes : [ triangleA!, triangleB! ],
                     shapes          : [ lengthSymbolA, lengthSymbolB ]

@@ -1,4 +1,5 @@
 ///<reference path="shape.ts" />
+///<reference path="statement.ts" />
 
 namespace plane_ts {
 //
@@ -13,8 +14,8 @@ function lastShape<T>(shapes : T[]) : T {
     return last(sorted_shapes);
 }
 
-export abstract class Constraint extends Shape {
-    constructor(obj : any){
+export abstract class Constraint extends Statement {
+    constructor(obj : {shapes : MathEntity[]}){
         super(obj);
     }
 
@@ -31,7 +32,9 @@ export class LengthEqualityConstraint extends Constraint {
     lengthSymbolB : LengthSymbol;
 
     constructor(obj : { lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol }){
-        super(obj);
+        const data = obj as any;
+        data.shapes = [ obj.lengthSymbolA, obj.lengthSymbolB ];
+        super(data);
         const [lengthSymbolA, lengthSymbolB] = sortShape<LengthSymbol>([ obj.lengthSymbolA, obj.lengthSymbolB ]);
         let points = [ obj.lengthSymbolA, obj.lengthSymbolB ].map(x => [x.pointA, x.pointB]).flat();
         this.point = lastShape(points);
@@ -64,14 +67,19 @@ export class LengthEqualityConstraint extends Constraint {
         }
 
         const length = this.lengthSymbolA.length();
-        const anchor = this.getAnchor().position;
-        const dir = this.point.position.sub(anchor).unit();
+        const anchor = this.getAnchor();
+        if(anchor == undefined){
+            msg(`no anchor for length-Symbol-B:${this.lengthSymbolB.id}`)
+            return;
+        }
+
+        const dir = this.point.position.sub(anchor.position).unit();
         const theta = Math.atan2(dir.y, dir.x);
-        const adjusted_position = anchor.add(dir.mul(length));
+        const adjusted_position = anchor.position.add(dir.mul(length));
         this.point.setPosition(adjusted_position);
     }
 
-    getAnchor() : Point {
+    getAnchor() : Point | undefined {
         if(this.lengthSymbolB.pointA == this.point){
             return this.lengthSymbolB.pointB;
         }
@@ -79,8 +87,13 @@ export class LengthEqualityConstraint extends Constraint {
             return this.lengthSymbolB.pointA;
         }
         else{
-            throw new MyError();
+            return undefined;
         }
+    }
+
+    setRelations(): void {
+        super.setRelations();
+        addEqualLengths(this.lengthSymbolA, this.lengthSymbolB);
     }
 }
 
@@ -89,7 +102,9 @@ abstract class LineConstraint extends Constraint {
     lineB : LineByPoints;
 
     constructor(obj : { lineA : AbstractLine, lineB : LineByPoints }){
-        super(obj);
+        const data = obj as any;
+        data.shapes = [ obj.lineA, obj.lineB ];
+        super(data);
         assert(obj.lineA.order < obj.lineB.order);
         this.lineA = obj.lineA;
         this.lineB = obj.lineB;
