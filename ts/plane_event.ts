@@ -21,6 +21,8 @@ export function initPlane(plane : Plane, root : layout_ts.Grid){
     viewEvent(view);
 
     Builder.setToolByName(SelectionTool.name);
+
+    makeReasonDlg();
 }
 
 export function bodyOnLoad(){
@@ -38,7 +40,9 @@ export function viewEvent(view : View){
     view.board.addEventListener("pointerdown", view.pointerdown.bind(view));
     view.board.addEventListener('pointermove', view.pointermove.bind(view));
     view.board.addEventListener("pointerup"  , view.pointerup.bind(view));   
-    view.board.addEventListener("click"      , view.click.bind(view));   
+    view.board.addEventListener("click"      , async (ev : MouseEvent)=>{
+        await view.click(ev);
+    });   
     view.board.addEventListener("dblclick"   , view.dblclick.bind(view));
 
     document.addEventListener('keydown', (ev : KeyboardEvent) => {

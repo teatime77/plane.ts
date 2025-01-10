@@ -12,9 +12,11 @@ export const pointOnCircleArcs = new Map<Point,Set<CircleArc>>();
 export const pointOnLines = new Map<Point,Set<AbstractLine>>();
 export const angleMap = new Map<string,Angle>();
 
+export let quadrilaterals = new Set<Quadrilateral>();
+
 export let equalLengths : Set<LengthSymbol>[] = [];
 export let equalCircleArcs : Set<CircleArc>[] = [];
-export let congruentTriangles : Map<string,Triangle>[] = [];
+export let congruentTriangles : Triangle[][] = [];
 
 
 function addSetMap<T, V>(a : T, b : V, map:Map<T, Set<V>>){
@@ -35,6 +37,8 @@ export function initRelations(){
     pointOnCircleArcs.clear();
     pointOnLines.clear();
     angleMap.clear();
+
+    quadrilaterals.clear();
 
     equalLengths = [];
     equalCircleArcs = [];
@@ -147,6 +151,17 @@ export function isParallel(lineA : AbstractLine, lineB : AbstractLine) : boolean
     return line_set != undefined && line_set.has(lineB);
 }
 
+export function areEqualCircleArcs(circle1 : CircleArc, circle2 : CircleArc) : boolean {
+    if(circle1 == circle2){
+        return true;
+    }
+    
+    const circle_set1 = equalCircleArcs.find(x => x.has(circle1));
+    const circle_set2 = equalCircleArcs.find(x => x.has(circle2));
+
+    return circle_set1 != undefined && circle_set1 == circle_set2;
+}
+
 export function addEqualCircleArcs(circle1 : CircleArc, circle2 : CircleArc){
     const circle_set1 = equalCircleArcs.find(x => x.has(circle1));
     const circle_set2 = equalCircleArcs.find(x => x.has(circle2));
@@ -191,7 +206,7 @@ export function getPointsFromLine(line : AbstractLine) : Set<Point>{
     return new Set<Point>(points);
 }
 
-export function getCommonPointOfLines(lineA : AbstractLine, lineB : AbstractLine) : Point {
+export function getCommonPointOfLines(lineA : AbstractLine, lineB : AbstractLine) : Point | undefined {
     const pointsA = getPointsFromLine(lineA);
     const pointsB = getPointsFromLine(lineB);
     const common_points = intersection<Point>(pointsA, pointsB);
@@ -199,7 +214,7 @@ export function getCommonPointOfLines(lineA : AbstractLine, lineB : AbstractLine
         return common_points[0];
     }
 
-    throw new MyError();
+    return undefined;
 }
 
 export function getLineFromPoints(lines : AbstractLine[], pointA : Point, pointB : Point) : AbstractLine | undefined {
@@ -212,18 +227,70 @@ export function addCongruentTriangles(triangle1 : Triangle, triangle2 : Triangle
         return;
     }
 
-    const key1 = triangle1.key();
-    const key2 = triangle2.key();
+    for(const triangles of congruentTriangles){
+        let equal_triangle1 = triangles.find(x => x.isEqual(triangle1));
+        let equal_triangle2 = triangles.find(x => x.isEqual(triangle2));
 
-    let map = congruentTriangles.find(x => x.has(key1) || x.has(key2));
-    if(map == undefined){
-        map = new Map<string,Triangle>([[key1, triangle1], [key2, triangle2]]);
-        congruentTriangles.push(map);
+        let indexes1 : number[] | undefined;
+        let indexes2 : number[] | undefined;
+        if(equal_triangle1 != undefined){
+            indexes1 = triangle1.points.map(p => equal_triangle1.points.indexOf(p)) ;
+        }
+
+        if(equal_triangle2 != undefined){
+            indexes2 = triangle2.points.map(p => equal_triangle2.points.indexOf(p)) ;
+        }
+
+        if(indexes1 != undefined){
+            if(indexes2 != undefined){
+                if(range(3).every(i => indexes1[i] == indexes2[i])){
+                    return;
+                }
+                else{
+                    throw new MyError();
+                }
+            }
+            else{
+                if(range(3).every(i => indexes1[i] == i)){
+                    triangles.push(triangle2);
+                }
+                else{
+                    throw new MyError();
+                }
+            }
+        }
+        else if(indexes2 != undefined){
+            if(range(3).every(i => indexes2[i] == i)){
+                triangles.push(triangle1);
+            }
+            else{
+                throw new MyError();
+            }
+
+        }
     }
-    else{
-        map.set(key1, triangle1);
-        map.set(key2, triangle2);
+
+    congruentTriangles.push([triangle1, triangle2]);
+}
+
+export function findEqualLengthsByPointsPair(As : [Point, Point], Bs : [Point, Point]) : [LengthSymbol, LengthSymbol] | undefined {
+    for(const length_symbol_set of equalLengths){
+        const length_symbols = Array.from(length_symbol_set);
+
+        const length_symbolA = length_symbols.find(x => areSetsEqual<Point>([x.pointA, x.pointB], [As[0], As[1]]));
+        if(length_symbolA != undefined){
+
+            const length_symbolB = length_symbols.find(x => areSetsEqual<Point>([x.pointA, x.pointB], [Bs[0], Bs[1]]));
+            if(length_symbolB != undefined){
+                return [length_symbolA, length_symbolB];
+            }
+            else{
+                return undefined;
+            }
+        }
     }
+
+    return undefined;
 }
 
 }

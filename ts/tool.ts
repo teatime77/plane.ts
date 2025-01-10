@@ -1,14 +1,166 @@
 ///<reference path="inference.ts" />
 ///<reference path="deduction/equal_length.ts" />
 ///<reference path="deduction/equal_angle.ts" />
+///<reference path="deduction/quadrilateral.ts" />
 ///<reference path="constraint.ts" />
 
 namespace plane_ts {
 //
+
 function addShapeSetRelations(view : View, shape : MathEntity){
     view.addShape(shape);
     shape.setRelations();
 }
+
+abstract class shapesSelector{
+    numShapes : number;
+    shapes     : Shape[] = [];
+
+    constructor(numShapes : number){
+        this.numShapes = numShapes;
+    }
+
+    abstract isInstanceof(shape : Shape | undefined) : boolean;
+
+    clear(){
+        this.shapes = [];
+    }
+
+    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
+        if(this.isInstanceof(shape)){
+            this.shapes.push(shape as Shape);
+        }
+    }
+
+    drawTool(view : View){  
+        this.shapes.forEach(x => x.draw());
+    }
+
+    done() : boolean {
+        return this.shapes.length == this.numShapes;
+    }
+}
+
+class LinesSelector extends shapesSelector {
+    isInstanceof(shape : Shape | undefined) : boolean {
+        return shape instanceof AbstractLine;
+    }
+}
+
+class CircleArcsSelector extends shapesSelector {
+    isInstanceof(shape : Shape | undefined) : boolean {
+        return shape instanceof CircleArc;
+    }
+}
+
+class PolygonsSelector {
+    numVertices : number;
+    points  : Point[] = [];
+    polygon? : Polygon;
+
+    constructor(numVertices : number){
+        this.numVertices = numVertices;
+    }
+
+    clear(){
+        this.points    = [];
+        this.polygon  = undefined;
+    }
+
+    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
+        if(shape instanceof Point){
+            shape.setMode(Mode.depend);
+
+            this.points.push(shape);
+            if(this.points.length == this.numVertices){
+
+                let polygon : Polygon;
+                if(this.numVertices == 3){
+
+                    polygon = new Triangle({
+                        points : this.points,
+                        lines : []
+                    });
+                }
+                else if(this.numVertices == 4){
+                    polygon = new Quadrilateral({
+                        points : this.points,
+                        lines : []
+                    });
+                }
+                else{
+                    throw new MyError();
+                }
+
+                if(this.polygon == undefined){
+                    this.polygon = polygon;
+                }
+            }
+        }
+    }
+
+    drawTool(view : View){  
+        if(this.polygon != undefined){
+            this.polygon.draw();
+        }
+    }
+
+    done() : boolean {
+        return this.polygon != undefined;
+    }
+}
+
+class TrianglePairSelector {
+    selector = new PolygonsSelector(3);
+    triangleA? : Triangle;
+    triangleB? : Triangle;
+
+    constructor(){
+        this.selector
+    }
+
+    clear(){
+        this.selector.clear();
+        this.triangleA = undefined;
+        this.triangleB = undefined;
+    }
+
+    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
+        this.selector.click(event, view, position, shape);
+        if(this.selector.done()){
+            if(this.triangleA == undefined){
+                this.triangleA = this.selector.polygon as Triangle;
+            }
+        }
+    }    
+
+    done() : boolean {
+        return this.triangleA != undefined && this.triangleB != undefined;
+    }
+
+    drawTool(view : View){  
+        [this.triangleA, this.triangleB].filter(x => x != undefined).forEach(x => x.draw());
+    }
+
+    areCongruentTriangles() : boolean {
+        if(this.triangleA != undefined && this.triangleB != undefined){
+            return this.triangleA.isCongruent(this.triangleB);
+        }
+
+        throw new MyError();
+    }
+}
+
+class QuadrilateralSelector extends PolygonsSelector {
+    constructor(){
+        super(4);
+    }
+}
+
+export let linesSelector = new LinesSelector(2);
+export let circleArcsSelector = new CircleArcsSelector(2);
+export let trianglePairSelector = new TrianglePairSelector();
+export let quadrilateralSelector = new QuadrilateralSelector();
 
 export class Builder {
     static toolName : string;
@@ -50,7 +202,7 @@ export class Builder {
         }
     }
 
-    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){        
+    async click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){        
     }
 
     pointerdown(event : PointerEvent, view : View, position : Vec2, shape : Shape | undefined){
@@ -102,6 +254,10 @@ export class Builder {
             showProperty(shape, 0);
         }
     }
+
+    pendingShapes() : Shape[] {
+        return [];
+    }
 }
 
 export class SelectionTool extends Builder {
@@ -112,7 +268,7 @@ export class SelectionTool extends Builder {
     maxSave : Vec2 | undefined;
     oldPosition? : Vec2;
 
-    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){ 
+    async click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){ 
         this.resetTool(undefined);
         if(shape != undefined){
 
@@ -184,7 +340,7 @@ export class RangeTool extends Builder {
     downPosition? : Vec2;
     movePosition? : Vec2;
 
-    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){ 
+    async click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){ 
         msg("range click");
         if(event.ctrlKey){
 
@@ -243,7 +399,7 @@ export class RangeTool extends Builder {
 }
 
 class PointBuilder extends Builder {
-    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){  
+    async click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){  
         if(shape == undefined || shape instanceof AbstractLine || shape instanceof Circle){
 
             const new_point = Point.fromArgs(position);
@@ -262,7 +418,7 @@ class PointBuilder extends Builder {
 class MidpointBuilder extends Builder {
     pointA : Point | undefined;
 
-    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
+    async click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
         if(this.pointA == undefined){
 
             if(shape instanceof Point){
@@ -282,7 +438,7 @@ class MidpointBuilder extends Builder {
 class CircleByPointBuilder extends Builder {
     circle : CircleByPoint | undefined;
 
-    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
+    async click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
         if(this.circle == undefined){
 
             const center = this.makePointOnClick(view, position, shape);
@@ -327,7 +483,7 @@ class CircleByRadiusBuilder extends Builder {
     center?   : Point;
     position? : Vec2;
 
-    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
+    async click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
         if(this.center == undefined){
 
             this.center = this.makePointOnClick(view, position, shape);
@@ -370,7 +526,7 @@ class EllipseBuilder extends Builder {
     center : Point | undefined;
     xPoint : Point | undefined;
 
-    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
+    async click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
         if(this.center == undefined){
 
             this.center = this.makePointOnClick(view, position, shape);
@@ -417,7 +573,7 @@ class ArcByPointBuilder extends Builder {
     pointA : Point | undefined;
     pointB : Point | undefined;
 
-    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
+    async click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
         if(this.center == undefined){
 
             this.center = this.makePointOnClick(view, position, shape);
@@ -463,7 +619,7 @@ class ArcByRadiusBuilder extends Builder {
     pointA? : Point;
     arc? : ArcByLengthSymbol | ArcByCircle;
 
-    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
+    async click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
         if(shape instanceof LengthSymbol){
             this.lengthSymbol = shape;
             shape.setMode(Mode.depend);
@@ -553,7 +709,7 @@ class LineByPointsBuilder extends Builder {
     pointA? : Point;
     position? : Vec2;
 
-    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
+    async click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
         if(this.pointA == undefined){
 
             this.pointA = this.makePointOnClick(view, position, shape);
@@ -609,45 +765,48 @@ class RayBuilder extends LineByPointsBuilder {
 }
 
 class PolygonBuilder extends Builder {
-    polygon : Polygon | undefined;
+    points : Point[] = [];
+    lines  : AbstractLine[] = [];
     lastPosition : Vec2 | undefined;
 
-    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
-        if(this.polygon == undefined){
+    pendingShapes() : Shape[] {
+        return this.points;
+    }
 
-            this.polygon = new Polygon({ points : [], lines : [] });
-            addShapeSetRelations(view, this.polygon);
-        }
+    async click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
 
         const point = this.makePointOnClick(view, position, shape);
 
-        if(3 <= this.polygon.points.length && this.polygon.points[0] == point){
+        if(this.points.length != 0){
 
-            const pointA = last(this.polygon.points);
-            const line = makeLineSegment(pointA, point);
+            const pointA = last(this.points);
+            let line = getCommonLineOfPoints(pointA, point);
+            if(line == undefined){
 
-            this.polygon.lines.push(line);
-            this.polygon.lines.forEach(x => x.setRelations());
+                line = makeLineSegment(pointA, point);
+            }
 
-            this.resetTool(this.polygon);
-            this.polygon = undefined;
+            this.lines.push(line);
+        }
+
+        if(3 <= this.points.length && this.points[0] == point){
+
+            const polygon = new Polygon({ points : this.points, lines : this.lines });
+            addShapeSetRelations(view, polygon);
+
+            this.resetTool(polygon);
+            this.points = [];
+            this.lines  = [];
         }
         else{
             point.setMode(Mode.depend);
 
-            this.polygon.points.push(point);
-
-            if(2 <= this.polygon.points.length){
-                const [pointA, pointB] = this.polygon.points.slice(this.polygon.points.length - 2);
-                const line = makeLineSegment(pointA, pointB);
-
-                this.polygon.lines.push(line);
-            }
+            this.points.push(point);
         }
     }
 
     pointermove(event : PointerEvent, view : View, position : Vec2, shape : Shape | undefined){
-        if(this.polygon != undefined){
+        if(this.points.length != 0){
 
             this.lastPosition = position;
             View.current.dirty = true;
@@ -655,10 +814,22 @@ class PolygonBuilder extends Builder {
     }    
 
     drawTool(view: View): void {
-        if(this.polygon != undefined && this.lastPosition != undefined){
+        if(this.points.length != 0 && this.lastPosition != undefined){
             
-            const point = last(this.polygon.points);
-            view.canvas.drawLine(this.polygon, point.position, this.lastPosition);
+            this.points.forEach(x => x.draw());
+            
+            for(const [idx, point] of this.points.entries()){
+                let position : Vec2;
+                
+                if(idx + 1 < this.points.length){
+                    position = this.points[idx + 1].position;
+                }
+                else{
+                    position = this.lastPosition;
+                }
+                
+                view.canvas.drawLineRaw(point.position, position, dependColor, defaultLineWidth);
+            }
         }
     }
 }
@@ -667,7 +838,7 @@ class ParallelLineBuilder extends Builder {
     line  : AbstractLine | undefined;
     point : Point | undefined;
 
-    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
+    async click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
         if(shape instanceof Point){
 
             this.point  = this.makePointOnClick(view, position, shape);
@@ -698,7 +869,7 @@ class PerpendicularBuilder extends Builder {
     point : Point | undefined;
     line  : AbstractLine | undefined;
 
-    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
+    async click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
         if(this.point == undefined && shape instanceof Point){
             this.point  = this.makePointOnClick(view, position, shape);
             this.point.setMode(Mode.depend);
@@ -725,7 +896,7 @@ class PerpendicularLineBuilder extends Builder {
     line   : AbstractLine | undefined;
     pointA : Point | undefined;
 
-    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
+    async click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
         if(shape instanceof AbstractLine){
             this.line = shape;
         }
@@ -757,7 +928,7 @@ class PerpendicularLineBuilder extends Builder {
 class IntersectionBuilder extends Builder {
     shape1 : AbstractLine | CircleArc | undefined;
 
-    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
+    async click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
         if(shape instanceof AbstractLine || shape instanceof CircleArc){
             if(this.shape1 == undefined){
                 this.shape1 = shape;
@@ -813,7 +984,7 @@ class CirclePointTangentBuilder extends Builder {
     circle : Circle | undefined;
     point  : Point  | undefined;
 
-    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
+    async click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
         if(shape instanceof Circle){
 
             this.circle = shape;
@@ -839,7 +1010,7 @@ class CirclePointTangentBuilder extends Builder {
 class CircleCircleTangentBuilder extends Builder {
     circle : Circle | undefined;
 
-    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
+    async click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
         if(shape instanceof Circle){
 
             if(this.circle == undefined){
@@ -861,7 +1032,7 @@ abstract class AbstractAngleBuilder extends Builder {
     line1 : AbstractLine | undefined;
     pos1  : Vec2 | undefined;
 
-    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
+    async click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
         if(shape instanceof AbstractLine){
             if(this.line1 == undefined){
 
@@ -878,6 +1049,9 @@ abstract class AbstractAngleBuilder extends Builder {
                 lineB.calc();
 
                 const common_point = getCommonPointOfLines(lineA, lineB);
+                if(common_point == undefined){
+                    throw new MyError();
+                }
 
                 const directionA = Math.sign(pos1.sub(common_point.position).dot(lineA.e));
                 const directionB = Math.sign(pos2.sub(common_point.position).dot(lineB.e));
@@ -928,7 +1102,7 @@ class DimensionLineBuilder extends Builder {
     pointB : Point | undefined;
     dimLine : DimensionLine | undefined;
 
-    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
+    async click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
         if(this.dimLine == undefined){
             if(shape instanceof Point){
 
@@ -980,7 +1154,7 @@ class DimensionLineBuilder extends Builder {
 
 class LengthSymbolBuilder extends LineByPointsBuilder {
 
-    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
+    async click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
         if(shape instanceof LineByPoints){
             const symbol = new LengthSymbol({pointA : shape.pointA, pointB : shape.pointB, lengthKind : 0});
             addShapeSetRelations(view, symbol);
@@ -1013,7 +1187,7 @@ class LengthSymbolBuilder extends LineByPointsBuilder {
 
 
 class TextBlockBuilder extends Builder {
-    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
+    async click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
         const text_block = new TextBlock({ text : "Text", isTex : false, offset : position });
         text_block.updateTextPosition();
 
@@ -1043,7 +1217,7 @@ export class StatementBuilder extends Builder {
         showProperty(this.statement, 0);
     }
 
-    click(event : MouseEvent, view : View, position : Vec2, shape : MathEntity | undefined){        
+    async click(event : MouseEvent, view : View, position : Vec2, shape : MathEntity | undefined){        
         if(shape != undefined){
             let selected_shape = shape;
 
@@ -1088,131 +1262,206 @@ export class StatementBuilder extends Builder {
     }
 }
 
-export class TriangleCongruenceBuilder extends Builder { 
-    pointA? : Point;
-    pointB? : Point;
-    triangleA? : Triangle;
 
+export class TriangleCongruenceBuilder extends Builder { 
     constructor(triangleCongruence? : TriangleCongruence){
         super();
+        trianglePairSelector = new TrianglePairSelector();
     }
 
-    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
-        if(shape instanceof Point){
-            shape.setMode(Mode.depend);
+    async click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
+        trianglePairSelector.click(event, view, position, shape);
+        if(trianglePairSelector.done()){
 
-            if(this.pointA == undefined){
-                this.pointA = shape;
-            }
-            else if(this.pointB == undefined){
-                this.pointB = shape;
+            const triangleCongruence = makeTriangleCongruence(trianglePairSelector.triangleA!, trianglePairSelector.triangleB!);
+            if(triangleCongruence != undefined){
+
+                addShapeSetRelations(view, triangleCongruence);
+
+                this.resetTool(triangleCongruence);
             }
             else{
 
-                if(this.triangleA == undefined){
-                    this.triangleA = new Triangle({
-                        points : [ this.pointA, this.pointB, shape ],
-                        lines : []
-                    });
-
-                    this.pointA = undefined;
-                    this.pointB = undefined;
-
-                    this.resetTool(undefined);
-                }
-                else{
-                    const triangleB = new Triangle({
-                        points : [ this.pointA, this.pointB, shape ],
-                        lines : []
-                    });
-
-                    const triangleCongruence = makeTriangleCongruence(this.triangleA, triangleB);
-                    if(triangleCongruence != undefined){
-
-                        addShapeSetRelations(view, triangleCongruence);
-
-                        this.resetTool(triangleCongruence);
-                    }
-                    else{
-    
-                        this.resetTool(undefined);
-                    }
-                        
-                    this.pointA = undefined;
-                    this.pointB = undefined;
-                    this.triangleA = undefined;
-                }
+                this.resetTool(undefined);
             }
+
+            trianglePairSelector = new TrianglePairSelector();
         }
     }
 
     drawTool(view : View){  
-        if(this.triangleA != undefined){
-            this.triangleA.draw();
-        }
+        trianglePairSelector.drawTool(view);
     }
-
 }
 
 export class LengthEqualityBuilder extends Builder {
     lengthSymbolA? : LengthSymbol;
+    lengthSymbolB? : LengthSymbol;
+    lengthEqualityReason : LengthEqualityReason = LengthEqualityReason.none;
 
     constructor(lengthEquality? : LengthEquality){
         super();
     }
 
-    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
-        if(shape instanceof LengthSymbol){
-            if(this.lengthSymbolA == undefined){
-                this.lengthSymbolA = shape;
-                shape.setMode(Mode.depend);
-            }
-            else{
+    clear(){
+        this.lengthSymbolA = undefined;
+        this.lengthSymbolB = undefined;
+        this.lengthEqualityReason = LengthEqualityReason.none;
+    }
 
-                const lengthEquality = makeEqualLength(this.lengthSymbolA, shape);
-                if(lengthEquality != undefined){
+    async click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
+        let lengthEquality : LengthEquality | undefined;
 
-                    addShapeSetRelations(view, lengthEquality);
-                    this.lengthSymbolA = undefined;
-                    this.resetTool(lengthEquality);
+        if(this.lengthEqualityReason == LengthEqualityReason.none){
+
+            if(shape instanceof LengthSymbol){
+                if(this.lengthSymbolA == undefined){
+                    this.lengthSymbolA = shape;
+                    shape.setMode(Mode.depend);
                 }
-                else{
+                else if(this.lengthSymbolB == undefined){
+                    this.lengthSymbolB = shape;
+                    shape.setMode(Mode.depend);
 
-                    this.lengthSymbolA.setMode(Mode.none);
-                    this.lengthSymbolA = undefined;
+                    const id = await showMenu(lengthEqualityReasonDlg);
+
+                    const key = id.replace("length-equality-reason-", "");
+                    this.lengthEqualityReason = LengthEqualityReason[key as keyof typeof LengthEqualityReason];
+                    msg(`id:${id} [${key}] [${this.lengthEqualityReason}]`);
+
+                    switch(this.lengthEqualityReason){
+                    case LengthEqualityReason.radii_equal:
+                        lengthEquality = makeEqualLengthByRadiiEqual(this.lengthSymbolA, this.lengthSymbolB);
+                        break;
+                    case LengthEqualityReason.common_circle:
+                        showPrompt(TT("click the common circle. "));
+                        break;
+                    case LengthEqualityReason.parallel_lines:
+                        linesSelector.clear();
+                        showPrompt(TT("click two parallel lines. "));
+                        break;
+                    case LengthEqualityReason.circle_by_radius:
+                        lengthEquality = makeEqualLengthByCircleByRadius(this.lengthSymbolA, this.lengthSymbolB);
+                        break;
+                    case LengthEqualityReason.congruent_triangles:
+                        trianglePairSelector.clear();
+                        break;
+                    case LengthEqualityReason.parallelogram_sides:
+                    case LengthEqualityReason.parallelogram_diagonal_bisection:
+                        quadrilateralSelector.clear();
+                        break;
+                    default:
+                        throw new MyError();
+                    }
                 }
+            }        
+        }
+        else{
+            if(this.lengthSymbolA == undefined || this.lengthSymbolB == undefined){
+                throw new MyError();
             }
+            
+            switch(this.lengthEqualityReason){
+            // case LengthEqualityReason.radii_equal:
+            case LengthEqualityReason.common_circle:
+                if(shape instanceof CircleArc){
+                    lengthEquality = makeEqualLengthByCommonCircle(this.lengthSymbolA, this.lengthSymbolB, shape);
+                }
+                break;
+            case LengthEqualityReason.parallel_lines:
+                linesSelector.click(event, view, position, shape);
+                if(linesSelector.done()){
+                    lengthEquality = makeEqualLengthByParallelLines(this.lengthSymbolA, this.lengthSymbolB, linesSelector.shapes as AbstractLine[]);
+                    linesSelector.clear();
+                }
+                break;
+            // case LengthEqualityReason.circle_by_radius:
+            case LengthEqualityReason.congruent_triangles:
+                trianglePairSelector.click(event, view, position, shape);
+                if(trianglePairSelector.done()){
+                    if(trianglePairSelector.areCongruentTriangles()){
+                        lengthEquality = makeEqualLengthByCongruentTrianglesSub(this.lengthSymbolA, this.lengthSymbolB);
+                        trianglePairSelector.clear();
+                    }
+                    else{
+                        throw new MyError();
+                    }
+                }
+                break;
+            case LengthEqualityReason.parallelogram_sides:
+                quadrilateralSelector.click(event, view, position, shape);
+                if(quadrilateralSelector.done()){
+                    lengthEquality = makeEqualLengthByParallelogramSides(this.lengthSymbolA, this.lengthSymbolB, quadrilateralSelector.polygon as Quadrilateral);
+                }
+                break;
+            case LengthEqualityReason.parallelogram_diagonal_bisection:
+                quadrilateralSelector.click(event, view, position, shape);
+                if(quadrilateralSelector.done()){
+                    lengthEquality = makeEqualLengthByParallelogramDiagonalBisection(this.lengthSymbolA, this.lengthSymbolB, quadrilateralSelector.polygon as Quadrilateral);
+                }
+                break;
+            default:
+                throw new MyError();
+            }
+        }
+
+        if(lengthEquality != undefined){
+            addShapeSetRelations(view, lengthEquality);
+            this.resetTool(lengthEquality);
+            this.clear();
         }
     }
 }
 
 export class AngleEqualityBuilder extends Builder {
     angleA? : Angle;
+    angleB? : Angle;
 
     constructor(angleEquality? : AngleEquality){
         super();
     }
 
-    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
+    async click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
         if(shape instanceof Angle){
             if(this.angleA == undefined){
                 this.angleA = shape;
                 shape.setMode(Mode.depend);
             }
+            else if(this.angleB == undefined){
+                this.angleB = shape;
+                shape.setMode(Mode.depend);
+
+                const id = await showMenu(angleEqualityReasonDlg);
+                const key = id.replace("angle-equality-reason-", "");
+                const value = AngleEqualityReason[key as keyof typeof AngleEqualityReason];
+                msg(`id:${id} [${key}] [${value}]`);
+                switch(value){
+                case AngleEqualityReason.vertical_angles:
+                case AngleEqualityReason.parallel_lines:
+                case AngleEqualityReason.angle_bisector:
+                case AngleEqualityReason.congruent_triangles:
+                case AngleEqualityReason.parallelogram_opposite_angles:
+                    msg("ok");
+                    break;
+                default:
+                    throw new MyError();
+                }
+            }
             else{
 
-                const angleEquality = makeEqualAngle(this.angleA, shape);
+                const angleEquality = makeAngleEquality(this.angleA, shape);
                 if(angleEquality != undefined){
 
                     addShapeSetRelations(view, angleEquality);
-                    this.angleA = undefined;
                     this.resetTool(angleEquality);
                 }
                 else{
 
-                    this.angleA.setMode(Mode.none);
-                    this.angleA = undefined;
+                    this.resetTool(undefined);
                 }
+
+                this.angleA = undefined;
+                this.angleB = undefined;
             }
         }
     }
@@ -1222,7 +1471,7 @@ export class AngleEqualityBuilder extends Builder {
 export class EqualityConstraintBuilder extends Builder {
     lengthSymbolA? : LengthSymbol;
 
-    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
+    async click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
         if(shape instanceof LengthSymbol){
             if(this.lengthSymbolA == undefined){
                 this.lengthSymbolA = shape;
@@ -1238,7 +1487,6 @@ export class EqualityConstraintBuilder extends Builder {
                 addShapeSetRelations(view, constraint);
                 this.lengthSymbolA = undefined;
                 this.resetTool(constraint);
-
             }
         }
     }
@@ -1248,7 +1496,7 @@ export class EqualityConstraintBuilder extends Builder {
 abstract class ParallelPerpendicularLineBuilder extends Builder {
     line  : AbstractLine | undefined;
 
-    click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
+    async click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){   
         if(shape instanceof AbstractLine){
             if(this.line == undefined){
 
@@ -1291,6 +1539,35 @@ class ParallelConstraintBuilder extends ParallelPerpendicularLineBuilder {
 class PerpendicularConstraintBuilder extends ParallelPerpendicularLineBuilder {
 }
 
+abstract class ClassifierBuilder extends Builder {
+}
+
+class QuadrilateralClassifierBuilder extends ClassifierBuilder {
+    points : Point[] = [];
+
+    async click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
+        if(shape instanceof Point){
+            this.points.push(shape);
+            shape.setMode(Mode.depend);
+            if(this.points.length == 4){
+                const lines = range(4).map(i => getCommonLineOfPoints(this.points[i], this.points[(i + 1) % 4])) as AbstractLine[];
+                if(lines.some(x => x == undefined)){
+                    throw new MyError();
+                }
+                const quadrilateral = new Quadrilateral({points : this.points, lines});
+                if(quadrilateral.shapeClass != QuadrilateralClass.none){
+
+                    addShapeSetRelations(view, quadrilateral);
+                    this.resetTool(quadrilateral);    
+                }
+
+                this.points = [];
+            }
+        }
+    }
+
+}
+
 export class MotionBuilder extends SelectionTool { 
     animation : Motion;
 
@@ -1329,13 +1606,14 @@ const toolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [
     [ DimensionLineBuilder      , "dimension-line"     , TT("dimension line")     , [ DimensionLine ] ],
     [ LengthSymbolBuilder       , "length-symbol"      , TT("length symbol")      , [ LengthSymbol ] ],
     [ TextBlockBuilder          , "text"               , TT("text")               , [ TextBlock ] ],
-    [ StatementBuilder          , "statement"          , TT("statement")          , [ Statement ] ],
     [ TriangleCongruenceBuilder , "triangle-congruence", TT("triangle congruence"), [ TriangleCongruence ] ],
     [ LengthEqualityBuilder     , "equal-length"       , TT("equal length")       , [ LengthEquality ] ],
     [ AngleEqualityBuilder      , "equal-angle"        , TT("equal angle")        , [ AngleEquality ] ],
     [ EqualityConstraintBuilder , "equality-constraint", TT("equality constraint"), [ LengthEqualityConstraint ] ],
-    [ ParallelConstraintBuilder , "parallel-line"      , TT("parallel constraint"), [ ParallelConstraint ]],
-    [ PerpendicularConstraintBuilder , "perpendicular-line" , TT("perpendicular constraint"), [ PerpendicularConstraint ]],
+    [ ParallelConstraintBuilder , "parallel-constraint"      , TT("parallel constraint"), [ ParallelConstraint ]],
+    [ PerpendicularConstraintBuilder , "perpendicular-constraint" , TT("perpendicular constraint"), [ PerpendicularConstraint ]],
+    [ StatementBuilder          , "statement"          , TT("statement")          , [ Statement ] ],
+    [ QuadrilateralClassifierBuilder, "quadrilateral-classifier", TT("quadrilateral classifier"), [ Quadrilateral ]],
     [ MotionBuilder             , "animation"          , TT("animation")          , [ Motion ] ],
 ];
 

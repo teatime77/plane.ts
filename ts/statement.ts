@@ -2,6 +2,8 @@ namespace plane_ts {
 //
 type Term = parser_ts.Term;
 const parseMath = parser_ts.parseMath;
+export let lengthEqualityReasonDlg : HTMLDialogElement;
+export let angleEqualityReasonDlg : HTMLDialogElement;
 
 export enum TriangleCongruenceReason {
     none,
@@ -17,14 +19,34 @@ export enum LengthEqualityReason {
     parallel_lines,
     circle_by_radius,
     congruent_triangles,
+    parallelogram_sides,
+    parallelogram_diagonal_bisection,
+}
+
+export function enumToStr(dic : typeof LengthEqualityReason, num: LengthEqualityReason): string {
+    for(const [key, value] of Object.entries(dic)){
+        if(value == num){
+            return key;
+        }
+    }
+
+    return 'Unknown'; 
 }
 
 export enum AngleEqualityReason {
     none = 200,
-    vertical_angle,
+    vertical_angles,
     parallel_lines,
     angle_bisector,
     congruent_triangles,
+    parallelogram_opposite_angles
+}
+
+export enum QuadrilateralClass {
+    none = 300,
+    trapezoid,
+    parallelogram,
+    rhombus
 }
 
 export enum ImplicationCode {
@@ -53,11 +75,59 @@ export const textMap = new Map<number,string>([
     [ LengthEqualityReason.congruent_triangles, "congruent_triangles" ],
 
     [ AngleEqualityReason.none, "none" ],
-    [ AngleEqualityReason.vertical_angle, "vertical_angle" ],
+    [ AngleEqualityReason.vertical_angles, "vertical_angle" ],
     [ AngleEqualityReason.parallel_lines, "parallel_lines" ],
     [ AngleEqualityReason.angle_bisector, "angle_bisector" ],
     [ AngleEqualityReason.congruent_triangles, "congruent_triangles" ],
 ]);
+
+export function makeReasonDlg(){
+    const titles = [ "reason for length equality", "reason for angle equality" ];
+
+    for(const [idx, dic] of [LengthEqualityReason, AngleEqualityReason].entries()){
+        const dlg = document.createElement("dialog");
+        dlg.className = "menu_dlg";
+
+        const div = document.createElement("div");
+        div.style.display = "flex";
+        div.style.flexDirection = "column";
+
+        const title = document.createElement("span");
+        title.innerText = titles[idx];
+        div.append(title);
+
+        for(const [key, value] of Object.entries(dic)){
+            if (isNaN(Number(key))){
+                console.log(`of [${key}]${typeof key}: [${value}]${typeof value}`); 
+                const span = document.createElement("span");
+                if(idx == 0){
+
+                    span.id = `length-equality-reason-${key}`;
+                }
+                else{
+
+                    span.id = `angle-equality-reason-${key}`;
+                }
+                span.innerText = key;
+                span.className = "menu_item";
+
+                div.append(span);
+            }
+        }
+
+        if(idx == 0){
+
+            lengthEqualityReasonDlg = dlg;
+        }
+        else{
+
+            angleEqualityReasonDlg = dlg;
+        }
+
+        dlg.append(div);
+        document.body.append(dlg);
+    }
+}
 
 export class Statement extends Shape {
     static idTimeout : number | undefined;

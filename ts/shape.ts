@@ -1385,10 +1385,10 @@ export class ArcByCircle extends ArcByRadius {
 
 export class Polygon extends Shape {
     static colorIndex : number = 0;
-    points : Point[] = [];
-    lines  : LineByPoints[] = [];
+    points : Point[];
+    lines  : AbstractLine[];
 
-    constructor(obj : { points : Point[], lines  : LineByPoints[] }){
+    constructor(obj : { points : Point[], lines : AbstractLine[] }){
         super(obj);
         this.points = obj.points;
         this.lines  = obj.lines;
@@ -1445,6 +1445,10 @@ export class Polygon extends Shape {
         this.points.forEach(x => x.setRelations());
         this.lines.forEach(x => x.setRelations());
     }
+
+    isEqual(polygon : Polygon) : boolean {
+        return areSetsEqual(this.points, polygon.points);
+    }
 }
 
 export class Triangle extends Polygon {    
@@ -1477,6 +1481,16 @@ export class Triangle extends Polygon {
 
     key() : string {
         return this.points.map(x => `${x.id}`).join(":");
+    }
+
+    isCongruent(triangle : Triangle) : boolean {
+        for(const triangles of congruentTriangles){   
+            if(triangles.some(x => x.isEqual(this))){
+                return triangles.some(x => x.isEqual(triangle));
+            }
+        }
+
+        return false;
     }
 }
 

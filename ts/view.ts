@@ -214,7 +214,7 @@ export class View extends Widget {
         window.requestAnimationFrame(this.drawShapes.bind(this));
     }
 
-    click(event : MouseEvent){
+    async click(event : MouseEvent){
         let position = this.eventPosition(event);
         if(Plane.one.snap_to_grid.checked()){
             position = this.grid.snap(position);
@@ -292,7 +292,7 @@ export class View extends Widget {
             position = this.grid.snap(position);
         }
 
-        const shapes = this.allShapes();
+        const shapes = this.allShapes().concat(Builder.tool.pendingShapes());
 
         const old_near_shape = shapes.find(x => x.isOver);
         const near_shape = this.getShape(position);
@@ -376,7 +376,7 @@ export class View extends Widget {
     }
 
     getShape(position : Vec2) : Shape | undefined {
-        const shapes = this.allRealShapes();
+        const shapes = this.allRealShapes().concat(Builder.tool.pendingShapes());
         const point = shapes.filter(x => x instanceof Point).find(x => x.isNear(position));
         if(point != undefined){
             return point;

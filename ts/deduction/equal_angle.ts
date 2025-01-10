@@ -4,6 +4,33 @@ export function angleKey(lineA : AbstractLine, directionA : number, lineB : Abst
     return `${lineA.id}:${directionA}:${lineB.id}:${directionB}:${intersection.id}`;
 }
 
+export function findAngleBy3points(angles : Angle[], angle_points_arg : Point[]) : Angle | undefined {
+    const points = toClockwisePoints(angle_points_arg);
+
+    return angles.find(x => x.intersection == points[1] && x.lineA.includesPoint(points[2]) && x.lineB.includesPoint(points[0]));
+}
+
+export function findEqualAnglesBy3pointsPair(points_arg_1 : Point[], points_arg_2 : Point[]) : [Angle, Angle] | undefined {
+    const points1 = toClockwisePoints(points_arg_1);
+    const points2 = toClockwisePoints(points_arg_2);
+
+    for(const angle_set of supplementaryAngles.flat()){
+        const angles = Array.from(angle_set);
+        const angle1 = findAngleBy3points(angles, points1);
+        if(angle1 != undefined){
+            const angle2 = findAngleBy3points(angles, points2);
+            if(angle2 != undefined){
+                return [angle1, angle2];
+            }
+            else{
+                return undefined;
+            }
+        }
+    }
+
+    return undefined;
+}
+
 export function findAngle(angle_points_arg : Point[]) : Angle | undefined {
     let angle_points =angle_points_arg.slice();
     if(! isClockwise(angle_points)){
@@ -98,14 +125,14 @@ export function isEqualAnglePoints(angle_pointsA : Point[], angle_pointsB : Poin
     return false;
 }
 
-export function makeEqualAngle(angleA : Angle, angleB : Angle) : AngleEquality | undefined {
-    for(const map of congruentTriangles.values()){
+export function makeAngleEqualityByCongruentTriangles(angleA : Angle, angleB : Angle) : AngleEquality | undefined {
+    for(const triangles of congruentTriangles){
         let idxA : number = -1;
         let idxB : number = -1;
         let triangleA : Triangle;
         let triangleB : Triangle;
 
-        for(const triangle of map.values()){
+        for(const triangle of triangles){
             if(idxA == -1){
                 idxA = triangle.angleIndex(angleA);
                 triangleA = triangle;
@@ -149,7 +176,7 @@ export function makeEqualAngle(angleA : Angle, angleB : Angle) : AngleEquality |
             if(Math.sign(e_AA.dot(e_BA)) == -1 && Math.sign(e_AB.dot(e_BB)) == -1){
                 msg(`equal angle:vertical angle`);
                 return new AngleEquality({
-                    reason : AngleEqualityReason.vertical_angle,
+                    reason : AngleEqualityReason.vertical_angles,
                     auxiliaryShapes : [
                         angleA.lineA, angleA.lineB
                     ],
@@ -209,6 +236,60 @@ export function makeEqualAngle(angleA : Angle, angleB : Angle) : AngleEquality |
         msg("make-Equal-Angle:cross_sign * parallel_sign != 1");
         return undefined;
     }
+}
+
+export function makeAngleEqualityByParallelogram(angleA : Angle, angleB : Angle) : AngleEquality | undefined {
+    const parallelograms = Array.from(quadrilaterals).filter(x => x.isParallelogram());
+    const intersections = [angleA.intersection, angleB.intersection];
+
+    const parallelograms2 = parallelograms.filter(x => areSetsEqual([x.points[0], x.points[2]], intersections) || areSetsEqual([x.points[1], x.points[3]], intersections ));
+    for(const parallelogram of parallelograms2){
+        const points = toClockwisePoints(parallelogram.points);
+        let triad_pair : Point[][];
+        if(intersections.includes(points[0])){
+            triad_pair = [[points[3], points[0], points[1]], [points[1], points[2], points[3]]]
+        }
+        else{
+            triad_pair = [[points[0], points[1], points[2]], [points[2], points[3], points[0]]]
+        }
+
+        const angles = [angleA, angleB];
+        if(triad_pair[0][1] == angleB.intersection){
+            triad_pair.reverse();
+        }
+        for(const [idx, triad] of triad_pair.entries()){
+            const angle = angles[idx];
+            assert(triad[1] == angle.intersection);
+            if(angle.lineA.includesPoint(triad[2]) && angle.lineB.includesPoint(triad[0])){
+                msg(`equal ange:parallelogram`);
+                return new AngleEquality({
+                    reason : AngleEqualityReason.parallel_lines,
+                    auxiliaryShapes : [parallelogram],
+                    shapes : [
+                        angleA, angleB
+                    ]
+                });        
+            }
+        }
+    }
+
+    return undefined;
+}
+
+export function makeAngleEquality(angleA : Angle, angleB : Angle) : AngleEquality | undefined {
+    let angle_equality : AngleEquality | undefined;
+
+    angle_equality = makeAngleEqualityByCongruentTriangles(angleA, angleB);
+    if(angle_equality != undefined){
+        return angle_equality;
+    }
+
+    angle_equality = makeAngleEqualityByParallelogram(angleA, angleB);
+    if(angle_equality != undefined){
+        return angle_equality;
+    }
+
+    return undefined;
 }
 
 export class AngleEquality extends Statement {

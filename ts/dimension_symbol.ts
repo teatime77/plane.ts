@@ -31,7 +31,10 @@ export class Angle extends Shape {
         this.lineB       = obj.lineB;
         this.directionB  = obj.directionB;
         
-        this.intersection = getCommonPointOfLines(this.lineA, this.lineB);
+        this.intersection = getCommonPointOfLines(this.lineA, this.lineB)!;
+        if(this.intersection == undefined){
+            throw new MyError();
+        }
     }
 
     makeObj() : any {
@@ -234,6 +237,7 @@ export class LengthSymbol extends Shape {
     pointA : Point;
     pointB : Point;
     lengthKind : number;
+    line? : AbstractLine;
     circle? : CircleByRadius | ArcByRadius;
 
     constructor(obj : { pointA : Point, pointB : Point, lengthKind : number }){
@@ -341,6 +345,8 @@ export class LengthSymbol extends Shape {
 
         const key = pairKey(this.pointA, this.pointB);
         pointsToLengthSymbol.set(key, this);
+
+        this.line = getCommonLineOfPoints(this.pointA, this.pointB);
 
         this.circle = undefined;
 

@@ -21,8 +21,38 @@ export function $inp(id : string) : HTMLInputElement {
     return $(id) as HTMLInputElement;
 }
 
+export function $dlg(id : string) : HTMLDialogElement {
+    return $(id) as HTMLDialogElement;
+}
+
 export function $sel(id : string) : HTMLSelectElement {
     return $(id) as HTMLSelectElement;
+}
+
+// Define a function that returns a Promise
+async function waitForClick(element: HTMLElement): Promise<string> {
+    return new Promise<string>((resolve : (id:string)=>void) => {
+
+        const clickHandler = (ev : MouseEvent) => {
+            const target = ev.target as HTMLElement;
+            if(target.className == "menu_item"){
+
+                element.removeEventListener('click', clickHandler);
+                resolve(target.id); 
+            }
+        }
+
+        element.addEventListener('click', clickHandler);
+    });
+}
+
+
+export async function showMenu(dlg : HTMLDialogElement){
+    dlg.showModal();
+    
+    const id = await waitForClick(dlg);
+    dlg.close();
+    return id;
 }
         
 export class MyError extends Error {
@@ -247,6 +277,26 @@ export function pairs<T>(a : T, b : T) : [[T, T], [T, T]] {
     return [ [a, b], [b, a] ];
 }
 
+
+export function areSetsEqual<T>(A: T[], B: T[]): boolean {
+    const setA = new Set<T>(A);
+    const setB = new Set<T>(B);
+
+    // Check if sizes are different
+    if (setA.size !== setB.size) {
+        return false;
+    }
+
+    // Check if all elements of setA are present in setB
+    for (const element of setA) {
+        if (!setB.has(element)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 export function isClockwise(points : Point[]) : boolean {
     assert(points.length == 3);
     const [A, B, C] = points.map(x => x.position);
@@ -257,6 +307,15 @@ export function isClockwise(points : Point[]) : boolean {
     assert(cross_product != 0);
 
     return 0 < cross_product;
+}
+
+export function toClockwisePoints(points : Point[]) : Point[] {
+    if(isClockwise(points)){
+        return points;
+    }
+    else{
+        return [2, 1, 0].map(i => points[i]);
+    }
 }
 
 }
