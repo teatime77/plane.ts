@@ -315,7 +315,7 @@ export class LengthEquality extends Statement {
                 const parallel_lines = this.auxiliaryShapes as AbstractLine[];
                 const [lengthSymbolA, lengthSymbolB] = this.selectedShapes as LengthSymbol[];
                 lengthEquality = makeEqualLengthByParallelLines(lengthSymbolA, lengthSymbolB, parallel_lines);
-                linesSelector.clear();
+                linesSelector_2.clear();
             }
             break;
 

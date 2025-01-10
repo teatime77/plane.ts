@@ -23,7 +23,7 @@ export enum LengthEqualityReason {
     parallelogram_diagonal_bisection,
 }
 
-export function enumToStr(dic : typeof LengthEqualityReason, num: LengthEqualityReason): string {
+export function enumToStr(dic : typeof LengthEqualityReason | typeof AngleEqualityReason, num: LengthEqualityReason | AngleEqualityReason): string {
     for(const [key, value] of Object.entries(dic)){
         if(value == num){
             return key;
