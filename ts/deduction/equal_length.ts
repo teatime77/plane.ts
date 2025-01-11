@@ -88,8 +88,8 @@ export function makeEqualLengthByCongruentTriangles(lengthSymbolA : LengthSymbol
     });
 }
 
-export function makeEqualLengthByCongruentTrianglesSub(lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol) : LengthEquality | undefined {
-    const triangle_pairs = pairs<Triangle>(trianglePairSelector.triangleA!, trianglePairSelector.triangleB!);
+export function makeEqualLengthByCongruentTrianglesSub(lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol, triangles : Triangle[]) : LengthEquality | undefined {
+    const triangle_pairs = pairs<Triangle>(triangles[0], triangles[1]);
     for(const [triangleA, triangleB] of triangle_pairs){
 
         const idxA = triangleA.lengthSymbolIndex(lengthSymbolA);

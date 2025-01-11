@@ -604,7 +604,7 @@ export class Point extends Shape {
     draw() : void {
         const color = this.modeColor();
 
-        const radius = (this.mode == Mode.none ? 1 : 2) * Point.radius;
+        const radius = modePointRadius(this.mode);
         if(this.visible){
 
             View.current.canvas.drawCircleRaw(this.position, radius, color);
@@ -1408,8 +1408,6 @@ export class Polygon extends Shape {
     }
 
     draw(): void {
-        const positions = this.points.map(x => x.position);
-
         let color : string;
         if(this.mode == Mode.none){
 
@@ -1421,6 +1419,12 @@ export class Polygon extends Shape {
             color = this.modeColor();
         }
 
+        const radius = (this.mode == Mode.none ? 1 : 2) * Point.radius;
+        for(const point of this.points){
+            View.current.canvas.drawCircleRaw(point.position, radius, color);
+        }
+
+        const positions = this.points.map(x => x.position);
         View.current.canvas.drawPolygonRaw(positions, color, NaN, true);
     }
 

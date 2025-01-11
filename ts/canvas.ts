@@ -1,5 +1,24 @@
 namespace plane_ts {
 //
+function modeColor(mode : Mode) : string {
+    switch(mode){
+    case Mode.none:
+        return fgColor;
+    case Mode.depend:
+        return dependColor;
+    case Mode.target:
+        return targetColor;
+    }
+}
+
+export function modePointRadius(mode : Mode) : number {
+    return (mode == Mode.none ? 1 : 2) * Point.radius;
+}
+
+function modeLineWidth(mode : Mode) : number {
+    return (mode == Mode.none ? defaultLineWidth : OverLineWidth);    
+}
+
 export class Canvas {
     view   : View;
     canvas : HTMLCanvasElement;
@@ -122,6 +141,17 @@ export class Canvas {
     drawPolygon(shape : Shape, positions : Vec2[]){
         const [color, line_width] = this.getAttributes(shape);
         this.drawPolygonRaw(positions, color, line_width);
+    }
+
+    drawPartialPolygon(points : Point[], mode : Mode){
+        const color = modeColor(mode);
+        const radius = modePointRadius(mode);
+
+        const positions = points.map(x => x.position);
+        positions.forEach(x => View.current.canvas.drawCircleRaw(x, radius, color));
+
+        const line_width = modeLineWidth(mode);
+        View.current.canvas.drawPolygonRaw(positions, color, line_width);
     }
 
     drawLinesRaw(lines : [Vec2, Vec2][], color : string, line_width : number){

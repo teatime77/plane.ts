@@ -223,6 +223,7 @@ export class View extends Widget {
         Point.tempPoints = [];
         const shape = this.getShape(position);
         Builder.tool.click(event, this, position, shape);
+        this.dirty = true;
     }
 
     dblclick(event : MouseEvent){
@@ -267,6 +268,8 @@ export class View extends Widget {
 
             shape.setMode(Mode.target);
         }
+
+        this.dirty = true;
     }
 
 

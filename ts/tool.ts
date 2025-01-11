@@ -95,9 +95,7 @@ class PolygonsSelector {
     }
 
     drawTool(view : View){  
-        if(this.polygon != undefined){
-            this.polygon.draw();
-        }
+        View.current.canvas.drawPartialPolygon(this.points, Mode.depend);
     }
 
     done() : boolean {
@@ -112,6 +110,10 @@ class TrianglePairSelector {
 
     constructor(){
         this.selector
+    }
+
+    triangles() : [Triangle, Triangle] {
+        return [ this.triangleA!, this.triangleB! ];
     }
 
     clear(){
@@ -141,6 +143,7 @@ class TrianglePairSelector {
     }
 
     drawTool(view : View){  
+        this.selector.drawTool(view);
         [this.triangleA, this.triangleB].filter(x => x != undefined).forEach(x => x.draw());
     }
 
@@ -162,7 +165,6 @@ class QuadrilateralSelector extends PolygonsSelector {
 export let linesSelector_2 = new LinesSelector(2);
 export let linesSelector_3 = new LinesSelector(3);
 export let circleArcsSelector = new CircleArcsSelector(2);
-export let trianglePairSelector = new TrianglePairSelector();
 export let quadrilateralSelector = new QuadrilateralSelector();
 
 export class Builder {
@@ -1267,16 +1269,17 @@ export class StatementBuilder extends Builder {
 
 
 export class TriangleCongruenceBuilder extends Builder { 
+    trianglePairSelector = new TrianglePairSelector();
+
     constructor(triangleCongruence? : TriangleCongruence){
         super();
-        trianglePairSelector = new TrianglePairSelector();
     }
 
     async click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
-        trianglePairSelector.click(event, view, position, shape);
-        if(trianglePairSelector.done()){
+        this.trianglePairSelector.click(event, view, position, shape);
+        if(this.trianglePairSelector.done()){
 
-            const triangleCongruence = makeTriangleCongruence(trianglePairSelector.triangleA!, trianglePairSelector.triangleB!);
+            const triangleCongruence = makeTriangleCongruence(this.trianglePairSelector.triangleA!, this.trianglePairSelector.triangleB!);
             if(triangleCongruence != undefined){
 
                 addShapeSetRelations(view, triangleCongruence);
@@ -1288,12 +1291,12 @@ export class TriangleCongruenceBuilder extends Builder {
                 this.resetTool(undefined);
             }
 
-            trianglePairSelector = new TrianglePairSelector();
+            this.trianglePairSelector = new TrianglePairSelector();
         }
     }
 
     drawTool(view : View){  
-        trianglePairSelector.drawTool(view);
+        this.trianglePairSelector.drawTool(view);
     }
 }
 
@@ -1301,6 +1304,8 @@ export class LengthEqualityBuilder extends Builder {
     lengthSymbolA? : LengthSymbol;
     lengthSymbolB? : LengthSymbol;
     lengthEqualityReason : LengthEqualityReason = LengthEqualityReason.none;
+
+    trianglePairSelector : TrianglePairSelector | undefined;
 
     constructor(lengthEquality? : LengthEquality){
         super();
@@ -1347,7 +1352,8 @@ export class LengthEqualityBuilder extends Builder {
                         lengthEquality = makeEqualLengthByCircleByRadius(this.lengthSymbolA, this.lengthSymbolB);
                         break;
                     case LengthEqualityReason.congruent_triangles:
-                        trianglePairSelector.clear();
+                        showPrompt(TT("click on the vertices of two congruent triangles."));
+                        this.trianglePairSelector = new TrianglePairSelector();
                         break;
                     case LengthEqualityReason.parallelogram_sides:
                     case LengthEqualityReason.parallelogram_diagonal_bisection:
@@ -1380,11 +1386,14 @@ export class LengthEqualityBuilder extends Builder {
                 break;
             // case LengthEqualityReason.circle_by_radius:
             case LengthEqualityReason.congruent_triangles:
-                trianglePairSelector.click(event, view, position, shape);
-                if(trianglePairSelector.done()){
-                    if(trianglePairSelector.areCongruentTriangles()){
-                        lengthEquality = makeEqualLengthByCongruentTrianglesSub(this.lengthSymbolA, this.lengthSymbolB);
-                        trianglePairSelector.clear();
+                if(this.trianglePairSelector == undefined){
+                    throw new MyError();
+                }
+                this.trianglePairSelector.click(event, view, position, shape);
+                if(this.trianglePairSelector.done()){
+                    if(this.trianglePairSelector.areCongruentTriangles()){
+                        lengthEquality = makeEqualLengthByCongruentTrianglesSub(this.lengthSymbolA, this.lengthSymbolB, this.trianglePairSelector.triangles());
+                        this.trianglePairSelector = undefined;
                     }
                     else{
                         throw new MyError();
@@ -1414,6 +1423,13 @@ export class LengthEqualityBuilder extends Builder {
             this.clear();
         }
     }
+
+    drawTool(view : View){  
+        if(this.trianglePairSelector != undefined){
+
+            this.trianglePairSelector.drawTool(view);
+        }
+    }
 }
 
 export class AngleEqualityBuilder extends Builder {
@@ -1421,103 +1437,122 @@ export class AngleEqualityBuilder extends Builder {
     angleB? : Angle;
     angleEqualityReason : AngleEqualityReason = AngleEqualityReason.none;
 
+    trianglePairSelector : TrianglePairSelector | undefined;
+
     constructor(angleEquality? : AngleEquality){
         super();
+    }
+
+    clear(){
+        this.angleA = undefined;
+        this.angleB = undefined;
+        this.angleEqualityReason = AngleEqualityReason.none;
+        this.trianglePairSelector = undefined;
     }
 
     async click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
         let angleEquality : AngleEquality | undefined;
 
-        if(shape instanceof Angle){
-            if(this.angleA == undefined){
-                this.angleA = shape;
-                shape.setMode(Mode.depend);
-            }
-            else if(this.angleB == undefined){
-                this.angleB = shape;
-                shape.setMode(Mode.depend);
+        if(this.angleA == undefined || this.angleB == undefined){
 
-                const id = await showMenu(angleEqualityReasonDlg);
-                const key = id.replace("angle-equality-reason-", "");
-                this.angleEqualityReason = AngleEqualityReason[key as keyof typeof AngleEqualityReason];
-                msg(`id:${id} [${key}] [${this.angleEqualityReason}]`);
-                switch(this.angleEqualityReason){
-                case AngleEqualityReason.vertical_angles:
-                    angleEquality = makeAngleEqualityByVertical_angles(this.angleA, this.angleB);
-                    break;
-                case AngleEqualityReason.parallel_lines:
-                    linesSelector_3.clear();
-                    break;
-                case AngleEqualityReason.angle_bisector:
-                    break;
-                case AngleEqualityReason.congruent_triangles:
-                    trianglePairSelector.clear();
-                    break;
-                case AngleEqualityReason.parallelogram_opposite_angles:
-                    quadrilateralSelector.clear();
-                    break;
-                default:
-                    throw new MyError();
+            if(shape instanceof Angle){
+                if(this.angleA == undefined){
+                    this.angleA = shape;
+                    shape.setMode(Mode.depend);
                 }
-            }
-            else{
+                else if(this.angleB == undefined){
+                    this.angleB = shape;
+                    shape.setMode(Mode.depend);
 
-                switch(this.angleEqualityReason){
-                case AngleEqualityReason.vertical_angles:
-                    break;
-
-                case AngleEqualityReason.parallel_lines:
-                    linesSelector_3.click(event, view, position, shape);
-                    if(linesSelector_3.done()){
-                        const parallel_lines = linesSelector_3.shapes.slice(0, 2) as AbstractLine[];
-                        const cross_line = linesSelector_3.shapes[2] as AbstractLine;
-                        angleEquality = makeAngleEqualityByParallelLines(this.angleA, this.angleB, parallel_lines, cross_line);
+                    const id = await showMenu(angleEqualityReasonDlg);
+                    const key = id.replace("angle-equality-reason-", "");
+                    this.angleEqualityReason = AngleEqualityReason[key as keyof typeof AngleEqualityReason];
+                    msg(`id:${id} [${key}] [${this.angleEqualityReason}]`);
+                    switch(this.angleEqualityReason){
+                    case AngleEqualityReason.vertical_angles:
+                        angleEquality = makeAngleEqualityByVertical_angles(this.angleA, this.angleB);
+                        break;
+                    case AngleEqualityReason.parallel_lines:
                         linesSelector_3.clear();
+                        break;
+                    case AngleEqualityReason.angle_bisector:
+                        break;
+                    case AngleEqualityReason.congruent_triangles:
+                        showPrompt(TT("click on the vertices of two congruent triangles."));
+                        this.trianglePairSelector = new TrianglePairSelector();
+                        break;
+                    case AngleEqualityReason.parallelogram_opposite_angles:
+                        quadrilateralSelector.clear();
+                        break;
+                    default:
+                        throw new MyError();
                     }
-                    break;
+                }
+            }        
+        }
+        else{
 
-                case AngleEqualityReason.angle_bisector:
-                    break;
+            switch(this.angleEqualityReason){
+            case AngleEqualityReason.vertical_angles:
+                break;
 
-                case AngleEqualityReason.congruent_triangles:
-                    trianglePairSelector.click(event, view, position, shape);
-                    if(trianglePairSelector.done()){
-                        if(trianglePairSelector.areCongruentTriangles()){
-                            const [triangleA, triangleB] = [trianglePairSelector.triangleA!, trianglePairSelector.triangleB!];
-                            angleEquality = makeAngleEqualityByCongruentTriangles(this.angleA, this.angleB, triangleA, triangleB);
-                            trianglePairSelector.clear();
-                        }
-                        else{
-                            throw new MyError();
-                        }
-                    }
-                    break;
+            case AngleEqualityReason.parallel_lines:
+                linesSelector_3.click(event, view, position, shape);
+                if(linesSelector_3.done()){
+                    const parallel_lines = linesSelector_3.shapes.slice(0, 2) as AbstractLine[];
+                    const cross_line = linesSelector_3.shapes[2] as AbstractLine;
+                    angleEquality = makeAngleEqualityByParallelLines(this.angleA, this.angleB, parallel_lines, cross_line);
+                    linesSelector_3.clear();
+                }
+                break;
 
-                case AngleEqualityReason.parallelogram_opposite_angles:
-                    quadrilateralSelector.click(event, view, position, shape);
-                    if(quadrilateralSelector.done()){
-                        const parallelogram = quadrilateralSelector.polygon as Quadrilateral;
-                        angleEquality = makeAngleEqualityByParallelogramOppositeAngles(this.angleA, this.angleB, parallelogram);
-                    }
-                    break;
+            case AngleEqualityReason.angle_bisector:
+                break;
 
-                default:
+            case AngleEqualityReason.congruent_triangles:
+                if(this.trianglePairSelector == undefined){
                     throw new MyError();
                 }
-    
-                if(angleEquality != undefined){
 
-                    addShapeSetRelations(view, angleEquality);
-                    this.resetTool(angleEquality);
+                this.trianglePairSelector.click(event, view, position, shape);
+                if(this.trianglePairSelector.done()){
+                    if(this.trianglePairSelector.areCongruentTriangles()){
+                        const [triangleA, triangleB] = [this.trianglePairSelector.triangleA!, this.trianglePairSelector.triangleB!];
+                        angleEquality = makeAngleEqualityByCongruentTriangles(this.angleA, this.angleB, triangleA, triangleB);
+                        this.trianglePairSelector = undefined;
+                    }
+                    else{
+                        throw new MyError();
+                    }
                 }
-                else{
+                break;
 
-                    this.resetTool(undefined);
+            case AngleEqualityReason.parallelogram_opposite_angles:
+                quadrilateralSelector.click(event, view, position, shape);
+                if(quadrilateralSelector.done()){
+                    const parallelogram = quadrilateralSelector.polygon as Quadrilateral;
+                    angleEquality = makeAngleEqualityByParallelogramOppositeAngles(this.angleA, this.angleB, parallelogram);
                 }
+                break;
 
-                this.angleA = undefined;
-                this.angleB = undefined;
+            default:
+                throw new MyError();
             }
+
+            if(angleEquality != undefined){
+
+                addShapeSetRelations(view, angleEquality);
+                this.resetTool(angleEquality);
+
+                this.clear();
+            }
+        }
+    }
+
+    drawTool(view : View){  
+        if(this.trianglePairSelector != undefined){
+
+            this.trianglePairSelector.drawTool(view);
         }
     }
 }
