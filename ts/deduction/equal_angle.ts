@@ -230,6 +230,16 @@ export function makeAngleEqualityByParallelLines(angleA : Angle, angleB : Angle,
     }
 }
 
+export function makeAngleEqualityByAngleBisector(angleA : Angle, angleB : Angle, angle_bisector : AngleBisector) : AngleEquality {
+    const [ lineA, lineB ] = [ angleA.lineA, angleB.lineB ];
+
+    return new AngleEquality({
+        reason          : AngleEqualityReason.angle_bisector,
+        auxiliaryShapes : [ lineA, lineB, angle_bisector ],
+        shapes          : [ angleA, angleB ]
+    });
+}
+
 export function makeAngleEqualityByParallelogramOppositeAngles(angleA : Angle, angleB : Angle, parallelogram : Quadrilateral) : AngleEquality | undefined {
     if(! parallelogram.isParallelogram()){
         return undefined;
@@ -305,7 +315,11 @@ export class AngleEquality extends Statement {
                 }
                 break;
                 
-            case AngleEqualityReason.angle_bisector:
+            case AngleEqualityReason.angle_bisector:{
+
+                    const angle_bisector = this.auxiliaryShapes[2] as AngleBisector;
+                    angleEquality = makeAngleEqualityByAngleBisector(angleA, angleB, angle_bisector);
+                }
                 break;
 
             case AngleEqualityReason.congruent_triangles:{
@@ -326,7 +340,7 @@ export class AngleEquality extends Statement {
 
 
         if(angleEquality == undefined){
-            msg(`can not make Angle-Equality: ${reason_str}`)
+            throw new MyError(`can not make Angle-Equality: ${reason_str}`)
         }
         else{
 

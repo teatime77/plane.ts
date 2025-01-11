@@ -308,6 +308,9 @@ export class LengthEquality extends Statement {
                 const circle = this.auxiliaryShapes[0] as Circle;
                 const [lengthSymbolA, lengthSymbolB] = this.selectedShapes as LengthSymbol[];
                 lengthEquality = makeEqualLengthByCommonCircle(lengthSymbolA, lengthSymbolB, circle);
+                if(lengthEquality == undefined){
+                    lengthEquality = makeEqualLengthByCommonCircle(lengthSymbolA, lengthSymbolB, circle);
+                }
             }
             break;
 
@@ -353,7 +356,7 @@ export class LengthEquality extends Statement {
 
         const reason_str = enumToStr(LengthEqualityReason, this.reason);
         if(lengthEquality == undefined){
-            msg(`can not make Length-Equality: ${reason_str}`)
+            throw new MyError(`can not make Length-Equality: ${reason_str}`)
         }
         else{
 

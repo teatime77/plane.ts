@@ -1078,15 +1078,11 @@ abstract class AbstractAngleBuilder extends Builder {
                     const angleA = new Angle({ angleMark : 1, lineA, directionA, lineB : target, directionB : 1 });
                     const angleB = new Angle({ angleMark : 1, lineA : target, directionA : 1, lineB, directionB });
 
-                    const angle_bisector = new AngleEquality({
-                        reason          : AngleEqualityReason.angle_bisector,
-                        auxiliaryShapes : [ lineA, lineB, target ],
-                        shapes          : [ angleA, angleB ]
-                    });
+                    const angleEquality = makeAngleEqualityByAngleBisector(angleA, angleB, target);
 
                     addShapeSetRelations(view, angleA);
                     addShapeSetRelations(view, angleB);
-                    addShapeSetRelations(view, angle_bisector);
+                    addShapeSetRelations(view, angleEquality);
                 }
 
                 this.line1 = undefined;

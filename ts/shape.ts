@@ -573,15 +573,7 @@ export class Point extends Shape {
 
         this.bound.adjustPosition(this, this.position);
 
-        if(bound instanceof AbstractLine){
-            addPointOnLines(this, bound);
-        }
-        else if(bound instanceof CircleArc){
-            addPointOnCircleArcs(this, bound);
-        }
-        else if(bound != undefined){
-            throw new MyError();
-        }
+        this.setRelations();
     }
 
     updateCaption(){
@@ -682,6 +674,20 @@ export class Point extends Shape {
     shapePointerup(position : Vec2){
         this.positionSave = undefined;
     }
+
+    setRelations(): void {
+        super.setRelations();
+
+        if(this.bound instanceof AbstractLine){
+            addPointOnLines(this, this.bound);
+        }
+        else if(this.bound instanceof CircleArc){
+            addPointOnCircleArcs(this, this.bound);
+        }
+        else if(this.bound != undefined){
+            throw new MyError();
+        }
+    }
 }
 
 export enum LineKind {
@@ -767,6 +773,7 @@ export abstract class AbstractLine extends Shape {
 
     setRelations(): void {
         super.setRelations();
+        this.pointA.setRelations();
         addPointOnLines(this.pointA, this);
     }
 
@@ -861,6 +868,7 @@ export class LineByPoints extends AbstractLine {
 
     setRelations(): void {
         super.setRelations();
+        this.pointB.setRelations();
         addPointOnLines(this.pointB, this);
     }
 }
