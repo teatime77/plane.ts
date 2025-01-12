@@ -841,27 +841,15 @@ export class LineByPoints extends AbstractLine {
     }
 
     reading(): Reading {
-        if(this.lineKind == LineKind.line_segment || this.lineKind == LineKind.line){
-
-            if(this.pointA.name != "" && this.pointB.name != ""){
-                return new Reading(this, TT('Draw a line from point "A" to point "B".'), [ this.pointA, this.pointB ]);
-            }
-            else{
-                return new Reading(this, TT('Draw a line.'), []);
-            }
-        }
-        else if(this.lineKind == LineKind.ray){
-            
-            if(this.pointA.name != "" && this.pointB.name != ""){
-
-                return new Reading(this, TT('Draw a half-line from point "A" to point "B".'), [ this.pointA, this.pointB ]);
-            }
-            else{
-
-                return new Reading(this, TT('Draw a half-line.'), []);
-            }
-        }
-        else{
+        switch(this.lineKind){
+        case LineKind.line:
+            return new Reading(this, TT('Draw a line through two points.'), []);
+        case LineKind.ray:
+        case LineKind.ray_reverse:
+            return new Reading(this, TT('Draw a half-line through two points.'), []);
+        case LineKind.line_segment:
+            return new Reading(this, TT('Draw a line segment through two points.'), []);
+        default:
             throw new MyError();
         }
     }
@@ -915,7 +903,7 @@ export class ParallelLine extends AbstractLine {
     }
 
     reading(): Reading {
-        return new Reading(this, TT('Draw a line through point "A" that is parallel to line "B".'), []);
+        return new Reading(this, TT('Draw a line through a point that is parallel to another line.'), []);
     }
 
     setRelations(): void {

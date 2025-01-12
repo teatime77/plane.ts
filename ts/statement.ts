@@ -98,7 +98,7 @@ export function makeReasonDlg(){
 
         for(const [key, value] of Object.entries(dic)){
             if (isNaN(Number(key))){
-                console.log(`of [${key}]${typeof key}: [${value}]${typeof value}`); 
+                // console.log(`of [${key}]${typeof key}: [${value}]${typeof value}`); 
                 const span = document.createElement("span");
                 if(idx == 0){
 
