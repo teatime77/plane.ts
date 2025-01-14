@@ -1553,8 +1553,11 @@ export class AngleEqualityBuilder extends Builder {
 
 export class EqualityConstraintBuilder extends Builder {
     lengthSymbolA? : LengthSymbol;
+    angleA? : Angle;
 
     async click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
+        let constraint : Constraint | undefined;
+
         if(shape instanceof LengthSymbol){
             if(this.lengthSymbolA == undefined){
                 this.lengthSymbolA = shape;
@@ -1562,15 +1565,32 @@ export class EqualityConstraintBuilder extends Builder {
             }
             else{
 
-                const constraint = new LengthEqualityConstraint({
+                constraint = new LengthEqualityConstraint({
                     lengthSymbolA : this.lengthSymbolA,
                     lengthSymbolB : shape
                 });
-
-                addShapeSetRelations(view, constraint);
-                this.lengthSymbolA = undefined;
-                this.resetTool(constraint);
             }
+        }
+        else if(shape instanceof Angle){
+            if(this.angleA == undefined){
+                this.angleA = shape;
+                shape.setMode(Mode.depend);
+            }
+            else{
+
+                constraint = new AngleEqualityConstraint({
+                    shapes : [ this.angleA, shape ]
+                });
+            }
+        }
+
+        if(constraint != undefined){
+
+            addShapeSetRelations(view, constraint);
+            this.resetTool(constraint);
+
+            this.lengthSymbolA = undefined;
+            this.angleA = undefined;
         }
     }
 }
@@ -1708,7 +1728,7 @@ const toolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [
     [ TriangleCongruenceBuilder , "triangle-congruence", TT("triangle congruence"), [ TriangleCongruence ] ],
     [ LengthEqualityBuilder     , "equal-length"       , TT("equal length")       , [ LengthEquality ] ],
     [ AngleEqualityBuilder      , "equal-angle"        , TT("equal angle")        , [ AngleEquality ] ],
-    [ EqualityConstraintBuilder , "equality-constraint", TT("equality constraint"), [ LengthEqualityConstraint ] ],
+    [ EqualityConstraintBuilder , "equality-constraint", TT("equality constraint"), [ LengthEqualityConstraint, AngleEqualityConstraint ] ],
     [ ParallelConstraintBuilder , "parallel-constraint"      , TT("parallel constraint"), [ ParallelConstraint ]],
     [ PerpendicularConstraintBuilder , "perpendicular-constraint" , TT("perpendicular constraint"), [ PerpendicularConstraint ]],
     [ QuadrilateralClassifierBuilder, "quadrilateral-classifier", TT("quadrilateral classifier"), [ ParallelogramClassifier, RhombusClassifier ]],

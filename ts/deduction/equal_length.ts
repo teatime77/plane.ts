@@ -229,7 +229,7 @@ export function makeEqualLengthByParallelogramDiagonalBisection(lengthSymbolA : 
                     msg(`parallelogram-diagonal-bisection`);
                     return new LengthEquality({
                         reason : LengthEqualityReason.parallelogram_diagonal_bisection,
-                        auxiliaryShapes : [classifier],
+                        auxiliaryShapes : [parallelogram],
                         shapes : [ lengthSymbolA, lengthSymbolB ]            
                     });
                 }
@@ -317,8 +317,7 @@ export class LengthEquality extends Statement {
             }
             break;
 
-        case LengthEqualityReason.parallelogram_diagonal_bisection:
-            quadrilateralSelector.clear();{
+        case LengthEqualityReason.parallelogram_diagonal_bisection:{
                 const parallelogram = this.auxiliaryShapes[0] as Quadrilateral;
                 const [lengthSymbolA, lengthSymbolB] = this.selectedShapes as LengthSymbol[];
                 lengthEquality = makeEqualLengthByParallelogramDiagonalBisection(lengthSymbolA, lengthSymbolB, parallelogram);

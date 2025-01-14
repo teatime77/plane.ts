@@ -97,6 +97,16 @@ export class LengthEqualityConstraint extends Constraint {
     }
 }
 
+export class AngleEqualityConstraint extends Constraint {
+    setRelations(): void {
+        super.setRelations();
+        assert(this.selectedShapes.length == 2 && this.selectedShapes.every(x => x instanceof Angle));
+        const [angleA, angleB] = this.selectedShapes as Angle[];
+
+        addEqualAngles(angleA, angleB);
+    }
+}
+
 abstract class LineConstraint extends Constraint {
     lineA : AbstractLine;
     lineB : LineByPoints;

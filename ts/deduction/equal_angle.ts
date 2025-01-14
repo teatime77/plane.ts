@@ -82,7 +82,7 @@ export function addSupplementaryAngles(angle1 : Angle, angle2 : Angle){
     supplementaryAngles.push([ new Set<Angle>([angle1]), new Set<Angle>([angle2])  ])    
 }
 
-function addEqualAngles(angle1 : Angle, angle2 : Angle){
+export function addEqualAngles(angle1 : Angle, angle2 : Angle){
     const angle_sets = supplementaryAngles.flat().filter(x => x.has(angle1) || x.has(angle2));
 
     let angle_set : Set<Angle>; 

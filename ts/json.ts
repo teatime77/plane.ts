@@ -218,6 +218,9 @@ export function parseObject(obj: any, parse_other_object? : (o : any)=>any) : an
     case LengthEqualityConstraint.name:
         return new LengthEqualityConstraint(obj);
 
+    case AngleEqualityConstraint.name:
+        return new AngleEqualityConstraint(obj);
+
     case ParallelConstraint.name:
         return new ParallelConstraint(obj);
 
