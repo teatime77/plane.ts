@@ -1327,11 +1327,9 @@ export class LengthEqualityBuilder extends Builder {
                     this.lengthSymbolB = shape;
                     shape.setMode(Mode.depend);
 
-                    const id = await showMenu(lengthEqualityReasonDlg);
-
-                    const key = id.replace("length-equality-reason-", "");
+                    const key = await showMenu(lengthEqualityReasonDlg);
                     this.lengthEqualityReason = LengthEqualityReason[key as keyof typeof LengthEqualityReason];
-                    msg(`id:${id} [${key}] [${this.lengthEqualityReason}]`);
+                    msg(`key:[${key}] [${this.lengthEqualityReason}]`);
 
                     switch(this.lengthEqualityReason){
                     case LengthEqualityReason.radii_equal:
@@ -1340,7 +1338,7 @@ export class LengthEqualityBuilder extends Builder {
                     case LengthEqualityReason.common_circle:
                         showPrompt(TT("click the common circle. "));
                         break;
-                    case LengthEqualityReason.parallel_lines:
+                    case LengthEqualityReason.parallel_lines_distance:
                         linesSelector_2.clear();
                         showPrompt(TT("click two parallel lines. "));
                         break;
@@ -1351,7 +1349,7 @@ export class LengthEqualityBuilder extends Builder {
                         showPrompt(TT("click on the vertices of two congruent triangles."));
                         this.trianglePairSelector = new TrianglePairSelector();
                         break;
-                    case LengthEqualityReason.parallelogram_sides:
+                    case LengthEqualityReason.parallelogram_opposite_sides:
                     case LengthEqualityReason.parallelogram_diagonal_bisection:
                         quadrilateralSelector.clear();
                         break;
@@ -1373,7 +1371,7 @@ export class LengthEqualityBuilder extends Builder {
                     lengthEquality = makeEqualLengthByCommonCircle(this.lengthSymbolA, this.lengthSymbolB, shape);
                 }
                 break;
-            case LengthEqualityReason.parallel_lines:
+            case LengthEqualityReason.parallel_lines_distance:
                 linesSelector_2.click(event, view, position, shape);
                 if(linesSelector_2.done()){
                     lengthEquality = makeEqualLengthByParallelLines(this.lengthSymbolA, this.lengthSymbolB, linesSelector_2.shapes as AbstractLine[]);
@@ -1396,10 +1394,10 @@ export class LengthEqualityBuilder extends Builder {
                     }
                 }
                 break;
-            case LengthEqualityReason.parallelogram_sides:
+            case LengthEqualityReason.parallelogram_opposite_sides:
                 quadrilateralSelector.click(event, view, position, shape);
                 if(quadrilateralSelector.done()){
-                    lengthEquality = makeEqualLengthByParallelogramSides(this.lengthSymbolA, this.lengthSymbolB, quadrilateralSelector.polygon as Quadrilateral);
+                    lengthEquality = makeEqualLengthByParallelogramOppositeSides(this.lengthSymbolA, this.lengthSymbolB, quadrilateralSelector.polygon as Quadrilateral);
                 }
                 break;
             case LengthEqualityReason.parallelogram_diagonal_bisection:
@@ -1460,10 +1458,9 @@ export class AngleEqualityBuilder extends Builder {
                     this.angleB = shape;
                     shape.setMode(Mode.depend);
 
-                    const id = await showMenu(angleEqualityReasonDlg);
-                    const key = id.replace("angle-equality-reason-", "");
+                    const key = await showMenu(angleEqualityReasonDlg);
                     this.angleEqualityReason = AngleEqualityReason[key as keyof typeof AngleEqualityReason];
-                    msg(`id:${id} [${key}] [${this.angleEqualityReason}]`);
+                    msg(`key:[${key}] [${this.angleEqualityReason}]`);
                     switch(this.angleEqualityReason){
                     case AngleEqualityReason.vertical_angles:
                         angleEquality = makeAngleEqualityByVertical_angles(this.angleA, this.angleB);
@@ -1534,14 +1531,14 @@ export class AngleEqualityBuilder extends Builder {
             default:
                 throw new MyError();
             }
+        }
 
-            if(angleEquality != undefined){
+        if(angleEquality != undefined){
 
-                addShapeSetRelations(view, angleEquality);
-                this.resetTool(angleEquality);
+            addShapeSetRelations(view, angleEquality);
+            this.resetTool(angleEquality);
 
-                this.clear();
-            }
+            this.clear();
         }
     }
 
@@ -1636,15 +1633,31 @@ class QuadrilateralClassifierBuilder extends ClassifierBuilder {
             this.points.push(shape);
             shape.setMode(Mode.depend);
             if(this.points.length == 4){
-                const lines = range(4).map(i => getCommonLineOfPoints(this.points[i], this.points[(i + 1) % 4])) as AbstractLine[];
-                if(lines.some(x => x == undefined)){
-                    throw new MyError();
-                }
-                const quadrilateral = new Quadrilateral({points : this.points, lines});
-                if(quadrilateral.shapeClass != QuadrilateralClass.none){
+                const key1 = await showMenu(shapeTypeDlg);
+                const shapeType = ShapeType[key1 as keyof typeof ShapeType];
+                msg(`key:[${key1}] [${shapeType}]`);
 
-                    addShapeSetRelations(view, quadrilateral);
-                    this.resetTool(quadrilateral);    
+                let key2 : string;
+                let reason : ParallelogramReason | RhombusReason;
+                switch(shapeType){
+                case ShapeType.parallelogram:
+                    key2 = await showMenu(parallelogramReasonDlg);
+                    reason = ParallelogramReason[key2 as keyof typeof ParallelogramReason];                    
+                    break;
+
+                case ShapeType.rhombus:
+                    key2 = await showMenu(rhombusReasonDlg);
+                    reason = RhombusReason[key2 as keyof typeof RhombusReason];
+                    break;
+                }
+
+                msg(`key:[${key2}] [${reason}]`);
+
+                const classifier = makeQuadrilateralClassifier(this.points, reason);
+                if(classifier != undefined){
+
+                    addShapeSetRelations(view, classifier);
+                    this.resetTool(classifier);    
                 }
 
                 this.points = [];
@@ -1698,8 +1711,8 @@ const toolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [
     [ EqualityConstraintBuilder , "equality-constraint", TT("equality constraint"), [ LengthEqualityConstraint ] ],
     [ ParallelConstraintBuilder , "parallel-constraint"      , TT("parallel constraint"), [ ParallelConstraint ]],
     [ PerpendicularConstraintBuilder , "perpendicular-constraint" , TT("perpendicular constraint"), [ PerpendicularConstraint ]],
+    [ QuadrilateralClassifierBuilder, "quadrilateral-classifier", TT("quadrilateral classifier"), [ ParallelogramClassifier, RhombusClassifier ]],
     [ StatementBuilder          , "statement"          , TT("statement")          , [ Statement ] ],
-    [ QuadrilateralClassifierBuilder, "quadrilateral-classifier", TT("quadrilateral classifier"), [ Quadrilateral ]],
     [ MotionBuilder             , "animation"          , TT("animation")          , [ Motion ] ],
 ];
 

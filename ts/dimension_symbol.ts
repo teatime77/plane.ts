@@ -361,6 +361,10 @@ export class LengthSymbol extends Shape {
             }
         }
     }
+
+    points() : [Point, Point] {
+        return [this.pointA, this.pointB];
+    }
 }
 
 

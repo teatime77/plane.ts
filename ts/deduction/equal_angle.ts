@@ -304,40 +304,39 @@ export class AngleEquality extends Statement {
 
         const reason_str = enumToStr(AngleEqualityReason, this.reason);
         switch(this.reason){
-            case AngleEqualityReason.vertical_angles:
-                angleEquality = makeAngleEqualityByVertical_angles(angleA, angleB);
-                break;
+        case AngleEqualityReason.vertical_angles:
+            angleEquality = makeAngleEqualityByVertical_angles(angleA, angleB);
+            break;
 
-            case AngleEqualityReason.parallel_lines:{
-                    const parallel_lines = this.auxiliaryShapes.slice(0, 2) as AbstractLine[];
-                    const cross_line = this.auxiliaryShapes[2] as AbstractLine;
-                    angleEquality = makeAngleEqualityByParallelLines(angleA, angleB, parallel_lines, cross_line);
-                }
-                break;
-                
-            case AngleEqualityReason.angle_bisector:{
-
-                    const angle_bisector = this.auxiliaryShapes[2] as AngleBisector;
-                    angleEquality = makeAngleEqualityByAngleBisector(angleA, angleB, angle_bisector);
-                }
-                break;
-
-            case AngleEqualityReason.congruent_triangles:{
-                    const [triangleA, triangleB] = this.auxiliaryShapes as Triangle[];
-                    angleEquality = makeAngleEqualityByCongruentTriangles(angleA, angleB, triangleA, triangleB);
-                }
-                break;
-
-            case AngleEqualityReason.parallelogram_opposite_angles:{
-                    const parallelogram = this.auxiliaryShapes[0] as Quadrilateral;
-                    angleEquality = makeAngleEqualityByParallelogramOppositeAngles(angleA, angleB, parallelogram);
-                }
-                break;
-
-            default:
-                throw new MyError(`unknown Angle-Equality reason: ${this.reason} ${reason_str}`);
+        case AngleEqualityReason.parallel_lines:{
+                const parallel_lines = this.auxiliaryShapes.slice(0, 2) as AbstractLine[];
+                const cross_line = this.auxiliaryShapes[2] as AbstractLine;
+                angleEquality = makeAngleEqualityByParallelLines(angleA, angleB, parallel_lines, cross_line);
             }
+            break;
+            
+        case AngleEqualityReason.angle_bisector:{
 
+                const angle_bisector = this.auxiliaryShapes[2] as AngleBisector;
+                angleEquality = makeAngleEqualityByAngleBisector(angleA, angleB, angle_bisector);
+            }
+            break;
+
+        case AngleEqualityReason.congruent_triangles:{
+                const [triangleA, triangleB] = this.auxiliaryShapes as Triangle[];
+                angleEquality = makeAngleEqualityByCongruentTriangles(angleA, angleB, triangleA, triangleB);
+            }
+            break;
+
+        case AngleEqualityReason.parallelogram_opposite_angles:{
+                const parallelogram = this.auxiliaryShapes[0] as Quadrilateral;
+                angleEquality = makeAngleEqualityByParallelogramOppositeAngles(angleA, angleB, parallelogram);
+            }
+            break;
+
+        default:
+            throw new MyError(`unknown Angle-Equality reason: ${this.reason} ${reason_str}`);
+        }
 
         if(angleEquality == undefined){
             throw new MyError(`can not make Angle-Equality: ${reason_str}`)
@@ -348,8 +347,6 @@ export class AngleEquality extends Statement {
         }
 
         return angleEquality;
-
-
     }
 }
 

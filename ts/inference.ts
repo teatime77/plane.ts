@@ -12,12 +12,25 @@ export const pointOnCircleArcs = new Map<Point,Set<CircleArc>>();
 export const pointOnLines = new Map<Point,Set<AbstractLine>>();
 export const angleMap = new Map<string,Angle>();
 
-export let quadrilaterals = new Set<Quadrilateral>();
+export let parallelogramClassifiers = new Set<ParallelogramClassifier>();
 
 export let equalLengths : Set<LengthSymbol>[] = [];
 export let equalCircleArcs : Set<CircleArc>[] = [];
 export let congruentTriangles : Triangle[][] = [];
 
+export const reasonToDoc = new Map<number, number>([
+    [AngleEqualityReason.vertical_angles, 8],
+    [AngleEqualityReason.parallelogram_opposite_angles, 35],
+
+    [LengthEqualityReason.parallel_lines_distance, 42],
+    [LengthEqualityReason.parallelogram_opposite_sides, 35],
+    [LengthEqualityReason.parallelogram_diagonal_bisection, 46],
+
+    [ParallelogramReason.each_opposite_sides_are_equal, 44],
+    [ParallelogramReason.each_diagonal_bisections, 47],
+]);
+
+export const usedReasons = new Set<number>();
 
 function addSetMap<T, V>(a : T, b : V, map:Map<T, Set<V>>){
     let set = map.get(a);
@@ -38,7 +51,7 @@ export function initRelations(){
     pointOnLines.clear();
     angleMap.clear();
 
-    quadrilaterals.clear();
+    parallelogramClassifiers.clear();
 
     equalLengths = [];
     equalCircleArcs = [];
@@ -291,6 +304,14 @@ export function findEqualLengthsByPointsPair(As : [Point, Point], Bs : [Point, P
     }
 
     return undefined;
+}
+
+export function getParallelogramClassifier(points : Point[]) : ParallelogramClassifier | undefined {
+    return list(parallelogramClassifiers).find(x => areSetsEqual(x.quadrilateral().points, points) );
+}
+
+export function isParallelogramPoints(points : Point[]) : boolean {
+    return getParallelogramClassifier(points) != undefined;
 }
 
 }

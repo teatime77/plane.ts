@@ -52,7 +52,9 @@ export async function showMenu(dlg : HTMLDialogElement){
     
     const id = await waitForClick(dlg);
     dlg.close();
-    return id;
+
+    const k = id.lastIndexOf("-");
+    return id.substring(k + 1);
 }
         
 export class MyError extends Error {
@@ -316,6 +318,29 @@ export function toClockwisePoints(points : Point[]) : Point[] {
     else{
         return [2, 1, 0].map(i => points[i]);
     }
+}
+
+export function reasonText(value : number) : string {
+    if(RhombusReason.none <= value){
+        return RhombusReason[value];
+    }
+    else if(ParallelogramReason.none <= value){
+        return ParallelogramReason[value];
+    }
+    else if(QuadrilateralClass.none <= value){
+        return QuadrilateralClass[value];
+    }
+    else if(AngleEqualityReason.none <= value){
+        return AngleEqualityReason[value];
+    }
+    else if(LengthEqualityReason.none <= value){
+        return LengthEqualityReason[value];
+    }
+    else if(TriangleCongruenceReason.none <= value){
+        return TriangleCongruenceReason[value];
+    }
+
+    throw new MyError();
 }
 
 }

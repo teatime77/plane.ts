@@ -227,6 +227,15 @@ export function parseObject(obj: any, parse_other_object? : (o : any)=>any) : an
     case Motion.name:
         return new Motion(obj);
 
+    case Quadrilateral.name:
+        return new Quadrilateral(obj);
+
+    case ParallelogramClassifier.name:
+        return new ParallelogramClassifier(obj);
+
+    case RhombusClassifier.name:
+        return new RhombusClassifier(obj);
+
     default:
         if(parse_other_object != undefined){
             return parse_other_object(obj);
@@ -258,7 +267,8 @@ export function handleFileSelect(ev: DragEvent) {
             const json = reader.result as string;
             const obj  = JSON.parse(json);
 
-            loadData(obj);
+            assert(false);
+            loadData(NaN, obj);
 
             // viewEvent(obj);
         };
@@ -267,7 +277,8 @@ export function handleFileSelect(ev: DragEvent) {
     }
 }
 
-export function loadData(obj : any){
+export function loadData(doc_id : number, obj : any){
+
     Plane.one.clearPlane();
 
     Widget.maxId  = -1;

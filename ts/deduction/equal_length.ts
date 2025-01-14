@@ -174,7 +174,7 @@ export function makeEqualLengthByParallelLines(lengthSymbolA : LengthSymbol, len
 
     msg(`parallel-lines`);
     return new LengthEquality({
-        reason : LengthEqualityReason.parallel_lines,
+        reason : LengthEqualityReason.parallel_lines_distance,
         auxiliaryShapes : parallel_lines,
         shapes : [ lengthSymbolA, lengthSymbolB ]            
     });
@@ -185,7 +185,7 @@ export function makeEqualLengthByParallelLinesAuto(lengthSymbolA : LengthSymbol,
     if(parallel_lines != undefined){
         msg(`parallel-lines`);
         return new LengthEquality({
-            reason : LengthEqualityReason.parallel_lines,
+            reason : LengthEqualityReason.parallel_lines_distance,
             auxiliaryShapes : parallel_lines,
             shapes : [ lengthSymbolA, lengthSymbolB ]            
         });
@@ -194,7 +194,7 @@ export function makeEqualLengthByParallelLinesAuto(lengthSymbolA : LengthSymbol,
     return undefined;
 }
 
-export function makeEqualLengthByParallelogramSides(lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol, parallelogram : Quadrilateral) : LengthEquality | undefined {
+export function makeEqualLengthByParallelogramOppositeSides(lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol, parallelogram : Quadrilateral) : LengthEquality | undefined {
     if(parallelogram.isParallelogram()){
 
         const points =  [lengthSymbolA.pointA, lengthSymbolA.pointB, lengthSymbolB.pointA, lengthSymbolB.pointB];
@@ -202,7 +202,7 @@ export function makeEqualLengthByParallelogramSides(lengthSymbolA : LengthSymbol
 
             msg(`parallelogram-sides`);
             return new LengthEquality({
-                reason : LengthEqualityReason.parallelogram_sides,
+                reason : LengthEqualityReason.parallelogram_opposite_sides,
                 auxiliaryShapes : [parallelogram],
                 shapes : [ lengthSymbolA, lengthSymbolB ]            
             });
@@ -213,58 +213,33 @@ export function makeEqualLengthByParallelogramSides(lengthSymbolA : LengthSymbol
 }
 
 export function makeEqualLengthByParallelogramDiagonalBisection(lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol, parallelogram : Quadrilateral) : LengthEquality | undefined {
-    if(parallelogram.isParallelogram()){
-        const bisection_lengthSymbols = [parallelogram.diagonalBisectionLengthSymbolsA, parallelogram.diagonalBisectionLengthSymbolsB];
-        if(bisection_lengthSymbols.some(x => x != undefined && areSetsEqual(x, [lengthSymbolA, lengthSymbolB]))){
-            msg(`parallelogram-diagonal-bisection`);
-            return new LengthEquality({
-                reason : LengthEqualityReason.parallelogram_diagonal_bisection,
-                auxiliaryShapes : [parallelogram],
-                shapes : [ lengthSymbolA, lengthSymbolB ]            
-            });
-        }
+    const classifier = getParallelogramClassifier(parallelogram.points);
+    if(classifier != undefined){
+        const diagonal_intersection = parallelogram.diagonalIntersection();
+        if(diagonal_intersection != undefined){
+            let lengthSymbol_points_pair = [lengthSymbolA.points(), lengthSymbolB.points()];
+            if(lengthSymbol_points_pair.every(x => x.includes(diagonal_intersection))){
 
+                let lengthSymbol_vertices = lengthSymbol_points_pair.map(x=> x[0] == diagonal_intersection ? x[1] : x[0]);
+
+                if(areSetsEqual(lengthSymbol_vertices, [parallelogram.points[0], parallelogram.points[2]]) ||
+                   areSetsEqual(lengthSymbol_vertices, [parallelogram.points[1], parallelogram.points[3]]) ){
+
+
+                    msg(`parallelogram-diagonal-bisection`);
+                    return new LengthEquality({
+                        reason : LengthEqualityReason.parallelogram_diagonal_bisection,
+                        auxiliaryShapes : [classifier],
+                        shapes : [ lengthSymbolA, lengthSymbolB ]            
+                    });
+                }
+            }
+        }
     }
 
     return undefined;
 }
 
-function makeEqualLength(lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol) : LengthEquality | undefined {
-    const all_shapes = View.current.allRealShapes();
-    const all_circle_arcs = all_shapes.filter(x => x instanceof CircleArc) as CircleArc[];
-
-    const points =  [lengthSymbolA.pointA, lengthSymbolA.pointB, lengthSymbolB.pointA, lengthSymbolB.pointB];
-    const parallelograms = Array.from(quadrilaterals).filter(x => x.shapeClass == QuadrilateralClass.parallelogram || QuadrilateralClass.rhombus);
-    {
-        const parallelogram = parallelograms.find(x => areSetsEqual(points, x.points));
-        if(parallelogram != undefined){
-            msg(`parallelogram-sides`);
-            return new LengthEquality({
-                reason : LengthEqualityReason.parallelogram_sides,
-                auxiliaryShapes : [parallelogram],
-                shapes : [ lengthSymbolA, lengthSymbolB ]            
-            });
-        }
-    }
-
-    {
-        const parallelogram = parallelograms.find(x => 
-            x.diagonalBisectionLengthSymbolsA != undefined && areSetsEqual(x.diagonalBisectionLengthSymbolsA, [lengthSymbolA, lengthSymbolB]) ||
-            x.diagonalBisectionLengthSymbolsB != undefined && areSetsEqual(x.diagonalBisectionLengthSymbolsB, [lengthSymbolA, lengthSymbolB])
-        );
-        if(parallelogram != undefined){
-            msg(`parallelogram-diagonal-bisection`);
-            return new LengthEquality({
-                reason : LengthEqualityReason.parallelogram_diagonal_bisection,
-                auxiliaryShapes : [parallelogram],
-                shapes : [ lengthSymbolA, lengthSymbolB ]            
-            });
-        }
-    }
-
-    msg(`can not make Equal-Length`)
-    return undefined;
-}
 
 export function showPrompt(text : string){
     const dlg = $dlg("help-dlg");
@@ -314,7 +289,7 @@ export class LengthEquality extends Statement {
             }
             break;
 
-        case LengthEqualityReason.parallel_lines:{
+        case LengthEqualityReason.parallel_lines_distance:{
                 const parallel_lines = this.auxiliaryShapes as AbstractLine[];
                 const [lengthSymbolA, lengthSymbolB] = this.selectedShapes as LengthSymbol[];
                 lengthEquality = makeEqualLengthByParallelLines(lengthSymbolA, lengthSymbolB, parallel_lines);
@@ -335,10 +310,10 @@ export class LengthEquality extends Statement {
             }
             break;
 
-        case LengthEqualityReason.parallelogram_sides:{
+        case LengthEqualityReason.parallelogram_opposite_sides:{
                 const parallelogram = this.auxiliaryShapes[0] as Quadrilateral;
                 const [lengthSymbolA, lengthSymbolB] = this.selectedShapes as LengthSymbol[];
-                lengthEquality = makeEqualLengthByParallelogramSides(lengthSymbolA, lengthSymbolB, parallelogram);
+                lengthEquality = makeEqualLengthByParallelogramOppositeSides(lengthSymbolA, lengthSymbolB, parallelogram);
             }
             break;
 

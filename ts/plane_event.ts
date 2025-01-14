@@ -22,7 +22,7 @@ export function initPlane(plane : Plane, root : layout_ts.Grid){
 
     Builder.setToolByName(SelectionTool.name);
 
-    makeReasonDlg();
+    makeSelectionDlg();
 }
 
 export function bodyOnLoad(){

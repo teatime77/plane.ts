@@ -1494,4 +1494,20 @@ export class Triangle extends Polygon {
     }
 }
 
+export class Quadrilateral extends Polygon {
+    isParallelogram() : boolean {
+        return isParallelogramPoints(this.points);
+    }
+
+    diagonalIntersection() : Point | undefined {
+        const point_pairs = [ [this.points[0], this.points[2]], [this.points[1], this.points[3]] ]
+        const diagonals = point_pairs.map(x => getCommonLineOfPoints(x[0], x[1]) );
+        if(diagonals.every(x => x != undefined)){
+            return getCommonPointOfLines(diagonals[0], diagonals[1]);
+        }
+
+        return undefined;
+    }
+}
+
 }

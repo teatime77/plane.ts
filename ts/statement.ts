@@ -5,6 +5,10 @@ const parseMath = parser_ts.parseMath;
 export let lengthEqualityReasonDlg : HTMLDialogElement;
 export let angleEqualityReasonDlg : HTMLDialogElement;
 
+export let shapeTypeDlg : HTMLDialogElement;
+export let parallelogramReasonDlg : HTMLDialogElement;
+export let rhombusReasonDlg : HTMLDialogElement;
+
 export enum TriangleCongruenceReason {
     none,
     side_side_side,
@@ -16,10 +20,10 @@ export enum LengthEqualityReason {
     none = 100,
     radii_equal,
     common_circle,
-    parallel_lines,
+    parallel_lines_distance,
     circle_by_radius,
     congruent_triangles,
-    parallelogram_sides,
+    parallelogram_opposite_sides,
     parallelogram_diagonal_bisection,
 }
 
@@ -31,6 +35,11 @@ export function enumToStr(dic : typeof LengthEqualityReason | typeof AngleEquali
     }
 
     return 'Unknown'; 
+}
+
+export enum ShapeType {
+    parallelogram,
+    rhombus
 }
 
 export enum AngleEqualityReason {
@@ -49,6 +58,20 @@ export enum QuadrilateralClass {
     rhombus
 }
 
+export enum ParallelogramReason {
+    none = 400,
+    each_opposite_sides_are_equal,
+    each_opposite_sides_are_parallel,
+    each_opposite_angles_are_equal,
+    one_opposite_sides_are_parallel_and_equal,
+    each_diagonal_bisections,
+}
+
+export enum RhombusReason {
+    none = 500,
+    all_sides_are_equal,
+}
+
 export enum ImplicationCode {
     none,
     equal_angles,
@@ -61,30 +84,11 @@ export const ImplicationTexts : string[] = [
     "equal-lengths",
 ];
 
-export const textMap = new Map<number,string>([
-    [ TriangleCongruenceReason.none, "none" ],
-    [ TriangleCongruenceReason.side_side_side, "side_side_side" ],
-    [ TriangleCongruenceReason.side_angle_side, "side_angle_side" ],
-    [ TriangleCongruenceReason.angle_side_angle, "angle_side_angle" ],
+export function makeSelectionDlg(){
+    const titles = [ "reason for length equality", "reason for angle equality", "shape type", "reason for parallelogram", "reason for rhombus" ];
+    const span_id_prefixes = [ "length-equality-reason", "angle-equality-reason", "shape-type", "parallelogram-reason", "rhombus-reason" ]
 
-    [ LengthEqualityReason.none, "none" ],
-    [ LengthEqualityReason.radii_equal, "radii_equal" ],
-    [ LengthEqualityReason.common_circle, "common_circle" ],
-    [ LengthEqualityReason.parallel_lines, "parallel_lines" ],
-    [ LengthEqualityReason.circle_by_radius, "circle_by_radius" ],
-    [ LengthEqualityReason.congruent_triangles, "congruent_triangles" ],
-
-    [ AngleEqualityReason.none, "none" ],
-    [ AngleEqualityReason.vertical_angles, "vertical_angle" ],
-    [ AngleEqualityReason.parallel_lines, "parallel_lines" ],
-    [ AngleEqualityReason.angle_bisector, "angle_bisector" ],
-    [ AngleEqualityReason.congruent_triangles, "congruent_triangles" ],
-]);
-
-export function makeReasonDlg(){
-    const titles = [ "reason for length equality", "reason for angle equality" ];
-
-    for(const [idx, dic] of [LengthEqualityReason, AngleEqualityReason].entries()){
+    for(const [idx, dic] of [ LengthEqualityReason, AngleEqualityReason, ShapeType, ParallelogramReason, RhombusReason ].entries()){
         const dlg = document.createElement("dialog");
         dlg.className = "menu_dlg";
 
@@ -98,16 +102,9 @@ export function makeReasonDlg(){
 
         for(const [key, value] of Object.entries(dic)){
             if (isNaN(Number(key))){
-                // console.log(`of [${key}]${typeof key}: [${value}]${typeof value}`); 
+                console.log(`of key:[${key}]${typeof key} value:[${value}]${typeof value} dic[value]:[${dic[value]}]`); 
                 const span = document.createElement("span");
-                if(idx == 0){
-
-                    span.id = `length-equality-reason-${key}`;
-                }
-                else{
-
-                    span.id = `angle-equality-reason-${key}`;
-                }
+                span.id = `${span_id_prefixes[idx]}-${key}`;
                 span.innerText = key;
                 span.className = "menu_item";
 
@@ -115,13 +112,22 @@ export function makeReasonDlg(){
             }
         }
 
-        if(idx == 0){
-
+        switch(idx){
+        case 0:
             lengthEqualityReasonDlg = dlg;
-        }
-        else{
-
+            break;
+        case 1:
             angleEqualityReasonDlg = dlg;
+            break;
+        case 2:
+            shapeTypeDlg = dlg;
+            break;
+        case 3:
+            parallelogramReasonDlg = dlg;
+            break;
+        case 4:
+            rhombusReasonDlg = dlg;
+            break;
         }
 
         dlg.append(div);
@@ -286,6 +292,12 @@ export class Statement extends Shape {
         for(const [idx, shape] of selected_shapes.entries()){
             shape.index = idx;
         }
+    }
+
+    setRelations(): void {
+        super.setRelations();
+
+        usedReasons.add(this.reason);
     }
 }
 

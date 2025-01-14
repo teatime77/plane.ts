@@ -400,8 +400,8 @@ export function showProperty(widget : Widget | Widget[], nest : number){
             }
             else if(name == "reason"){
 
-                const text = textMap.get(value) as string;
-                assert(text != undefined);
+                const text = reasonText(value);
+                assert(typeof text == "string");
                 makeConstantProperty(tbl, nest + 1, name, text);
                 continue;
             }
