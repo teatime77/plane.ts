@@ -56,7 +56,16 @@ export class Midpoint extends Point {
     }
 
     reading() : Reading {
-        return new Reading(this, TT('Let "A" be the midpoint between points "B" and "C".'), [ this, this.pointA, this.pointB]);
+        return new Reading(this, TT('Find the midpoint of two points.'), []);
+    }
+
+    setRelations(): void {
+        super.setRelations();
+        const line = getCommonLineOfPoints(this.pointA, this.pointB);
+        if(line != undefined){
+            // msg(`add mid point On Lines point:${this.id} line:${line.id}`);
+            addPointOnLines(this, line);
+        }
     }
 }
 

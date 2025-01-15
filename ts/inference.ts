@@ -75,6 +75,7 @@ export function addPointOnCircleArcs(point : Point, circle : CircleArc){
 
 export function addPointOnLines(point : Point, line : AbstractLine){
     addSetMap<Point,AbstractLine>(point, line, pointOnLines);
+    // msg(`add-Point-On-Lines point${point.id} line:${line.id}`);
     assert(pointOnLines.get(point) != undefined);
 }
 

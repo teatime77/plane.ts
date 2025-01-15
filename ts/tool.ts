@@ -1172,6 +1172,7 @@ class LengthSymbolBuilder extends LineByPointsBuilder {
                 if(line == undefined){
 
                     line = makeLineSegment(pointA, pointB);
+                    // msg(`make line:${pointA.id} - ${line.id} - ${pointB.id}`);
                     addShapeSetRelations(view, line);
                 }
 
@@ -1258,7 +1259,7 @@ export class StatementBuilder extends Builder {
             const button = makeShapeButton(selected_shape, false);
             button.button.style.position = "";
 
-            SelectedShapesProperty.one.span.append(button.button);
+            ShapesProperty.one.span.append(button.button);
         }
     }
 }

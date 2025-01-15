@@ -245,19 +245,19 @@ export class AngleMarkProperty extends Property {
     }
 }
 
-export class SelectedShapesProperty extends Property {
-    static one : SelectedShapesProperty;
+export class ShapesProperty extends Property {
+    static one : ShapesProperty;
 
     span : HTMLSpanElement;
 
-    constructor(statements : Statement[], name : string, value : MathEntity[]){
-        super(statements, name);
+    constructor(widgets : Widget[], name : string, value : MathEntity[]){
+        super(widgets, name);
 
         this.span = document.createElement("span");
 
         if(name == "selectedShapes"){
 
-            SelectedShapesProperty.one = this;
+            ShapesProperty.one = this;
             this.span.id = "selected-shapes-property-span";
         }
 
@@ -384,7 +384,7 @@ export function showProperty(widget : Widget | Widget[], nest : number){
                 continue;
             }
 
-            let property : InputProperty | TextAreaProperty | SelectProperty | AngleMarkProperty | SelectedShapesProperty;
+            let property : InputProperty | TextAreaProperty | SelectProperty | AngleMarkProperty | ShapesProperty;
             let property_element : HTMLElement;
 
             if(name == "narration" || name == "mathText" || name == "text" && widget instanceof TextBlock){
@@ -411,10 +411,13 @@ export function showProperty(widget : Widget | Widget[], nest : number){
             }
             else if(name == "selectedShapes" || name == "auxiliaryShapes"){
 
-                const statements = widgets.filter(x => x instanceof Statement) as Statement[];
-                property = new SelectedShapesProperty(statements, name, value);
+                property = new ShapesProperty(widgets, name, value);
                 property_element  = property.span;
+            }
+            else if(name == "line"){
 
+                property = new ShapesProperty(widgets, name, [value]);
+                property_element  = property.span;
             }
             else{
                 switch(typeof value){

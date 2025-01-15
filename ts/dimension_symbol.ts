@@ -267,7 +267,8 @@ export class LengthSymbol extends Shape {
 
     getProperties(){
         return super.getProperties().concat([
-            "lengthKind"
+            "lengthKind",
+            "line"
         ])
     }
 
@@ -337,6 +338,33 @@ export class LengthSymbol extends Shape {
         }
     }
 
+    findEqualLengthByMidPoint(){
+        const all_shapes = View.current.allShapes();
+        
+        const length_symbols = all_shapes.filter(x => x instanceof LengthSymbol && x != this && x.line == this.line) as LengthSymbol[];
+        if(length_symbols.length == 0){
+            // msg(`no length-symbol:${this.id}`);
+
+            (all_shapes.filter(x => x instanceof LengthSymbol) as LengthSymbol[]).forEach(x => msg(`${x.id} line:${x.line!.id}`))
+            return;
+        }
+
+        for(const length_symbol of length_symbols){
+            // msg(`length-symbol on line: ${this.id} ${length_symbol.id}`);
+
+            const points = this.points().concat(length_symbol.points());
+
+            const mid_points = all_shapes.filter(x => x instanceof Midpoint && areSetsEqual([x, x.pointA, x.pointB], points)) as Midpoint[];
+            for(const mid_point of mid_points){
+                if(this.points().includes(mid_point) && length_symbol.points().includes(mid_point)){
+                    addEqualLengths(this, length_symbol);
+                    // msg(`equal-length-by-midpoint:${this.id} mid:${mid_point.id} ${length_symbol.id}`);
+                    return;
+                }
+            }    
+        }
+    }
+
     setRelations(): void {
         super.setRelations();
 
@@ -360,6 +388,8 @@ export class LengthSymbol extends Shape {
                 }
             }
         }
+
+        this.findEqualLengthByMidPoint();
     }
 
     points() : [Point, Point] {

@@ -829,11 +829,33 @@ export class LineByPoints extends AbstractLine {
             return false;
         }
 
-        const AB = this.pointA.distance(this.pointB);
+        if(this.lineKind == LineKind.line){
+            return true;
+        }
 
-        const n = this.e.dot(position.sub(this.pointA.position));
+        let n : number;
 
-        return 0 <= n && n <= AB;
+        if(this.lineKind == LineKind.ray || this.lineKind == LineKind.line_segment){
+            n = this.e.dot(position.sub(this.pointA.position));
+        }
+        else if(this.lineKind == LineKind.ray_reverse){
+            n = - this.e.dot(position.sub(this.pointB.position));
+        }
+        else{
+            throw new MyError();
+        }
+
+        switch(this.lineKind){
+        case LineKind.ray:
+        case LineKind.ray_reverse:
+            return 0 <= n;
+
+        case LineKind.line_segment:{
+                const AB = this.pointA.distance(this.pointB);
+
+                return 0 <= n && n <= AB;
+            }
+        }
     }
 
     draw() : void {
