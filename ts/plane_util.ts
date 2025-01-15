@@ -299,6 +299,12 @@ export function areSetsEqual<T>(A: T[], B: T[]): boolean {
     return true;
 }
 
+export function isSubSet<T>(A: T[], B: T[]): boolean {
+    const setB = new Set<T>(B);
+
+    return A.every(x => setB.has(x));
+}
+
 export function isClockwise(points : Point[]) : boolean {
     assert(points.length == 3);
     const [A, B, C] = points.map(x => x.position);
@@ -321,7 +327,10 @@ export function toClockwisePoints(points : Point[]) : Point[] {
 }
 
 export function reasonText(value : number) : string {
-    if(RhombusReason.none <= value){
+    if(ParallelReason.none <= value){
+        return ParallelReason[value];
+    }
+    else if(RhombusReason.none <= value){
         return RhombusReason[value];
     }
     else if(ParallelogramReason.none <= value){

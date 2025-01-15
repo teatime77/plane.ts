@@ -2,6 +2,7 @@
 ///<reference path="deduction/equal_length.ts" />
 ///<reference path="deduction/equal_angle.ts" />
 ///<reference path="deduction/quadrilateral.ts" />
+///<reference path="deduction/parallel_detector.ts" />
 ///<reference path="constraint.ts" />
 
 namespace plane_ts {
@@ -1354,6 +1355,10 @@ export class LengthEqualityBuilder extends Builder {
                     case LengthEqualityReason.parallelogram_diagonal_bisection:
                         quadrilateralSelector.clear();
                         break;
+                    case LengthEqualityReason.equivalence_class:
+                        lengthEquality = makeEqualLengthByEquivalenceClass(this.lengthSymbolA, this.lengthSymbolB);
+                        break;
+    
                     default:
                         throw new MyError();
                     }
@@ -1551,6 +1556,48 @@ export class AngleEqualityBuilder extends Builder {
     }
 }
 
+export class ParallelDetectorBuilder extends Builder {
+    parallelReason? : ParallelReason;
+    lineA? : AbstractLine;
+
+    clear(){
+        this.lineA = undefined;
+    }
+
+    async click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
+        if(shape instanceof AbstractLine){
+            if(this.lineA == undefined){
+                this.lineA = shape;
+                shape.setMode(Mode.depend);
+            }
+            else{
+                shape.setMode(Mode.depend);
+
+                const key = await showMenu(parallelReasonDlg);
+                this.parallelReason = ParallelReason[key as keyof typeof ParallelReason];
+                msg(`key:[${key}] [${this.parallelReason}]`);
+
+                let detector : ParallelDetector | undefined;
+
+                switch(this.parallelReason){
+                case ParallelReason.parallelogram:
+                    detector = makeParallelDetectorByParallelogram(this.lineA, shape);        
+    
+                    break;
+                default:
+                    throw new MyError();
+                }
+                        
+                if(detector != undefined){
+                    addShapeSetRelations(view, detector);
+                    this.resetTool(detector);
+                    this.clear();    
+                }
+            }
+        }
+    }
+}
+
 
 export class EqualityConstraintBuilder extends Builder {
     lengthSymbolA? : LengthSymbol;
@@ -1729,6 +1776,7 @@ const toolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [
     [ TriangleCongruenceBuilder , "triangle-congruence", TT("triangle congruence"), [ TriangleCongruence ] ],
     [ LengthEqualityBuilder     , "equal-length"       , TT("equal length")       , [ LengthEquality ] ],
     [ AngleEqualityBuilder      , "equal-angle"        , TT("equal angle")        , [ AngleEquality ] ],
+    [ ParallelDetectorBuilder   , "parallel-detector"  , TT("parallel detector")  , [ ParallelDetector ] ],
     [ EqualityConstraintBuilder , "equality-constraint", TT("equality constraint"), [ LengthEqualityConstraint, AngleEqualityConstraint ] ],
     [ ParallelConstraintBuilder , "parallel-constraint"      , TT("parallel constraint"), [ ParallelConstraint ]],
     [ PerpendicularConstraintBuilder , "perpendicular-constraint" , TT("perpendicular constraint"), [ PerpendicularConstraint ]],

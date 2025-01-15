@@ -301,6 +301,15 @@ export class LengthSymbol extends Shape {
         return A.distance(B);
     }
 
+    isEqual(lengthSymbol : LengthSymbol) : boolean {
+        const equal_length_set = equalLengths.find(x => x.has(this));
+        if(equal_length_set != undefined){
+            return equal_length_set.has(lengthSymbol);
+        }
+
+        return false;
+    }
+
     draw() : void {
         View.current.canvas.drawLine(this, this.pointA.position, this.pointB.position);
 
@@ -345,7 +354,7 @@ export class LengthSymbol extends Shape {
         if(length_symbols.length == 0){
             // msg(`no length-symbol:${this.id}`);
 
-            (all_shapes.filter(x => x instanceof LengthSymbol) as LengthSymbol[]).forEach(x => msg(`${x.id} line:${x.line!.id}`))
+            // (all_shapes.filter(x => x instanceof LengthSymbol) as LengthSymbol[]).forEach(x => msg(`${x.id} line:${x.line!.id}`))
             return;
         }
 

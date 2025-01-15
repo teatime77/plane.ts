@@ -4,6 +4,8 @@ type Term = parser_ts.Term;
 const parseMath = parser_ts.parseMath;
 export let lengthEqualityReasonDlg : HTMLDialogElement;
 export let angleEqualityReasonDlg : HTMLDialogElement;
+export let parallelReasonDlg : HTMLDialogElement;
+
 
 export let shapeTypeDlg : HTMLDialogElement;
 export let parallelogramReasonDlg : HTMLDialogElement;
@@ -25,6 +27,7 @@ export enum LengthEqualityReason {
     congruent_triangles,
     parallelogram_opposite_sides,
     parallelogram_diagonal_bisection,
+    equivalence_class,
 }
 
 export function enumToStr(dic : typeof LengthEqualityReason | typeof AngleEqualityReason, num: LengthEqualityReason | AngleEqualityReason): string {
@@ -72,6 +75,11 @@ export enum RhombusReason {
     all_sides_are_equal,
 }
 
+export enum ParallelReason {
+    none = 600,
+    parallelogram
+}
+
 export enum ImplicationCode {
     none,
     equal_angles,
@@ -85,10 +93,10 @@ export const ImplicationTexts : string[] = [
 ];
 
 export function makeSelectionDlg(){
-    const titles = [ "reason for length equality", "reason for angle equality", "shape type", "reason for parallelogram", "reason for rhombus" ];
-    const span_id_prefixes = [ "length-equality-reason", "angle-equality-reason", "shape-type", "parallelogram-reason", "rhombus-reason" ]
+    const titles = [ "reason for length equality", "reason for angle equality", "shape type", "reason for parallelogram", "reason for rhombus", "reason for parallel" ];
+    const span_id_prefixes = [ "length-equality-reason", "angle-equality-reason", "shape-type", "parallelogram-reason", "rhombus-reason", "parallel-reason" ]
 
-    for(const [idx, dic] of [ LengthEqualityReason, AngleEqualityReason, ShapeType, ParallelogramReason, RhombusReason ].entries()){
+    for(const [idx, dic] of [ LengthEqualityReason, AngleEqualityReason, ShapeType, ParallelogramReason, RhombusReason, ParallelReason ].entries()){
         const dlg = document.createElement("dialog");
         dlg.className = "menu_dlg";
 
@@ -127,6 +135,9 @@ export function makeSelectionDlg(){
             break;
         case 4:
             rhombusReasonDlg = dlg;
+            break;
+        case 5:
+            parallelReasonDlg = dlg;
             break;
         }
 

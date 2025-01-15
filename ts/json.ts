@@ -209,6 +209,9 @@ export function parseObject(obj: any, parse_other_object? : (o : any)=>any) : an
     case AngleEquality.name:
         return new AngleEquality(obj);
 
+    case ParallelDetector.name:
+        return new ParallelDetector(obj);
+
     case SelectedShape.name:
         return new SelectedShape(obj);
 
