@@ -817,7 +817,7 @@ export class Motion extends MathEntity {
 
     async animate(speech : i18n_ts.AbstractSpeech){
         if(this.narration != ""){
-            speech.speak(TT(this.narration));
+            await speech.speak(TT(this.narration));
         }
 
         const startTime = Date.now();

@@ -352,4 +352,45 @@ export function reasonText(value : number) : string {
     throw new MyError();
 }
 
+const reasonMsgMap = new Map<number, string>([
+    [ TriangleCongruenceReason.side_side_side, TT("Since three pairs of sides of two triangles are equal,")],
+    [ TriangleCongruenceReason.side_angle_side, TT("Since two pairs of sides of two triangles are equal, and the included angles are equal,")],
+    [ TriangleCongruenceReason.angle_side_angle, TT("Since two pairs of angles of two triangles are equal, and the included sides are equal,")],
+
+    [ LengthEqualityReason.radii_equal, TT("Since the two circles have the same radius,")],
+    [ LengthEqualityReason.common_circle, TT("Since two length symbols are the radii of the same circle,")],
+    [ LengthEqualityReason.parallel_lines_distance, TT("Since the distance between two parallel lines is constant,")],
+    [ LengthEqualityReason.circle_by_radius, TT("Since the two circles have the same radius,")],
+    [ LengthEqualityReason.congruent_triangles, TT("Since the two triangles are congruent,")],
+    [ LengthEqualityReason.parallelogram_opposite_sides, TT("Since the opposite sides of a parallelogram are equal in length,")],
+    [ LengthEqualityReason.parallelogram_diagonal_bisection, TT("Since the diagonals of a parallelogram intersect at the midpoint,")],
+    [ LengthEqualityReason.equivalence_class, TT("Since these two length symbols are equal to another length symbol,")],
+
+    [ AngleEqualityReason.vertical_angles, TT("Since vertical angles are equal,")],
+    [ AngleEqualityReason.parallel_lines, TT("Since the corresponding angles of parallel lines are equal,")],
+    [ AngleEqualityReason.angle_bisector, TT("Since these angles are formed by the angle bisectors,")],
+    [ AngleEqualityReason.congruent_triangles, TT("Since the two triangles are congruent,")],
+    [ AngleEqualityReason.parallelogram_opposite_angles, TT("Since the diagonals of a parallelogram are congruent,")],
+
+    [ ParallelogramReason.each_opposite_sides_are_equal, TT("Since each opposite sides are equal,")],
+    [ ParallelogramReason.each_opposite_sides_are_parallel, TT("Since each opposite sides are parallel,")],
+    [ ParallelogramReason.each_opposite_angles_are_equal, TT("Since each opposite angles are equal,")],
+    [ ParallelogramReason.one_opposite_sides_are_parallel_and_equal, TT("Since one opposite sides are parallel and equal,")],
+    [ ParallelogramReason.each_diagonal_bisections, TT("Since the diagonals intersect at their midpoints,")],
+
+    [ RhombusReason.all_sides_are_equal, TT("Since all four sides are equal in length,")],
+
+    [ ParallelReason.parallelogram, TT("Since the opposite sides of a parallelogram are of equal length,") ],
+]);
+
+export function reasonMsg(reason : number) : string {
+    const text = reasonMsgMap.get(reason);
+    if(text != undefined){
+        return text;
+    }
+
+    throw new MyError();
+}
+
+
 }

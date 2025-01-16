@@ -20,6 +20,10 @@ export function makeParallelDetectorByParallelogram(lineA : AbstractLine, lineB 
 }
 
 export class ParallelDetector extends Statement {
+    reading(): Reading {
+        return this.textReading(TT("these two lines are parallel."));
+    }
+
     setRelations(){
         super.setRelations();
         assert(this.selectedShapes.length == 2 && this.selectedShapes.every(x => x instanceof AbstractLine));

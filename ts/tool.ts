@@ -1773,6 +1773,7 @@ const toolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [
     [ DimensionLineBuilder      , "dimension-line"     , TT("dimension line")     , [ DimensionLine ] ],
     [ LengthSymbolBuilder       , "length-symbol"      , TT("length symbol")      , [ LengthSymbol ] ],
     [ TextBlockBuilder          , "text"               , TT("text")               , [ TextBlock ] ],
+    [ StatementBuilder          , "statement"          , TT("statement")          , [ Statement ] ],
     [ TriangleCongruenceBuilder , "triangle-congruence", TT("triangle congruence"), [ TriangleCongruence ] ],
     [ LengthEqualityBuilder     , "equal-length"       , TT("equal length")       , [ LengthEquality ] ],
     [ AngleEqualityBuilder      , "equal-angle"        , TT("equal angle")        , [ AngleEquality ] ],
@@ -1781,7 +1782,6 @@ const toolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [
     [ ParallelConstraintBuilder , "parallel-constraint"      , TT("parallel constraint"), [ ParallelConstraint ]],
     [ PerpendicularConstraintBuilder , "perpendicular-constraint" , TT("perpendicular constraint"), [ PerpendicularConstraint ]],
     [ QuadrilateralClassifierBuilder, "quadrilateral-classifier", TT("quadrilateral classifier"), [ ParallelogramClassifier, RhombusClassifier ]],
-    [ StatementBuilder          , "statement"          , TT("statement")          , [ Statement ] ],
     [ MotionBuilder             , "animation"          , TT("animation")          , [ Motion ] ],
 ];
 
@@ -1794,8 +1794,8 @@ export function makeShapeButton(shape : MathEntity, add_to_view_shapes : boolean
     }
     else{
 
-        for(const [ tool, img_name, title, shapes] of toolList){
-            if(shapes.some(x => shape instanceof x)){
+        for(const [ tool, img_name, title, shape_classes] of toolList){
+            if(shape_classes.some(x => x.name == shape.constructor.name)){
 
                 shape_img_name = img_name;
                 break;
@@ -1803,7 +1803,13 @@ export function makeShapeButton(shape : MathEntity, add_to_view_shapes : boolean
         }
 
         if(shape_img_name == undefined){
-            throw new MyError();
+            if(shape instanceof Polygon){
+                shape_img_name = "polygon";
+            }
+            else{
+
+                throw new MyError(`unknown shape class name:[${shape.constructor.name}]`);
+            }
         }
     }
 

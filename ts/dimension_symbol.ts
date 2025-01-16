@@ -242,9 +242,7 @@ export class LengthSymbol extends Shape {
 
     constructor(obj : { pointA : Point, pointB : Point, lengthKind : number }){
         super(obj);
-        if((obj as any).mute == undefined){
-            this.mute = true;
-        }
+        this.mute = false;
 
         if(obj.lengthKind == undefined){
             throw new MyError("length kind is undefined.")
@@ -372,6 +370,10 @@ export class LengthSymbol extends Shape {
                 }
             }    
         }
+    }
+
+    reading(): Reading {
+        return this.textReading(TT("Draw a length symbol."));
     }
 
     setRelations(): void {

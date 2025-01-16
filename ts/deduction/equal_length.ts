@@ -266,11 +266,12 @@ export function showPrompt(text : string){
 }
 
 export class LengthEquality extends Statement {
-    constructor(obj : { narration? : string, reason? : number, implication? : number, auxiliaryShapes? : MathEntity[], shapes : MathEntity[], mathText? : string }){
+    constructor(obj : { narration? : string, reason? : number, auxiliaryShapes? : MathEntity[], shapes : MathEntity[], mathText? : string }){
         super(obj);
     }
 
-    async asyncPlay(speech : i18n_ts.AbstractSpeech){
+    reading(): Reading {
+        return this.textReading(TT("the two length symbols are of equal length."));
     }
 
     setRelations(): void {

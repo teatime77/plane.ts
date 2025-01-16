@@ -91,6 +91,10 @@ export class LengthEqualityConstraint extends Constraint {
         }
     }
 
+    reading(): Reading {
+        return this.textReading("Make the two line segments equal in length.");
+    }
+
     setRelations(): void {
         super.setRelations();
         addEqualLengths(this.lengthSymbolA, this.lengthSymbolB);

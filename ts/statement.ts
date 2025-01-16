@@ -86,12 +86,6 @@ export enum ImplicationCode {
     equal_lengths,
 };
 
-export const ImplicationTexts : string[] = [
-    "none",
-    "equal-angles",
-    "equal-lengths",
-];
-
 export function makeSelectionDlg(){
     const titles = [ "reason for length equality", "reason for angle equality", "shape type", "reason for parallelogram", "reason for rhombus", "reason for parallel" ];
     const span_id_prefixes = [ "length-equality-reason", "angle-equality-reason", "shape-type", "parallelogram-reason", "rhombus-reason", "parallel-reason" ]
@@ -150,22 +144,17 @@ export class Statement extends Shape {
     static idTimeout : number | undefined;
 
     reason : number = 0;
-    implication : number = 0;
     mathText : string = "";
     latexBox? : layout_ts.LaTeXBox;
     auxiliaryShapes : MathEntity[] = [];
     selectedShapes : MathEntity[];
 
-    constructor(obj : { narration? : string, reason? : number, implication? : number, shapes : MathEntity[], auxiliaryShapes? : MathEntity[], mathText? : string }){
+    constructor(obj : { narration? : string, reason? : number, shapes : MathEntity[], auxiliaryShapes? : MathEntity[], mathText? : string }){
         super(obj);
         this.selectedShapes = obj.shapes;
 
         if(obj.reason != undefined){
             this.reason = obj.reason;
-        }
-
-        if(obj.implication != undefined){
-            this.implication = obj.implication;
         }
 
         if(obj.auxiliaryShapes != undefined){
@@ -183,7 +172,7 @@ export class Statement extends Shape {
 
     getProperties(){
         return super.getProperties().concat([
-            "reason", "implication", "selectedShapes", "auxiliaryShapes", "mathText"
+            "reason", "selectedShapes", "auxiliaryShapes", "mathText"
         ]);
     }
 
@@ -202,10 +191,6 @@ export class Statement extends Shape {
 
         if(this.auxiliaryShapes.length != 0){
             obj.auxiliaryShapes = this.auxiliaryShapes.map(x => x.toObj());
-        }
-
-        if(this.implication != 0){
-            obj.implication = this.implication;
         }
 
         if(this.mathText != ""){
@@ -305,14 +290,36 @@ export class Statement extends Shape {
         }
     }
 
+    async showReasonAndStatement(speech : i18n_ts.AbstractSpeech){
+        if(!(this instanceof Constraint)){
+
+            const reason_msg = reasonMsg(this.reason);
+            speech.speak(reason_msg);
+            for(const shape of this.auxiliaryShapes){
+                shape.setMode(Mode.depend);
+                sleep(500);
+            }
+
+            await speech.waitEnd();
+        }
+
+        const reading = this.reading();
+        speech.speak(reading.text);
+
+        for(const shape of this.selectedShapes){
+            shape.setMode(Mode.target);
+            sleep(500);
+        }
+        
+        await speech.waitEnd();
+    }
+
     setRelations(): void {
         super.setRelations();
 
         usedReasons.add(this.reason);
     }
 }
-
-
 
 /*
 These two lines are parallel.

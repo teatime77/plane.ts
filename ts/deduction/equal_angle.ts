@@ -283,11 +283,12 @@ export function makeAngleEqualityByParallelogramOppositeAngles(angleA : Angle, a
 }
 
 export class AngleEquality extends Statement {
-    constructor(obj : { narration? : string, reason? : number, implication? : number, auxiliaryShapes? : MathEntity[], shapes : MathEntity[], mathText? : string }){
+    constructor(obj : { narration? : string, reason? : number, auxiliaryShapes? : MathEntity[], shapes : MathEntity[], mathText? : string }){
         super(obj);
     }
 
-    async asyncPlay(speech : i18n_ts.AbstractSpeech){
+    reading(): Reading {
+        return this.textReading(TT("the two angles are equal."));
     }
 
     setRelations(): void {

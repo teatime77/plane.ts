@@ -405,10 +405,6 @@ export function showProperty(widget : Widget | Widget[], nest : number){
                 makeConstantProperty(tbl, nest + 1, name, text);
                 continue;
             }
-            else if(name == "implication"){
-                property = new SelectProperty(widgets, name, value, ImplicationTexts);
-                property_element  = property.select;
-            }
             else if(name == "selectedShapes" || name == "auxiliaryShapes"){
 
                 property = new ShapesProperty(widgets, name, value);

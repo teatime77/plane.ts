@@ -140,9 +140,15 @@ abstract class QuadrilateralClassifier extends Statement {
 }
 
 export class ParallelogramClassifier extends QuadrilateralClassifier {    
+    reading(): Reading {
+        return this.textReading(TT("this is a parallelogram."));
+    }
 }
 
 export class RhombusClassifier extends ParallelogramClassifier {    
+    reading(): Reading {
+        return this.textReading(TT("this is a rhombus."));
+    }
 }
 
 }

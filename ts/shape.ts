@@ -10,7 +10,7 @@ export const bgColor = layout_ts.bgColor;
 export const dependColor = "blue";
 export const targetColor = "red";
 export const defaultLineWidth = 3;
-export const OverLineWidth = 4;
+export const OverLineWidth = 5;
 let capturedShape : MathEntity | undefined;
 
 export enum Mode {
@@ -83,6 +83,11 @@ export abstract class MathEntity extends Widget implements i18n_ts.Readable, par
     }
 
     abstract reading() : Reading;
+
+    textReading(text : string) : Reading {
+        return new Reading(this, text, []);
+    }
+
     highlight(on : boolean) : void {
         if(on){
             this.setMode(Mode.target);
@@ -673,6 +678,22 @@ export class Point extends Shape {
 
     shapePointerup(position : Vec2){
         this.positionSave = undefined;
+    }
+
+    reading(): Reading {
+        if(this.bound instanceof AbstractLine){
+            return this.textReading(TT("Draw a point on the line."));
+
+        }
+        else if(this.bound instanceof Circle){
+            return this.textReading(TT("Draw a point on the circle."));
+        }
+        else if(this.bound instanceof Arc){
+            return this.textReading(TT("Draw a point on the arc."));            
+        }
+        else{
+            return this.textReading(TT("Draw a point."));
+        }
     }
 
     setRelations(): void {
@@ -1425,6 +1446,24 @@ export class Polygon extends Shape {
         return super.dependencies().concat(this.lines).concat(this.points);
     }
 
+    shrinkPoints() : Vec2[] {
+        const positions = this.points.map(x => x.position);
+        
+        let center = positions[0];
+        positions.slice(1).forEach(x => center = center.add(x));
+
+        center = center.mul(1 / positions.length);
+
+        const shrinked_positions : Vec2[] = [];
+        for(const position of positions){
+            const v = position.sub(center);
+            const new_position = center.add(v.mul(0.9));
+            shrinked_positions.push(new_position);
+        }
+
+        return shrinked_positions;
+    }
+
     draw(): void {
         let color : string;
         if(this.mode == Mode.none){
@@ -1438,12 +1477,28 @@ export class Polygon extends Shape {
         }
 
         const radius = (this.mode == Mode.none ? 1 : 2) * Point.radius;
-        for(const point of this.points){
-            View.current.canvas.drawCircleRaw(point.position, radius, color);
+
+        let positions : Vec2[];
+        if(this.mode == Mode.none){
+            positions = this.points.map(x => x.position);
+        }
+        else{
+            positions = this.shrinkPoints();
         }
 
-        const positions = this.points.map(x => x.position);
-        View.current.canvas.drawPolygonRaw(positions, color, NaN, true);
+        for(const position of positions){
+            View.current.canvas.drawCircleRaw(position, radius, color);
+        }
+
+        if(this.mode == Mode.target){
+
+            View.current.canvas.drawPolygonRaw(positions, color, NaN, true);
+        }
+        else{
+
+            const line_width = (this.mode == Mode.none ? defaultLineWidth : OverLineWidth);
+            View.current.canvas.drawPolygonRaw(positions, color, line_width, false);
+        }
     }
 
     getAllShapes(shapes : MathEntity[]){
