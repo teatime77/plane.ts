@@ -291,7 +291,7 @@ export class Statement extends Shape {
     }
 
     async showReasonAndStatement(speech : i18n_ts.AbstractSpeech){
-        if(!(this instanceof Constraint)){
+        if(this.reason != 0){
 
             const reason_msg = reasonMsg(this.reason);
             speech.speak(reason_msg);
