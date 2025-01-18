@@ -21,6 +21,8 @@ export class Angle extends Shape {
 
     constructor(obj : { angleMark : number, lineA : AbstractLine, directionA : number, lineB : AbstractLine, directionB : number }){
         super(obj);
+        this.mute = true;
+        
         this.angleMark   = obj.angleMark;
         if(this.angleMark == undefined){
             this.angleMark = 0;
@@ -242,7 +244,7 @@ export class LengthSymbol extends Shape {
 
     constructor(obj : { pointA : Point, pointB : Point, lengthKind : number }){
         super(obj);
-        this.mute = false;
+        this.mute = true;
 
         if(obj.lengthKind == undefined){
             throw new MyError("length kind is undefined.")

@@ -84,6 +84,15 @@ export class View extends Widget {
         this.resizeView();
     }
 
+    clearView(){
+        this.shapes = [];
+        this.dirty = true;
+    
+        Plane.one.clearNarrationBox();
+    
+        initRelations();    
+    }
+
     setMinMax(min : Vec2, max : Vec2){
         this.min = min;
         this.max = max;

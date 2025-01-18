@@ -1,15 +1,5 @@
 namespace plane_ts {
 //
-function modeColor(mode : Mode) : string {
-    switch(mode){
-    case Mode.none:
-        return fgColor;
-    case Mode.depend:
-        return dependColor;
-    case Mode.target:
-        return targetColor;
-    }
-}
 
 export function modePointRadius(mode : Mode) : number {
     return (mode == Mode.none ? 1 : 2) * Point.radius;
@@ -144,7 +134,7 @@ export class Canvas {
     }
 
     drawPartialPolygon(points : Point[], mode : Mode){
-        const color = modeColor(mode);
+        const color = getModeColor(mode);
         const radius = modePointRadius(mode);
 
         const positions = points.map(x => x.position);

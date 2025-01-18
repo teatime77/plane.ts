@@ -16,7 +16,25 @@ let capturedShape : MathEntity | undefined;
 export enum Mode {
     none,
     depend,
-    target
+    depend1,
+    depend2,
+    target,
+    target1,
+    target2,
+}
+
+const modeColorMap = new Map<Mode,string>([
+    [ Mode.none   , fgColor ],
+    [ Mode.depend , dependColor ],
+    [ Mode.depend1, "Aqua" ],
+    [ Mode.depend2, "lime" ],
+    [ Mode.target , targetColor ],
+    [ Mode.target1, "orange" ],
+    [ Mode.target2, "magenta" ],
+]);
+
+export function getModeColor(mode : Mode) : string {
+    return modeColorMap.get(mode)!;
 }
 
 export abstract class MathEntity extends Widget implements i18n_ts.Readable, parser_ts.Highlightable {
@@ -437,13 +455,11 @@ export abstract class Shape extends MathEntity {
     }
 
     modeColor() : string {
-        switch(this.mode){
-        case Mode.none:
-            return this.color;
-        case Mode.depend:
-            return dependColor;
-        case Mode.target:
-            return targetColor;
+        if(this.mode == Mode.none){
+            return this.color;            
+        }
+        else{
+            return getModeColor(this.mode);
         }
     }
 
@@ -884,6 +900,8 @@ export class LineByPoints extends AbstractLine {
     }
 
     reading(): Reading {
+        return this.textReading(TT('Draw a line.'));
+/*
         switch(this.lineKind){
         case LineKind.line:
             return new Reading(this, TT('Draw a line through two points.'), []);
@@ -895,6 +913,7 @@ export class LineByPoints extends AbstractLine {
         default:
             throw new MyError();
         }
+*/
     }
 
     setRelations(): void {
@@ -1457,7 +1476,10 @@ export class Polygon extends Shape {
         const shrinked_positions : Vec2[] = [];
         for(const position of positions){
             const v = position.sub(center);
-            const new_position = center.add(v.mul(0.9));
+            const len = v.len();
+            const diff = View.current.fromXPixScale(2 * OverLineWidth);
+            const shrinked_v = v.unit().mul(len - diff);
+            const new_position = center.add(shrinked_v);
             shrinked_positions.push(new_position);
         }
 
@@ -1465,16 +1487,7 @@ export class Polygon extends Shape {
     }
 
     draw(): void {
-        let color : string;
-        if(this.mode == Mode.none){
-
-            const colors = [ "orange", "lime", "pink" ];
-            const idx = Polygon.colorIndex++ % colors.length;
-            color = colors[idx];
-        }
-        else{
-            color = this.modeColor();
-        }
+        const color = this.modeColor();
 
         const radius = (this.mode == Mode.none ? 1 : 2) * Point.radius;
 
@@ -1490,15 +1503,8 @@ export class Polygon extends Shape {
             View.current.canvas.drawCircleRaw(position, radius, color);
         }
 
-        if(this.mode == Mode.target){
-
-            View.current.canvas.drawPolygonRaw(positions, color, NaN, true);
-        }
-        else{
-
-            const line_width = (this.mode == Mode.none ? defaultLineWidth : OverLineWidth);
-            View.current.canvas.drawPolygonRaw(positions, color, line_width, false);
-        }
+        const line_width = (this.mode == Mode.none ? defaultLineWidth : OverLineWidth);
+        View.current.canvas.drawPolygonRaw(positions, color, line_width, false);
     }
 
     getAllShapes(shapes : MathEntity[]){

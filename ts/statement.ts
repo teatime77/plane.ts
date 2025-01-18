@@ -254,13 +254,7 @@ export class Statement extends Shape {
     setMode(mode : Mode){
         super.setMode(mode);
         if(this.latexBox != undefined){
-            let color : string;
-
-            switch(mode){
-            case Mode.none   : color = "transparent"; break;
-            case Mode.depend : color = "blue"       ; break;
-            case Mode.target : color = "red"        ; break;
-            }
+            const color = (mode == Mode.none ? "transparent" : getModeColor(mode));
 
             this.latexBox.setBorderColor(color);
         }
@@ -294,7 +288,7 @@ export class Statement extends Shape {
         if(this.reason != 0){
 
             const reason_msg = reasonMsg(this.reason);
-            speech.speak(reason_msg);
+            await speech.speak(reason_msg);
             for(const shape of this.auxiliaryShapes){
                 shape.setMode(Mode.depend);
                 sleep(500);
@@ -304,7 +298,7 @@ export class Statement extends Shape {
         }
 
         const reading = this.reading();
-        speech.speak(reading.text);
+        await speech.speak(reading.text);
 
         for(const shape of this.selectedShapes){
             shape.setMode(Mode.target);
