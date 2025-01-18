@@ -30,16 +30,6 @@ export enum LengthEqualityReason {
     equivalence_class,
 }
 
-export function enumToStr(dic : typeof LengthEqualityReason | typeof AngleEqualityReason, num: LengthEqualityReason | AngleEqualityReason): string {
-    for(const [key, value] of Object.entries(dic)){
-        if(value == num){
-            return key;
-        }
-    }
-
-    return 'Unknown'; 
-}
-
 export enum ShapeType {
     parallelogram,
     rhombus
@@ -284,15 +274,20 @@ export class Statement extends Shape {
         }
     }
 
+    async showAuxiliaryShapes(){
+        for(const shape of this.auxiliaryShapes){
+            shape.setMode(Mode.depend);
+            await sleep(500);
+        }
+    }
+
     async showReasonAndStatement(speech : i18n_ts.AbstractSpeech){
         if(this.reason != 0){
 
             const reason_msg = reasonMsg(this.reason);
             await speech.speak(reason_msg);
-            for(const shape of this.auxiliaryShapes){
-                shape.setMode(Mode.depend);
-                sleep(500);
-            }
+
+            await this.showAuxiliaryShapes();
 
             await speech.waitEnd();
         }
@@ -310,6 +305,9 @@ export class Statement extends Shape {
 
     setRelations(): void {
         super.setRelations();
+
+        this.auxiliaryShapes.forEach(x => x.setRelations());
+        this.selectedShapes.forEach(x => x.setRelations());
 
         usedReasons.add(this.reason);
     }

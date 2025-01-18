@@ -74,14 +74,17 @@ export function makeQuadrilateralClassifier(points : Point[], reason : Parallelo
         }
 
     case ParallelogramReason.one_opposite_sides_are_parallel_and_equal:{
-            let auxiliaryShapes : MathEntity[] = [];
+            let auxiliaryShapes : MathEntity[];
 
             if(parallelLinesA != undefined && equalSideLengthSymbolsA != undefined){
-                auxiliaryShapes.push(...parallelLinesA, ...equalSideLengthSymbolsA);
+                assert(range(2).every(i => parallelLinesA[i] == equalSideLengthSymbolsA[i].line));
+
+                auxiliaryShapes = equalSideLengthSymbolsA;
             }
             else if(parallelLinesB != undefined && equalSideLengthSymbolsB != undefined){
+                assert(range(2).every(i => parallelLinesB[i] == equalSideLengthSymbolsB[i].line));
 
-                auxiliaryShapes.push(...parallelLinesB, ...equalSideLengthSymbolsB);
+                auxiliaryShapes = equalSideLengthSymbolsB;
             }
             else{
                 break;
@@ -137,9 +140,75 @@ abstract class QuadrilateralClassifier extends Statement {
 
         parallelogramClassifiers.add(this);
     }
+
+    draw() : void {
+        assert(this.selectedShapes.length == 1 && this.selectedShapes[0] instanceof Quadrilateral);
+        const quadrilateral = this.selectedShapes[0] as Quadrilateral;
+
+        const shapes = this.auxiliaryShapes.filter(x => x.mode != Mode.none) as Shape[];
+        for(const shape of shapes){
+            let p1 : Point;
+            let p2 : Point;
+
+            if(shape instanceof LengthSymbol){
+
+                [p1, p2] = [ shape.pointA, shape.pointB ];
+            }
+            else if(shape instanceof AbstractLine){
+                const line = shape;
+
+                const idx = quadrilateral.lines.indexOf(line);
+                if(idx == -1){
+                    msg(`Quadrilateral-Classifier error:${this.id} shape:${shape.id}:${shape.constructor.name}`);
+                    continue;
+                }
+                assert(idx != -1);
+                [p1, p2] = [quadrilateral.points[idx], quadrilateral.points[(idx + 1) % quadrilateral.points.length]];
+            }
+            else{
+                shape.draw();
+                continue;
+            }
+
+            const color = shape.modeColor();
+            const line_width = shape.modeLineWidth();
+            View.current.canvas.drawLineRaw(p1.position, p2.position, color, line_width);
+        }
+    }
 }
 
-export class ParallelogramClassifier extends QuadrilateralClassifier {    
+export class ParallelogramClassifier extends QuadrilateralClassifier {   
+    async showAuxiliaryShapes(){
+
+        switch(this.reason){
+        case ParallelogramReason.each_opposite_sides_are_equal:
+        case ParallelogramReason.each_opposite_sides_are_parallel:
+        case ParallelogramReason.each_opposite_angles_are_equal:
+        case ParallelogramReason.each_diagonal_bisections:
+            assert(this.auxiliaryShapes.length == 4);
+
+            for(const shape of this.auxiliaryShapes.slice(0, 2)){
+                shape.setMode(Mode.depend1);
+            }
+            await sleep(500);
+
+            for(const shape of this.auxiliaryShapes.slice(2)){
+                shape.setMode(Mode.depend2);
+            }
+            break;
+
+        case ParallelogramReason.one_opposite_sides_are_parallel_and_equal:
+        case RhombusReason.all_sides_are_equal:
+            this.auxiliaryShapes.forEach(x => x.setMode(Mode.depend));
+            break;
+
+        default:
+            throw new MyError();
+        }
+
+        await sleep(500);
+    } 
+
     reading(): Reading {
         return this.textReading(TT("this is a parallelogram."));
     }

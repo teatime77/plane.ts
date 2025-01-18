@@ -303,7 +303,7 @@ export class AngleEquality extends Statement {
 
         const [angleA, angleB] = this.selectedShapes as Angle[];
 
-        const reason_str = enumToStr(AngleEqualityReason, this.reason);
+        const reason_str = reasonMsg(this.reason);
         switch(this.reason){
         case AngleEqualityReason.vertical_angles:
             angleEquality = makeAngleEqualityByVertical_angles(angleA, angleB);

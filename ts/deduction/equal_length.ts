@@ -346,7 +346,7 @@ export class LengthEquality extends Statement {
             throw new MyError();
         }
 
-        const reason_str = enumToStr(LengthEqualityReason, this.reason);
+        const reason_str = reasonMsg(this.reason);
         if(lengthEquality == undefined){
             throw new MyError(`can not make Length-Equality: ${reason_str}`)
         }

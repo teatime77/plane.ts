@@ -182,8 +182,11 @@ export function addEqualCircleArcs(circle1 : CircleArc, circle2 : CircleArc){
 
     if(circle_set1 != undefined){
         if(circle_set2 != undefined){
-            list(circle_set2).forEach(x => circle_set1.add(x));
-            remove(equalCircleArcs, circle_set2);
+            if(circle_set1 != circle_set2){
+
+                list(circle_set2).forEach(x => circle_set1.add(x));
+                remove(equalCircleArcs, circle_set2);
+            }
         }
         else{
             circle_set1.add(circle2);

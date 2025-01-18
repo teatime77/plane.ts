@@ -39,6 +39,7 @@ export function getModeColor(mode : Mode) : string {
 
 export abstract class MathEntity extends Widget implements i18n_ts.Readable, parser_ts.Highlightable {
     static orderSet = new Set<MathEntity>();
+    setRelationsCount : number = 0;
     visible : boolean = true;
     visible2 : boolean = false;
     mode : Mode = Mode.none;
@@ -201,6 +202,7 @@ export abstract class MathEntity extends Widget implements i18n_ts.Readable, par
     }
 
     setRelations(){
+        this.setRelationsCount++;
     }
 }
 
@@ -1527,6 +1529,19 @@ export class Polygon extends Shape {
         super.setRelations();
         this.points.forEach(x => x.setRelations());
         this.lines.forEach(x => x.setRelations());
+
+        const num_points = this.points.length;
+        const lines = range(num_points).map(i => getCommonLineOfPoints(this.points[i], this.points[(i + 1) % num_points])) as AbstractLine[];
+        if(lines.some(x => x == undefined)){
+            this.lines.forEach(x => x.setRelations());
+
+            throw new MyError();
+        }
+
+        if(range(this.points.length).some(i => lines[i] != this.lines[i])){
+            msg(`modify lines of ${this.id}:${this.constructor.name}`);
+            this.lines = lines;
+        }
     }
 
     isEqual(polygon : Polygon) : boolean {

@@ -188,9 +188,15 @@ export function pairKey(a : Widget, b : Widget) : string {
 
 export async function sleep(milliseconds : number) : Promise<void> {
     return new Promise((resolve) => {
-        setTimeout(()=>{
+        if(Plane.one.playMode == PlayMode.playAll){
             resolve();
-        }, milliseconds);
+        }
+        else{
+
+            setTimeout(()=>{
+                resolve();
+            }, milliseconds);
+        }
     });
 }
 
