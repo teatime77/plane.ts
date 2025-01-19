@@ -332,32 +332,6 @@ export function toClockwisePoints(points : Point[]) : Point[] {
     }
 }
 
-export function reasonText(value : number) : string {
-    if(ParallelReason.none <= value){
-        return ParallelReason[value];
-    }
-    else if(RhombusReason.none <= value){
-        return RhombusReason[value];
-    }
-    else if(ParallelogramReason.none <= value){
-        return ParallelogramReason[value];
-    }
-    else if(QuadrilateralClass.none <= value){
-        return QuadrilateralClass[value];
-    }
-    else if(AngleEqualityReason.none <= value){
-        return AngleEqualityReason[value];
-    }
-    else if(LengthEqualityReason.none <= value){
-        return LengthEqualityReason[value];
-    }
-    else if(TriangleCongruenceReason.none <= value){
-        return TriangleCongruenceReason[value];
-    }
-
-    throw new MyError();
-}
-
 let reasonMsgMap : Map<number, string> | undefined;
 
 function makeReasonMsgMap(){
@@ -380,6 +354,7 @@ function makeReasonMsgMap(){
         [ AngleEqualityReason.angle_bisector, TT("Since these angles are formed by the angle bisectors,")],
         [ AngleEqualityReason.congruent_triangles, TT("Since the two triangles are congruent,")],
         [ AngleEqualityReason.parallelogram_opposite_angles, TT("Since the diagonals of a parallelogram are congruent,")],
+        [ AngleEqualityReason.similar_triangles, TT("Since the two triangles are similar,") ],
 
         [ ParallelogramReason.each_opposite_sides_are_equal, TT("Since each opposite sides are equal,")],
         [ ParallelogramReason.each_opposite_sides_are_parallel, TT("Since each opposite sides are parallel,")],
@@ -390,6 +365,10 @@ function makeReasonMsgMap(){
         [ RhombusReason.all_sides_are_equal, TT("Since all four sides are equal in length,")],
 
         [ ParallelReason.parallelogram, TT("Since the opposite sides of a parallelogram are parallel,") ],
+
+        [ TriangleSimilarityReason.two_equal_angle_pairs, TT("Since both pairs of angles in two triangles are equal,")],
+
+        [0 , TT("no reason")],
     ]);
 }
 

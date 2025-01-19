@@ -148,6 +148,25 @@ export function makeAngleEqualityByCongruentTriangles(angleA : Angle, angleB : A
     return undefined;
 }
 
+export function makeAngleEqualityBySimilarTriangles(angleA : Angle, angleB : Angle, A : Triangle, B : Triangle) : AngleEquality | undefined {
+    for(const idx of range(3)){
+
+        const angle_pointsA = [ A.points[idx], A.points[(idx + 1) % 3], A.points[(idx + 2) % 3] ];
+        const angle_pointsB = [ B.points[idx], B.points[(idx + 1) % 3], B.points[(idx + 2) % 3] ];
+
+        if(findAngle(angle_pointsA) == angleA && findAngle(angle_pointsB) == angleB){
+
+            return new AngleEquality({
+                reason : AngleEqualityReason.similar_triangles,
+                auxiliaryShapes : [ A, B ],
+                shapes : [ angleA, angleB ]
+            });
+        }
+    }
+
+    return undefined;
+}
+
 function getAngleUnitVectors(angleA : Angle, angleB : Angle) : [Vec2, Vec2, Vec2, Vec2]{
     const e_AA = angleA.lineA.e.mul(angleA.directionA);
     const e_AB = angleA.lineB.e.mul(angleA.directionB);
@@ -332,6 +351,12 @@ export class AngleEquality extends Statement {
         case AngleEqualityReason.parallelogram_opposite_angles:{
                 const parallelogram = this.auxiliaryShapes[0] as Quadrilateral;
                 angleEquality = makeAngleEqualityByParallelogramOppositeAngles(angleA, angleB, parallelogram);
+            }
+            break;
+
+        case AngleEqualityReason.similar_triangles:{
+                const [triangleA, triangleB] = this.auxiliaryShapes as Triangle[];
+                angleEquality = makeAngleEqualityBySimilarTriangles(angleA, angleB, triangleA, triangleB);
             }
             break;
 

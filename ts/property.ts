@@ -400,7 +400,7 @@ export function showProperty(widget : Widget | Widget[], nest : number){
             }
             else if(name == "reason"){
 
-                const text = reasonText(value);
+                const text = reasonMsg(value);
                 assert(typeof text == "string");
                 makeConstantProperty(tbl, nest + 1, name, text);
                 continue;

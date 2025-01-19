@@ -202,6 +202,9 @@ export function parseObject(obj: any, parse_other_object? : (o : any)=>any) : an
     case TriangleCongruence.name:
         return new TriangleCongruence(obj);
 
+    case TriangleSimilarity.name:
+        return new TriangleSimilarity(obj);
+
     case "EqualLength":
     case LengthEquality.name:
         return new LengthEquality(obj);

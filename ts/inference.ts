@@ -17,6 +17,7 @@ export let parallelogramClassifiers = new Set<ParallelogramClassifier>();
 export let equalLengths : Set<LengthSymbol>[] = [];
 export let equalCircleArcs : Set<CircleArc>[] = [];
 export let congruentTriangles : Triangle[][] = [];
+export let similarTriangles : Triangle[][] = [];
 
 export const reasonToDoc = new Map<number, number>([
     [AngleEqualityReason.vertical_angles, 8],
@@ -56,6 +57,7 @@ export function initRelations(){
     equalLengths = [];
     equalCircleArcs = [];
     congruentTriangles = [];
+    similarTriangles = [];
 }
 
 export function recalcRelations(view : View){
@@ -238,13 +240,15 @@ export function getLineFromPoints(lines : AbstractLine[], pointA : Point, pointB
     return lines.find(x => x.includesPoint(pointA) && x.includesPoint(pointB));
 }
 
-export function addCongruentTriangles(triangle1 : Triangle, triangle2 : Triangle){
+export function addCongruentSimilarTriangles(is_congruent : boolean, triangle1 : Triangle, triangle2 : Triangle){
     if(!(triangle1 instanceof Triangle && triangle2 instanceof Triangle)){
         msg("old Congruent Triangles")
         return;
     }
 
-    for(const triangles of congruentTriangles){
+    const triangles_list = is_congruent ? congruentTriangles : similarTriangles;
+
+    for(const triangles of triangles_list){
         let equal_triangle1 = triangles.find(x => x.isEqual(triangle1));
         let equal_triangle2 = triangles.find(x => x.isEqual(triangle2));
 
@@ -270,6 +274,7 @@ export function addCongruentTriangles(triangle1 : Triangle, triangle2 : Triangle
             else{
                 if(range(3).every(i => indexes1[i] == i)){
                     triangles.push(triangle2);
+                    return;
                 }
                 else{
                     throw new MyError();
@@ -279,6 +284,7 @@ export function addCongruentTriangles(triangle1 : Triangle, triangle2 : Triangle
         else if(indexes2 != undefined){
             if(range(3).every(i => indexes2[i] == i)){
                 triangles.push(triangle1);
+                return;
             }
             else{
                 throw new MyError();
@@ -287,7 +293,15 @@ export function addCongruentTriangles(triangle1 : Triangle, triangle2 : Triangle
         }
     }
 
-    congruentTriangles.push([triangle1, triangle2]);
+    triangles_list.push([triangle1, triangle2]);
+}
+
+export function addCongruentTriangles(triangle1 : Triangle, triangle2 : Triangle){
+    return addCongruentSimilarTriangles(true, triangle1, triangle2);
+}
+
+export function addSimilarTriangles(triangle1 : Triangle, triangle2 : Triangle){
+    return addCongruentSimilarTriangles(false, triangle1, triangle2);
 }
 
 export function findEqualLengthsByPointsPair(As : [Point, Point], Bs : [Point, Point]) : [LengthSymbol, LengthSymbol] | undefined {

@@ -3,6 +3,7 @@
 ///<reference path="deduction/equal_angle.ts" />
 ///<reference path="deduction/quadrilateral.ts" />
 ///<reference path="deduction/parallel_detector.ts" />
+///<reference path="deduction/triangle_similarity.ts" />
 ///<reference path="constraint.ts" />
 
 namespace plane_ts {
@@ -1266,35 +1267,54 @@ export class StatementBuilder extends Builder {
 }
 
 
-export class TriangleCongruenceBuilder extends Builder { 
+abstract class TriangleCongruenceSimilarityBuilder extends Builder { 
     trianglePairSelector = new TrianglePairSelector();
-
-    constructor(triangleCongruence? : TriangleCongruence){
-        super();
-    }
 
     async click(event : MouseEvent, view : View, position : Vec2, shape : Shape | undefined){
         this.trianglePairSelector.click(event, view, position, shape);
         if(this.trianglePairSelector.done()){
 
-            const triangleCongruence = makeTriangleCongruence(this.trianglePairSelector.triangleA!, this.trianglePairSelector.triangleB!);
-            if(triangleCongruence != undefined){
+            const triangle_statement = this.makeTriangleCongruenceSimilarity(this.trianglePairSelector.triangleA!, this.trianglePairSelector.triangleB!);
+            if(triangle_statement != undefined){
 
-                addShapeSetRelations(view, triangleCongruence);
+                addShapeSetRelations(view, triangle_statement);
 
-                this.resetTool(triangleCongruence);
+                this.resetTool(triangle_statement);
             }
             else{
 
                 this.resetTool(undefined);
             }
 
-            this.trianglePairSelector = new TrianglePairSelector();
+            this.trianglePairSelector.clear();
         }
     }
 
     drawTool(view : View){  
         this.trianglePairSelector.drawTool(view);
+    }
+
+    abstract makeTriangleCongruenceSimilarity(A : Triangle, B : Triangle) : Statement | undefined;
+}
+
+
+export class TriangleCongruenceBuilder extends TriangleCongruenceSimilarityBuilder { 
+    constructor(triangleCongruence? : TriangleCongruence){
+        super();
+    }
+
+    makeTriangleCongruenceSimilarity(A : Triangle, B : Triangle) : Statement | undefined {
+        return makeTriangleCongruence(A, B);
+    }
+}
+
+export class TriangleSimilarityBuilder extends TriangleCongruenceSimilarityBuilder {
+    constructor(triangleSimilarity? : TriangleSimilarity){
+        super();
+    }
+
+    makeTriangleCongruenceSimilarity(A : Triangle, B : Triangle) : Statement | undefined {
+        return makeTriangleSimilarity(A, B);
     }
 }
 
@@ -1483,6 +1503,10 @@ export class AngleEqualityBuilder extends Builder {
                     case AngleEqualityReason.parallelogram_opposite_angles:
                         quadrilateralSelector.clear();
                         break;
+                    case AngleEqualityReason.similar_triangles:
+                        showPrompt(TT("click on the vertices of two similar triangles."));
+                        this.trianglePairSelector = new TrianglePairSelector();
+                        break;
                     default:
                         throw new MyError();
                     }
@@ -1526,6 +1550,32 @@ export class AngleEqualityBuilder extends Builder {
                 }
                 break;
 
+            case AngleEqualityReason.similar_triangles:
+                if(this.trianglePairSelector == undefined){
+                    throw new MyError();
+                }
+
+                this.trianglePairSelector.click(event, view, position, shape);
+                if(this.trianglePairSelector.done()){
+                    const [triangleA, triangleB] = [this.trianglePairSelector.triangleA!, this.trianglePairSelector.triangleB!];
+                    this.trianglePairSelector.clear();
+
+                    if(! triangleA.isSimilar(triangleB)){
+                        const triangle_similarity = makeTriangleSimilarity(triangleA, triangleB);
+                        if(triangle_similarity == undefined){
+                            msg("triangles are not similar.");
+                            return;
+                        }
+                        else{
+                            msg("make triangle similarity.");
+                            addShapeSetRelations(view, triangle_similarity);
+                        }
+                    }
+
+                    angleEquality = makeAngleEqualityBySimilarTriangles(this.angleA, this.angleB, triangleA, triangleB);
+                }
+                break;
+                
             case AngleEqualityReason.parallelogram_opposite_angles:
                 quadrilateralSelector.click(event, view, position, shape);
                 if(quadrilateralSelector.done()){
@@ -1775,6 +1825,7 @@ const toolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [
     [ TextBlockBuilder          , "text"               , TT("text")               , [ TextBlock ] ],
     [ StatementBuilder          , "statement"          , TT("statement")          , [ Statement ] ],
     [ TriangleCongruenceBuilder , "triangle-congruence", TT("triangle congruence"), [ TriangleCongruence ] ],
+    [ TriangleSimilarityBuilder , "triangle-similarity", TT("triangle similarity"), [ TriangleSimilarity ] ],
     [ LengthEqualityBuilder     , "equal-length"       , TT("equal length")       , [ LengthEquality ] ],
     [ AngleEqualityBuilder      , "equal-angle"        , TT("equal angle")        , [ AngleEquality ] ],
     [ ParallelDetectorBuilder   , "parallel-detector"  , TT("parallel detector")  , [ ParallelDetector ] ],

@@ -41,7 +41,8 @@ export enum AngleEqualityReason {
     parallel_lines,
     angle_bisector,
     congruent_triangles,
-    parallelogram_opposite_angles
+    parallelogram_opposite_angles,
+    similar_triangles,
 }
 
 export enum QuadrilateralClass {
@@ -70,17 +71,33 @@ export enum ParallelReason {
     parallelogram
 }
 
+export enum TriangleSimilarityReason {
+    none = 700,
+    two_equal_angle_pairs,
+};
+
+
 export enum ImplicationCode {
     none,
     equal_angles,
     equal_lengths,
 };
 
-export function makeSelectionDlg(){
-    const titles = [ "reason for length equality", "reason for angle equality", "shape type", "reason for parallelogram", "reason for rhombus", "reason for parallel" ];
-    const span_id_prefixes = [ "length-equality-reason", "angle-equality-reason", "shape-type", "parallelogram-reason", "rhombus-reason", "parallel-reason" ]
+export function makeSelectionDlg(){    
+    const data : [string, string, (typeof LengthEqualityReason | typeof AngleEqualityReason | typeof ShapeType | typeof ParallelogramReason | typeof RhombusReason | typeof ParallelReason)][] = [ 
+        [ "reason for length equality", "length-equality-reason", LengthEqualityReason ],
+        [ "reason for angle equality" , "angle-equality-reason" , AngleEqualityReason ],
+        [ "shape type"                , "shape-type"            , ShapeType ],
+        [ "reason for parallelogram"  , "parallelogram-reason"  , ParallelogramReason ],
+        [ "reason for rhombus"        , "rhombus-reason"        , RhombusReason ], 
+        [ "reason for parallel"       , "parallel-reason"       , ParallelReason ], 
+    ];
 
-    for(const [idx, dic] of [ LengthEqualityReason, AngleEqualityReason, ShapeType, ParallelogramReason, RhombusReason, ParallelReason ].entries()){
+    const titles = data.map(x => x[0]);
+    const span_id_prefixes = data.map(x => x[1]);
+    const dics = data.map(x => x[2]);
+
+    for(const [idx, dic] of dics.entries()){
         const dlg = document.createElement("dialog");
         dlg.className = "menu_dlg";
 

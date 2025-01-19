@@ -1590,6 +1590,21 @@ export class Triangle extends Polygon {
 
         return false;
     }
+
+    isSimilar(triangle : Triangle) : boolean {
+        if(this.isCongruent(triangle)){
+            return true;
+        }
+
+        for(const triangles of similarTriangles){   
+            if(triangles.some(x => x.isEqual(this))){
+                return triangles.some(x => x.isEqual(triangle));
+            }
+        }
+
+        return false;
+    }
+
 }
 
 export class Quadrilateral extends Polygon {
