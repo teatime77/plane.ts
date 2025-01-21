@@ -691,6 +691,11 @@ export class AngleBisector extends AbstractLine {
     calc(): void {
         this.e = this.lineA.e.mul(this.directionA).add(this.lineB.e.mul(this.directionB)).mul(0.5);
     }
+
+    reading() : Reading {
+        return this.textReading(TT("Draw the angle bisector."));
+    }
+
 }
 
 export class SelectedShape extends Shape {
