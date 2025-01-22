@@ -231,7 +231,15 @@ export class View extends Widget {
 
         Point.tempPoints = [];
         const shape = this.getShape(position);
-        Builder.tool.click(event, this, position, shape);
+
+        if(Builder.tool instanceof StatementBuilder){
+
+            Builder.tool.clickWithMouseEvent(event, this, position, shape);
+        }
+        else{
+
+            Builder.tool.click(this, position, shape);
+        }
         this.dirty = true;
     }
 
