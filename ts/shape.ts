@@ -1052,7 +1052,7 @@ export abstract class Circle extends CircleArc {
 export class CircleByPoint extends Circle {
     point : Point;
 
-    constructor(obj : { center : Point, point : Point, color : string }){
+    constructor(obj : { center : Point, point : Point }){
         super(obj);
         this.point = obj.point;
     }
@@ -1063,10 +1063,6 @@ export class CircleByPoint extends Circle {
         });
 
         return obj;
-    }
-
-    static fromArgs(center : Point, point : Point, color : string = fgColor){
-        return new CircleByPoint({ center : center, point : point, color : color })
     }
 
     getAllShapes(shapes : MathEntity[]){

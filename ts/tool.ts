@@ -399,8 +399,8 @@ export class RangeTool extends Builder {
     }
 }
 
-class PointBuilder extends Builder {
-    async clickWithPosition(view : View, position : Vec2, shape : Shape | undefined){  
+export class PointBuilder extends Builder {
+    async click(view : View, position : Vec2, shape : Shape | undefined){  
         if(shape == undefined || shape instanceof AbstractLine || shape instanceof Circle){
 
             const new_point = this.makePointOnClick(view, position, shape);
@@ -437,44 +437,39 @@ class MidpointBuilder extends Builder {
 }
 
 class CircleByPointBuilder extends Builder {
-    circle : CircleByPoint | undefined;
+    center? : Point;
+    position? : Vec2;
 
     async click(view : View, position : Vec2, shape : Shape | undefined){   
-        if(this.circle == undefined){
+        if(this.center == undefined){
 
-            const center = this.makePointOnClick(view, position, shape);
-            center.setMode(Mode.depend);
+            this.center = this.makePointOnClick(view, position, shape);
+            this.center.setMode(Mode.depend);
 
-            const point = Point.fromArgs(position);
-            this.circle = CircleByPoint.fromArgs(center, point);
-
-            addShapeSetRelations(view, this.circle);
+            this.position = position;
         }
         else{
-            if(shape instanceof Point){
+            const point = this.makePointOnClick(view, position, shape);
 
-                this.circle.point = shape;
-            }
-            else{
+            const circle = new CircleByPoint({ center : this.center, point });
 
-                this.circle.point.setPosition(position);
-            }
+            addShapeSetRelations(view, circle);
 
-            this.resetTool(this.circle);
-            this.circle = undefined;
+            this.resetTool(circle);
+            this.center = undefined;
         }
     }
 
     pointermove(event : PointerEvent, view : View, position : Vec2, shape : Shape | undefined){
-        if(this.circle != undefined){
-            if(shape instanceof Point && shape != this.circle.center){
+        this.position = position;
+        View.current.dirty = true;
+    }
 
-                this.circle.point = shape;
-            }
-            else{
+    drawTool(view : View){        
+        if(this.center != undefined){
 
-                this.circle.point.setPosition(position);
-            }
+            const radius = this.position!.distance(this.center.position);
+            View.current.canvas.drawCircleRaw(this.center.position, radius, fgColor, defaultLineWidth);
         }
     }
 }
@@ -523,9 +518,9 @@ class CircleByRadiusBuilder extends Builder {
 }
 
 class EllipseBuilder extends Builder {
-    ellipse : Ellipse | undefined;
     center : Point | undefined;
     xPoint : Point | undefined;
+    radiusY = 0;
 
     async click(view : View, position : Vec2, shape : Shape | undefined){   
         if(this.center == undefined){
@@ -537,22 +532,22 @@ class EllipseBuilder extends Builder {
             this.xPoint = this.makePointOnClick(view, position, shape);
             this.xPoint.setMode(Mode.depend);
 
-            this.ellipse = new Ellipse({ center : this.center, xPoint : this.xPoint, radiusY : 0 });
-            addShapeSetRelations(view, this.ellipse);
         }
         else{
-            this.ellipse!.radiusY = this.getRadiusY(position);
+            this.radiusY = this.getRadiusY(position);
+            const ellipse = new Ellipse({ center : this.center, xPoint : this.xPoint, radiusY : this.radiusY });
+            addShapeSetRelations(view, ellipse);
 
-            this.resetTool(this.ellipse);
-            this.ellipse = undefined;
+
+            this.resetTool(ellipse);
             this.center = undefined;
             this.xPoint = undefined;
         }
     }
 
     pointermove(event : PointerEvent, view : View, position : Vec2, shape : Shape | undefined){
-        if(this.ellipse != undefined && this.center != undefined && this.xPoint != undefined){
-            this.ellipse.setRadiusY(this.getRadiusY(position));
+        if(this.center != undefined && this.xPoint != undefined){
+            this.radiusY = this.getRadiusY(position);
         }
     }
 
@@ -590,7 +585,6 @@ class ArcByPointBuilder extends Builder {
             const pointB = this.makePointOnClick(view, position, shape);
 
             const arc = new ArcByPoint({ center : this.center, pointA : this.pointA, pointB });
-            arc.setMode(Mode.depend);
 
             addShapeSetRelations(view, arc);
 
@@ -623,16 +617,20 @@ class ArcByRadiusBuilder extends Builder {
     lengthSymbol? : LengthSymbol;
     circle? : CircleArc;
     pointA? : Point;
-    arc? : ArcByLengthSymbol | ArcByCircle;
+    position? : Vec2;
 
     async click(view : View, position : Vec2, shape : Shape | undefined){   
         if(shape instanceof LengthSymbol){
             this.lengthSymbol = shape;
             shape.setMode(Mode.depend);
+
+            this.circle = undefined;
         }
         else if(shape instanceof CircleArc){
             this.circle = shape;
             shape.setMode(Mode.depend);
+
+            this.lengthSymbol = undefined;
         }        
         else if(this.center == undefined){
 
@@ -644,70 +642,49 @@ class ArcByRadiusBuilder extends Builder {
                 this.pointA = this.makePointOnClick(view, position, shape);
                 this.pointA.setMode(Mode.depend);
 
-                const [startAngle, endAngle] = Arc.getAngles(this.center!, this.pointA, this.pointA);
-                if(this.lengthSymbol != undefined){
-
-                    this.arc = new ArcByLengthSymbol({ center : this.center , lengthSymbol : this.lengthSymbol, startAngle, endAngle });
-                }   
-                else{
-
-                    this.arc = new ArcByCircle({ center : this.center , circle : this.circle!, startAngle, endAngle });
-                }
-
-                this.arc.adjustPosition(this.arc.pointA, position);
-
-                this.arc.setMode(Mode.depend);
+                this.position = position;
             }
             else{
 
-                addShapeSetRelations(view, this.arc!);
+                const [startAngle, endAngle] = Arc.getAngles(this.center!, this.pointA, this.position!);
+
+                let arc : ArcByLengthSymbol | ArcByCircle;
+                if(this.lengthSymbol != undefined){
+
+                    arc = new ArcByLengthSymbol({ center : this.center , lengthSymbol : this.lengthSymbol, startAngle, endAngle });
+                }   
+                else{
+
+                    arc = new ArcByCircle({ center : this.center , circle : this.circle!, startAngle, endAngle });
+                }
+
+                addShapeSetRelations(view, arc);
         
-                this.arc = undefined;
                 this.center = undefined;
                 this.lengthSymbol = undefined;
                 this.circle = undefined;
                 this.pointA = undefined;
     
-                this.resetTool(this.arc);
+                this.resetTool(arc);
             }
         }
     }
 
     pointermove(event : PointerEvent, view : View, position : Vec2, shape : Shape | undefined){
-        if(this.arc != undefined){
-
-            this.arc.adjustPosition(this.arc.pointB, position);
-        }
+        if(this.pointA != undefined){
+             this.position = position;
+            view.dirty = true;
+       }
     }
 
     drawTool(view: View): void {
-        const shapes : (Shape | undefined)[] = [this.center, this.pointA];
+        [this.center, this.lengthSymbol, this.circle, this.pointA].filter(x => x != undefined).forEach(x => x.draw());
 
-        if(this.arc != undefined){
-            shapes.push(this.arc, this.arc.pointB)
-        }
-
-        shapes.filter(x => x != undefined).forEach(x => x.draw());
-    }
-}
-
-
-export function drawTentativeLine(tool : Builder, pointA? : Point, position? : Vec2){
-    if(pointA != undefined && position != undefined){
-        pointA.draw();
-
-        let p2 : Vec2;
-
-        if(tool instanceof LineSegmentBuilder || tool instanceof LengthSymbolBuilder){
-            p2 = position;
-        }
-        else{
-            const l = View.current.max.distance(View.current.min);
-            const e = position.sub(pointA.position).unit();
-            p2 = pointA.position.add(e.mul( l));
-        }
-
-        View.current.canvas.drawLine(undefined, pointA.position, p2);
+        if((this.lengthSymbol != undefined || this.circle != undefined) && this.center != undefined && this.pointA != undefined){
+            const radius = (this.lengthSymbol != undefined ? this.lengthSymbol.length(): this.circle!.radius());
+            const [startAngle, endAngle] = Arc.getAngles(this.center!, this.pointA, this.position!);
+            View.current.canvas.drawArcRaw(this.center.position, radius, startAngle, endAngle, fgColor, defaultLineWidth);
+        }        
     }
 }
 
@@ -720,6 +697,8 @@ class LineByPointsBuilder extends Builder {
 
             this.pointA = this.makePointOnClick(view, position, shape);
             this.pointA.setMode(Mode.depend);
+
+            this.position = position;
         }
         else{
             const pointB = this.makePointOnClick(view, position, shape);
@@ -755,19 +734,20 @@ class LineByPointsBuilder extends Builder {
                 this.position = position;
             }
 
-            View.current.dirty = true;
+            view.dirty = true;
         }
     }
 
     drawTool(view : View){
-        drawTentativeLine(this, this.pointA, this.position);
+        if(this.pointA != undefined){
+
+            this.pointA.draw();
+            view.canvas.drawLineRaw(this.pointA.position, this.position!, fgColor, defaultLineWidth);
+        }
     }
 }
 
 class LineSegmentBuilder extends LineByPointsBuilder {
-}
-
-class RayBuilder extends LineByPointsBuilder {
 }
 
 class PolygonBuilder extends Builder {
@@ -979,9 +959,7 @@ class IntersectionBuilder extends Builder {
                 this.shape1 = undefined;
                 this.resetTool(new_shape);
             }
-
         }
-
     }
 }
 
