@@ -174,10 +174,13 @@ export class Builder {
     static tool : Builder;
     static shape : Statement | undefined;
 
+    done : boolean = false;
+
     static setToolByName(tool_name : string){
         Builder.shape = undefined;
         Builder.toolName = tool_name;
         Builder.tool = makeToolByType(tool_name);
+        msg(`set-Tool-By-Name:${tool_name}[${Builder.tool.constructor.name}]`)
     }
 
     static setToolByShape(shape : Statement){
@@ -260,6 +263,8 @@ export class Builder {
 
             showProperty(shape, 0);
         }
+
+        this.done = true;
     }
 
     pendingShapes() : Shape[] {
@@ -716,7 +721,7 @@ class LineByPointsBuilder extends Builder {
 
             addShapeSetRelations(view, line);
 
-            this.pointA = undefined;
+            this.pointA   = undefined;
             this.position = undefined;
 
             this.resetTool(line);
@@ -1140,6 +1145,7 @@ class LengthSymbolBuilder extends LineByPointsBuilder {
         else{
             if(this.pointA == undefined){
                 this.pointA = this.makePointOnClick(view, position, shape);
+                this.position = position;
             }
             else{
                 const clicked_point = this.makePointOnClick(view, position, shape);
@@ -1156,7 +1162,8 @@ class LengthSymbolBuilder extends LineByPointsBuilder {
                 const symbol = new LengthSymbol({ pointA, pointB, lengthKind : 0});
                 addShapeSetRelations(view, symbol);
 
-                this.pointA      = undefined;
+                this.pointA   = undefined;
+                this.position = undefined;
 
                 this.resetTool(symbol);
             }    
@@ -1324,9 +1331,7 @@ export class LengthEqualityBuilder extends Builder {
                     this.lengthSymbolB = shape;
                     shape.setMode(Mode.depend);
 
-                    const key = await showMenu(lengthEqualityReasonDlg);
-                    this.lengthEqualityReason = LengthEqualityReason[key as keyof typeof LengthEqualityReason];
-                    msg(`key:[${key}] [${this.lengthEqualityReason}]`);
+                    this.lengthEqualityReason = await showMenu(lengthEqualityReasonDlg);
 
                     switch(this.lengthEqualityReason){
                     case LengthEqualityReason.radii_equal:
@@ -1459,9 +1464,8 @@ export class AngleEqualityBuilder extends Builder {
                     this.angleB = shape;
                     shape.setMode(Mode.depend);
 
-                    const key = await showMenu(angleEqualityReasonDlg);
-                    this.angleEqualityReason = AngleEqualityReason[key as keyof typeof AngleEqualityReason];
-                    msg(`key:[${key}] [${this.angleEqualityReason}]`);
+                    this.angleEqualityReason = await showMenu(angleEqualityReasonDlg);
+
                     switch(this.angleEqualityReason){
                     case AngleEqualityReason.vertical_angles:
                         angleEquality = makeAngleEqualityByVertical_angles(this.angleA, this.angleB);
@@ -1598,9 +1602,7 @@ export class ParallelDetectorBuilder extends Builder {
             else{
                 shape.setMode(Mode.depend);
 
-                const key = await showMenu(parallelReasonDlg);
-                this.parallelReason = ParallelReason[key as keyof typeof ParallelReason];
-                msg(`key:[${key}] [${this.parallelReason}]`);
+                this.parallelReason = await showMenu(parallelReasonDlg);
 
                 let detector : ParallelDetector | undefined;
 
@@ -1726,25 +1728,25 @@ class QuadrilateralClassifierBuilder extends ClassifierBuilder {
             this.points.push(shape);
             shape.setMode(Mode.depend);
             if(this.points.length == 4){
-                const key1 = await showMenu(shapeTypeDlg);
-                const shapeType = ShapeType[key1 as keyof typeof ShapeType];
-                msg(`key:[${key1}] [${shapeType}]`);
+                const shapeType = await showMenu(shapeTypeDlg);
+                
 
-                let key2 : string;
                 let reason : ParallelogramReason | RhombusReason;
+
                 switch(shapeType){
                 case ShapeType.parallelogram:
-                    key2 = await showMenu(parallelogramReasonDlg);
-                    reason = ParallelogramReason[key2 as keyof typeof ParallelogramReason];                    
+                    reason = await showMenu(parallelogramReasonDlg);
                     break;
 
                 case ShapeType.rhombus:
-                    key2 = await showMenu(rhombusReasonDlg);
-                    reason = RhombusReason[key2 as keyof typeof RhombusReason];
+                    reason = await showMenu(rhombusReasonDlg);
                     break;
+
+                default:
+                    throw new MyError();
                 }
 
-                msg(`key:[${key2}] [${reason}]`);
+                msg(`reason:[${reason}]`);
 
                 const classifier = makeQuadrilateralClassifier(this.points, reason);
                 if(classifier != undefined){

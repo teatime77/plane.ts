@@ -16,11 +16,14 @@ function recalc(shape : MathEntity, changed : Set<MathEntity>){
 export class View extends Widget {
     static nearThreshold = 8;
     static current : View;
+    static isPlayBack : boolean = false;
+
     name  : string = "";
     board : HTMLCanvasElement;
     canvas : Canvas;
     grid : Grid;
 
+    operations : Operation[] = [];
     shapes : MathEntity[] = [];
     undoStack : MathEntity[] = [];
 
@@ -232,6 +235,8 @@ export class View extends Widget {
         Point.tempPoints = [];
         const shape = this.getShape(position);
 
+        this.addOperation(new ClickShape(position, shape));
+
         if(Builder.tool instanceof StatementBuilder){
 
             Builder.tool.clickWithMouseEvent(event, this, position, shape);
@@ -387,6 +392,10 @@ export class View extends Widget {
         this.dirty = true;
 
         msg(`resize: w:${this.board.width} h:${this.board.height} max:${this.max}`);
+    }
+
+    addOperation(operation : Operation){
+        this.operations.push(operation);
     }
 
     addShape(shape : MathEntity){

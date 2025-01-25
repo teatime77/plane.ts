@@ -30,15 +30,16 @@ export function $sel(id : string) : HTMLSelectElement {
 }
 
 // Define a function that returns a Promise
-async function waitForClick(element: HTMLElement): Promise<string> {
-    return new Promise<string>((resolve : (id:string)=>void) => {
+async function waitForClick(element: HTMLElement): Promise<number> {
+    return new Promise<number>((resolve : (id:number)=>void) => {
 
         const clickHandler = (ev : MouseEvent) => {
             const target = ev.target as HTMLElement;
-            if(target.className == "menu_item"){
+            if(target.className == enumSelectionClassName){
 
                 element.removeEventListener('click', clickHandler);
-                resolve(target.id); 
+                const enum_value = parseInt(target.dataset.enum_value!);
+                resolve(enum_value); 
             }
         }
 
@@ -50,11 +51,37 @@ async function waitForClick(element: HTMLElement): Promise<string> {
 export async function showMenu(dlg : HTMLDialogElement){
     dlg.showModal();
     
-    const id = await waitForClick(dlg);
+    let value : number
+
+    if(View.isPlayBack){
+        const operation = View.current.operations.pop();
+        if(operation instanceof EnumSelection){
+
+            const items = Array.from(dlg.getElementsByClassName(enumSelectionClassName)) as HTMLElement[];
+
+            const enum_value = `${operation.value}`;
+            const item  = items.find(x => x.dataset.enum_value == enum_value)!;
+            assert(item != undefined);
+            item.style.borderStyle = "ridge";
+            await sleep(1000);
+            item.style.borderStyle = "none";
+
+            value = operation.value;
+        }
+        else{
+            throw new MyError();
+        }
+    }
+    else{
+
+        value = await waitForClick(dlg);
+
+        View.current.addOperation(new EnumSelection(value));
+    }
+
     dlg.close();
 
-    const k = id.lastIndexOf("-");
-    return id.substring(k + 1);
+    return value
 }
         
 export class MyError extends Error {

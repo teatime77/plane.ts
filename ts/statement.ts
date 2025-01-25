@@ -2,6 +2,9 @@ namespace plane_ts {
 //
 type Term = parser_ts.Term;
 const parseMath = parser_ts.parseMath;
+
+export const enumSelectionClassName = "enum_selection_item";
+
 export let lengthEqualityReasonDlg : HTMLDialogElement;
 export let angleEqualityReasonDlg : HTMLDialogElement;
 export let parallelReasonDlg : HTMLDialogElement;
@@ -28,11 +31,6 @@ export enum LengthEqualityReason {
     parallelogram_opposite_sides,
     parallelogram_diagonal_bisection,
     equivalence_class,
-}
-
-export enum ShapeType {
-    parallelogram,
-    rhombus
 }
 
 export enum AngleEqualityReason {
@@ -76,12 +74,11 @@ export enum TriangleSimilarityReason {
     two_equal_angle_pairs,
 };
 
+export enum ShapeType {
+    parallelogram = 800,
+    rhombus
+}
 
-export enum ImplicationCode {
-    none,
-    equal_angles,
-    equal_lengths,
-};
 
 export function makeSelectionDlg(){    
     const data : [string, string, (typeof LengthEqualityReason | typeof AngleEqualityReason | typeof ShapeType | typeof ParallelogramReason | typeof RhombusReason | typeof ParallelReason)][] = [ 
@@ -115,7 +112,8 @@ export function makeSelectionDlg(){
                 const span = document.createElement("span");
                 span.id = `${span_id_prefixes[idx]}-${key}`;
                 span.innerText = key;
-                span.className = "menu_item";
+                span.className = enumSelectionClassName;
+                span.dataset.enum_value = `${value}`;
 
                 div.append(span);
             }
