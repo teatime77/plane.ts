@@ -1,6 +1,6 @@
 namespace plane_ts {
 
-let idMap = new Map<number, Widget>();
+export let idMap = new Map<number, Widget>();
 
 export abstract class Widget {
     static refMap : Map<number, any> = new Map<number, any>();
@@ -277,7 +277,7 @@ export function handleFileSelect(ev: DragEvent) {
             const obj  = JSON.parse(json);
 
             assert(false);
-            loadData(NaN, obj);
+            loadData(obj);
 
             // viewEvent(obj);
         };
@@ -286,7 +286,7 @@ export function handleFileSelect(ev: DragEvent) {
     }
 }
 
-export function loadData(doc_id : number, obj : any){
+export function loadData(obj : any){
 
     Plane.one.clearPlane();
 

@@ -54,7 +54,8 @@ export async function showMenu(dlg : HTMLDialogElement){
     let value : number
 
     if(View.isPlayBack){
-        const operation = View.current.operations.pop();
+        const operation = playBackOperations.shift()!;
+        View.current.addOperation(operation);
         if(operation instanceof EnumSelection){
 
             const items = Array.from(dlg.getElementsByClassName(enumSelectionClassName)) as HTMLElement[];

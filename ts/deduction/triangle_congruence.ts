@@ -29,7 +29,7 @@ export function makeTriangleCongruence(A : Triangle, B : Triangle) : TriangleCon
     msg(`equal side count:${equal_side_count}`);
 
     if(equal_side_count == 3){
-        return new TriangleCongruence({ shapes:[A, B], reason : TriangleCongruenceReason.side_angle_side, auxiliaryShapes : auxiliaryShapes })
+        return new TriangleCongruence({ shapes:[A, B], reason : TriangleCongruenceReason.side_side_side, auxiliaryShapes : auxiliaryShapes })
     }
     else if(equal_side_count == 2){
         const idx = equal_side.indexOf(false);

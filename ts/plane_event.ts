@@ -13,7 +13,9 @@ export function initPlane(plane : Plane, root : layout_ts.Grid){
         const tool_name = button.button.value;
         Builder.setToolByName(tool_name);
 
-        View.current.addOperation(new ToolSelection(tool_name))
+        if(tool_name != "SelectionTool" && tool_name != "RangeTool"){
+            View.current.addOperation(new ToolSelection(tool_name))
+        }
     }
 
     const canvas = makeCanvas(plane.canvas_block.div);
@@ -52,7 +54,7 @@ export function viewEvent(view : View){
     document.addEventListener('keydown', (ev : KeyboardEvent) => {
         if (ev.key === "Escape") {
             msg("Escape key pressed!");
-            Builder.resetTool();
+            Builder.builderResetTool();
         }
     });    
 

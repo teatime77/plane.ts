@@ -25,7 +25,7 @@ export class View extends Widget {
 
     operations : Operation[] = [];
     shapes : MathEntity[] = [];
-    undoStack : MathEntity[] = [];
+    undoStack : Operation[][] = [];
 
     changed : Set<MathEntity> = new Set<MathEntity>();
 
@@ -88,8 +88,15 @@ export class View extends Widget {
     }
 
     clearView(){
+        Widget.maxId = this.id;
+        idMap.clear();
+        idMap.set(this.id, this);
+
+        this.operations = [];
         this.shapes = [];
         this.dirty = true;
+
+        clearShapeList();
     
         Plane.one.clearNarrationBox();
     
@@ -235,16 +242,30 @@ export class View extends Widget {
         Point.tempPoints = [];
         const shape = this.getShape(position);
 
-        this.addOperation(new ClickShape(position, shape));
 
-        if(Builder.tool instanceof StatementBuilder){
+        if(Builder.tool instanceof SelectionTool){
+            if(shape instanceof Point){
 
-            Builder.tool.clickWithMouseEvent(event, this, position, shape);
+                const click_shape = this.operations.find(x => x instanceof ClickShape && x.createdPoint === shape) as ClickShape;
+                if(click_shape != undefined){
+                    msg(`click shape position is changed: ${click_shape.position}=>${position}`);
+                    click_shape.position = position;
+                }
+            }
         }
         else{
+            this.addOperation(new ClickShape(position, shape));
 
-            Builder.tool.click(this, position, shape);
+            if(Builder.tool instanceof StatementBuilder){
+
+                Builder.tool.clickWithMouseEvent(event, this, position, shape);
+            }
+            else{
+
+                Builder.tool.click(this, position, shape);
+            }
         }
+
         this.dirty = true;
     }
 
@@ -463,41 +484,55 @@ export class View extends Widget {
         text_blocks.forEach(x => x.updateTextPosition());
     }
 
-    undo(){
-        if(this.shapes.length == 0){
+    async undo(){
+        if(this.shapes.length == 0 || this.operations.length == 0){
             return;
         }
 
-        const shape = this.shapes.pop()!;
+        const undo_operations : Operation[] = [];
 
-        recalcRelations(this);
+        undo_operations.unshift( this.operations.pop()! );        
+        while(true){
+            if(this.operations.length == 0){
+                this.shapes = [];
+                break;
+            }
+            else{
+                const last_operation = last(this.operations);
+                if(last_operation.shapesLength != 0){
+                    assert(last_operation instanceof ClickShape);
 
-        const valid_shapes = new Set<MathEntity>(this.allShapes());
+                    if(undo_operations.length != 0 && !(undo_operations[0] instanceof ToolSelection)){
+                        const tool_selection = this.operations.slice().reverse().find(x => x instanceof ToolSelection)!;
+                        assert(tool_selection != undefined);
+                        undo_operations.unshift(new ToolSelection(tool_selection.toolName));
+                        msg(`prepend tool-selection:${tool_selection.toolName}`);
+                    }
 
-        const shapes_created_by_shape =  shape.allShapes().filter(x => ! valid_shapes.has(x));
-        shapes_created_by_shape.forEach(x => x.hideTextBlock());
+                    break;
+                }
+                else{
+                    undo_operations.unshift( this.operations.pop()! );        
+                }                
+            }
+        }
 
-        this.undoStack.push(shape);
+        await playBackAll();
 
-        popShapeList();
+        this.undoStack.push(undo_operations);
 
         this.dirty = true;
     }
 
-    redo(){
+    async redo(){
         if(this.undoStack.length == 0){
             return;
         }
 
-        const shape = this.undoStack.pop()!;
-        shape.allShapes().forEach(x => x.restoreTextBlock());
+        const undo_operations = this.undoStack.pop()!;
+        this.operations.push(... undo_operations);
 
-        this.shapes.push(shape);
-
-        this.resetOrders();
-        recalcRelations(this);
-
-        addToViewShapesList(shape);
+        await playBackAll();
 
         this.dirty = true;
     }

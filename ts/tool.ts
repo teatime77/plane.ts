@@ -172,15 +172,15 @@ export let quadrilateralSelector = new QuadrilateralSelector();
 export class Builder {
     static toolName : string;
     static tool : Builder;
-    static shape : Statement | undefined;
 
     done : boolean = false;
 
     static setToolByName(tool_name : string){
-        Builder.shape = undefined;
         Builder.toolName = tool_name;
         Builder.tool = makeToolByType(tool_name);
-        msg(`set-Tool-By-Name:${tool_name}[${Builder.tool.constructor.name}]`)
+        if(tool_name == "RangeTool"){
+            msg(`dump:\n${View.current.operations.map(x => x.dump()).join("\n")}`);
+        }
     }
 
     static setToolByShape(shape : Statement){
@@ -201,15 +201,10 @@ export class Builder {
         }
     }
 
-    static resetTool(){
+    static builderResetTool(){
         Builder.tool.resetTool(undefined);
         
-        if(Builder.shape != undefined){
-            Builder.setToolByShape(Builder.shape);
-        }
-        else{
-            Builder.setToolByName(Builder.toolName);
-        }
+        Builder.setToolByName(Builder.toolName);
     }
 
     async click(view : View, position : Vec2, shape : Shape | undefined){        
@@ -243,6 +238,14 @@ export class Builder {
 
                 point.setBound(shape);
             }
+
+            if(view.operations.length != 0){
+                const last_operation = last(view.operations);
+                if(last_operation instanceof ClickShape && last_operation.position === position){
+                    last_operation.createdPoint = point;
+                    msg(`point is created.`);
+                }
+            }
             return point;
         }
     }
@@ -257,6 +260,11 @@ export class Builder {
     }
 
     resetTool(shape : MathEntity | undefined){
+        if(View.current.operations.length != 0){
+            const last_operation = last(View.current.operations);
+            last_operation.maxId = Widget.maxId;
+            last_operation.shapesLength = View.current.shapes.length;
+        }
         View.current.resetMode();
 
         if(shape != undefined){
@@ -281,6 +289,7 @@ export class SelectionTool extends Builder {
     oldPosition? : Vec2;
 
     async click(view : View, position : Vec2, shape : Shape | undefined){ 
+        msg(`selection click:${position}`);
         this.resetTool(undefined);
         if(shape != undefined){
 
@@ -290,6 +299,7 @@ export class SelectionTool extends Builder {
     }
 
     pointerdown(event : PointerEvent, view : View, position : Vec2, shape : Shape | undefined){
+        msg(`selection pointerdown:${position}`);
         this.downOffset = new Vec2(event.offsetX, event.offsetY);
 
         this.selectedShape = shape;
@@ -335,6 +345,7 @@ export class SelectionTool extends Builder {
     }
 
     pointerup(event : PointerEvent, view : View, position : Vec2, shape : Shape | undefined){
+        msg(`selection pointerup:${position}`);
         if(this instanceof MotionBuilder && this.selectedShape instanceof Point && !this.selectedShape.position.equals(this.oldPosition!)){
             msg(`position changed:`)
             this.animation.addPropertyChange(this.selectedShape, "position", this.oldPosition, this.selectedShape.position);
@@ -1873,6 +1884,11 @@ export function addToViewShapesList(shape : MathEntity){
 
 export function popShapeList(){
     Plane.one.shapes_block.popChild();
+    layout_ts.Layout.root.updateRootLayout();
+}
+
+export function clearShapeList(){
+    Plane.one.shapes_block.clear();
     layout_ts.Layout.root.updateRootLayout();
 }
 

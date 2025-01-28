@@ -81,7 +81,7 @@ export class Plane {
                     height : "24px",
                     url : `${urlOrigin}/lib/plane/img/undo.png`,
                     click : async(ev : MouseEvent)=>{
-                        View.current.undo();
+                        await View.current.undo();
                     }
                 })
                 ,
@@ -90,7 +90,7 @@ export class Plane {
                     height : "24px",
                     url : `${urlOrigin}/lib/plane/img/redo.png`,
                     click : async(ev : MouseEvent)=>{
-                        View.current.redo();
+                        await View.current.redo();
                     }
                 })
                 ,
