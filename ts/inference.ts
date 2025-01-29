@@ -364,4 +364,22 @@ export function getTrianglesByAngle(angle : Angle, triangles : Triangle[]) : Tri
     return triangles_with_inner_angle;
 }
 
+
+export function getTrianglesByLengthSymbol(length_symbol : LengthSymbol, triangles : Triangle[]) : Triangle[] {
+    const triangles_with_length_symbol : Triangle[] = [];
+
+    const Length_symbol_points = [ length_symbol.pointA, length_symbol.pointB ];
+
+    for(const triangle of triangles){
+        const points = triangle.points.filter(point => Length_symbol_points.includes(point) );
+        if(points.length == 2){
+            triangles_with_length_symbol.push(triangle);
+        }
+    }
+
+    return triangles_with_length_symbol;
+}
+
+
+
 }

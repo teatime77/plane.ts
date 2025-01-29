@@ -79,28 +79,58 @@ function findParallelLinesOfLengthSymbols(lengthSymbolA : LengthSymbol, lengthSy
     return undefined;
 }
 
-export function makeEqualLengthByCongruentTriangles(lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol, triangleA : Triangle, triangleB : Triangle) : LengthEquality{
-    msg(`equal length:congruent triangles`);
-    return new LengthEquality({
-        reason          : LengthEqualityReason.congruent_triangles,
-        auxiliaryShapes : [ triangleA!, triangleB! ],
-        shapes          : [ lengthSymbolA, lengthSymbolB ]
-    });
-}
+function findTrianglePairByLengthSymbols(lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol, triangles_list : Triangle[][]) : [Triangle, Triangle] | undefined {
+    for(const triangles of triangles_list){
+        const trianglesA = getTrianglesByLengthSymbol(lengthSymbolA, triangles);
+        if(trianglesA.length == 0){
+            continue;
+        }
 
-export function makeEqualLengthByCongruentTrianglesSub(lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol, triangles : Triangle[]) : LengthEquality | undefined {
-    const triangle_pairs = pairs<Triangle>(triangles[0], triangles[1]);
-    for(const [triangleA, triangleB] of triangle_pairs){
+        const trianglesB = getTrianglesByLengthSymbol(lengthSymbolB, triangles);
+        if(trianglesB.length == 0){
+            continue;
+        }
 
-        const idxA = triangleA.lengthSymbolIndex(lengthSymbolA);
-        const idxB = triangleB.lengthSymbolIndex(lengthSymbolB);
+        for(const triangleA of trianglesA){
+            const idxA = triangleA.lines.indexOf(lengthSymbolA.line!);
+            assert(idxA != -1);
 
-        if(idxA != -1 && idxB != -1 && idxA == idxB){
-            return makeEqualLengthByCongruentTriangles(lengthSymbolA, lengthSymbolB, triangleA, triangleB);
+            for(const triangleB of trianglesB){
+                const idxB = triangleB.lines.indexOf(lengthSymbolB.line!);
+                assert(idxB != -1);
+
+                if(idxA == idxB){
+
+                    return [triangleA, triangleB];
+
+                }
+                else{
+                    msg(`make Angle Equality By Congruent Triangles : idx-A:${idxA} != idx-B:${idxB}`);
+                }
+            }
         }
     }
 
-    return undefined;
+}
+
+export function makeEqualLengthByCongruentTriangles(lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol) : LengthEquality | undefined {
+    const triangleAB = findTrianglePairByLengthSymbols(lengthSymbolA, lengthSymbolB, congruentTriangles);
+    if(triangleAB != undefined){
+        const [triangleA, triangleB] = triangleAB;
+
+        msg(`equal length:congruent triangles`);
+        return new LengthEquality({
+            reason          : LengthEqualityReason.congruent_triangles,
+            auxiliaryShapes : [ triangleA, triangleB ],
+            shapes          : [ lengthSymbolA, lengthSymbolB ]
+        });
+    }
+    else{
+
+        msg(`can not find congruent triangles`);
+
+        return undefined;
+    }
 }
 
 export function makeEqualLengthByRadiiEqual(lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol) : LengthEquality | undefined {
@@ -316,9 +346,8 @@ export class LengthEquality extends Statement {
             break;
 
         case LengthEqualityReason.congruent_triangles:{
-                const [ triangleA, triangleB ] = this.auxiliaryShapes as Triangle[];
                 const [lengthSymbolA, lengthSymbolB] = this.selectedShapes as LengthSymbol[];
-                lengthEquality = makeEqualLengthByCongruentTriangles(lengthSymbolA, lengthSymbolB, triangleA, triangleB);
+                lengthEquality = makeEqualLengthByCongruentTriangles(lengthSymbolA, lengthSymbolB);
             }
             break;
 

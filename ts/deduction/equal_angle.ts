@@ -125,8 +125,8 @@ export function isEqualAnglePoints(angle_pointsA : Point[], angle_pointsB : Poin
     return false;
 }
 
-export function makeAngleEqualityByCongruentTriangles(angleA : Angle, angleB : Angle) : AngleEquality | undefined {
-    for(const triangles of congruentTriangles){
+function findTrianglePairByAngles(angleA : Angle, angleB : Angle, triangles_list : Triangle[][]) : [Triangle, Triangle] | undefined {
+    for(const triangles of triangles_list){
         const trianglesA = getTrianglesByAngle(angleA, triangles);
         if(trianglesA.length == 0){
             continue;
@@ -147,16 +147,8 @@ export function makeAngleEqualityByCongruentTriangles(angleA : Angle, angleB : A
 
                 if(idxA == idxB){
 
-                    msg(`equal angle:congruent triangles`);
-                    return new AngleEquality({
-                        reason : AngleEqualityReason.congruent_triangles,
-                        auxiliaryShapes : [
-                            triangleA, triangleB
-                        ],
-                        shapes : [
-                            angleA, angleB
-                        ]
-                    });        
+                    return [triangleA, triangleB];
+
                 }
                 else{
                     msg(`make Angle Equality By Congruent Triangles : idx-A:${idxA} != idx-B:${idxB}`);
@@ -165,28 +157,48 @@ export function makeAngleEqualityByCongruentTriangles(angleA : Angle, angleB : A
         }
     }
 
-    msg(`can not find congruent triangles`);
-
-    return undefined;
 }
 
-export function makeAngleEqualityBySimilarTriangles(angleA : Angle, angleB : Angle, A : Triangle, B : Triangle) : AngleEquality | undefined {
-    for(const idx of range(3)){
+export function makeAngleEqualityByCongruentTriangles(angleA : Angle, angleB : Angle) : AngleEquality | undefined {
+    const triangleAB = findTrianglePairByAngles(angleA, angleB, congruentTriangles);
+    if(triangleAB != undefined){
+        const [triangleA, triangleB] = triangleAB;
 
-        const angle_pointsA = [ A.points[idx], A.points[(idx + 1) % 3], A.points[(idx + 2) % 3] ];
-        const angle_pointsB = [ B.points[idx], B.points[(idx + 1) % 3], B.points[(idx + 2) % 3] ];
-
-        if(findAngle(angle_pointsA) == angleA && findAngle(angle_pointsB) == angleB){
-
-            return new AngleEquality({
-                reason : AngleEqualityReason.similar_triangles,
-                auxiliaryShapes : [ A, B ],
-                shapes : [ angleA, angleB ]
-            });
-        }
+        msg(`equal angle:congruent triangles`);
+        return new AngleEquality({
+            reason : AngleEqualityReason.congruent_triangles,
+            auxiliaryShapes : [
+                triangleA, triangleB
+            ],
+            shapes : [
+                angleA, angleB
+            ]
+        });        
     }
+    else{
 
-    return undefined;
+        msg(`can not find congruent triangles`);
+
+        return undefined;
+    }
+}
+
+export function makeAngleEqualityBySimilarTriangles(angleA : Angle, angleB : Angle) : AngleEquality | undefined {
+    const triangleAB = findTrianglePairByAngles(angleA, angleB, similarTriangles);
+    if(triangleAB != undefined){
+        const [triangleA, triangleB] = triangleAB;
+        return new AngleEquality({
+            reason : AngleEqualityReason.similar_triangles,
+            auxiliaryShapes : [ triangleA, triangleB ],
+            shapes : [ angleA, angleB ]
+        });
+    }
+    else{
+
+        msg(`can not find similar triangles`);
+
+        return undefined;
+    }
 }
 
 function getAngleUnitVectors(angleA : Angle, angleB : Angle) : [Vec2, Vec2, Vec2, Vec2]{
@@ -364,9 +376,8 @@ export class AngleEquality extends Statement {
             }
             break;
 
-        case AngleEqualityReason.congruent_triangles:{
-                angleEquality = makeAngleEqualityByCongruentTriangles(angleA, angleB);
-            }
+        case AngleEqualityReason.congruent_triangles:
+            angleEquality = makeAngleEqualityByCongruentTriangles(angleA, angleB);
             break;
 
         case AngleEqualityReason.parallelogram_opposite_angles:{
@@ -375,10 +386,8 @@ export class AngleEquality extends Statement {
             }
             break;
 
-        case AngleEqualityReason.similar_triangles:{
-                const [triangleA, triangleB] = this.auxiliaryShapes as Triangle[];
-                angleEquality = makeAngleEqualityBySimilarTriangles(angleA, angleB, triangleA, triangleB);
-            }
+        case AngleEqualityReason.similar_triangles:
+            angleEquality = makeAngleEqualityBySimilarTriangles(angleA, angleB);
             break;
 
         default:

@@ -1359,8 +1359,7 @@ export class LengthEqualityBuilder extends Builder {
                         lengthEquality = makeEqualLengthByCircleByRadius(this.lengthSymbolA, this.lengthSymbolB);
                         break;
                     case LengthEqualityReason.congruent_triangles:
-                        showPrompt(TT("click on the vertices of two congruent triangles."));
-                        this.trianglePairSelector = new TrianglePairSelector();
+                        lengthEquality = makeEqualLengthByCongruentTriangles(this.lengthSymbolA, this.lengthSymbolB);
                         break;
                     case LengthEqualityReason.parallelogram_opposite_sides:
                     case LengthEqualityReason.parallelogram_diagonal_bisection:
@@ -1397,19 +1396,6 @@ export class LengthEqualityBuilder extends Builder {
                 break;
             // case LengthEqualityReason.circle_by_radius:
             case LengthEqualityReason.congruent_triangles:
-                if(this.trianglePairSelector == undefined){
-                    throw new MyError();
-                }
-                this.trianglePairSelector.click(view, position, shape);
-                if(this.trianglePairSelector.done()){
-                    if(this.trianglePairSelector.areCongruentTriangles()){
-                        lengthEquality = makeEqualLengthByCongruentTrianglesSub(this.lengthSymbolA, this.lengthSymbolB, this.trianglePairSelector.triangles());
-                        this.trianglePairSelector = undefined;
-                    }
-                    else{
-                        throw new MyError();
-                    }
-                }
                 break;
             case LengthEqualityReason.parallelogram_opposite_sides:
                 quadrilateralSelector.click(view, position, shape);
@@ -1493,8 +1479,7 @@ export class AngleEqualityBuilder extends Builder {
                         quadrilateralSelector.clear();
                         break;
                     case AngleEqualityReason.similar_triangles:
-                        showPrompt(TT("click on the vertices of two similar triangles."));
-                        this.trianglePairSelector = new TrianglePairSelector();
+                        angleEquality = makeAngleEqualityBySimilarTriangles(this.angleA, this.angleB);
                         break;
                     default:
                         throw new MyError();
@@ -1523,32 +1508,6 @@ export class AngleEqualityBuilder extends Builder {
 
             case AngleEqualityReason.congruent_triangles:
                 break;
-
-            case AngleEqualityReason.similar_triangles:
-                if(this.trianglePairSelector == undefined){
-                    throw new MyError();
-                }
-
-                this.trianglePairSelector.click(view, position, shape);
-                if(this.trianglePairSelector.done()){
-                    const [triangleA, triangleB] = [this.trianglePairSelector.triangleA!, this.trianglePairSelector.triangleB!];
-                    this.trianglePairSelector.clear();
-
-                    if(! triangleA.isSimilar(triangleB)){
-                        const triangle_similarity = makeTriangleSimilarity(triangleA, triangleB);
-                        if(triangle_similarity == undefined){
-                            msg("triangles are not similar.");
-                            return;
-                        }
-                        else{
-                            msg("make triangle similarity.");
-                            addShapeSetRelations(view, triangle_similarity);
-                        }
-                    }
-
-                    angleEquality = makeAngleEqualityBySimilarTriangles(this.angleA, this.angleB, triangleA, triangleB);
-                }
-                break;
                 
             case AngleEqualityReason.parallelogram_opposite_angles:
                 quadrilateralSelector.click(view, position, shape);
@@ -1558,6 +1517,9 @@ export class AngleEqualityBuilder extends Builder {
                 }
                 break;
 
+            case AngleEqualityReason.similar_triangles:
+                break;
+    
             default:
                 throw new MyError();
             }
