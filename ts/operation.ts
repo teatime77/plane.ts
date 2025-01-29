@@ -12,8 +12,19 @@ export abstract class Operation {
     }
 }
 
-export async function loadOperationsText(text : string){
-    msg(`load Operations Text:\n${text}`);
+export async function loadOperationsText(doc_text : string){
+    msg(`load Operations Text:\n${doc_text}`);
+    const data = JSON.parse(doc_text);
+    let lines : string[];
+
+    if(data["version"] == 2.0){
+        lines = data["operations"];
+        assert(Array.isArray(lines) && (lines.length == 0 || typeof lines[1] == "string"));
+    }
+    else{
+        msg(`data is empty.`);
+        lines = [];
+    }
 
     const view = View.current;
     view.clearView();
@@ -22,7 +33,7 @@ export async function loadOperationsText(text : string){
 
     const operations : Operation[] = [];
 
-    for(let line of text.split("\n")){
+    for(let line of lines){
         line = line.trim().replaceAll(/\s+/g, " ");        
         if(line == ""){
             continue;
@@ -65,10 +76,15 @@ export async function loadOperationsText(text : string){
 }
 
 export function getOperationsText(){
-    const text = View.current.operations.map(x => x.toString()).join("\n");
-    msg(`operations-text : \n${text}\n`);
+    const data = {
+        version : 2.0,
+        operations : View.current.operations.map(x => x.toString())
+    };
+
+    const doc_text = JSON.stringify(data, null, 4);
+    msg(`operations-text : \n${doc_text}\n`);
     
-    return text;
+    return doc_text;
 }
 
 export class ClickShape extends Operation {

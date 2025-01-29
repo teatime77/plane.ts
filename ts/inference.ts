@@ -333,7 +333,35 @@ export function isParallelogramPoints(points : Point[]) : boolean {
 }
 
 export function getTrianglesByAngle(angle : Angle, triangles : Triangle[]) : Triangle[] {
-    return triangles.filter(x => x.lines.filter(line => [angle.lineA, angle.lineB].includes(line)).length == 2);
+    const triangles_with_inner_angle : Triangle[] = [];
+
+    LA : for(const triangle of triangles){
+        const angle_points : Point[] = [ angle.intersection ];
+
+        for(const line of [angle.lineA, angle.lineB]){
+            const points = triangle.points.filter(point => line.includesPoint(point));
+            if(points.length != 2){
+                continue LA;
+            }
+
+            if(points[0] == angle.intersection){
+                angle_points.push(points[1]);
+            }
+            else if(points[1] == angle.intersection){
+                angle_points.push(points[0]);
+            }
+            else{
+                continue LA;
+            }
+        }
+        assert(angle_points.length == 3);
+
+        if(isClockwise(angle_points)){
+            triangles_with_inner_angle.push(triangle);
+        }
+    }
+
+    return triangles_with_inner_angle;
 }
 
 }

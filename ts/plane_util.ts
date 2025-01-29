@@ -65,7 +65,7 @@ export async function showMenu(dlg : HTMLDialogElement){
             const item  = items.find(x => x.dataset.enum_value == enum_value)!;
             assert(item != undefined);
             item.style.borderStyle = "ridge";
-            await sleep(1000);
+            await sleep(500);
             item.style.borderStyle = "none";
 
             value = operation.value;
@@ -214,18 +214,15 @@ export function pairKey(a : Widget, b : Widget) : string {
     return a.id <= b.id ? `${a.id}:${b.id}` : `${b.id}:${a.id}`;
 }
 
-
 export async function sleep(milliseconds : number) : Promise<void> {
-    return new Promise((resolve) => {
-        if(Plane.one.playMode == PlayMode.playAll){
-            resolve();
-        }
-        else{
+    if(Plane.one.playMode == PlayMode.playAll){
+        milliseconds = 50;
+    }
 
-            setTimeout(()=>{
-                resolve();
-            }, milliseconds);
-        }
+    return new Promise((resolve) => {
+        setTimeout(()=>{
+            resolve();
+        }, milliseconds);
     });
 }
 

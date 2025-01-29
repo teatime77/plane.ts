@@ -654,15 +654,15 @@ class ArcByRadiusBuilder extends Builder {
             this.center.setMode(Mode.depend);
         }
         else if((this.lengthSymbol != undefined || this.circle != undefined) && this.center != undefined){
+            this.position = position;
+
             if(this.pointA == undefined){
                 this.pointA = this.makePointOnClick(view, position, shape);
                 this.pointA.setMode(Mode.depend);
-
-                this.position = position;
             }
             else{
 
-                const [startAngle, endAngle] = Arc.getAngles(this.center!, this.pointA, this.position!);
+                const [startAngle, endAngle] = Arc.getAngles(this.center!, this.pointA, position);
 
                 let arc : ArcByLengthSymbol | ArcByCircle;
                 if(this.lengthSymbol != undefined){
