@@ -125,25 +125,47 @@ export function isEqualAnglePoints(angle_pointsA : Point[], angle_pointsB : Poin
     return false;
 }
 
-export function makeAngleEqualityByCongruentTriangles(angleA : Angle, angleB : Angle, triangleA : Triangle, triangleB : Triangle) : AngleEquality | undefined {
-    if(triangleA.isCongruent(triangleB)){
+export function makeAngleEqualityByCongruentTriangles(angleA : Angle, angleB : Angle) : AngleEquality | undefined {
+    for(const triangles of congruentTriangles){
+        const trianglesA = getTrianglesByAngle(angleA, triangles);
+        if(trianglesA.length == 0){
+            continue;
+        }
 
-        const idxA = triangleA.angleIndex(angleA);
-        const idxB = triangleB.angleIndex(angleB);
+        const trianglesB = getTrianglesByAngle(angleB, triangles);
+        if(trianglesB.length == 0){
+            continue;
+        }
 
-        if(idxA != -1 && idxB != -1 && idxA == idxB){
-            msg(`equal angle:congruent triangles`);
-            return new AngleEquality({
-                reason : AngleEqualityReason.congruent_triangles,
-                auxiliaryShapes : [
-                    triangleA!, triangleB!
-                ],
-                shapes : [
-                    angleA, angleB
-                ]
-            });
+        for(const triangleA of trianglesA){
+            const idxA = triangleA.points.indexOf(angleA.intersection);
+            assert(idxA != -1);
+
+            for(const triangleB of trianglesB){
+                const idxB = triangleB.points.indexOf(angleB.intersection);
+                assert(idxB != -1);
+
+                if(idxA == idxB){
+
+                    msg(`equal angle:congruent triangles`);
+                    return new AngleEquality({
+                        reason : AngleEqualityReason.congruent_triangles,
+                        auxiliaryShapes : [
+                            triangleA, triangleB
+                        ],
+                        shapes : [
+                            angleA, angleB
+                        ]
+                    });        
+                }
+                else{
+                    msg(`make Angle Equality By Congruent Triangles : idx-A:${idxA} != idx-B:${idxB}`);
+                }
+            }
         }
     }
+
+    msg(`can not find congruent triangles`);
 
     return undefined;
 }
@@ -343,8 +365,7 @@ export class AngleEquality extends Statement {
             break;
 
         case AngleEqualityReason.congruent_triangles:{
-                const [triangleA, triangleB] = this.auxiliaryShapes as Triangle[];
-                angleEquality = makeAngleEqualityByCongruentTriangles(angleA, angleB, triangleA, triangleB);
+                angleEquality = makeAngleEqualityByCongruentTriangles(angleA, angleB);
             }
             break;
 

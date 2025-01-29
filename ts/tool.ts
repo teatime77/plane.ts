@@ -1487,8 +1487,7 @@ export class AngleEqualityBuilder extends Builder {
                     case AngleEqualityReason.angle_bisector:
                         break;
                     case AngleEqualityReason.congruent_triangles:
-                        showPrompt(TT("click on the vertices of two congruent triangles."));
-                        this.trianglePairSelector = new TrianglePairSelector();
+                        angleEquality = makeAngleEqualityByCongruentTriangles(this.angleA, this.angleB);
                         break;
                     case AngleEqualityReason.parallelogram_opposite_angles:
                         quadrilateralSelector.clear();
@@ -1523,21 +1522,6 @@ export class AngleEqualityBuilder extends Builder {
                 break;
 
             case AngleEqualityReason.congruent_triangles:
-                if(this.trianglePairSelector == undefined){
-                    throw new MyError();
-                }
-
-                this.trianglePairSelector.click(view, position, shape);
-                if(this.trianglePairSelector.done()){
-                    if(this.trianglePairSelector.areCongruentTriangles()){
-                        const [triangleA, triangleB] = [this.trianglePairSelector.triangleA!, this.trianglePairSelector.triangleB!];
-                        angleEquality = makeAngleEqualityByCongruentTriangles(this.angleA, this.angleB, triangleA, triangleB);
-                        this.trianglePairSelector = undefined;
-                    }
-                    else{
-                        throw new MyError();
-                    }
-                }
                 break;
 
             case AngleEqualityReason.similar_triangles:

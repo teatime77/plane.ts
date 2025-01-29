@@ -332,4 +332,8 @@ export function isParallelogramPoints(points : Point[]) : boolean {
     return getParallelogramClassifier(points) != undefined;
 }
 
+export function getTrianglesByAngle(angle : Angle, triangles : Triangle[]) : Triangle[] {
+    return triangles.filter(x => x.lines.filter(line => [angle.lineA, angle.lineB].includes(line)).length == 2);
+}
+
 }

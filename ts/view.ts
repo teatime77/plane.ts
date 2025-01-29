@@ -252,9 +252,11 @@ export class View extends Widget {
                     click_shape.position = position;
                 }
             }
+
+            Builder.tool.click(this, position, shape);
         }
         else{
-            this.addOperation(new ClickShape(position, shape));
+            this.addOperation(new ClickShape(position, (shape != undefined ? shape.id : NaN)));
 
             if(Builder.tool instanceof StatementBuilder){
 

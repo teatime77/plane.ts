@@ -13,10 +13,14 @@ export abstract class Operation {
 }
 
 export async function loadOperationsText(text : string){
+    msg(`load Operations Text:\n${text}`);
+
     const view = View.current;
     view.clearView();
 
     const speech = new i18n_ts.DummySpeech();
+
+    const operations : Operation[] = [];
 
     for(let line of text.split("\n")){
         line = line.trim().replaceAll(/\s+/g, " ");        
@@ -31,14 +35,13 @@ export async function loadOperationsText(text : string){
         case "click":{
                 const x = parseFloat(items[1]);
                 const y = parseFloat(items[2]);
-                let shape : Shape | undefined = undefined;
+                let shapeId = NaN;
                 if(4 <= items.length){
-                    const id = parseInt(items[3]);
-                    shape = idMap.get(id) as Shape;
-                    assert(shape != undefined);
+                    shapeId = parseInt(items[3]);
+                    assert(! isNaN(shapeId));
                 }
 
-                operation = new ClickShape(new Vec2(x, y), shape);
+                operation = new ClickShape(new Vec2(x, y), shapeId);
             }
             break;
 
@@ -53,8 +56,12 @@ export async function loadOperationsText(text : string){
             throw new MyError();
         }
 
-        await playBack(speech, [operation]);
+        operations.push(operation);
     }
+
+    await playBack(speech, operations);
+
+    msg(`load Operations Text completes.`);
 }
 
 export function getOperationsText(){
@@ -69,10 +76,10 @@ export class ClickShape extends Operation {
     shapeId : number;
     createdPoint? : Point;
 
-    constructor(position : Vec2, shape : Shape | undefined){
+    constructor(position : Vec2, shapeId : number){
         super();
         this.position = position;
-        this.shapeId    = (shape != undefined ? shape.id : NaN);
+        this.shapeId    = shapeId;
     }
 
     toString() : string {
@@ -172,6 +179,7 @@ export async function playBack(speech : i18n_ts.AbstractSpeech, operations : Ope
 
     while(playBackOperations.length != 0){
         const operation = playBackOperations.shift()!;
+        msg(`play back:${operation.dump()}`);
         view.addOperation(operation);
         if(operation instanceof ClickShape){
             let shape : Shape | undefined;
@@ -225,6 +233,9 @@ export async function playBack(speech : i18n_ts.AbstractSpeech, operations : Ope
         }
         else if(operation instanceof ToolSelection){
             Builder.setToolByName(operation.toolName);
+        }
+        else{
+            throw new MyError();
         }
     }
 

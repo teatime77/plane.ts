@@ -55,6 +55,7 @@ export async function showMenu(dlg : HTMLDialogElement){
 
     if(View.isPlayBack){
         const operation = playBackOperations.shift()!;
+        msg(`show Menu:${operation.dump()}`);
         View.current.addOperation(operation);
         if(operation instanceof EnumSelection){
 
