@@ -31,6 +31,7 @@ export enum LengthEqualityReason {
     parallelogram_opposite_sides,
     parallelogram_diagonal_bisection,
     equivalence_class,
+    midpoint,
 }
 
 export enum AngleEqualityReason {

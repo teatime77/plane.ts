@@ -373,6 +373,8 @@ export class LengthEquality extends Statement {
             }
             break;
 
+        case LengthEqualityReason.midpoint:
+
         default:
             throw new MyError();
         }

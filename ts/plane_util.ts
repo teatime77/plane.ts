@@ -397,6 +397,7 @@ function makeReasonMsgMap(){
         [ LengthEqualityReason.parallelogram_opposite_sides, TT("Since the opposite sides of a parallelogram are equal in length,")],
         [ LengthEqualityReason.parallelogram_diagonal_bisection, TT("Since the diagonals of a parallelogram intersect at the midpoint,")],
         [ LengthEqualityReason.equivalence_class, TT("Since these two length symbols are equal to another length symbol,")],
+        [ LengthEqualityReason.midpoint, TT("Since the midpoint bisects the line segment,")],
 
         [ AngleEqualityReason.vertical_angles, TT("Since vertical angles are equal,")],
         [ AngleEqualityReason.parallel_lines, TT("Since the corresponding angles of parallel lines are equal,")],

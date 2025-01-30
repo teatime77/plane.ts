@@ -444,7 +444,21 @@ class MidpointBuilder extends Builder {
         }
         else if(shape instanceof Point){
             const mid_point = new Midpoint( { position:Vec2.zero(), pointA : this.pointA, pointB : shape  } );
+
+            const lengthSymbolA = new LengthSymbol({pointA : this.pointA, pointB : mid_point, lengthKind : 0});
+            const lengthSymbolB = new LengthSymbol({pointA : mid_point  , pointB : shape    , lengthKind : 0});
+
+            const lengthEquality = new LengthEquality({
+                reason : LengthEqualityReason.midpoint,
+                auxiliaryShapes : [ mid_point ],
+                shapes : [ lengthSymbolA, lengthSymbolB ]
+            });
+
             addShapeSetRelations(view, mid_point);
+            addShapeSetRelations(view, lengthSymbolA);
+            addShapeSetRelations(view, lengthSymbolB);
+            addShapeSetRelations(view, lengthEquality);
+
             this.pointA      = undefined;
             this.resetTool(mid_point);
         }
