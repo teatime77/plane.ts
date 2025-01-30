@@ -224,27 +224,32 @@ export function makeEqualLengthByParallelLinesAuto(lengthSymbolA : LengthSymbol,
     return undefined;
 }
 
-export function makeEqualLengthByParallelogramOppositeSides(lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol, parallelogram : Quadrilateral) : LengthEquality | undefined {
-    if(parallelogram.isParallelogram()){
+export function makeEqualLengthByParallelogramOppositeSides(lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol) : LengthEquality | undefined {
+    let points = [ lengthSymbolA.pointA, lengthSymbolA.pointB, lengthSymbolB.pointA, lengthSymbolB.pointB];
+    points = toClockwisePoints(points);
 
-        const points =  [lengthSymbolA.pointA, lengthSymbolA.pointB, lengthSymbolB.pointA, lengthSymbolB.pointB];
-        if(areSetsEqual(parallelogram.points, points)){
-
-            msg(`parallelogram-sides`);
-            return new LengthEquality({
-                reason : LengthEqualityReason.parallelogram_opposite_sides,
-                auxiliaryShapes : [parallelogram],
-                shapes : [ lengthSymbolA, lengthSymbolB ]            
-            });
-        }
+    const parallelogramClassifier =  getParallelogramClassifier(points);
+    if(parallelogramClassifier == undefined){
+        msg(`no parallelogram`);
+        return undefined;
     }
 
-    return undefined;
+    const parallelogram = new Quadrilateral({
+        points,
+        lines : []
+    });
+
+    msg(`parallelogram-sides`);
+    return new LengthEquality({
+        reason : LengthEqualityReason.parallelogram_opposite_sides,
+        auxiliaryShapes : [parallelogram],
+        shapes : [ lengthSymbolA, lengthSymbolB ]            
+    });
 }
 
-export function makeEqualLengthByParallelogramDiagonalBisection(lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol, parallelogram : Quadrilateral) : LengthEquality | undefined {
-    const classifier = getParallelogramClassifier(parallelogram.points);
-    if(classifier != undefined){
+export function makeEqualLengthByParallelogramDiagonalBisection(lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol) : LengthEquality | undefined {
+    const parallelograms = getParallelogramsByDiagonalLengthSymbols(lengthSymbolA, lengthSymbolB);
+    for(const parallelogram of parallelograms){
         const diagonal_intersection = parallelogram.diagonalIntersection();
         if(diagonal_intersection != undefined){
             let lengthSymbol_points_pair = [lengthSymbolA.points(), lengthSymbolB.points()];
@@ -254,7 +259,6 @@ export function makeEqualLengthByParallelogramDiagonalBisection(lengthSymbolA : 
 
                 if(areSetsEqual(lengthSymbol_vertices, [parallelogram.points[0], parallelogram.points[2]]) ||
                    areSetsEqual(lengthSymbol_vertices, [parallelogram.points[1], parallelogram.points[3]]) ){
-
 
                     msg(`parallelogram-diagonal-bisection`);
                     return new LengthEquality({
@@ -352,16 +356,14 @@ export class LengthEquality extends Statement {
             break;
 
         case LengthEqualityReason.parallelogram_opposite_sides:{
-                const parallelogram = this.auxiliaryShapes[0] as Quadrilateral;
                 const [lengthSymbolA, lengthSymbolB] = this.selectedShapes as LengthSymbol[];
-                lengthEquality = makeEqualLengthByParallelogramOppositeSides(lengthSymbolA, lengthSymbolB, parallelogram);
+                lengthEquality = makeEqualLengthByParallelogramOppositeSides(lengthSymbolA, lengthSymbolB);
             }
             break;
 
         case LengthEqualityReason.parallelogram_diagonal_bisection:{
-                const parallelogram = this.auxiliaryShapes[0] as Quadrilateral;
                 const [lengthSymbolA, lengthSymbolB] = this.selectedShapes as LengthSymbol[];
-                lengthEquality = makeEqualLengthByParallelogramDiagonalBisection(lengthSymbolA, lengthSymbolB, parallelogram);
+                lengthEquality = makeEqualLengthByParallelogramDiagonalBisection(lengthSymbolA, lengthSymbolB);
             }
             break;
 

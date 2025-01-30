@@ -20,15 +20,16 @@ export let congruentTriangles : Triangle[][] = [];
 export let similarTriangles : Triangle[][] = [];
 
 export const reasonToDoc = new Map<number, number>([
-    [AngleEqualityReason.vertical_angles, 8],
-    [AngleEqualityReason.parallelogram_opposite_angles, 35],
+    // [AngleEqualityReason.vertical_angles, 8],
+    [AngleEqualityReason.parallelogram_opposite_angles, 10],
+    [ AngleEqualityReason.angle_bisector, 2 ],
 
-    [LengthEqualityReason.parallel_lines_distance, 42],
-    [LengthEqualityReason.parallelogram_opposite_sides, 35],
-    [LengthEqualityReason.parallelogram_diagonal_bisection, 46],
+    // [LengthEqualityReason.parallel_lines_distance, 42],
+    [LengthEqualityReason.parallelogram_opposite_sides, 10],
+    [LengthEqualityReason.parallelogram_diagonal_bisection, 11],
 
-    [ParallelogramReason.each_opposite_sides_are_equal, 44],
-    [ParallelogramReason.each_diagonal_bisections, 47],
+    [ParallelogramReason.each_opposite_sides_are_equal, 1],
+    [ParallelogramReason.each_diagonal_bisections, 9],
 ]);
 
 export const usedReasons = new Set<number>();
@@ -326,6 +327,33 @@ export function findEqualLengthsByPointsPair(As : [Point, Point], Bs : [Point, P
 
 export function getParallelogramClassifier(points : Point[]) : ParallelogramClassifier | undefined {
     return list(parallelogramClassifiers).find(x => areSetsEqual(x.quadrilateral().points, points) );
+}
+
+export function getParallelogramsByDiagonalLengthSymbols(lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol) : Quadrilateral[]{
+    if(lengthSymbolA.line == undefined || lengthSymbolA.line != lengthSymbolB.line){
+        msg(TT("length symbols are not on the same line."));
+        return [];
+    }
+
+    const connection_point = lengthSymbolA.points().find(x => lengthSymbolB.points().includes(x));
+    if(connection_point == undefined){
+        msg(TT("no connection point of two length symbols"));
+        return [];
+    }
+
+    const pointA = lengthSymbolA.points().find(x => x != connection_point);
+    const pointB = lengthSymbolB.points().find(x => x != connection_point);
+
+    const parallelograms : Quadrilateral[] = [];
+    for(const parallelogramClassifier of parallelogramClassifiers){
+        const parallelogram = parallelogramClassifier.quadrilateral();
+        const points = parallelogram.points;
+        if(areSetsEqual([points[0], points[2]], [pointA, pointB]) || areSetsEqual([points[1], points[3]], [pointA, pointB]) ){
+            parallelograms.push(parallelogram);
+        }
+    }
+
+    return parallelograms;
 }
 
 export function isParallelogramPoints(points : Point[]) : boolean {

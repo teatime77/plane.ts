@@ -165,7 +165,6 @@ class QuadrilateralSelector extends PolygonsSelector {
 }
 
 export let linesSelector_2 = new LinesSelector(2);
-export let linesSelector_3 = new LinesSelector(3);
 export let circleArcsSelector = new CircleArcsSelector(2);
 export let quadrilateralSelector = new QuadrilateralSelector();
 
@@ -1362,8 +1361,10 @@ export class LengthEqualityBuilder extends Builder {
                         lengthEquality = makeEqualLengthByCongruentTriangles(this.lengthSymbolA, this.lengthSymbolB);
                         break;
                     case LengthEqualityReason.parallelogram_opposite_sides:
+                        lengthEquality = makeEqualLengthByParallelogramOppositeSides(this.lengthSymbolA, this.lengthSymbolB);
+                        break;
                     case LengthEqualityReason.parallelogram_diagonal_bisection:
-                        quadrilateralSelector.clear();
+                        lengthEquality = makeEqualLengthByParallelogramDiagonalBisection(this.lengthSymbolA, this.lengthSymbolB);
                         break;
                     case LengthEqualityReason.equivalence_class:
                         lengthEquality = makeEqualLengthByEquivalenceClass(this.lengthSymbolA, this.lengthSymbolB);
@@ -1398,16 +1399,8 @@ export class LengthEqualityBuilder extends Builder {
             case LengthEqualityReason.congruent_triangles:
                 break;
             case LengthEqualityReason.parallelogram_opposite_sides:
-                quadrilateralSelector.click(view, position, shape);
-                if(quadrilateralSelector.done()){
-                    lengthEquality = makeEqualLengthByParallelogramOppositeSides(this.lengthSymbolA, this.lengthSymbolB, quadrilateralSelector.polygon as Quadrilateral);
-                }
                 break;
             case LengthEqualityReason.parallelogram_diagonal_bisection:
-                quadrilateralSelector.click(view, position, shape);
-                if(quadrilateralSelector.done()){
-                    lengthEquality = makeEqualLengthByParallelogramDiagonalBisection(this.lengthSymbolA, this.lengthSymbolB, quadrilateralSelector.polygon as Quadrilateral);
-                }
                 break;
             default:
                 throw new MyError();
@@ -1468,7 +1461,7 @@ export class AngleEqualityBuilder extends Builder {
                         angleEquality = makeAngleEqualityByVertical_angles(this.angleA, this.angleB);
                         break;
                     case AngleEqualityReason.parallel_lines:
-                        linesSelector_3.clear();
+                        angleEquality = makeAngleEqualityByParallelLines(this.angleA, this.angleB);
                         break;
                     case AngleEqualityReason.angle_bisector:
                         break;
@@ -1494,13 +1487,6 @@ export class AngleEqualityBuilder extends Builder {
                 break;
 
             case AngleEqualityReason.parallel_lines:
-                linesSelector_3.click(view, position, shape);
-                if(linesSelector_3.done()){
-                    const parallel_lines = linesSelector_3.shapes.slice(0, 2) as AbstractLine[];
-                    const cross_line = linesSelector_3.shapes[2] as AbstractLine;
-                    angleEquality = makeAngleEqualityByParallelLines(this.angleA, this.angleB, parallel_lines, cross_line);
-                    linesSelector_3.clear();
-                }
                 break;
 
             case AngleEqualityReason.angle_bisector:

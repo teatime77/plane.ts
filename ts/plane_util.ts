@@ -350,11 +350,34 @@ export function isClockwise(points : Point[]) : boolean {
 }
 
 export function toClockwisePoints(points : Point[]) : Point[] {
-    if(isClockwise(points)){
-        return points;
+    if(points.length == 3){
+
+        if(isClockwise(points)){
+            return points;
+        }
+        else{
+            return [2, 1, 0].map(i => points[i]);
+        }
+    }
+
+    if(points.length != 4){
+        throw new MyError();
+    }
+
+    const [p1, p2, p3] = toClockwisePoints(points.slice(0, 3));
+    const p4 = points[3];
+    if(isClockwise([p1,p4,p2])){
+        return [p1, p4, p2, p3];
+    }
+    else if(isClockwise([p2, p4, p3])){
+        return [p1, p2, p4, p3 ];
+    }
+    else if(isClockwise([p3, p4, p1])){
+        return [p3, p4, p1, p2];
     }
     else{
-        return [2, 1, 0].map(i => points[i]);
+
+        throw new MyError();
     }
 }
 

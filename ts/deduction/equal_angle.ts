@@ -239,7 +239,20 @@ export function makeAngleEqualityByVertical_angles(angleA : Angle, angleB : Angl
     return undefined;
 }
 
-export function makeAngleEqualityByParallelLines(angleA : Angle, angleB : Angle, parallel_lines : AbstractLine[], cross_line : AbstractLine) : AngleEquality | undefined {
+export function makeAngleEqualityByParallelLines(angleA : Angle, angleB : Angle) : AngleEquality | undefined {
+
+    let angle_lines = unique([ angleA.lineA, angleA.lineB, angleB.lineA, angleB.lineB  ]);
+    if(angle_lines.length != 3){
+        msg("no cross line.");
+        return undefined;
+    }
+
+    const cross_line = angle_lines.find(x => [ angleA.lineA, angleA.lineB ].includes(x) && [angleB.lineA, angleB.lineB].includes(x));
+    assert(cross_line != undefined);
+
+    const parallel_lines = angle_lines.filter(x => x != cross_line);
+    assert(parallel_lines.length == 2);
+
     if(! isParallel(parallel_lines[0], parallel_lines[1])){
         msg("not parallel");
         return undefined;
@@ -363,9 +376,7 @@ export class AngleEquality extends Statement {
             break;
 
         case AngleEqualityReason.parallel_lines:{
-                const parallel_lines = this.auxiliaryShapes.slice(0, 2) as AbstractLine[];
-                const cross_line = this.auxiliaryShapes[2] as AbstractLine;
-                angleEquality = makeAngleEqualityByParallelLines(angleA, angleB, parallel_lines, cross_line);
+                angleEquality = makeAngleEqualityByParallelLines(angleA, angleB);
             }
             break;
             
