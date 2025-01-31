@@ -281,6 +281,8 @@ export class DimensionLine extends Shape {
 }
 
 export class LengthSymbol extends Shape {
+    static DefaultLengthKind = 0;
+
     pointA : Point;
     pointB : Point;
     lengthKind : number;
@@ -365,14 +367,25 @@ export class LengthSymbol extends Shape {
         const AB = B.sub(A);
 
         const e = AB.unit()
+        const center = this.center();
+
+        if(this.lengthKind == 0){
+
+            const e45 = e.rot45();
+
+            const tick_1 = center.add( e45.mul(- tick_half_length) );
+            const tick_2 = center.add( e45.mul(  tick_half_length) );
+    
+            drawLine(this, tick_1, tick_2);
+            return;
+        }
+
         const normal = e.rot90();
         const normal_minus = normal.mul(- tick_half_length);
         const normal_plus  = normal.mul(  tick_half_length);
 
-        const center = this.center();
-
         let shifts : number[];
-        if(this.lengthKind % 2 == 0){
+        if(this.lengthKind % 2 == 1){
 
             shifts = [ 0, 1, -1, 2, -2 ];
         }
@@ -381,7 +394,7 @@ export class LengthSymbol extends Shape {
         }
         assert(this.lengthKind < shifts.length);
 
-        for(const idx of range(this.lengthKind + 1)){
+        for(const idx of range(this.lengthKind)){
             const shift = shifts[idx];
             const pos = center.add(e.mul(shift * tick_half_length));
 
@@ -453,6 +466,28 @@ export class LengthSymbol extends Shape {
     points() : [Point, Point] {
         return [this.pointA, this.pointB];
     }
+
+    static setEqualLengthKinds(lengthSymbols : LengthSymbol[]){
+        assert(lengthSymbols.every(x => x instanceof LengthSymbol));
+        
+        const max_lengthKind = Math.max(... lengthSymbols.map(x => x.lengthKind));
+        if(max_lengthKind != LengthSymbol.DefaultLengthKind){
+            lengthSymbols.forEach(x => x.lengthKind = max_lengthKind);
+        }
+        else{
+            const all_lengthSymbols = View.current.allShapes().filter(x => x instanceof LengthSymbol);
+            if(all_lengthSymbols.length == 0){
+
+                lengthSymbols.forEach(x => x.lengthKind = LengthSymbol.DefaultLengthKind + 1);
+            }
+            else{
+
+                const max_all_lengthKind = Math.max(... all_lengthSymbols.map(x => x.lengthKind));
+                lengthSymbols.forEach(x => x.lengthKind = max_all_lengthKind + 1);
+            }
+        }
+    }
+
 }
 
 

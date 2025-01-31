@@ -44,6 +44,8 @@ export class LengthEqualityConstraint extends Constraint {
         this.lengthSymbolB = obj.lengthSymbolB;
 
         this.calc();
+
+        LengthSymbol.setEqualLengthKinds(this.selectedShapes as LengthSymbol[]);
     }
 
     makeObj() : any {

@@ -302,6 +302,8 @@ export function showPrompt(text : string){
 export class LengthEquality extends Statement {
     constructor(obj : { narration? : string, reason? : number, auxiliaryShapes? : MathEntity[], shapes : MathEntity[], mathText? : string }){
         super(obj);
+
+        LengthSymbol.setEqualLengthKinds(this.selectedShapes as LengthSymbol[]);
     }
 
     reading(): Reading {
