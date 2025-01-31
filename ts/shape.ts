@@ -41,7 +41,6 @@ export abstract class MathEntity extends Widget implements i18n_ts.Readable, par
     static orderSet = new Set<MathEntity>();
     setRelationsCount : number = 0;
     visible : boolean = true;
-    visible2 : boolean = false;
     mode : Mode = Mode.none;
     isOver : boolean = false;
     mute : boolean = false;
@@ -1475,7 +1474,7 @@ export class Polygon extends Shape {
         for(const position of positions){
             const v = position.sub(center);
             const len = v.len();
-            const diff = View.current.fromXPixScale(2 * OverLineWidth);
+            const diff = View.current.fromXPixScale(1 * OverLineWidth);
             const shrinked_v = v.unit().mul(len - diff);
             const new_position = center.add(shrinked_v);
             shrinked_positions.push(new_position);
@@ -1486,6 +1485,13 @@ export class Polygon extends Shape {
 
     draw(): void {
         const color = this.modeColor();
+
+        if([Mode.target1, Mode.target2].includes(this.mode)){
+            const positions = this.points.map(x => x.position);
+            View.current.canvas.drawPolygonRaw(positions, color, NaN, true);
+
+            return;
+        }
 
         const radius = (this.mode == Mode.none ? 1 : 2) * Point.radius;
 

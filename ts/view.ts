@@ -36,7 +36,6 @@ export class View extends Widget {
     max! : Vec2;
 
     dirty : boolean = false;
-    attentionShapes : Shape[] = [];
 
     static getJson() : string {
     
@@ -209,7 +208,7 @@ export class View extends Widget {
             this.grid.showGrid(Plane.one.show_axis.checked(), Plane.one.show_grid.checked());
 
             const shapes = this.allRealShapes();
-            const visible_shapes = shapes.filter(x => x.visible || x.visible2);
+            const visible_shapes = shapes.filter(x => x.visible);
             
             if(Plane.one.playMode != PlayMode.stop || !Plane.one.editMode){
 
@@ -220,7 +219,6 @@ export class View extends Widget {
                 shapes.forEach(c => c.draw());
             }
 
-            this.attentionShapes.forEach(x => x.draw());
             visible_shapes.filter(x =>  x.mode != Mode.none).forEach(c => c.draw());
 
             Builder.tool.drawTool(this);

@@ -698,76 +698,7 @@ export class AngleBisector extends AbstractLine {
 
 }
 
-export class SelectedShape extends Shape {
-    index : number = NaN;
-    highlightMode : number = 0;
-    specifiedShapes : Shape[];
 
-    constructor(obj : { specifiedShapes : Shape[] }){
-        super(obj);
-        this.specifiedShapes = obj.specifiedShapes;
-    }
-
-    makeObj() : any {
-        return Object.assign(super.makeObj(), {
-            specifiedShapes : this.specifiedShapes.map(x => x.toObj())
-        });
-    }
-
-    setMode(mode : Mode){
-        this.specifiedShapes.forEach(x => x.setMode(mode));
-    }
-
-    draw(){
-        if(this.isTriangle()){
-            this.drawTriangle();
-        }
-    }
-
-    drawTriangle(){
-        const points = this.specifiedShapes as Point[];
-        const positions = points.map(x => x.position);
-
-        const center_x = average(positions.map(p => p.x));
-        const center_y = average(positions.map(p => p.y));
-        const center = new Vec2(center_x, center_y);
-
-        const offset_len = View.current.fromXPixScale(2 * OverLineWidth);
-        const offset_positions : Vec2[] = [];
-        for(const p of positions){
-            const offset = center.sub(p).unit().mul(offset_len);
-            offset_positions.push(p.add(offset));
-        }
-
-        const color = [ "orange", "lime", "pink"  ][this.index];
-        View.current.canvas.drawPolygonRaw(positions, color, NaN, true);
-
-        let side_points : Point[];
-        switch(this.highlightMode){
-        case 0: return;
-        case 1: side_points = [ points[0], points[1] ]; break;
-        case 2: side_points = [ points[1], points[2] ]; break;
-        case 3: side_points = [ points[2], points[0] ]; break;
-        default : throw new MyError();
-        }
-
-        try{
-
-            View.current.canvas.drawLineRaw(side_points[0].position, side_points[1].position, dependColor, OverLineWidth);
-        }
-        catch(e){
-            msg(`${e}`);
-        }
-    }
-
-    reading() : Reading {
-        return new Reading(this, "", []);
-    }
-
-    isTriangle() : boolean {
-        return this.specifiedShapes.length == 3 && this.specifiedShapes.every(x => x instanceof Point);
-    }
-}
 
 export class PropertyChange {
     widget : Widget;
@@ -829,7 +760,7 @@ export class Motion extends MathEntity {
         while(true){
             const endTime = Date.now();
             let rate = (endTime - startTime) / 3000;
-            if(Plane.one.playMode == PlayMode.playAll){
+            if(Plane.one.playMode == PlayMode.fastForward){
                 rate *= 3;
             }
             if(1 < rate){

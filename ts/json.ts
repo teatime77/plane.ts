@@ -215,9 +215,6 @@ export function parseObject(obj: any, parse_other_object? : (o : any)=>any) : an
     case ParallelDetector.name:
         return new ParallelDetector(obj);
 
-    case SelectedShape.name:
-        return new SelectedShape(obj);
-
     case PropertyChange.name:
         return new PropertyChange(obj);
 

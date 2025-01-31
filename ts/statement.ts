@@ -283,13 +283,6 @@ export class Statement extends Shape {
         }
     }
 
-    setIndex(){
-        const selected_shapes =  this.selectedShapes.filter(x => x instanceof SelectedShape) as SelectedShape[];
-        for(const [idx, shape] of selected_shapes.entries()){
-            shape.index = idx;
-        }
-    }
-
     async showAuxiliaryShapes(){
         for(const shape of this.auxiliaryShapes){
             shape.setMode(Mode.depend);
@@ -303,7 +296,18 @@ export class Statement extends Shape {
             const reason_msg = reasonMsg(this.reason);
             await speech.speak(reason_msg);
 
-            await this.showAuxiliaryShapes();
+            if([LengthEqualityReason.congruent_triangles, AngleEqualityReason.congruent_triangles].includes(this.reason)){
+                assert( this.auxiliaryShapes.every(x => x instanceof Triangle) );
+
+                for(const [i, shape] of this.auxiliaryShapes.entries()){
+                    shape.setMode(i == 0 ? Mode.target1 : Mode.target2);
+                    await sleep(500);
+                }    
+            }
+            else{
+
+                await this.showAuxiliaryShapes();
+            }
 
             await speech.waitEnd();
         }
@@ -311,9 +315,19 @@ export class Statement extends Shape {
         const reading = this.reading();
         await speech.speak(reading.text);
 
-        for(const shape of this.selectedShapes){
-            shape.setMode(Mode.target);
-            sleep(500);
+        if(this instanceof TriangleCongruence){
+            assert( this.selectedShapes.every(x => x instanceof Triangle) );
+
+            for(const [i, shape] of this.selectedShapes.entries()){
+                shape.setMode(i == 0 ? Mode.target1 : Mode.target2);
+                await sleep(500);
+            }
+        }
+        else{
+            for(const shape of this.selectedShapes){
+                shape.setMode(Mode.target);
+                await sleep(500);
+            }
         }
         
         await speech.waitEnd();

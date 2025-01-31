@@ -70,7 +70,9 @@ export async function loadOperationsText(doc_text : string){
         operations.push(operation);
     }
 
+    Plane.one.playMode = PlayMode.fastForward;
     await playBack(speech, operations);
+    Plane.one.playMode = PlayMode.stop;
 
     msg(`load Operations Text completes.`);
 }
@@ -156,9 +158,6 @@ export async function speakAndHighlight(shape : MathEntity, speech : i18n_ts.Abs
     await speech.speak(lines.shift()!.trim());
 
     for(const dep of shape.dependencies()){
-        if(dep instanceof SelectedShape){
-            View.current.attentionShapes.push(dep);
-        }
         
         dep.setMode(Mode.depend);
 

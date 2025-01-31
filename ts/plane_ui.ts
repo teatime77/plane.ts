@@ -16,7 +16,7 @@ const $checkbox = layout_ts.$checkbox;
 export enum PlayMode {
     stop,
     normal,
-    playAll,
+    fastForward,
 }
 
 export class Plane {

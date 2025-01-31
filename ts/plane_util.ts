@@ -215,7 +215,7 @@ export function pairKey(a : Widget, b : Widget) : string {
 }
 
 export async function sleep(milliseconds : number) : Promise<void> {
-    if(Plane.one.playMode == PlayMode.playAll){
+    if(Plane.one.playMode == PlayMode.fastForward){
         milliseconds = 50;
     }
 

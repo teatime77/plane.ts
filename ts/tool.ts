@@ -1248,8 +1248,7 @@ export class StatementBuilder extends Builder {
 
                         this.specifiedShapes.push(shape);
 
-                        selected_shape = new SelectedShape({ specifiedShapes : this.specifiedShapes });
-                        this.statement.selectedShapes.push(selected_shape);
+                        this.statement.selectedShapes.push(... this.specifiedShapes);
 
                         this.specifiedShapes.forEach(x => x.setMode(Mode.none));
                         this.specifiedShapes = [];
@@ -1773,28 +1772,21 @@ const toolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [
 export function makeShapeButton(shape : MathEntity, add_to_view_shapes : boolean) : layout_ts.Button {
     let shape_img_name : string | undefined;
 
-    if(shape instanceof SelectedShape){
+    for(const [ tool, img_name, title, shape_classes] of toolList){
+        if(shape_classes.some(x => x.name == shape.constructor.name)){
 
-        shape_img_name = "selected-shape";
-    }
-    else{
-
-        for(const [ tool, img_name, title, shape_classes] of toolList){
-            if(shape_classes.some(x => x.name == shape.constructor.name)){
-
-                shape_img_name = img_name;
-                break;
-            }
+            shape_img_name = img_name;
+            break;
         }
+    }
 
-        if(shape_img_name == undefined){
-            if(shape instanceof Polygon){
-                shape_img_name = "polygon";
-            }
-            else{
+    if(shape_img_name == undefined){
+        if(shape instanceof Polygon){
+            shape_img_name = "polygon";
+        }
+        else{
 
-                throw new MyError(`unknown shape class name:[${shape.constructor.name}]`);
-            }
+            throw new MyError(`unknown shape class name:[${shape.constructor.name}]`);
         }
     }
 
