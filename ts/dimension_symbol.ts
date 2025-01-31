@@ -9,6 +9,8 @@ export class Angle extends Shape {
     static radius1Pix = 20;
     static radius1 : number;
     static numMarks = 5;
+    static RightAngleMark = 0;
+    static DefaultAngleMark = 1;
 
     angleMark   : number;
     lineA       : AbstractLine;
@@ -24,9 +26,8 @@ export class Angle extends Shape {
         this.mute = true;
         
         this.angleMark   = obj.angleMark;
-        if(this.angleMark == undefined){
-            this.angleMark = 0;
-        }
+        assert(this.angleMark != undefined)
+
         this.lineA       = obj.lineA;
         this.directionA  = obj.directionA;
 
@@ -105,7 +106,7 @@ export class Angle extends Shape {
         
         const center = this.intersection.position;
 
-        if(this.angleMark == 0){
+        if(this.angleMark == Angle.RightAngleMark){
 
             const vx = (new Vec2(Angle.radius1, 0)).rot(start);
             const vy = (new Vec2(Angle.radius1, 0)).rot(end);
@@ -116,9 +117,10 @@ export class Angle extends Shape {
         }
         else{
 
-            const scales = [ 1, 0.6, 1.4, 2.0];
+            const scales = [ 1, 0.6, 1.4, 2.0, 2.5, 3.0];
 
             for(const i of range(this.angleMark)){    
+                assert(i < scales.length);
                 let radius = Angle.radius1 * scales[i];
                 View.current.canvas.drawArc(this, center, radius, start, end);
             }
@@ -134,6 +136,49 @@ export class Angle extends Shape {
 
         const key = angleKey(this.lineA, this.directionA, this.lineB, this.directionB, this.intersection);
         angleMap.set(key, this);
+    }
+
+    lines() : [AbstractLine, AbstractLine] {
+        return [this.lineA, this.lineB];
+    }
+
+    static setEqualAngleMarks(angles : Angle[]){
+        assert(angles.length == 2 && angles.every(x => x instanceof Angle));
+        
+        for(const [angle1, angle2] of pairs(angles[0], angles[1])){
+            if(angle1.intersection == angle2.intersection){
+                if(angle1.lineA == angle2.lineB && angle1.lineB == angle2.lineA){
+
+                    msg("Angle Equality:Since the two angles bisect the line, they are right angles.");
+                    angles.forEach(x => x.angleMark = Angle.RightAngleMark);
+                    return;
+                }
+            }
+        }
+
+        if(angles.some(x => x.angleMark == Angle.RightAngleMark)){
+            msg("Angle Equality:Since one angle is a right angle, the other angle is also a right angle.");
+            angles.forEach(x => x.angleMark = Angle.RightAngleMark);
+        }
+        else{
+
+            const max_angleMark = Math.max(... angles.map(x => x.angleMark));
+            if(max_angleMark != Angle.DefaultAngleMark){
+                angles.forEach(x => x.angleMark = max_angleMark);
+            }
+            else{
+                const all_angles = View.current.allShapes().filter(x => x instanceof Angle);
+                if(all_angles.length == 0){
+
+                    angles.forEach(x => x.angleMark = Angle.DefaultAngleMark + 1);
+                }
+                else{
+
+                    const max_all_angleMark = Math.max(... all_angles.map(x => x.angleMark));
+                    angles.forEach(x => x.angleMark = max_all_angleMark + 1);
+                }
+            }
+        }
     }
 }
 

@@ -102,6 +102,12 @@ export class LengthEqualityConstraint extends Constraint {
 }
 
 export class AngleEqualityConstraint extends Constraint {
+    constructor(obj : {shapes : MathEntity[]}){
+        super(obj);
+
+        Angle.setEqualAngleMarks(this.selectedShapes as Angle[]);
+    }
+
     setRelations(): void {
         super.setRelations();
         assert(this.selectedShapes.length == 2 && this.selectedShapes.every(x => x instanceof Angle));
