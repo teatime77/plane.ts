@@ -52,9 +52,9 @@ export function findAngle(angle_points_arg : Point[]) : Angle | undefined {
     const angle = angleMap.get(key);
     if(angle == undefined){
         const point_ids = angle_points.map(x => `${x.id}`).join(", ");
-        msg(`point ids:${point_ids}  key:${key}`);
+        // msg(`point ids:${point_ids}  key:${key}`);
         for(const map_key of angleMap.keys()){
-            msg(`map key:${map_key}`);
+            // msg(`map key:${map_key}`);
         }
     }
 
@@ -164,7 +164,7 @@ export function makeAngleEqualityByCongruentTriangles(angleA : Angle, angleB : A
     if(triangleAB != undefined){
         const [triangleA, triangleB] = triangleAB;
 
-        msg(`equal angle:congruent triangles`);
+        // msg(`equal angle:congruent triangles`);
         return new AngleEquality({
             reason : AngleEqualityReason.congruent_triangles,
             auxiliaryShapes : [
@@ -212,13 +212,13 @@ function getAngleUnitVectors(angleA : Angle, angleB : Angle) : [Vec2, Vec2, Vec2
 
 export function makeAngleEqualityByVertical_angles(angleA : Angle, angleB : Angle) : AngleEquality | undefined {
     if(angleA.intersection == angleB.intersection){
-        msg("intersectionA == intersectionB");
+        // msg("intersectionA == intersectionB");
         if(angleA.lineA == angleB.lineA && angleA.lineB == angleB.lineB){
-            msg("lineAA == lineBB & lineAB == lineBB");
+            // msg("lineAA == lineBB & lineAB == lineBB");
 
             const [ e_AA, e_AB, e_BA, e_BB ] = getAngleUnitVectors(angleA, angleB);
             if(Math.sign(e_AA.dot(e_BA)) == -1 && Math.sign(e_AB.dot(e_BB)) == -1){
-                msg(`equal angle:vertical angle`);
+                // msg(`equal angle:vertical angle`);
                 return new AngleEquality({
                     reason : AngleEqualityReason.vertical_angles,
                     auxiliaryShapes : [
@@ -264,13 +264,13 @@ export function makeAngleEqualityByParallelLines(angleA : Angle, angleB : Angle)
     const [ e_AA, e_AB, e_BA, e_BB ] = getAngleUnitVectors(angleA, angleB);
 
     if(angleA.lineA == angleB.lineA && angleA.lineA == cross_line && areSetsEqual(parallel_lines, [angleA.lineB, angleB.lineB])){
-        msg("lineA == lineA");
+        // msg("lineA == lineA");
     
         cross_sign    = Math.sign(e_AA.dot(e_BA));
         parallel_sign = Math.sign(e_AB.dot(e_BB));
     }
     else if(angleA.lineB == angleB.lineB && angleA.lineB == cross_line && areSetsEqual(parallel_lines, [angleA.lineA, angleB.lineA])){
-        msg("lineB == lineB");
+        // msg("lineB == lineB");
 
         cross_sign    = Math.sign(e_AB.dot(e_BB));
         parallel_sign = Math.sign(e_AA.dot(e_BA));
@@ -281,7 +281,7 @@ export function makeAngleEqualityByParallelLines(angleA : Angle, angleB : Angle)
     }
 
     if(cross_sign * parallel_sign == 1){
-        msg(`equal ange:parallel lines`);
+        // msg(`equal angle:parallel lines`);
         return new AngleEquality({
             reason : AngleEqualityReason.parallel_lines,
             auxiliaryShapes : parallel_lines.concat(cross_line),
@@ -333,7 +333,7 @@ export function makeAngleEqualityByParallelogramOppositeAngles(angleA : Angle, a
             const angle = angles[idx];
             assert(triad[1] == angle.intersection);
             if(angle.lineA.includesPoint(triad[2]) && angle.lineB.includesPoint(triad[0])){
-                msg(`equal ange:parallelogram`);
+                // msg(`equal angle:parallelogram`);
                 return new AngleEquality({
                     reason : AngleEqualityReason.parallelogram_opposite_angles,
                     auxiliaryShapes : [parallelogram],

@@ -149,7 +149,7 @@ export class Angle extends Shape {
             if(angle1.intersection == angle2.intersection){
                 if(angle1.lineA == angle2.lineB && angle1.lineB == angle2.lineA){
 
-                    msg("Angle Equality:Since the two angles bisect the line, they are right angles.");
+                    // msg("Angle Equality:Since the two angles bisect the line, they are right angles.");
                     angles.forEach(x => x.angleMark = Angle.RightAngleMark);
                     return;
                 }
@@ -157,7 +157,7 @@ export class Angle extends Shape {
         }
 
         if(angles.some(x => x.angleMark == Angle.RightAngleMark)){
-            msg("Angle Equality:Since one angle is a right angle, the other angle is also a right angle.");
+            // msg("Angle Equality:Since one angle is a right angle, the other angle is also a right angle.");
             angles.forEach(x => x.angleMark = Angle.RightAngleMark);
         }
         else{

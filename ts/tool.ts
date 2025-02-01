@@ -242,7 +242,7 @@ export class Builder {
                 const last_operation = last(view.operations);
                 if(last_operation instanceof ClickShape && last_operation.position === position){
                     last_operation.createdPoint = point;
-                    msg(`point is created.`);
+                    // msg(`point is created.`);
                 }
             }
             return point;
@@ -1702,7 +1702,7 @@ class QuadrilateralClassifierBuilder extends ClassifierBuilder {
                     throw new MyError();
                 }
 
-                msg(`reason:[${reason}]`);
+                // msg(`reason:[${reason}]`);
 
                 const classifier = makeQuadrilateralClassifier(this.points, reason);
                 if(classifier != undefined){

@@ -109,7 +109,7 @@ export function makeSelectionDlg(){
 
         for(const [key, value] of Object.entries(dic)){
             if (isNaN(Number(key))){
-                console.log(`of key:[${key}]${typeof key} value:[${value}]${typeof value} dic[value]:[${dic[value]}]`); 
+                // console.log(`of key:[${key}]${typeof key} value:[${value}]${typeof value} dic[value]:[${dic[value]}]`); 
                 const span = document.createElement("span");
                 span.id = `${span_id_prefixes[idx]}-${key}`;
                 span.innerText = key;

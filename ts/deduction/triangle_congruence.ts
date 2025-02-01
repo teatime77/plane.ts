@@ -26,7 +26,7 @@ export function makeTriangleCongruence(A : Triangle, B : Triangle) : TriangleCon
     }
 
     const equal_side_count = equal_side.filter(x => x).length;
-    msg(`equal side count:${equal_side_count}`);
+    // msg(`equal side count:${equal_side_count}`);
 
     if(equal_side_count == 3){
         return new TriangleCongruence({ shapes:[A, B], reason : TriangleCongruenceReason.side_side_side, auxiliaryShapes : auxiliaryShapes })

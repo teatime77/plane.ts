@@ -13,7 +13,7 @@ export abstract class Operation {
 }
 
 export async function loadOperationsText(doc_text : string){
-    msg(`load Operations Text:\n${doc_text}`);
+    // msg(`load Operations Text:\n${doc_text}`);
     const data = JSON.parse(doc_text);
     let lines : string[];
 
@@ -194,7 +194,7 @@ export async function playBack(speech : i18n_ts.AbstractSpeech, operations : Ope
 
     while(playBackOperations.length != 0){
         const operation = playBackOperations.shift()!;
-        msg(`play back:${operation.dump()}`);
+        // msg(`play back:${operation.dump()}`);
         view.addOperation(operation);
         if(operation instanceof ClickShape){
             let shape : Shape | undefined;

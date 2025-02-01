@@ -118,7 +118,7 @@ export function makeEqualLengthByCongruentTriangles(lengthSymbolA : LengthSymbol
     if(triangleAB != undefined){
         const [triangleA, triangleB] = triangleAB;
 
-        msg(`equal length:congruent triangles`);
+        // msg(`equal length:congruent triangles`);
         return new LengthEquality({
             reason          : LengthEqualityReason.congruent_triangles,
             auxiliaryShapes : [ triangleA, triangleB ],
@@ -135,7 +135,7 @@ export function makeEqualLengthByCongruentTriangles(lengthSymbolA : LengthSymbol
 
 export function makeEqualLengthByRadiiEqual(lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol) : LengthEquality | undefined {
     if(lengthSymbolA.circle != undefined && lengthSymbolB.circle != undefined && areEqualCircleArcs(lengthSymbolA.circle, lengthSymbolB.circle)){
-        msg(`radii-equal`);
+        // msg(`radii-equal`);
         return new LengthEquality({
             reason : LengthEqualityReason.radii_equal,
             auxiliaryShapes : [ lengthSymbolA.circle, lengthSymbolB.circle ],
@@ -153,7 +153,7 @@ export function makeEqualLengthByCommonCircle(lengthSymbolA : LengthSymbol, leng
 
         if(circle.center == A && circle.includesPoint(B) && circle.includesPoint(C)){
 
-            msg(`common-circle`);
+            // msg(`common-circle`);
             return new LengthEquality({
                 reason : LengthEqualityReason.common_circle,
                 auxiliaryShapes : [ circle ],
@@ -239,7 +239,7 @@ export function makeEqualLengthByParallelogramOppositeSides(lengthSymbolA : Leng
         lines : []
     });
 
-    msg(`parallelogram-sides`);
+    // msg(`parallelogram-sides`);
     return new LengthEquality({
         reason : LengthEqualityReason.parallelogram_opposite_sides,
         auxiliaryShapes : [parallelogram],
