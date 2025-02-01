@@ -1073,7 +1073,12 @@ abstract class AbstractAngleBuilder extends Builder {
 
                 if(this instanceof AngleBuilder){
 
-                    target = new Angle({ angleMark : 1, lineA, directionA, lineB, directionB });
+                    let angleMark = 1;
+                    if(isPerpendicular(lineA, lineB)){
+                        angleMark = Angle.RightAngleMark;
+                    }
+                    
+                    target = new Angle({ angleMark, lineA, directionA, lineB, directionB });
 
                     addShapeSetRelations(view, target);
                 }

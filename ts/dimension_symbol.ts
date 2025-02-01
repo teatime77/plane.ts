@@ -12,7 +12,7 @@ export class Angle extends Shape {
     static RightAngleMark = 0;
     static DefaultAngleMark = 1;
 
-    angleMark   : number;
+    angleMark!  : number;
     lineA       : AbstractLine;
     directionA  : number;
 
@@ -25,8 +25,8 @@ export class Angle extends Shape {
         super(obj);
         this.mute = true;
         
-        this.angleMark   = obj.angleMark;
-        assert(this.angleMark != undefined)
+        assert(obj.angleMark != undefined);
+        this.setAngleMark(obj.angleMark);
 
         this.lineA       = obj.lineA;
         this.directionA  = obj.directionA;
@@ -60,6 +60,13 @@ export class Angle extends Shape {
 
     setAngleMark(angle_mark : number){
         this.angleMark = angle_mark;
+        if(angle_mark == Angle.RightAngleMark){
+            rightAngles.add(this);
+        }
+    }
+
+    isRightAngle() : boolean {
+        return this.angleMark == Angle.RightAngleMark;
     }
 
     dependencies() : MathEntity[] {
@@ -106,7 +113,7 @@ export class Angle extends Shape {
         
         const center = this.intersection.position;
 
-        if(this.angleMark == Angle.RightAngleMark){
+        if(this.isRightAngle()){
 
             const vx = (new Vec2(Angle.radius1, 0)).rot(start);
             const vy = (new Vec2(Angle.radius1, 0)).rot(end);
@@ -150,15 +157,15 @@ export class Angle extends Shape {
                 if(angle1.lineA == angle2.lineB && angle1.lineB == angle2.lineA){
 
                     // msg("Angle Equality:Since the two angles bisect the line, they are right angles.");
-                    angles.forEach(x => x.angleMark = Angle.RightAngleMark);
+                    angles.forEach(x => x.setAngleMark(Angle.RightAngleMark));
                     return;
                 }
             }
         }
 
-        if(angles.some(x => x.angleMark == Angle.RightAngleMark)){
+        if(angles.some(x => x.isRightAngle())){
             // msg("Angle Equality:Since one angle is a right angle, the other angle is also a right angle.");
-            angles.forEach(x => x.angleMark = Angle.RightAngleMark);
+            angles.forEach(x => x.setAngleMark(Angle.RightAngleMark));
         }
         else{
 

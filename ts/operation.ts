@@ -12,9 +12,7 @@ export abstract class Operation {
     }
 }
 
-export async function loadOperationsText(doc_text : string){
-    // msg(`load Operations Text:\n${doc_text}`);
-    const data = JSON.parse(doc_text);
+export async function loadOperationsText(data : any){
     let lines : string[];
 
     if(data["version"] == 2.0){

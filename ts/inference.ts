@@ -5,6 +5,7 @@ namespace plane_ts {
 //
 export let perpendicularPairs : [Set<AbstractLine>, Set<AbstractLine>][] = [];
 export let supplementaryAngles : [Set<Angle>, Set<Angle>][];
+export const rightAngles = new Set<Angle>();
 
 export const pointsToLengthSymbol = new Map<string, LengthSymbol>();
 export const centerOfCircleArcs = new Map<Point,Set<CircleArc>>();
@@ -46,6 +47,7 @@ function addSetMap<T, V>(a : T, b : V, map:Map<T, Set<V>>){
 export function initRelations(){
     perpendicularPairs = [];
     supplementaryAngles = [];
+    rightAngles.clear();
 
     pointsToLengthSymbol.clear();
     centerOfCircleArcs.clear();
@@ -166,6 +168,17 @@ export function getParallelLines(line : AbstractLine) : Set<AbstractLine> | unde
 export function isParallel(lineA : AbstractLine, lineB : AbstractLine) : boolean {
     const line_set = getParallelLines(lineA);
     return line_set != undefined && line_set.has(lineB);
+}
+
+export function isPerpendicular(lineA : AbstractLine, lineB : AbstractLine) : boolean {
+    const perpendicular_lines = getPerpendicularLines(lineA);
+    
+    if(perpendicular_lines == undefined){
+        return false;
+    }
+    else{
+        return perpendicular_lines.has(lineB);
+    }
 }
 
 export function areEqualCircleArcs(circle1 : CircleArc, circle2 : CircleArc) : boolean {

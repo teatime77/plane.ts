@@ -14,7 +14,10 @@ export function findEqualAnglesBy3pointsPair(points_arg_1 : Point[], points_arg_
     const points1 = toClockwisePoints(points_arg_1);
     const points2 = toClockwisePoints(points_arg_2);
 
-    for(const angle_set of supplementaryAngles.flat()){
+    const angles_list = supplementaryAngles.flat();
+    angles_list.push(rightAngles);
+    
+    for(const angle_set of angles_list){
         const angles = Array.from(angle_set);
         const angle1 = findAngleBy3points(angles, points1);
         if(angle1 != undefined){
@@ -105,6 +108,10 @@ export function addEqualAngles(angle1 : Angle, angle2 : Angle){
 }
 
 export function isEqualAngle(angleA : Angle, angleB : Angle) : boolean {
+    if(angleA.isRightAngle() && angleB.isRightAngle()){
+        return true;
+    }
+
     for(const angle_set of supplementaryAngles.flat()){
         if(angle_set.has(angleA)){
             return angle_set.has(angleB);
