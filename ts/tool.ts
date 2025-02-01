@@ -1735,7 +1735,6 @@ export class MotionBuilder extends SelectionTool {
 
 const toolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [
     [ SelectionTool             , "selection"          , TT("selection")          , [  ] ],
-    [ RangeTool                 , "range"              , TT("range")              , [  ] ],
     [ PointBuilder              , "point"              , TT("point")              , [ Point ] ],
     [ MidpointBuilder           , "mid-point"          , TT("mid point")          , [ Midpoint ] ],
     [ IntersectionBuilder       , "intersection"       , TT("intersection")       , [ LineLineIntersection, LineArcIntersection, ArcArcIntersection ] ],
@@ -1749,14 +1748,8 @@ const toolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [
     [ CircleByRadiusBuilder     , "circle-by-radius"   , TT("circle by radius")   , [ CircleByRadius ] ],
     [ ArcByPointBuilder         , "arc-by-point"       , TT("arc by point")       , [ ArcByPoint ] ],
     [ ArcByRadiusBuilder        , "arc-by-radius"      , TT("arc by radius")      , [ ArcByLengthSymbol, ArcByCircle ] ],
-    [ EllipseBuilder            , "ellipse"            , TT("ellipse")            , [ Ellipse ] ],
-    [ CirclePointTangentBuilder , "tangent-point"      , TT("tangent point")      , [ CirclePointTangent ] ],
-    [ CircleCircleTangentBuilder, "tangent-circles"    , TT("tangent circles")    , [ CircleCircleTangent ] ],
     [ AngleBuilder              , "angle"              , TT("angle")              , [ Angle ] ],
-    [ DimensionLineBuilder      , "dimension-line"     , TT("dimension line")     , [ DimensionLine ] ],
     [ LengthSymbolBuilder       , "length-symbol"      , TT("length symbol")      , [ LengthSymbol ] ],
-    [ TextBlockBuilder          , "text"               , TT("text")               , [ TextBlock ] ],
-    [ StatementBuilder          , "statement"          , TT("statement")          , [ Statement ] ],
     [ TriangleCongruenceBuilder , "triangle-congruence", TT("triangle congruence"), [ TriangleCongruence ] ],
     [ TriangleSimilarityBuilder , "triangle-similarity", TT("triangle similarity"), [ TriangleSimilarity ] ],
     [ LengthEqualityBuilder     , "equal-length"       , TT("equal length")       , [ LengthEquality ] ],
@@ -1766,8 +1759,24 @@ const toolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [
     [ ParallelConstraintBuilder , "parallel-constraint"      , TT("parallel constraint"), [ ParallelConstraint ]],
     [ PerpendicularConstraintBuilder , "perpendicular-constraint" , TT("perpendicular constraint"), [ PerpendicularConstraint ]],
     [ QuadrilateralClassifierBuilder, "quadrilateral-classifier", TT("quadrilateral classifier"), [ ParallelogramClassifier, RhombusClassifier ]],
+];
+
+const editToolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [
+    [ RangeTool                 , "range"              , TT("range")              , [  ] ],
+    [ EllipseBuilder            , "ellipse"            , TT("ellipse")            , [ Ellipse ] ],
+    [ CirclePointTangentBuilder , "tangent-point"      , TT("tangent point")      , [ CirclePointTangent ] ],
+    [ CircleCircleTangentBuilder, "tangent-circles"    , TT("tangent circles")    , [ CircleCircleTangent ] ],
+    [ DimensionLineBuilder      , "dimension-line"     , TT("dimension line")     , [ DimensionLine ] ],
+    [ TextBlockBuilder          , "text"               , TT("text")               , [ TextBlock ] ],
+    [ StatementBuilder          , "statement"          , TT("statement")          , [ Statement ] ],
     [ MotionBuilder             , "animation"          , TT("animation")          , [ Motion ] ],
 ];
+
+function initToolList(){
+    if(i18n_ts.appMode == i18n_ts.AppMode.edit){
+        toolList.push(... editToolList);
+    }
+}
 
 export function makeShapeButton(shape : MathEntity, add_to_view_shapes : boolean) : layout_ts.Button {
     let shape_img_name : string | undefined;
@@ -1831,6 +1840,8 @@ export function clearShapeList(){
 }
 
 export function makeToolButtons() : layout_ts.RadioButton[] {
+    initToolList();
+
     const tool_buttons : layout_ts.RadioButton[] = [];
 
     for(const [ tool, img_name, title, shapes] of toolList){

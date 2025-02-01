@@ -338,7 +338,7 @@ function appendDelete(tbl : HTMLTableElement, shape : MathEntity){
     tbl.append(row);
 }
 
-export function showProperty(widget : Widget | Widget[], nest : number){
+export function showProperty(widget : Widget | Widget[], nest : number){    
     if(nest == 0){
         used_property_names = new Set<string>();
     }
@@ -375,6 +375,12 @@ export function showProperty(widget : Widget | Widget[], nest : number){
     for(const property_name of properties){
         if(used_property_names.has(property_name)){
             continue;
+        }
+
+        if(i18n_ts.appMode == i18n_ts.AppMode.play){
+            if(!["reason", "selectedShapes", "auxiliaryShapes" ].includes(property_name)){
+                continue;
+            }
         }
 
         if(typeof property_name == "string"){
@@ -479,6 +485,10 @@ export function showProperty(widget : Widget | Widget[], nest : number){
         else{
             throw new MyError();
         }
+    }
+
+    if(i18n_ts.appMode == i18n_ts.AppMode.play){
+        return;
     }
 
     if(widget instanceof Statement){
