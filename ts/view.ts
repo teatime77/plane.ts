@@ -95,10 +95,9 @@ export class View extends Widget {
         this.shapes = [];
         this.dirty = true;
 
+        Plane.one.clearPlane();
         clearShapeList();
-    
-        Plane.one.clearNarrationBox();
-    
+        
         initRelations();    
     }
 
