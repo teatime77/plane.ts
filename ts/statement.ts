@@ -212,7 +212,7 @@ export class Statement extends Shape {
             text : "",
             click : async (ev : MouseEvent)=>{
                 const position = View.current.eventPosition(ev);
-                (Builder.tool as StatementBuilder).clickWithMouseEvent(ev, View.current, position, this);
+                await (Builder.tool as StatementBuilder).clickWithMouseEvent(ev, View.current, position, this);
             }
         });
     }

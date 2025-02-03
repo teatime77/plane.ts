@@ -61,6 +61,19 @@ export async function loadOperationsText(data : any){
             operation = new EnumSelection(parseInt(items[1]));
             break;
 
+        case "property":{
+                const regex = /property\s+(\d+)\s+([0-9a-zA-Z_]+)\s+'?([^']+)'?/;
+                const matches = line.match(regex);
+                assert(matches != null);
+
+                const items2 = Array.from(matches!);
+                assert(items2.length == 4);
+
+                const [id, name, value] = items2.slice(1);
+                operation = new PropertySetting(parseInt(id), name, value);
+            }
+            break;
+
         default:
             throw new MyError();
         }
@@ -149,6 +162,30 @@ export class EnumSelection extends Operation {
 
     toString() : string {
         return `enum  ${this.value}`;
+    }
+}
+
+export class PropertySetting extends Operation {
+    id    : number;
+    name  : string;
+    value : string | number;
+
+    constructor(id : number, name : string, value : string | number){
+        super();
+        this.id    = id;
+        this.name  = name;
+        this.value = value;
+    }
+
+    toString() : string {
+        if(typeof this.value == "string"){
+
+            return `property ${this.id} ${this.name} '${this.value}'`;
+        }
+        else{
+
+            return `property ${this.id} ${this.name} ${this.value}`;
+        }
     }
 }
 
@@ -246,6 +283,11 @@ export async function playBack(speech : i18n_ts.AbstractSpeech, operations : Ope
         }
         else if(operation instanceof ToolSelection){
             Builder.setToolByName(operation.toolName);
+        }
+        else if(operation instanceof PropertySetting){
+            const shape = view.allRealShapes().find(x => x.id == operation.id);
+            assert(shape != undefined);
+            setProperty(shape, operation.name, operation.value);
         }
         else{
             throw new MyError();

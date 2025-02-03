@@ -294,9 +294,10 @@ export function showPrompt(text : string){
     // document.body.append(dlg);
 
     dlg.show();
+    const timeout = (Plane.one.playMode == PlayMode.fastForward ? 50 : 3000);
     setTimeout(()=>{
         dlg.close();
-    }, 3000);
+    }, timeout);
 }
 
 export class LengthEquality extends Statement {

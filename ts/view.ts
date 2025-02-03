@@ -251,33 +251,33 @@ export class View extends Widget {
                 }
             }
 
-            Builder.tool.click(this, position, shape);
+            await Builder.tool.click(this, position, shape);
         }
         else{
             this.addOperation(new ClickShape(position, (shape != undefined ? shape.id : NaN)));
 
             if(Builder.tool instanceof StatementBuilder){
 
-                Builder.tool.clickWithMouseEvent(event, this, position, shape);
+                await Builder.tool.clickWithMouseEvent(event, this, position, shape);
             }
             else{
 
-                Builder.tool.click(this, position, shape);
+                await Builder.tool.click(this, position, shape);
             }
         }
 
         this.dirty = true;
     }
 
-    dblclick(event : MouseEvent){
+    async dblclick(event : MouseEvent){
+        let position = this.eventPosition(event);
+        const shape = this.getShape(position);
+        if(shape == undefined){
+            return;
+        }
+
         if(Builder.tool instanceof SelectionTool){
             this.resetMode();
-
-            let position = this.eventPosition(event);
-            const shape = this.getShape(position);
-            if(shape == undefined){
-                return;
-            }
 
             if(shape instanceof LengthSymbol){
                 const length_symbols = equalLengths.find(x => x.has(shape));
@@ -310,6 +310,9 @@ export class View extends Widget {
             }
 
             shape.setMode(Mode.target);
+        }
+        else if(Builder.tool instanceof ShapeEquationBuilder){
+            await Builder.tool.dblclick(this, position, shape);
         }
 
         this.dirty = true;

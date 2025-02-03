@@ -104,15 +104,28 @@ export abstract class InputProperty extends Property {
 
 class StringProperty extends InputProperty {
     input : InputText;
+    value : string = "";
 
     constructor(widgets : Widget[], name : string, value : string){
         super(widgets, name, "text");
+        this.value = value;
         this.input = $input_text({
             text : value,
             change : async (ev : Event)=>{
-                this.setValue(this.input.input.value);
+                const new_value = this.input.input.value;
+                msg(`change:${this.value}=>${new_value}`)
+                this.setValue(new_value);
+
+                const id = widgets[0].id;
+                const operation = View.current.operations.find(x => x instanceof PropertySetting && x.id == id && x.name == name) as PropertySetting;
+                if(operation != undefined){
+                    operation.value = new_value;
+                }
+                else{
+                    View.current.addOperation( new PropertySetting(id, name, new_value) );
+                }
             }
-        })
+        });
     }
 
     getInput()  : HTMLInputElement {
@@ -378,7 +391,7 @@ export function showProperty(widget : Widget | Widget[], nest : number){
         }
 
         if(i18n_ts.appMode == i18n_ts.AppMode.play){
-            if(!["reason", "selectedShapes", "auxiliaryShapes" ].includes(property_name)){
+            if(![ "name", "reason", "selectedShapes", "auxiliaryShapes" ].includes(property_name)){
                 continue;
             }
         }

@@ -4,6 +4,7 @@
 ///<reference path="deduction/quadrilateral.ts" />
 ///<reference path="deduction/parallel_detector.ts" />
 ///<reference path="deduction/triangle_similarity.ts" />
+///<reference path="deduction/shape_equation.ts" />
 ///<reference path="constraint.ts" />
 
 namespace plane_ts {
@@ -28,7 +29,7 @@ abstract class shapesSelector{
         this.shapes = [];
     }
 
-    click(view : View, position : Vec2, shape : Shape | undefined){
+    async click(view : View, position : Vec2, shape : Shape | undefined){
         if(this.isInstanceof(shape)){
             this.shapes.push(shape as Shape);
         }
@@ -69,7 +70,7 @@ class PolygonsSelector {
         this.polygon  = undefined;
     }
 
-    click(view : View, position : Vec2, shape : Shape | undefined){
+    async click(view : View, position : Vec2, shape : Shape | undefined){
         if(shape instanceof Point){
             shape.setMode(Mode.depend);
 
@@ -124,7 +125,7 @@ class TrianglePairSelector {
         this.triangleB = undefined;
     }
 
-    click(view : View, position : Vec2, shape : Shape | undefined){
+    async click(view : View, position : Vec2, shape : Shape | undefined){
         this.selector.click(view, position, shape);
         if(this.selector.done()){
             this.selector.polygon!.setMode(Mode.depend);
@@ -1720,7 +1721,43 @@ class QuadrilateralClassifierBuilder extends ClassifierBuilder {
             }
         }
     }
+}
 
+export class ShapeEquationBuilder extends Builder {
+    angles : Angle[] = [];
+
+    async click(view : View, position : Vec2, shape : Shape | undefined){
+        if(shape instanceof Angle){
+            if(shape.name == ""){
+                msg(TT("The name of the shape is blank."))
+                return;
+            }
+
+            if(this.angles.length != 0 && this.angles[0].intersection != shape.intersection){
+                msg(TT("Corner vertices do not match."));
+                return;
+            }
+
+            if(! this.angles.includes(shape)){
+
+                this.angles.push(shape);
+                shape.setMode(Mode.depend);
+            }
+            msg(`click eq ${this.angles.length}`);
+        }
+    }
+
+    async dblclick(view : View, position : Vec2, shape : Shape | undefined){
+        msg(`dblclick eq ${this.angles.length}`);
+
+        const shapeEquation = makeAngleEquation(this.angles);
+        if(shapeEquation != undefined){
+            addShapeSetRelations(view, shapeEquation);
+            this.resetTool(shapeEquation);    
+        }
+
+        this.angles = [];
+    }
 }
 
 export class MotionBuilder extends SelectionTool { 
@@ -1764,6 +1801,7 @@ const toolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [
     [ ParallelConstraintBuilder , "parallel-constraint"      , TT("parallel constraint"), [ ParallelConstraint ]],
     [ PerpendicularConstraintBuilder , "perpendicular-constraint" , TT("perpendicular constraint"), [ PerpendicularConstraint ]],
     [ QuadrilateralClassifierBuilder, "quadrilateral-classifier", TT("quadrilateral classifier"), [ ParallelogramClassifier, RhombusClassifier ]],
+    [ ShapeEquationBuilder, "shape-equation", TT("shape equation"), [ ShapeEquation ] ],
 ];
 
 const editToolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [

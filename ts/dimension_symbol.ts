@@ -58,6 +58,11 @@ export class Angle extends Shape {
         ]);
     }
 
+    setName(name : string){
+        super.setName(name);
+        this.setCaptionPosition();
+    }
+
     setAngleMark(angle_mark : number){
         this.angleMark = angle_mark;
         if(angle_mark == Angle.RightAngleMark){
@@ -104,6 +109,7 @@ export class Angle extends Shape {
     }
 
     calc(){        
+        this.setCaptionPosition();
     }
 
     draw() : void {
@@ -134,6 +140,33 @@ export class Angle extends Shape {
         }
     }
 
+    setCaptionPosition(){
+        if(this.caption == undefined){
+            return;
+        }
+
+        let [start, end] = this.startEndAngle();
+        if(start > end){
+            end += 2 * Math.PI;
+        }
+        const mid_angle = (start + end) / 2;
+        const center = this.intersection.position;
+
+        let radius = Angle.radius1 * 2;
+
+        const dx = radius * Math.cos(mid_angle);
+        const dy = radius * Math.sin(mid_angle);
+        const caption_center = center.add(new Vec2(dx, dy));
+        const caption_center_pix = View.current.toPixPosition(caption_center);
+
+        const rect = this.caption.div.getBoundingClientRect();
+        const x = caption_center_pix.x - 0.5 * rect.width;
+        const y = caption_center_pix.y - 0.5 * rect.height;
+
+        this.caption.div.style.left = `${x}px`;
+        this.caption.div.style.top  = `${y}px`;
+    }
+
     reading() : Reading {
         return new Reading(this, TT('Draw the angle formed by intersecting two lines.'), []);
     }
@@ -152,7 +185,7 @@ export class Angle extends Shape {
     static setEqualAngleMarks(angles : Angle[]){
         assert(angles.length == 2 && angles.every(x => x instanceof Angle));
         
-        for(const [angle1, angle2] of pairs(angles[0], angles[1])){
+        for(const [angle1, angle2] of permutation([angles[0], angles[1]])){
             if(angle1.intersection == angle2.intersection){
                 if(angle1.lineA == angle2.lineB && angle1.lineB == angle2.lineA){
 

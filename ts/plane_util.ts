@@ -307,8 +307,33 @@ export function intersection<T>(set1 : Set<T> | undefined, set2 : Set<T> | undef
     return Array.from(set1.values()).filter(x => set2.has(x));
 }
 
-export function pairs<T>(a : T, b : T) : [[T, T], [T, T]] {
-    return [ [a, b], [b, a] ];
+export function permutation<T>(v : T[]) : T[][] {
+    if(v.length == 2){
+        return [ [v[0], v[1]], [v[1], v[0]] ];
+    }
+
+    const vv : T[][] = [];
+    for(const i of range(v.length)){
+        const v1 = v.slice();
+        const c = v1[i];
+        v1.splice(i,  1);
+
+        const vv1 = permutation(v1);
+        for(const v2 of vv1){
+
+            v2.unshift(c);
+            vv.push(v2);
+        }
+    }
+
+    return vv;
+}
+
+export function circularPermutation<T>(v : T[]) : T[][] {
+    const vv = permutation(v.slice(1));
+    vv.forEach(x => x.unshift(v[0]));
+
+    return vv;
 }
 
 

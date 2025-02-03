@@ -49,7 +49,9 @@ export function viewEvent(view : View){
     view.board.addEventListener("click"      , async (ev : MouseEvent)=>{
         await view.click(ev);
     });   
-    view.board.addEventListener("dblclick"   , view.dblclick.bind(view));
+    view.board.addEventListener("dblclick"   , async (ev : MouseEvent)=>{
+        await view.dblclick(ev);
+    });
 
     document.addEventListener('keydown', (ev : KeyboardEvent) => {
         if (ev.key === "Escape") {

@@ -1557,7 +1557,8 @@ export class Triangle extends Polygon {
         if(idx != -1){
         
             const other_points = [0, 1, 2].filter(i => i != idx).map(i => this.points[i]);
-            for(const [p1, p2] of pairs<Point>(other_points[0], other_points[1])){
+            assert(other_points.length == 2);
+            for(const [p1, p2] of permutation<Point>(other_points)){
                 if(angle.lineA.includesPoint(p1) && angle.lineB.includesPoint(p2)){
                     return idx;
                 }
@@ -1569,7 +1570,7 @@ export class Triangle extends Polygon {
 
     lengthSymbolIndex(lengthSymbol : LengthSymbol) : number {
         for(const [i1, i2] of [[0,1], [1,2], [2,0]]){
-            for(const [p1, p2] of pairs<Point>(this.points[i1], this.points[i2])){
+            for(const [p1, p2] of permutation<Point>([ this.points[i1], this.points[i2] ])){
                 if(lengthSymbol.pointA == p1 && lengthSymbol.pointB == p2){
                     return i1;
                 }
