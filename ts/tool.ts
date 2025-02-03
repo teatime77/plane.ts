@@ -1,6 +1,6 @@
 ///<reference path="inference.ts" />
-///<reference path="deduction/equal_length.ts" />
-///<reference path="deduction/equal_angle.ts" />
+///<reference path="deduction/length_equality.ts" />
+///<reference path="deduction/angle_equality.ts" />
 ///<reference path="deduction/quadrilateral.ts" />
 ///<reference path="deduction/parallel_detector.ts" />
 ///<reference path="deduction/triangle_similarity.ts" />
