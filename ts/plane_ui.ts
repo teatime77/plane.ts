@@ -202,17 +202,30 @@ export function makeCanvas(div : HTMLElement) : HTMLCanvasElement {
 }
 
 export function makeCssClass(){
-    const tex_style = document.createElement('style');
-    tex_style.innerHTML = 
+    const styles = [
 `.tex_div {
     position: absolute;
     display: inline-block;
     background-color: transparent;
     cursor: move;
     user-select: none;
-}`;
+}`
+    ,
+`.selectable_tex {
+    position: absolute;
+    display: inline-block;
+    background-color: transparent;
+    cursor: pointer;
+    user-select: none;
+}`
+    ];
 
-    document.getElementsByTagName('head')[0].appendChild(tex_style);
+    for(const style of styles){
+        const tex_style = document.createElement('style');
+        tex_style.innerHTML = style;
+
+        document.getElementsByTagName('head')[0].appendChild(tex_style);
+    }
 }
 
 export function fromXPixScale(pix : number) : number {

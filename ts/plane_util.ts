@@ -414,6 +414,11 @@ function makeReasonMsgMap(){
         [ TriangleCongruenceReason.side_angle_side, TT("Since two pairs of sides of two triangles are equal, and the included angles are equal,")],
         [ TriangleCongruenceReason.angle_side_angle, TT("Since two pairs of angles of two triangles are equal, and the included sides are equal,")],
 
+        [ ShapeEquationReason.sum_of_angles_is_pi, TT("Since the sum of the angles is π.")],
+        [ ShapeEquationReason.sum_of_angles_is_equal, TT("Since the sum of the angles is equal,")],
+        [ ShapeEquationReason.sum_of_lengths_is_equal, TT("Since the sum of the lengths is equal,")],
+        [ ShapeEquationReason.none, TT("Since the sum of the interior angles of a triangle is π,")],
+
         [ LengthEqualityReason.radii_equal, TT("Since the two circles have the same radius,")],
         [ LengthEqualityReason.common_circle, TT("Since two length symbols are the radii of the same circle,")],
         [ LengthEqualityReason.parallel_lines_distance, TT("Since the distance between two parallel lines is constant,")],

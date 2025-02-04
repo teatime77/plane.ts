@@ -35,6 +35,8 @@ export class View extends Widget {
     min! : Vec2;
     max! : Vec2;
 
+    textBase : Vec2 = new Vec2(-2, -1);
+
     dirty : boolean = false;
 
     static getJson() : string {
@@ -94,6 +96,7 @@ export class View extends Widget {
         this.operations = [];
         this.shapes = [];
         this.dirty = true;
+        this.textBase = new Vec2(-2, -1);
 
         Plane.one.clearPlane();
         clearShapeList();
