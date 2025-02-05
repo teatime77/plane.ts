@@ -1,6 +1,6 @@
 namespace plane_ts {
 //
-type Term = parser_ts.Term;
+
 const parseMath = parser_ts.parseMath;
 
 export const enumSelectionClassName = "enum_selection_item";
@@ -47,7 +47,8 @@ export enum LengthEqualityReason {
 
 export enum ExprTransformReason {
     none = 150,
-    transposition
+    transposition,
+    equality,
 }
 
 export enum AngleEqualityReason {

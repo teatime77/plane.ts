@@ -1811,13 +1811,32 @@ export class ExprTransformBuilder extends Builder {
     async finish(view : View){
         msg(`finish terms ${this.terms.length}`);
 
-        if(this.terms.length == 1){
-            const exprTransform = makeExprTransformByTransposition(this.terms[0]);
+        let exprTransform : ExprTransform | undefined;
+
+        switch(this.reason){
+        case ExprTransformReason.transposition:
+            if(this.terms.length == 1){
+                exprTransform = makeExprTransformByTransposition(this.terms[0]);
+            }
+            else{
+                msg(`terms length != 1`);
+            }
+            break;
+
+        case ExprTransformReason.equality:
+            if(2 <= this.terms.length){
+                exprTransform = makeExprTransformByEquality(this.terms);
+            }
+            else{
+                msg(`terms length < 2`);
+            }
+            break;
+        }
+
+        if(exprTransform != undefined){
+
             addShapeSetRelations(view, exprTransform);
             this.resetTool(exprTransform);    
-        }
-        else{
-            msg(`terms length != 1`);
         }
     }
 }
