@@ -14,12 +14,23 @@ export let shapeTypeDlg : HTMLDialogElement;
 export let parallelogramReasonDlg : HTMLDialogElement;
 export let rhombusReasonDlg : HTMLDialogElement;
 
+export let shapeEquationReasonDlg : HTMLDialogElement;
+export let exprTransformReasonDlg : HTMLDialogElement;
+
 export enum TriangleCongruenceReason {
     none,
     side_side_side,
     side_angle_side,
     angle_side_angle,
 };
+
+export enum ShapeEquationReason {
+    none = 50,
+    sum_of_angles_is_pi,
+    sum_of_angles_is_equal,
+    sum_of_lengths_is_equal,
+    sum_of_interior_angles_of_triangle_is_pi,
+}
 
 export enum LengthEqualityReason {
     none = 100,
@@ -32,6 +43,11 @@ export enum LengthEqualityReason {
     parallelogram_diagonal_bisection,
     equivalence_class,
     midpoint,
+};
+
+export enum ExprTransformReason {
+    none = 150,
+    transposition
 }
 
 export enum AngleEqualityReason {
@@ -82,13 +98,16 @@ export enum ShapeType {
 
 
 export function makeSelectionDlg(){    
-    const data : [string, string, (typeof LengthEqualityReason | typeof AngleEqualityReason | typeof ShapeType | typeof ParallelogramReason | typeof RhombusReason | typeof ParallelReason)][] = [ 
+    const data : [string, string, (typeof LengthEqualityReason | typeof AngleEqualityReason | typeof ShapeType | 
+        typeof ParallelogramReason | typeof RhombusReason | typeof ParallelReason | typeof ShapeEquationReason | typeof ExprTransformReason)][] = [ 
         [ "reason for length equality", "length-equality-reason", LengthEqualityReason ],
         [ "reason for angle equality" , "angle-equality-reason" , AngleEqualityReason ],
         [ "shape type"                , "shape-type"            , ShapeType ],
         [ "reason for parallelogram"  , "parallelogram-reason"  , ParallelogramReason ],
         [ "reason for rhombus"        , "rhombus-reason"        , RhombusReason ], 
         [ "reason for parallel"       , "parallel-reason"       , ParallelReason ], 
+        [ "reason for shape equation"       , "shape-equation-reason"       , ShapeEquationReason ], 
+        [ "reason for expression transformation", "expr-transform-reason", ExprTransformReason ], 
     ];
 
     const titles = data.map(x => x[0]);
@@ -139,6 +158,11 @@ export function makeSelectionDlg(){
         case 5:
             parallelReasonDlg = dlg;
             break;
+        case 6:
+            shapeEquationReasonDlg = dlg;
+            break;
+        case 7:
+            exprTransformReasonDlg = dlg;
         }
 
         dlg.append(div);

@@ -54,9 +54,21 @@ export async function loadOperationsText(data : any){
             }
             break;
 
+        case "term":{
+                const textBlock_id = parseInt(items[1]);
+                const indexes = items[2].split(":").map(x => parseInt(x));
+                operation = new ClickTerm(textBlock_id, indexes);
+            }
+            break;
+
         case "tool":
             operation = new ToolSelection(items[1]);
             break;
+
+        case "finish":
+            operation = new ToolFinish(items[1]);
+            break;
+            
         case "enum":
             operation = new EnumSelection(parseInt(items[1]));
             break;
@@ -136,7 +148,33 @@ export class ClickShape extends Operation {
             return this.toString() + `point:${this.createdPoint.id} ${this.createdPoint.position}`;
         }
     }
+}
 
+export class ClickTerm extends Operation {
+    textBlock_id : number;
+    indexes : number[];
+
+    constructor(textBlock_id : number, indexes : number[]){
+        super();
+        this.textBlock_id = textBlock_id;
+        this.indexes = indexes.slice();
+    }
+
+    getTerm() : Term {
+        const textBlock = View.current.allShapes().find(x => x.id == this.textBlock_id) as TextBlock;
+        if(!(textBlock instanceof TextBlock) || textBlock.app == undefined){
+            throw new MyError();
+        }
+
+        const path = new parser_ts.Path(this.indexes);
+        const term  = path.getTerm(textBlock.app);
+
+        return term;
+    }
+
+    toString() : string {
+        return `term ${this.textBlock_id}  ${this.indexes.join(":")}`;
+    }
 }
 
 export class ToolSelection extends Operation {
@@ -149,6 +187,19 @@ export class ToolSelection extends Operation {
 
     toString() : string {
         return `tool  ${this.toolName}`;
+    }
+}
+
+export class ToolFinish extends Operation {
+    toolName : string;
+
+    constructor(tool_name : string){
+        super();
+        this.toolName = tool_name;
+    }
+
+    toString() : string {
+        return `finish  ${this.toolName}`;
     }
 }
 
@@ -228,14 +279,24 @@ export async function playBack(speech : i18n_ts.AbstractSpeech, operations : Ope
     playBackOperations = operations.slice();
 
     while(playBackOperations.length != 0){
+        while(playBackOperations[0] instanceof EnumSelection){
+            msg(`wait for show menu`);
+            await sleep(100);
+        }
+
         const operation = playBackOperations.shift()!;
-        // msg(`play back:${operation.dump()}`);
+        msg(`play back:${operation.dump()}`);
         view.addOperation(operation);
         if(operation instanceof ClickShape){
             let shape : Shape | undefined;
             if(! isNaN(operation.shapeId)){
                 shape = idMap.get(operation.shapeId) as Shape;
-                assert(shape instanceof Shape);
+                if(shape instanceof TextBlock){
+                    shape = undefined;
+                }
+                else{
+                    assert(shape instanceof Shape);
+                }
             }
             await Builder.tool.click(view, operation.position, shape);
 
@@ -281,8 +342,21 @@ export async function playBack(speech : i18n_ts.AbstractSpeech, operations : Ope
 
             view.dirty = true;
         }
+        else if(operation instanceof ClickTerm){
+            if(Builder.tool instanceof ExprTransformBuilder){
+                const term = operation.getTerm();
+                Builder.tool.termClick(term);
+            }
+            else{
+                throw new MyError();
+            }
+        }
         else if(operation instanceof ToolSelection){
-            Builder.setToolByName(operation.toolName);
+            await Builder.setToolByName(operation.toolName, false);
+        }
+        else if(operation instanceof ToolFinish){
+            assert(Builder.toolName == operation.toolName);
+            await Builder.tool.finish(view);
         }
         else if(operation instanceof PropertySetting){
             const shape = view.allRealShapes().find(x => x.id == operation.id);

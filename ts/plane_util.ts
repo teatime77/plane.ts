@@ -1,5 +1,12 @@
 namespace plane_ts {
 //
+export const sum  = i18n_ts.sum;
+export const list  = i18n_ts.list;
+export const intersection  = i18n_ts.intersection;
+export const permutation  = i18n_ts.permutation;
+export const circularPermutation  = i18n_ts.circularPermutation;
+export const areSetsEqual  = i18n_ts.areSetsEqual;
+export const isSubSet  = i18n_ts.isSubSet;
 
 const $dic = new Map<string, HTMLElement>();
 
@@ -126,10 +133,6 @@ export function remove<T>(v : Array<T>, x : T){
     const idx = v.indexOf(x);
     assert(idx != undefined);
     v.splice(idx, 1);
-}
-
-export function sum(v : number[]) : number {
-    return v.reduce((acc, cur) => acc + cur, 0);
 }
 
 export function average(v : number[]) : number {
@@ -289,78 +292,6 @@ export function anyToObj(obj : any) : any {
     }
 }
 
-export function list<T>(set : Set<T> | undefined) : T[] {
-    if(set == undefined){
-        return [];
-    }
-    else{
-
-        return Array.from(set);
-    }
-}
-
-export function intersection<T>(set1 : Set<T> | undefined, set2 : Set<T> | undefined) : T[] {
-    if(set1 == undefined || set2 == undefined){
-        return [];
-    }
-
-    return Array.from(set1.values()).filter(x => set2.has(x));
-}
-
-export function permutation<T>(v : T[]) : T[][] {
-    if(v.length == 2){
-        return [ [v[0], v[1]], [v[1], v[0]] ];
-    }
-
-    const vv : T[][] = [];
-    for(const i of range(v.length)){
-        const v1 = v.slice();
-        const c = v1[i];
-        v1.splice(i,  1);
-
-        const vv1 = permutation(v1);
-        for(const v2 of vv1){
-
-            v2.unshift(c);
-            vv.push(v2);
-        }
-    }
-
-    return vv;
-}
-
-export function circularPermutation<T>(v : T[]) : T[][] {
-    const vv = permutation(v.slice(1));
-    vv.forEach(x => x.unshift(v[0]));
-
-    return vv;
-}
-
-
-export function areSetsEqual<T>(A: T[], B: T[]): boolean {
-    const setA = new Set<T>(A);
-    const setB = new Set<T>(B);
-
-    // Check if sizes are different
-    if (setA.size !== setB.size) {
-        return false;
-    }
-
-    // Check if all elements of setA are present in setB
-    for (const element of setA) {
-        if (!setB.has(element)) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-export function isSubSet<T>(A: T[], B: T[]): boolean {
-    const setB = new Set<T>(B);
-
-    return A.every(x => setB.has(x));
-}
 
 export function isClockwise(points : Point[]) : boolean {
     assert(points.length == 3);

@@ -5,6 +5,7 @@
 ///<reference path="deduction/parallel_detector.ts" />
 ///<reference path="deduction/triangle_similarity.ts" />
 ///<reference path="deduction/shape_equation.ts" />
+///<reference path="deduction/expr_transform.ts" />
 ///<reference path="constraint.ts" />
 
 namespace plane_ts {
@@ -175,9 +176,17 @@ export class Builder {
 
     done : boolean = false;
 
-    static setToolByName(tool_name : string){
+    static async setToolByName(tool_name : string, record_operation : boolean){
         Builder.toolName = tool_name;
         Builder.tool = makeToolByType(tool_name);
+
+        if(record_operation){
+            if(tool_name != "SelectionTool" && tool_name != "RangeTool"){
+                View.current.addOperation(new ToolSelection(tool_name))
+            }    
+        }
+
+        await Builder.tool.init();
         if(tool_name == "RangeTool"){
             msg(`dump:\n${View.current.operations.map(x => x.dump()).join("\n")}`);
         }
@@ -201,13 +210,28 @@ export class Builder {
         }
     }
 
-    static builderResetTool(){
+    static async builderResetTool(view : View){
+        while(view.operations.length != 0){
+            if(last(view.operations) instanceof ToolSelection){
+                break;
+            }
+            view.operations.pop();
+        }
+        view.operations.forEach(x => msg(x.dump()));
+
         Builder.tool.resetTool(undefined);
         
-        Builder.setToolByName(Builder.toolName);
+        await Builder.setToolByName(Builder.toolName, false);
+    }
+
+    async init(){        
     }
 
     async click(view : View, position : Vec2, shape : Shape | undefined){        
+    }
+
+    async finish(view : View){
+        throw new MyError();
     }
 
     pointerdown(event : PointerEvent, view : View, position : Vec2, shape : Shape | undefined){
@@ -1724,7 +1748,12 @@ class QuadrilateralClassifierBuilder extends ClassifierBuilder {
 }
 
 export class ShapeEquationBuilder extends Builder {
-    angles : Angle[] = [];
+    reason : ShapeEquationReason = ShapeEquationReason.none;
+    shapes : Shape[] = [];
+
+    async init(){        
+        this.reason  = await showMenu(shapeEquationReasonDlg);
+    }
 
     async click(view : View, position : Vec2, shape : Shape | undefined){
         if(shape instanceof Angle){
@@ -1733,30 +1762,63 @@ export class ShapeEquationBuilder extends Builder {
                 return;
             }
 
-            if(this.angles.length != 0 && this.angles[0].intersection != shape.intersection){
-                msg(TT("Corner vertices do not match."));
-                return;
-            }
+            if(! this.shapes.includes(shape)){
 
-            if(! this.angles.includes(shape)){
-
-                this.angles.push(shape);
+                this.shapes.push(shape);
                 shape.setMode(Mode.depend);
             }
-            msg(`click eq ${this.angles.length}`);
+            msg(`click eq ${this.shapes.length}`);
         }
     }
 
-    async dblclick(view : View, position : Vec2, shape : Shape | undefined){
-        msg(`dblclick eq ${this.angles.length}`);
+    async finish(view : View){        
+        msg(`finish shapes ${this.shapes.length}`);
 
-        const shapeEquation = makeAngleEquation(this.angles);
+        const shapeEquation = makeShapeEquation(this.reason, this.shapes);
         if(shapeEquation != undefined){
             addShapeSetRelations(view, shapeEquation);
             this.resetTool(shapeEquation);    
         }
 
-        this.angles = [];
+        this.shapes = [];
+    }
+}
+
+export class ExprTransformBuilder extends Builder {
+    reason : ExprTransformReason = ExprTransformReason.none;
+    terms : Term[] = [];
+
+    async init(){        
+        this.reason  = await showMenu(exprTransformReasonDlg);
+    }
+
+    async click(view : View, position : Vec2, shape : Shape | undefined){
+        msg(`click eq ${this.terms.length}`);
+    }
+
+    async dblclick(view : View, position : Vec2, shape : Shape | undefined){
+        msg(`dblclick eq ${this.terms.length}`);
+    }
+
+    termClick(term : Term){
+        msg(`term click ${this.terms.length}`);
+
+        if(! this.terms.includes(term)){
+            this.terms.push(term);
+        }
+    }
+
+    async finish(view : View){
+        msg(`finish terms ${this.terms.length}`);
+
+        if(this.terms.length == 1){
+            const exprTransform = makeExprTransformByTransposition(this.terms[0]);
+            addShapeSetRelations(view, exprTransform);
+            this.resetTool(exprTransform);    
+        }
+        else{
+            msg(`terms length != 1`);
+        }
     }
 }
 
@@ -1802,6 +1864,7 @@ const toolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [
     [ PerpendicularConstraintBuilder , "perpendicular-constraint" , TT("perpendicular constraint"), [ PerpendicularConstraint ]],
     [ QuadrilateralClassifierBuilder, "quadrilateral-classifier", TT("quadrilateral classifier"), [ ParallelogramClassifier, RhombusClassifier ]],
     [ ShapeEquationBuilder, "shape-equation", TT("shape equation"), [ ShapeEquation ] ],
+    [ ExprTransformBuilder, "expr-transform", TT("expression transformation"), [ ExprTransform ] ],
 ];
 
 const editToolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [

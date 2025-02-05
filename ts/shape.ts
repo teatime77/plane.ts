@@ -205,6 +205,18 @@ export abstract class MathEntity extends Widget implements i18n_ts.Readable, par
     }
 }
 
+class TermRect {
+    term : Term;
+    span : HTMLSpanElement;
+    rect : DOMRect;
+
+    constructor(term : Term, span : HTMLSpanElement){
+        this.term = term;
+        this.span = span;
+        this.rect = span.getBoundingClientRect();
+    }
+}
+
 export class TextBlock extends MathEntity {
     parent : MathEntity | undefined;
     text  : string;
@@ -212,8 +224,10 @@ export class TextBlock extends MathEntity {
     div   : HTMLDivElement;
 
     offset : Vec2 = new Vec2(0, 0);
+    app : App | undefined;
+    termRects : TermRect[] = [];
 
-    constructor(obj : { parent? : MathEntity, text : string, isTex : boolean, offset : Vec2 }){
+    constructor(obj : { parent? : MathEntity, text : string, isTex : boolean, offset : Vec2, app? : App }){
         super(obj);
         this.parent = obj.parent;
         this.text  = obj.text;
@@ -221,14 +235,27 @@ export class TextBlock extends MathEntity {
         this.offset = obj.offset;
 
         this.div   = document.createElement("div");
-        this.div.className = "tex_div";
+        if(obj.app != undefined){
+
+            this.app = obj.app;
+            this.div.className = "selectable_tex";
+            this.div.addEventListener("click", this.texClick.bind(this));
+        }
+        else{
+
+            this.div.className = "tex_div";
+        }
         this.div.style.fontSize = "x-large";
 
         this.setVisible(this.visible);
 
         View.current.board.parentElement!.append(this.div);
 
-        setCaptionEvent(this);
+        if(this.app == undefined){
+
+            setCaptionEvent(this);
+        }
+
         this.updateTextPosition();
     }
 
@@ -248,6 +275,44 @@ export class TextBlock extends MathEntity {
         ]);
     }
 
+    getClickedTerm(x : number, y : number) : Term {
+        let clickedTerm : Term | undefined;
+
+        for(const term_rect of this.termRects){
+            const rect = term_rect.rect;
+            const span = term_rect.span;
+
+            if(rect.left <= x && x < rect.right && rect.top <= y && y < rect.bottom){
+                clickedTerm = term_rect.term;
+                span.style.backgroundColor = "blue";
+            }
+            else{
+                span.style.backgroundColor = "transparent"
+            }
+        }
+
+        assert(clickedTerm != undefined);
+        return clickedTerm!;
+    }
+
+    texClick(ev : MouseEvent){
+        ev.stopPropagation();
+
+        if(Builder.tool instanceof ExprTransformBuilder){
+            const term = this.getClickedTerm(ev.clientX, ev.clientY);
+            
+            if(!View.isPlayBack){
+                const path = term.getPath();
+
+                const operation = new ClickTerm(this.id, path.indexes);
+
+                View.current.addOperation(operation);
+            }
+
+            Builder.tool.termClick(term);
+        }
+    }
+
     updateTextDiv(){
         let text = this.text;
         if(text == "" && this.parent instanceof Shape){
@@ -261,6 +326,20 @@ export class TextBlock extends MathEntity {
             }
 
             parser_ts.renderKatexSub(this.div, text);
+
+            if(this.app != undefined){
+                const terms = this.app.allTerms();
+                const tex_spans = Array.from(this.div.getElementsByClassName("enclosing")) as HTMLSpanElement[];
+                this.termRects = [];
+
+                const id_offset = "refvar-".length;
+                for(const span of tex_spans){
+                    const id = parseInt(span.id.substring(id_offset));
+                    const term = terms.find(x => x.id == id)!;
+                    assert(term != undefined);
+                    this.termRects.push(new TermRect(term, span));
+                }
+            }
         }
         else{
 

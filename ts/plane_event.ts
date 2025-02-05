@@ -4,18 +4,14 @@ type Block = layout_ts.Block;
 
 export let urlOrigin : string;
 
-export function initPlane(plane : Plane, root : layout_ts.Grid){
+export async function initPlane(plane : Plane, root : layout_ts.Grid){
     makeCssClass();
 
-    plane.tool_block.onChange = (ui : layout_ts.UI)=>{
+    plane.tool_block.onChange = async (ui : layout_ts.UI)=>{
         const button = ui as layout_ts.RadioButton;
 
         const tool_name = button.button.value;
-        Builder.setToolByName(tool_name);
-
-        if(tool_name != "SelectionTool" && tool_name != "RangeTool"){
-            View.current.addOperation(new ToolSelection(tool_name))
-        }
+        await Builder.setToolByName(tool_name, true);
     }
 
     const canvas = makeCanvas(plane.canvas_block.div);
@@ -26,21 +22,10 @@ export function initPlane(plane : Plane, root : layout_ts.Grid){
 
     viewEvent(view);
 
-    Builder.setToolByName(SelectionTool.name);
+    await Builder.setToolByName(SelectionTool.name, false);
 
     makeSelectionDlg();
 }
-
-export function bodyOnLoad(){
-    i18n_ts.initI18n();
-
-    const plane = new Plane();
-    const root = makeGrid(plane);
-    layout_ts.Layout.initLayout(root);
-    
-    initPlane(plane, root);
-}
-
 
 export function viewEvent(view : View){
     view.board.addEventListener("pointerdown", view.pointerdown.bind(view));
@@ -53,10 +38,21 @@ export function viewEvent(view : View){
         await view.dblclick(ev);
     });
 
-    document.addEventListener('keydown', (ev : KeyboardEvent) => {
+    document.addEventListener('keydown', async (ev : KeyboardEvent) => {
+        if(View.isPlayBack){
+            return;
+        }
+
         if (ev.key === "Escape") {
             msg("Escape key pressed!");
-            Builder.builderResetTool();
+            await Builder.builderResetTool(view);
+        }
+        else if(ev.key == "Enter"){
+            if(Builder.tool instanceof ShapeEquationBuilder || Builder.tool instanceof ExprTransformBuilder){
+
+                view.addOperation(new ToolFinish(Builder.toolName));
+                await Builder.tool.finish(view);
+            }
         }
     });    
 

@@ -184,6 +184,18 @@ export class Angle extends Shape {
 
     static setEqualAngleMarks(angles : Angle[]){
         assert(angles.length == 2 && angles.every(x => x instanceof Angle));
+
+        const named_angle = angles.find(x => x.name != "");
+        if(named_angle != undefined){
+            for(const angle of angles){
+                if(angle != named_angle){
+                    angle.setAngleMark(Angle.DefaultAngleMark);
+                    angle.setName(named_angle.name);    
+                }
+            }
+
+            return;
+        }
         
         for(const [angle1, angle2] of permutation([angles[0], angles[1]])){
             if(angle1.intersection == angle2.intersection){

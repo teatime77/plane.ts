@@ -35,7 +35,7 @@ export class View extends Widget {
     min! : Vec2;
     max! : Vec2;
 
-    textBase : Vec2 = new Vec2(-2, -1);
+    textBase : Vec2 = new Vec2(-2, 2);
 
     dirty : boolean = false;
 
@@ -96,7 +96,7 @@ export class View extends Widget {
         this.operations = [];
         this.shapes = [];
         this.dirty = true;
-        this.textBase = new Vec2(-2, -1);
+        this.textBase = new Vec2(-2, 2);
 
         Plane.one.clearPlane();
         clearShapeList();
@@ -312,9 +312,6 @@ export class View extends Widget {
             }
 
             shape.setMode(Mode.target);
-        }
-        else if(Builder.tool instanceof ShapeEquationBuilder){
-            await Builder.tool.dblclick(this, position, shape);
         }
 
         this.dirty = true;
