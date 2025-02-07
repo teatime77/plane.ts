@@ -1884,6 +1884,7 @@ const toolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [
     [ QuadrilateralClassifierBuilder, "quadrilateral-classifier", TT("quadrilateral classifier"), [ ParallelogramClassifier, RhombusClassifier ]],
     [ ShapeEquationBuilder, "shape-equation", TT("shape equation"), [ ShapeEquation ] ],
     [ ExprTransformBuilder, "expr-transform", TT("expression transformation"), [ ExprTransform ] ],
+    [ TextBlockBuilder          , "text"               , TT("text")               , [ TextBlock ] ],
 ];
 
 const editToolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [
@@ -1892,7 +1893,6 @@ const editToolList : [typeof Builder, string, string, (typeof MathEntity)[]][] =
     [ CirclePointTangentBuilder , "tangent-point"      , TT("tangent point")      , [ CirclePointTangent ] ],
     [ CircleCircleTangentBuilder, "tangent-circles"    , TT("tangent circles")    , [ CircleCircleTangent ] ],
     [ DimensionLineBuilder      , "dimension-line"     , TT("dimension line")     , [ DimensionLine ] ],
-    [ TextBlockBuilder          , "text"               , TT("text")               , [ TextBlock ] ],
     [ StatementBuilder          , "statement"          , TT("statement")          , [ Statement ] ],
     [ MotionBuilder             , "animation"          , TT("animation")          , [ Motion ] ],
 ];

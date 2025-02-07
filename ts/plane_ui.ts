@@ -144,8 +144,10 @@ export class Plane {
     }
 
     clearPlane(){
-        const tex_divs = Array.from(this.canvas_block.div.getElementsByClassName("tex_div")) as HTMLDivElement[];
-        tex_divs.forEach(x => x.remove());
+        // for(const class_name of ["tex_div"]){
+        //     const tex_divs = Array.from(this.canvas_block.div.getElementsByClassName(class_name)) as HTMLDivElement[];
+        //     tex_divs.forEach(x => x.remove());
+        // }
     
         this.text_block.div.innerHTML = "";
         this.narration_box.div.innerHTML = "";

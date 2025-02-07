@@ -5,6 +5,7 @@ export function makeExprTransformByTransposition(term : Term){
     algebra_ts.transpose(equation, term_cp);
 
     const exprTransform = new ExprTransform({
+        reason   : ExprTransformReason.transposition,
         equation : equation, 
         terms : [term_cp]
     });
@@ -49,6 +50,7 @@ export function makeExprTransformByEquality(terms : Term[]) : ExprTransform | un
     const equation = parser_ts.parseMath(text) as App;
 
     const exprTransform = new ExprTransform({
+        reason   : ExprTransformReason.equality,
         equation : equation, 
         terms : refvars
     });
@@ -57,12 +59,14 @@ export function makeExprTransformByEquality(terms : Term[]) : ExprTransform | un
 }
 
 export class ExprTransform extends MathEntity {
+    reason : ExprTransformReason;
     equation : App;
     terms : Term[];
     textBlock : TextBlock;
 
-    constructor(obj : {equation : App, terms : Term[]} ){
+    constructor(obj : { reason : ExprTransformReason, equation : App, terms : Term[]} ){
         super(obj);
+        this.reason   = obj.reason;
         this.equation = obj.equation;
         this.terms    = obj.terms;
         this.textBlock = makeEquationTextBlock(this.equation);
@@ -77,8 +81,22 @@ export class ExprTransform extends MathEntity {
         throw new MyError();
     }
 
-    async speakExprTransform(){
+    async speakExprTransform(speech : i18n_ts.AbstractSpeech){
+        let text : string;
+        switch(this.reason){
+        case ExprTransformReason.transposition:
+            text = TT("Transpose the term.");
+            break;
 
+        case ExprTransformReason.equality:
+            text = TT("From the above equations,");
+            break;
+
+        default:
+            throw new MyError();
+        }        
+
+        await speech.speak(text);
     }
 }
 }
