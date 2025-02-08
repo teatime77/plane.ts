@@ -39,16 +39,6 @@ export class View extends Widget {
 
     dirty : boolean = false;
 
-    static getJson() : string {
-    
-        Widget.processed = new Set<number>();
-    
-        const data = View.current.toObj();
-        const json = JSON.stringify(data, null, 4);
-
-        return json;
-    }
-
     makeObj() : any {
         let obj = Object.assign(super.makeObj(), {
             name   : this.name,

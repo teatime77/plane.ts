@@ -251,9 +251,9 @@ export function parseObject(obj: any, parse_other_object? : (o : any)=>any) : an
 }
 
 export function saveJson(anchor : layout_ts.Anchor){
-    const json = View.getJson();
+    const text = plane_ts.getOperationsText();
 
-    const blob = new Blob([json], { type: 'application/json' });
+    const blob = new Blob([text], { type: 'application/json' });
 
     layout_ts.saveBlob(anchor, "movie", blob);
 }

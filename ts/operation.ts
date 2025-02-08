@@ -15,7 +15,7 @@ export abstract class Operation {
 export async function loadOperationsText(data : any){
     let lines : string[];
 
-    if(data["version"] == 2.0){
+    if(2 <= data["version"]){
         lines = data["operations"];
         assert(Array.isArray(lines) && (lines.length == 0 || typeof lines[1] == "string"));
     }
@@ -29,7 +29,7 @@ export async function loadOperationsText(data : any){
 
     const speech = new i18n_ts.DummySpeech();
 
-    const operations : Operation[] = [];
+    let operations : Operation[] = [];
 
     for(let line of lines){
         line = line.trim().replaceAll(/\s+/g, " ");        
@@ -39,6 +39,7 @@ export async function loadOperationsText(data : any){
 
         let operation : Operation;
 
+        // msg(`load:${line}`);
         const items = line.split(" ");
         switch(items[0]){
         case "click":{
@@ -93,16 +94,57 @@ export async function loadOperationsText(data : any){
         operations.push(operation);
     }
 
+    if(data["version"] == 2.0){
+
+        const new_operations : Operation[] = [];
+        let idx = 0;
+        while(idx < operations.length){
+            const operation = operations[idx];
+            new_operations.push(operation);
+        
+            if(operation instanceof ToolSelection && [ "LengthEqualityBuilder", "AngleEqualityBuilder", "ParallelDetectorBuilder"].includes(operation.toolName)){
+                assert(operations[idx + 3] instanceof EnumSelection);
+
+                new_operations.push(operations[idx + 3]);
+                new_operations.push(operations[idx + 1]);
+                new_operations.push(operations[idx + 2]);
+
+                idx += 4;
+            }
+            else if(operation instanceof ToolSelection && operation.toolName ==  "QuadrilateralClassifierBuilder"){
+                assert(operations[idx + 5] instanceof EnumSelection && operations[idx + 6] instanceof EnumSelection);
+
+                new_operations.push(operations[idx + 5]);
+                new_operations.push(operations[idx + 6]);
+
+                new_operations.push(operations[idx + 1]);
+                new_operations.push(operations[idx + 2]);
+                new_operations.push(operations[idx + 3]);
+                new_operations.push(operations[idx + 4]);
+
+                idx += 7;
+            }
+            else{
+                idx++;
+            }
+        }
+        operations = new_operations;
+    }
+
     Plane.one.playMode = PlayMode.fastForward;
     await playBack(speech, operations);
     Plane.one.playMode = PlayMode.stop;
+
+    for(const [i, o] of operations.entries()){
+        msg(`load ${i}:${o.dump()}`);
+    }
 
     msg(`load Operations Text completes.`);
 }
 
 export function getOperationsText(){
     const data = {
-        version : 2.0,
+        version : 2.1,
         operations : View.current.operations.map(x => x.toString())
     };
 
@@ -285,7 +327,6 @@ export async function playBack(speech : i18n_ts.AbstractSpeech, operations : Ope
         }
 
         const operation = playBackOperations.shift()!;
-        msg(`play back:${operation.dump()}`);
         view.addOperation(operation);
         if(operation instanceof ClickShape){
             let shape : Shape | undefined;

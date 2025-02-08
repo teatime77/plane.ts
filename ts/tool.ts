@@ -1356,12 +1356,16 @@ export class TriangleSimilarityBuilder extends TriangleCongruenceSimilarityBuild
 export class LengthEqualityBuilder extends Builder {
     lengthSymbolA? : LengthSymbol;
     lengthSymbolB? : LengthSymbol;
-    lengthEqualityReason : LengthEqualityReason = LengthEqualityReason.none;
+    lengthEqualityReason : LengthEqualityReason | undefined;
 
     trianglePairSelector : TrianglePairSelector | undefined;
 
     constructor(lengthEquality? : LengthEquality){
         super();
+    }
+
+    async init(){        
+        this.lengthEqualityReason = await showMenu(lengthEqualityReasonDlg);
     }
 
     clear(){
@@ -1373,52 +1377,47 @@ export class LengthEqualityBuilder extends Builder {
     async click(view : View, position : Vec2, shape : Shape | undefined){
         let lengthEquality : LengthEquality | undefined;
 
-        if(this.lengthEqualityReason == LengthEqualityReason.none){
+        if(shape instanceof LengthSymbol){
+            if(this.lengthSymbolA == undefined){
+                this.lengthSymbolA = shape;
+                shape.setMode(Mode.depend);
+            }
+            else if(this.lengthSymbolB == undefined){
+                this.lengthSymbolB = shape;
+                shape.setMode(Mode.depend);
 
-            if(shape instanceof LengthSymbol){
-                if(this.lengthSymbolA == undefined){
-                    this.lengthSymbolA = shape;
-                    shape.setMode(Mode.depend);
+                switch(this.lengthEqualityReason!){
+                case LengthEqualityReason.radii_equal:
+                    lengthEquality = makeEqualLengthByRadiiEqual(this.lengthSymbolA, this.lengthSymbolB);
+                    break;
+                case LengthEqualityReason.common_circle:
+                    showPrompt(TT("click the common circle. "));
+                    break;
+                case LengthEqualityReason.parallel_lines_distance:
+                    linesSelector_2.clear();
+                    showPrompt(TT("click two parallel lines. "));
+                    break;
+                case LengthEqualityReason.circle_by_radius:
+                    lengthEquality = makeEqualLengthByCircleByRadius(this.lengthSymbolA, this.lengthSymbolB);
+                    break;
+                case LengthEqualityReason.congruent_triangles:
+                    lengthEquality = makeEqualLengthByCongruentTriangles(this.lengthSymbolA, this.lengthSymbolB);
+                    break;
+                case LengthEqualityReason.parallelogram_opposite_sides:
+                    lengthEquality = makeEqualLengthByParallelogramOppositeSides(this.lengthSymbolA, this.lengthSymbolB);
+                    break;
+                case LengthEqualityReason.parallelogram_diagonal_bisection:
+                    lengthEquality = makeEqualLengthByParallelogramDiagonalBisection(this.lengthSymbolA, this.lengthSymbolB);
+                    break;
+                case LengthEqualityReason.equivalence_class:
+                    lengthEquality = makeEqualLengthByEquivalenceClass(this.lengthSymbolA, this.lengthSymbolB);
+                    break;
+
+                default:
+                    throw new MyError();
                 }
-                else if(this.lengthSymbolB == undefined){
-                    this.lengthSymbolB = shape;
-                    shape.setMode(Mode.depend);
-
-                    this.lengthEqualityReason = await showMenu(lengthEqualityReasonDlg);
-
-                    switch(this.lengthEqualityReason){
-                    case LengthEqualityReason.radii_equal:
-                        lengthEquality = makeEqualLengthByRadiiEqual(this.lengthSymbolA, this.lengthSymbolB);
-                        break;
-                    case LengthEqualityReason.common_circle:
-                        showPrompt(TT("click the common circle. "));
-                        break;
-                    case LengthEqualityReason.parallel_lines_distance:
-                        linesSelector_2.clear();
-                        showPrompt(TT("click two parallel lines. "));
-                        break;
-                    case LengthEqualityReason.circle_by_radius:
-                        lengthEquality = makeEqualLengthByCircleByRadius(this.lengthSymbolA, this.lengthSymbolB);
-                        break;
-                    case LengthEqualityReason.congruent_triangles:
-                        lengthEquality = makeEqualLengthByCongruentTriangles(this.lengthSymbolA, this.lengthSymbolB);
-                        break;
-                    case LengthEqualityReason.parallelogram_opposite_sides:
-                        lengthEquality = makeEqualLengthByParallelogramOppositeSides(this.lengthSymbolA, this.lengthSymbolB);
-                        break;
-                    case LengthEqualityReason.parallelogram_diagonal_bisection:
-                        lengthEquality = makeEqualLengthByParallelogramDiagonalBisection(this.lengthSymbolA, this.lengthSymbolB);
-                        break;
-                    case LengthEqualityReason.equivalence_class:
-                        lengthEquality = makeEqualLengthByEquivalenceClass(this.lengthSymbolA, this.lengthSymbolB);
-                        break;
-    
-                    default:
-                        throw new MyError();
-                    }
-                }
-            }        
-        }
+            }
+        }        
         else{
             if(this.lengthSymbolA == undefined || this.lengthSymbolB == undefined){
                 throw new MyError();
@@ -1476,6 +1475,10 @@ export class AngleEqualityBuilder extends Builder {
         super();
     }
 
+    async init(){        
+        this.angleEqualityReason = await showMenu(angleEqualityReasonDlg);
+    }
+
     clear(){
         this.angleA = undefined;
         this.angleB = undefined;
@@ -1496,8 +1499,6 @@ export class AngleEqualityBuilder extends Builder {
                 else if(this.angleB == undefined){
                     this.angleB = shape;
                     shape.setMode(Mode.depend);
-
-                    this.angleEqualityReason = await showMenu(angleEqualityReasonDlg);
 
                     switch(this.angleEqualityReason){
                     case AngleEqualityReason.vertical_angles:
@@ -1575,6 +1576,10 @@ export class ParallelDetectorBuilder extends Builder {
     parallelReason? : ParallelReason;
     lineA? : AbstractLine;
 
+    async init(){        
+        this.parallelReason = await showMenu(parallelReasonDlg);
+    }
+
     clear(){
         this.lineA = undefined;
     }
@@ -1587,8 +1592,6 @@ export class ParallelDetectorBuilder extends Builder {
             }
             else{
                 shape.setMode(Mode.depend);
-
-                this.parallelReason = await showMenu(parallelReasonDlg);
 
                 let detector : ParallelDetector | undefined;
 
@@ -1707,34 +1710,35 @@ abstract class ClassifierBuilder extends Builder {
 }
 
 class QuadrilateralClassifierBuilder extends ClassifierBuilder {
+    reason : ParallelogramReason | RhombusReason | undefined;
     points : Point[] = [];
+
+    async init(){        
+        const shapeType = await showMenu(shapeTypeDlg);
+
+        switch(shapeType){
+        case ShapeType.parallelogram:
+            this.reason = await showMenu(parallelogramReasonDlg);
+            break;
+
+        case ShapeType.rhombus:
+            this.reason = await showMenu(rhombusReasonDlg);
+            break;
+
+        default:
+            throw new MyError();
+        }
+    }
 
     async click(view : View, position : Vec2, shape : Shape | undefined){
         if(shape instanceof Point){
             this.points.push(shape);
             shape.setMode(Mode.depend);
             if(this.points.length == 4){
-                const shapeType = await showMenu(shapeTypeDlg);
-                
-
-                let reason : ParallelogramReason | RhombusReason;
-
-                switch(shapeType){
-                case ShapeType.parallelogram:
-                    reason = await showMenu(parallelogramReasonDlg);
-                    break;
-
-                case ShapeType.rhombus:
-                    reason = await showMenu(rhombusReasonDlg);
-                    break;
-
-                default:
-                    throw new MyError();
-                }
 
                 // msg(`reason:[${reason}]`);
 
-                const classifier = makeQuadrilateralClassifier(this.points, reason);
+                const classifier = makeQuadrilateralClassifier(this.points, this.reason!);
                 if(classifier != undefined){
 
                     addShapeSetRelations(view, classifier);
