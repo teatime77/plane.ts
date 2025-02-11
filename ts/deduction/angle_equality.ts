@@ -290,7 +290,7 @@ export function makeAngleEqualityByParallelLines(angleA : Angle, angleB : Angle)
     if(cross_sign * parallel_sign == 1){
         // msg(`equal angle:parallel lines`);
         return new AngleEquality({
-            reason : AngleEqualityReason.parallel_lines,
+            reason : AngleEqualityReason.parallel_line_angles,
             auxiliaryShapes : parallel_lines.concat(cross_line),
             shapes : [
                 angleA, angleB
@@ -385,7 +385,7 @@ export class AngleEquality extends Statement {
             angleEquality = makeAngleEqualityByVertical_angles(angleA, angleB);
             break;
 
-        case AngleEqualityReason.parallel_lines:{
+        case AngleEqualityReason.parallel_line_angles:{
                 angleEquality = makeAngleEqualityByParallelLines(angleA, angleB);
             }
             break;

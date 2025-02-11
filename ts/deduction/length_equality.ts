@@ -165,22 +165,6 @@ export function makeEqualLengthByCommonCircle(lengthSymbolA : LengthSymbol, leng
     return undefined;
 }
 
-export function makeEqualLengthByCircleByRadius(lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol) : LengthEquality | undefined {
-    for(const [lengthSymbol1, lengthSymbol2] of [[lengthSymbolA, lengthSymbolB], [lengthSymbolB, lengthSymbolA]]){
-        if((lengthSymbol1.circle instanceof ArcByLengthSymbol || lengthSymbol1.circle instanceof CircleByRadius) && lengthSymbol1.circle.lengthSymbol == lengthSymbol2){
-
-            msg(`circle-by-radius`);
-            return new LengthEquality({
-                reason : LengthEqualityReason.circle_by_radius,
-                auxiliaryShapes : [ lengthSymbol1.circle ],
-                shapes : [ lengthSymbolA, lengthSymbolB ]                
-            });
-        }
-    }
-
-    return undefined;
-}
-
 export function makeEqualLengthByParallelLines(lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol, parallel_lines : AbstractLine[]) : LengthEquality | undefined {
     if(!isParallel(parallel_lines[0], parallel_lines[1])){
         return undefined;
@@ -346,12 +330,6 @@ export class LengthEquality extends Statement {
             }
             break;
 
-        case LengthEqualityReason.circle_by_radius:{
-                const [lengthSymbolA, lengthSymbolB] = this.selectedShapes as LengthSymbol[];
-                lengthEquality = makeEqualLengthByCircleByRadius(lengthSymbolA, lengthSymbolB);
-            }
-            break;
-
         case LengthEqualityReason.congruent_triangles:{
                 const [lengthSymbolA, lengthSymbolB] = this.selectedShapes as LengthSymbol[];
                 lengthEquality = makeEqualLengthByCongruentTriangles(lengthSymbolA, lengthSymbolB);
@@ -378,6 +356,7 @@ export class LengthEquality extends Statement {
 
         case LengthEqualityReason.midpoint:
 
+        case LengthEqualityReason.not_used:
         default:
             throw new MyError();
         }

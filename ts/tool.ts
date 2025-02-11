@@ -1397,9 +1397,6 @@ export class LengthEqualityBuilder extends Builder {
                     linesSelector_2.clear();
                     showPrompt(TT("click two parallel lines. "));
                     break;
-                case LengthEqualityReason.circle_by_radius:
-                    lengthEquality = makeEqualLengthByCircleByRadius(this.lengthSymbolA, this.lengthSymbolB);
-                    break;
                 case LengthEqualityReason.congruent_triangles:
                     lengthEquality = makeEqualLengthByCongruentTriangles(this.lengthSymbolA, this.lengthSymbolB);
                     break;
@@ -1413,6 +1410,7 @@ export class LengthEqualityBuilder extends Builder {
                     lengthEquality = makeEqualLengthByEquivalenceClass(this.lengthSymbolA, this.lengthSymbolB);
                     break;
 
+                case LengthEqualityReason.not_used:
                 default:
                     throw new MyError();
                 }
@@ -1504,7 +1502,7 @@ export class AngleEqualityBuilder extends Builder {
                     case AngleEqualityReason.vertical_angles:
                         angleEquality = makeAngleEqualityByVertical_angles(this.angleA, this.angleB);
                         break;
-                    case AngleEqualityReason.parallel_lines:
+                    case AngleEqualityReason.parallel_line_angles:
                         angleEquality = makeAngleEqualityByParallelLines(this.angleA, this.angleB);
                         break;
                     case AngleEqualityReason.angle_bisector:
@@ -1530,7 +1528,7 @@ export class AngleEqualityBuilder extends Builder {
             case AngleEqualityReason.vertical_angles:
                 break;
 
-            case AngleEqualityReason.parallel_lines:
+            case AngleEqualityReason.parallel_line_angles:
                 break;
 
             case AngleEqualityReason.angle_bisector:

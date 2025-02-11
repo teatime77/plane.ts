@@ -353,7 +353,7 @@ function makeReasonMsgMap(){
         [ LengthEqualityReason.radii_equal, TT("Since the two circles have the same radius,")],
         [ LengthEqualityReason.common_circle, TT("Since two length symbols are the radii of the same circle,")],
         [ LengthEqualityReason.parallel_lines_distance, TT("Since the distance between two parallel lines is constant,")],
-        [ LengthEqualityReason.circle_by_radius, TT("Since the two circles have the same radius,")],
+        [ LengthEqualityReason.not_used, TT("Since the two circles have the same radius,")],
         [ LengthEqualityReason.congruent_triangles, TT("Since the two triangles are congruent,")],
         [ LengthEqualityReason.parallelogram_opposite_sides, TT("Since the opposite sides of a parallelogram are equal in length,")],
         [ LengthEqualityReason.parallelogram_diagonal_bisection, TT("Since the diagonals of a parallelogram intersect at the midpoint,")],
@@ -361,7 +361,7 @@ function makeReasonMsgMap(){
         [ LengthEqualityReason.midpoint, TT("Since the midpoint bisects the line segment,")],
 
         [ AngleEqualityReason.vertical_angles, TT("Since vertical angles are equal,")],
-        [ AngleEqualityReason.parallel_lines, TT("Since the corresponding angles of parallel lines are equal,")],
+        [ AngleEqualityReason.parallel_line_angles, TT("Since the corresponding angles of parallel lines are equal,")],
         [ AngleEqualityReason.angle_bisector, TT("Since these angles are formed by the angle bisectors,")],
         [ AngleEqualityReason.congruent_triangles, TT("Since the two triangles are congruent,")],
         [ AngleEqualityReason.parallelogram_opposite_angles, TT("Since the diagonals of a parallelogram are congruent,")],

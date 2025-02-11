@@ -37,7 +37,7 @@ export enum LengthEqualityReason {
     radii_equal,
     common_circle,
     parallel_lines_distance,
-    circle_by_radius,
+    not_used,
     congruent_triangles,
     parallelogram_opposite_sides,
     parallelogram_diagonal_bisection,
@@ -54,7 +54,7 @@ export enum ExprTransformReason {
 export enum AngleEqualityReason {
     none = 200,
     vertical_angles,
-    parallel_lines,
+    parallel_line_angles,
     angle_bisector,
     congruent_triangles,
     parallelogram_opposite_angles,
