@@ -259,6 +259,10 @@ export class Angle extends Shape {
         return this.lineA == angle.lineA && this.directionA == angle.directionA;
     }
 
+    commonLineConnect(angle : Angle) : boolean {
+        return this.lineA == angle.lineB && this.directionA == - angle.directionB;
+    }
+
     commonLineBA(angle : Angle) : boolean {
         return this.lineB == angle.lineA && this.directionB == angle.directionA;
     }
