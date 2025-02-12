@@ -107,6 +107,12 @@ export function assert(b : boolean, msg : string = ""){
     }
 }    
 
+export function check(b : boolean, msg : string = ""){
+    if(!b){
+        throw new MyError(msg);
+    }
+}    
+
 export function msg(txt : string){
     layout_ts.Log.log(txt);
 }

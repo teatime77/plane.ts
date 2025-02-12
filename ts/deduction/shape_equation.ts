@@ -31,7 +31,7 @@ export function makeEquationTextBlock(equation : App) : TextBlock {
 export function makeSumOfAnglesIsPi(angles_arg: Angle[]) : ShapeEquation | undefined {
     const angles_list = permutation(angles_arg);
     for(const angles of angles_list){
-        if( range(angles.length - 1).every(i => angles[i].lineB == angles[i + 1].lineA && angles[i].directionB == angles[i + 1].directionA) ){
+        if( range(angles.length - 1).every( i => angles[i].commonLineBA(angles[i + 1]) ) ){
             const [first_angle, last_angle] = [ angles[0], last(angles) ];
             if(first_angle.lineA == last_angle.lineB && first_angle.directionA == - last_angle.directionB){
 
@@ -60,13 +60,44 @@ export function makeSumOfAnglesIsPi(angles_arg: Angle[]) : ShapeEquation | undef
     return undefined;
 }
 
+
+export function makeSumOfAnglesIsEqual(angles_arg: Angle[]) : ShapeEquation | undefined {
+    check(3 <= angles_arg.length);
+    const angles_list = permutation(angles_arg);
+    for(const angles of angles_list){
+        const outer_angle = angles[0];
+        const inner_angles = angles.slice(1);
+        if(outer_angle.commonLineAA(inner_angles[0]) && outer_angle.commonLineBB(last(inner_angles))){
+            if(range(inner_angles.length - 1).every(i => inner_angles[i].commonLineBA(inner_angles[i + 1]))){
+                const text = `${outer_angle.name} = ` + inner_angles.map(x => x.name).join(" + ");
+                msg(`angles sum eq: ${text}`);
+                const equation = parser_ts.parseMath(text) as App;
+                if(! equation.isEq()){
+                    msg(`can not make an equation: ${text}`);
+                    return undefined;
+                }
+
+                const text_block = makeEquationTextBlock(equation);
+
+                return new ShapeEquation({
+                    reason : ShapeEquationReason.sum_of_angles_is_equal,
+                    auxiliaryShapes : angles,
+                    shapes : [ text_block ],
+                    equation
+                });
+                
+            }
+        }
+    }
+
+    return undefined;
+}
+
 export function makeShapeEquation(reason : ShapeEquationReason, shapes: Shape[]) : ShapeEquation | undefined {
     switch(reason){
-    case ShapeEquationReason.sum_of_angles_is_pi:{
-        if(! shapes.every(x => x instanceof Angle)){
-            msg(TT("The selected shape is not an angle."));
-            return undefined;
-        }
+    case ShapeEquationReason.sum_of_angles_is_pi:
+    case ShapeEquationReason.sum_of_angles_is_equal:{
+        check(shapes.every(x => x instanceof Angle && x.name != ""), TT("The selected shapes are not names angles."));
         const angles = shapes as Angle[];
 
         const intersections = unique(angles.map(x => intersection));
@@ -75,7 +106,14 @@ export function makeShapeEquation(reason : ShapeEquationReason, shapes: Shape[])
             return undefined;
         }
 
-        return makeSumOfAnglesIsPi(shapes as Angle[]);
+        if(reason == ShapeEquationReason.sum_of_angles_is_pi){
+
+            return makeSumOfAnglesIsPi(shapes as Angle[]);
+        }
+        else{
+
+            return makeSumOfAnglesIsEqual(shapes as Angle[]);
+        }
     }
     default:
         throw new MyError();

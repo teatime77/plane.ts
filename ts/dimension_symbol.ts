@@ -11,6 +11,7 @@ export class Angle extends Shape {
     static numMarks = 5;
     static RightAngleMark = 0;
     static DefaultAngleMark = 1;
+    static outerAngleScale = 2;
 
     angleMark!  : number;
     lineA       : AbstractLine;
@@ -20,6 +21,8 @@ export class Angle extends Shape {
     directionB  : number;
 
     intersection! : Point;
+
+    outerAngle : boolean = false;
 
     constructor(obj : { angleMark : number, lineA : AbstractLine, directionA : number, lineB : AbstractLine, directionB : number }){
         super(obj);
@@ -88,11 +91,25 @@ export class Angle extends Shape {
         return [start, end];
     }
 
+    radiusPlus(){
+        return this.outerAngle ? Angle.outerAngleScale * Angle.radius1 : 0;
+    }
+
     isNear(position : Vec2) : boolean {  
         const distance = this.intersection.position.distance(position);
 
         let radius = Angle.radius1 * 1.2;
-        if(distance <= radius){
+
+        let near_radius;
+        if(this.outerAngle){
+            const outer_radius = radius + this.radiusPlus();
+            near_radius = (radius <= distance && distance < outer_radius);
+        }
+        else{
+            near_radius = distance <= radius;
+        }
+
+        if(near_radius){
 
             const [start, end] = this.startEndAngle();
 
@@ -108,7 +125,12 @@ export class Angle extends Shape {
         return false;
     }
 
-    calc(){        
+    calc(){       
+        const idx = View.current.shapes.indexOf(this);
+        let shapes = (idx == -1 ? View.current.shapes : View.current.shapes.slice(0, idx));
+
+        this.outerAngle = shapes.some(x => x instanceof Angle && (this.commonLineAA(x) || this.commonLineBB(x)));
+
         this.setCaptionPosition();
     }
 
@@ -134,7 +156,7 @@ export class Angle extends Shape {
 
             for(const i of range(this.angleMark)){    
                 assert(i < scales.length);
-                let radius = Angle.radius1 * scales[i];
+                const radius = Angle.radius1 * scales[i] + this.radiusPlus();
                 View.current.canvas.drawArc(this, center, radius, start, end);
             }
         }
@@ -152,7 +174,7 @@ export class Angle extends Shape {
         const mid_angle = (start + end) / 2;
         const center = this.intersection.position;
 
-        let radius = Angle.radius1 * 2;
+        const radius = Angle.radius1 * 2 + this.radiusPlus();
 
         const dx = radius * Math.cos(mid_angle);
         const dy = radius * Math.sin(mid_angle);
@@ -231,6 +253,18 @@ export class Angle extends Shape {
                 }
             }
         }
+    }
+
+    commonLineAA(angle : Angle) : boolean {
+        return this.lineA == angle.lineA && this.directionA == angle.directionA;
+    }
+
+    commonLineBA(angle : Angle) : boolean {
+        return this.lineB == angle.lineA && this.directionB == angle.directionA;
+    }
+
+    commonLineBB(angle : Angle) : boolean {
+        return this.lineB == angle.lineB && this.directionB == angle.directionB;
     }
 }
 

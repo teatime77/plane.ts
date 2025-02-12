@@ -1104,6 +1104,7 @@ abstract class AbstractAngleBuilder extends Builder {
                     }
                     
                     target = new Angle({ angleMark, lineA, directionA, lineB, directionB });
+                    target.calc();
 
                     addShapeSetRelations(view, target);
                 }
