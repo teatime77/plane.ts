@@ -238,9 +238,9 @@ export class AngleMarkProperty extends Property {
 
         this.span = document.createElement("span");
 
-        const button_img_urls = range(Angle.numMarks).map(i => `${origin}/lib/plane/img/angle-${i}.png`) as string[];
+        const button_img_urls = range(Angle.numMarks).map(i => `${origin}/lib/plane/img/angle_${i}.png`) as string[];
     
-        [this.img, this.dlg, this.imgButtons] = makeImageButtons(this.span, `${origin}/lib/plane/img/angle-${angles[0].angleMark}.png`, button_img_urls);
+        [this.img, this.dlg, this.imgButtons] = makeImageButtons(this.span, `${origin}/lib/plane/img/angle_${angles[0].angleMark}.png`, button_img_urls);
     
         this.img.addEventListener("click", (ev:MouseEvent)=>{
             this.dlg.showModal();

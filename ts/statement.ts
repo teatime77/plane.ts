@@ -65,7 +65,7 @@ export enum QuadrilateralClass {
     none = 300,
     trapezoid,
     parallelogram,
-    rhombus
+    rhombus,
 }
 
 export enum ParallelogramReason {
@@ -94,9 +94,57 @@ export enum TriangleSimilarityReason {
 
 export enum ShapeType {
     parallelogram = 800,
-    rhombus
+    rhombus,
 }
 
+export const enumToImgName = new Map<number, string>([
+    [ TriangleCongruenceReason.side_side_side, "side_side_side" ],
+    [ TriangleCongruenceReason.side_angle_side, "side_angle_side" ],
+    [ TriangleCongruenceReason.angle_side_angle, "angle_side_angle" ],
+
+    [ ShapeEquationReason.sum_of_angles_is_pi, "sum_of_angles_is_pi" ],
+    [ ShapeEquationReason.sum_of_angles_is_equal, "sum_of_angles_is_equal" ],
+    [ ShapeEquationReason.sum_of_lengths_is_equal, "sum_of_lengths_is_equal" ],
+    [ ShapeEquationReason.sum_of_interior_angles_of_triangle_is_pi, "sum_of_interior_angles_of_triangle_is_pi" ],
+
+    [ LengthEqualityReason.radii_equal, "radii_equal" ],
+    [ LengthEqualityReason.common_circle, "common_circle" ],
+    [ LengthEqualityReason.parallel_lines_distance, "parallel_lines_distance" ],
+    [ LengthEqualityReason.congruent_triangles, "triangle_congruence" ],
+    [ LengthEqualityReason.parallelogram_opposite_sides, "each_opposite_sides_are_equal" ],
+    [ LengthEqualityReason.parallelogram_diagonal_bisection, "each_diagonal_bisections" ],
+    [ LengthEqualityReason.equivalence_class, "equivalence_class" ],
+    [ LengthEqualityReason.midpoint, "midpoint" ],
+
+    [ ExprTransformReason.transposition, "transposition" ],
+    [ ExprTransformReason.equality, "equality" ],
+
+    [ AngleEqualityReason.vertical_angles, "vertical_angles" ],
+    [ AngleEqualityReason.parallel_line_angles, "parallel_line_angles" ],
+    [ AngleEqualityReason.angle_bisector, "angle_bisector" ],
+    [ AngleEqualityReason.congruent_triangles, "triangle_congruence" ],
+    [ AngleEqualityReason.parallelogram_opposite_angles, "each_opposite_angles_are_equal" ],
+    [ AngleEqualityReason.similar_triangles, "triangle_similarity" ],
+
+    [ QuadrilateralClass.trapezoid, "" ],
+    [ QuadrilateralClass.parallelogram, "quadrilateral_classifier" ],
+    [ QuadrilateralClass.rhombus, "all_sides_are_equal" ],
+
+    [ ParallelogramReason.each_opposite_sides_are_equal, "each_opposite_sides_are_equal" ],
+    [ ParallelogramReason.each_opposite_sides_are_parallel, "each_opposite_sides_are_parallel" ],
+    [ ParallelogramReason.each_opposite_angles_are_equal, "each_opposite_angles_are_equal" ],
+    [ ParallelogramReason.one_opposite_sides_are_parallel_and_equal, "one_opposite_sides_are_parallel_and_equal" ],
+    [ ParallelogramReason.each_diagonal_bisections, "each_diagonal_bisections" ],
+
+    [ RhombusReason.all_sides_are_equal, "all_sides_are_equal" ],
+
+    [ ParallelReason.parallelogram, "quadrilateral_classifier" ],
+
+    [ TriangleSimilarityReason.two_equal_angle_pairs, "two_equal_angle_pairs" ],
+
+    [ ShapeType.parallelogram, "quadrilateral_classifier" ],
+    [ ShapeType.rhombus, "all_sides_are_equal" ],
+]);
 
 export function makeSelectionDlg(){    
     const data : [string, string, (typeof LengthEqualityReason | typeof AngleEqualityReason | typeof ShapeType | 
@@ -129,14 +177,24 @@ export function makeSelectionDlg(){
 
         for(const [key, value] of Object.entries(dic)){
             if (isNaN(Number(key))){
-                // console.log(`of key:[${key}]${typeof key} value:[${value}]${typeof value} dic[value]:[${dic[value]}]`); 
-                const span = document.createElement("span");
-                span.id = `${span_id_prefixes[idx]}-${key}`;
-                span.innerText = key;
-                span.className = enumSelectionClassName;
-                span.dataset.enum_value = `${value}`;
+                if(["none", "not_used"].includes(key)){
+                    continue;
+                }
 
-                div.append(span);
+                let img_name = enumToImgName.get(value);
+                assert(img_name != undefined && img_name != "");
+
+                // console.log(`of key:[${key}]${typeof key} value:[${value}]${typeof value} dic[value]:[${dic[value]}]`); 
+                const img = document.createElement("img");
+                img.src = `./lib/plane/img/${img_name}.png`;
+                img.width  = 64;
+                img.height = 64;
+                img.id = `${span_id_prefixes[idx]}-${key}`;
+                img.className = enumSelectionClassName;
+                img.dataset.enum_value = `${value}`;
+
+                div.append(img);
+
             }
         }
 

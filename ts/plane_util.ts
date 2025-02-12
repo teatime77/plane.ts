@@ -71,8 +71,10 @@ export async function showMenu(dlg : HTMLDialogElement){
             const enum_value = `${operation.value}`;
             const item  = items.find(x => x.dataset.enum_value == enum_value)!;
             assert(item != undefined);
+            item.style.borderColor = "DeepSkyBlue";
             item.style.borderStyle = "ridge";
-            await sleep(500);
+            await sleepInFastForward(100);
+            item.style.borderColor = "";
             item.style.borderStyle = "none";
 
             value = operation.value;
@@ -222,6 +224,14 @@ export async function sleep(milliseconds : number) : Promise<void> {
         milliseconds = 50;
     }
 
+    return new Promise((resolve) => {
+        setTimeout(()=>{
+            resolve();
+        }, milliseconds);
+    });
+}
+
+export async function sleepInFastForward(milliseconds : number) : Promise<void> {
     return new Promise((resolve) => {
         setTimeout(()=>{
             resolve();
