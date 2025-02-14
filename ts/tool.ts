@@ -344,7 +344,7 @@ export class SelectionTool extends Builder {
 
         if(this.downOffset != undefined){
             const offset = new Vec2(event.offsetX, event.offsetY);
-            const diff   = view.fromPix(offset.sub(this.downOffset));
+            const diff   = view.fromPixScale(offset.sub(this.downOffset));
 
             diff.y *= -1;
 
@@ -1862,6 +1862,10 @@ export class ExprTransformBuilder extends Builder {
         case ExprTransformReason.add_equation:
             exprTransform = makeExprTransformByAddEquation(this.terms);
             break;
+
+        case ExprTransformReason.substitution:
+            exprTransform = makeExprTransformBySubstitution(this.terms);
+            break;
         }
 
         if(exprTransform != undefined){
@@ -1874,8 +1878,9 @@ export class ExprTransformBuilder extends Builder {
             for(const _ of gen){
                 msg(`simplify ${exprTransform.equation.str()}`);
                 await sleep(1000);
+                textBlock.app  = exprTransform.equation;
                 textBlock.text = exprTransform.equation.tex();
-                parser_ts.renderKatexSub(textBlock.div, textBlock.text);
+                textBlock.updateTextDiv();
             }
         }
     }

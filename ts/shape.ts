@@ -286,9 +286,6 @@ export class TextBlock extends MathEntity {
             if(rect.left <= x && x < rect.right && rect.top <= y && y < rect.bottom){
                 return term_rect;
             }
-            else{
-                span
-            }
         }
 
         throw new MyError();

@@ -119,8 +119,20 @@ export class View extends Widget {
         return(this.max.y - this.min.y) * (pix / this.board.clientHeight);
     }
 
-    fromPix(position : Vec2) : Vec2 {
+    fromPixScale(position : Vec2) : Vec2 {
         return new Vec2(this.fromXPixScale(position.x), this.fromYPixScale(position.y));
+    }
+
+    fromXPix(pix : number) : number {
+        return linear(0, pix, this.board.clientWidth, this.min.x, this.max.x);
+    }
+
+    fromYPix(pix : number) : number {
+        return linear(0, pix, this.board.clientHeight, this.min.y, this.max.y);
+    }
+
+    fromPix(position : Vec2) : Vec2 {
+        return new Vec2(this.fromXPix(position.x), this.fromYPix(position.y));
     }
 
     toXPixScale(n : number) : number {

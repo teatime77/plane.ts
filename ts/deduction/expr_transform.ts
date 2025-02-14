@@ -70,6 +70,18 @@ export function makeExprTransformByAddEquation(terms : Term[]) : ExprTransform |
     return exprTransform;
 }
 
+export function makeExprTransformBySubstitution(terms : Term[]) : ExprTransform | undefined {
+    const equation = algebra_ts.substitute(terms[0], terms[1]);
+
+    const exprTransform = new ExprTransform({
+        reason   : ExprTransformReason.substitution,
+        equation : equation, 
+        terms
+    });
+
+    return exprTransform;
+}
+
 export class ExprTransform extends MathEntity implements Equation {
     reason : ExprTransformReason;
     equation : App;
@@ -106,6 +118,10 @@ export class ExprTransform extends MathEntity implements Equation {
 
         case ExprTransformReason.add_equation:
             text = TT("Add two equations together.");
+            break;
+
+        case ExprTransformReason.substitution:
+            text = TT("Substitute the term.");
             break;
 
         default:
