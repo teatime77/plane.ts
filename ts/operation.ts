@@ -136,7 +136,7 @@ export async function loadOperationsText(data : any){
     Plane.one.playMode = PlayMode.stop;
 
     for(const [i, o] of operations.entries()){
-        msg(`load ${i}:${o.dump()}`);
+        // msg(`load ${i}:${o.dump()}`);
     }
 
     msg(`load Operations Text completes.`);

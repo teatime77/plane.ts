@@ -58,7 +58,19 @@ export function makeExprTransformByEquality(terms : Term[]) : ExprTransform | un
     return exprTransform;
 }
 
-export class ExprTransform extends MathEntity {
+export function makeExprTransformByAddEquation(terms : Term[]) : ExprTransform | undefined {
+    const equation = algebra_ts.addEquations(terms);
+
+    const exprTransform = new ExprTransform({
+        reason   : ExprTransformReason.add_equation,
+        equation : equation, 
+        terms
+    });
+
+    return exprTransform;
+}
+
+export class ExprTransform extends MathEntity implements Equation {
     reason : ExprTransformReason;
     equation : App;
     terms : Term[];
@@ -90,6 +102,10 @@ export class ExprTransform extends MathEntity {
 
         case ExprTransformReason.equality:
             text = TT("From the above equations,");
+            break;
+
+        case ExprTransformReason.add_equation:
+            text = TT("Add two equations together.");
             break;
 
         default:

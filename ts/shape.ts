@@ -205,7 +205,7 @@ export abstract class MathEntity extends Widget implements i18n_ts.Readable, par
     }
 }
 
-class TermRect {
+export class TermRect {
     term : Term;
     span : HTMLSpanElement;
     rect : DOMRect;
@@ -275,41 +275,43 @@ export class TextBlock extends MathEntity {
         ]);
     }
 
-    getClickedTerm(x : number, y : number) : Term {
-        let clickedTerm : Term | undefined;
+    getClickedTermRect(x : number, y : number) : TermRect {
+        this.termRects.forEach(x => x.span.style.backgroundColor = "transparent");
 
-        for(const term_rect of this.termRects){
+        const refvar_rects = this.termRects.filter(x => x.term instanceof RefVar);
+        for(const term_rect of refvar_rects){
             const rect = term_rect.rect;
             const span = term_rect.span;
 
             if(rect.left <= x && x < rect.right && rect.top <= y && y < rect.bottom){
-                clickedTerm = term_rect.term;
-                span.style.backgroundColor = "blue";
+                return term_rect;
             }
             else{
-                span.style.backgroundColor = "transparent"
+                span
             }
         }
 
-        assert(clickedTerm != undefined);
-        return clickedTerm!;
+        throw new MyError();
     }
 
     texClick(ev : MouseEvent){
         ev.stopPropagation();
 
         if(Builder.tool instanceof ExprTransformBuilder){
-            const term = this.getClickedTerm(ev.clientX, ev.clientY);
+            const srcTermRect = this.getClickedTermRect(ev.clientX, ev.clientY);
+
+            const dstTermRect = Builder.tool.getDstTermRect(this.termRects, srcTermRect);
+            const dstTerm = dstTermRect.term;
             
             if(!View.isPlayBack){
-                const path = term.getPath();
+                const path = dstTerm.getPath();
 
                 const operation = new ClickTerm(this.id, path.indexes);
 
                 View.current.addOperation(operation);
             }
 
-            Builder.tool.termClick(term);
+            Builder.tool.termClick(dstTerm);
         }
     }
 
@@ -332,7 +334,7 @@ export class TextBlock extends MathEntity {
                 const tex_spans = Array.from(this.div.getElementsByClassName("enclosing")) as HTMLSpanElement[];
                 this.termRects = [];
 
-                const id_offset = "refvar-".length;
+                const id_offset = "tex-term-".length;
                 for(const span of tex_spans){
                     const id = parseInt(span.id.substring(id_offset));
                     const term = terms.find(x => x.id == id)!;

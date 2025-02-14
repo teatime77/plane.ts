@@ -1811,6 +1811,30 @@ export class ExprTransformBuilder extends Builder {
         }
     }
 
+    getDstTermRect(termRects : TermRect[], srcTermRect : TermRect) : TermRect {
+        if(this.reason == ExprTransformReason.add_equation){
+            for(let term = srcTermRect.term; term.parent != null; term = term.parent){
+                if(term.parent.isEq()){
+
+                    const dstTermRect = termRects.find(x => x.term == term);
+                    if(dstTermRect == undefined){
+                        throw new MyError();
+                    }
+
+                    dstTermRect.span.style.backgroundColor = "blue";
+                    
+                    return dstTermRect;
+                }
+            }
+
+            throw new MyError();
+        }
+        else{
+            srcTermRect.span.style.backgroundColor = "blue";
+            return srcTermRect;
+        }
+    }
+
     async finish(view : View){
         msg(`finish terms ${this.terms.length}`);
 
@@ -1834,12 +1858,25 @@ export class ExprTransformBuilder extends Builder {
                 msg(`terms length < 2`);
             }
             break;
+
+        case ExprTransformReason.add_equation:
+            exprTransform = makeExprTransformByAddEquation(this.terms);
+            break;
         }
 
         if(exprTransform != undefined){
 
             addShapeSetRelations(view, exprTransform);
             this.resetTool(exprTransform);    
+
+            const textBlock = exprTransform.textBlock;
+            const gen = algebra_ts.simplifyNestedAddAll(exprTransform.equation);
+            for(const _ of gen){
+                msg(`simplify ${exprTransform.equation.str()}`);
+                await sleep(1000);
+                textBlock.text = exprTransform.equation.tex();
+                parser_ts.renderKatexSub(textBlock.div, textBlock.text);
+            }
         }
     }
 }

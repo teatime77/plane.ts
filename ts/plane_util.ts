@@ -7,6 +7,7 @@ export const permutation  = i18n_ts.permutation;
 export const circularPermutation  = i18n_ts.circularPermutation;
 export const areSetsEqual  = i18n_ts.areSetsEqual;
 export const isSubSet  = i18n_ts.isSubSet;
+export const check = i18n_ts.check;
 
 const $dic = new Map<string, HTMLElement>();
 
@@ -72,10 +73,8 @@ export async function showMenu(dlg : HTMLDialogElement){
             const item  = items.find(x => x.dataset.enum_value == enum_value)!;
             assert(item != undefined);
             item.style.borderColor = "DeepSkyBlue";
-            item.style.borderStyle = "ridge";
             await sleepInFastForward(100);
             item.style.borderColor = "";
-            item.style.borderStyle = "none";
 
             value = operation.value;
         }
@@ -107,12 +106,6 @@ export function assert(b : boolean, msg : string = ""){
     }
 }    
 
-export function check(b : boolean, msg : string = ""){
-    if(!b){
-        throw new MyError(msg);
-    }
-}    
-
 export function msg(txt : string){
     layout_ts.Log.log(txt);
 }
@@ -139,7 +132,7 @@ export function unique<T>(v : Array<T>) : T[] {
 
 export function remove<T>(v : Array<T>, x : T){
     const idx = v.indexOf(x);
-    assert(idx != undefined);
+    assert(idx != -1);
     v.splice(idx, 1);
 }
 

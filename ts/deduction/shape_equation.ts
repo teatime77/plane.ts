@@ -158,12 +158,21 @@ export function makeShapeEquation(reason : ShapeEquationReason, shapes: Shape[])
     }
 }
 
-export class ShapeEquation extends Statement {
+export interface Equation {
+    equation  : App;
+    textBlock : TextBlock;
+}
+
+export class ShapeEquation extends Statement implements Equation {
     equation : App;
+    textBlock : TextBlock;
     
     constructor(obj : { reason? : number, auxiliaryShapes? : MathEntity[], shapes : MathEntity[], equation : App }){
         super(obj);
         this.equation = obj.equation;
+
+        assert(this.selectedShapes.length == 1 && this.selectedShapes[0] instanceof TextBlock);
+        this.textBlock = this.selectedShapes[0] as TextBlock;
     }
 }
 }
