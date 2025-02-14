@@ -8,6 +8,7 @@ export const circularPermutation  = i18n_ts.circularPermutation;
 export const areSetsEqual  = i18n_ts.areSetsEqual;
 export const isSubSet  = i18n_ts.isSubSet;
 export const check = i18n_ts.check;
+export const remove  = i18n_ts.remove;
 
 const $dic = new Map<string, HTMLElement>();
 
@@ -128,12 +129,6 @@ export function unique<T>(v : Array<T>) : T[] {
         }
     }
     return ret;
-}
-
-export function remove<T>(v : Array<T>, x : T){
-    const idx = v.indexOf(x);
-    assert(idx != -1);
-    v.splice(idx, 1);
 }
 
 export function average(v : number[]) : number {
