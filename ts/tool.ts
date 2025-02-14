@@ -1870,7 +1870,7 @@ export class ExprTransformBuilder extends Builder {
             this.resetTool(exprTransform);    
 
             const textBlock = exprTransform.textBlock;
-            const gen = algebra_ts.simplifyNestedAddAll(exprTransform.equation);
+            const gen = algebra_ts.simplify(exprTransform.equation);
             for(const _ of gen){
                 msg(`simplify ${exprTransform.equation.str()}`);
                 await sleep(1000);
