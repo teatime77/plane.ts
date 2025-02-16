@@ -86,7 +86,8 @@ export enum RhombusReason {
 
 export enum ParallelReason {
     none = 600,
-    parallelogram
+    parallelogram,
+    corresponding_angles_or_alternate_angles_are_equal
 }
 
 export enum TriangleSimilarityReason {
@@ -143,6 +144,7 @@ export const enumToImgName = new Map<number, string>([
     [ RhombusReason.all_sides_are_equal, "all_sides_are_equal" ],
 
     [ ParallelReason.parallelogram, "quadrilateral_classifier" ],
+    [ ParallelReason.corresponding_angles_or_alternate_angles_are_equal, "parallel_line_angles" ],
 
     [ TriangleSimilarityReason.two_equal_angle_pairs, "two_equal_angle_pairs" ],
 
@@ -230,6 +232,39 @@ export function makeSelectionDlg(){
 
         dlg.append(div);
         document.body.append(dlg);
+    }
+}
+
+export class Assumption extends MathEntity {
+    mathText : string = "";
+    expression! : App;
+    textBlock : TextBlock | undefined;
+
+    constructor(){
+        super({});
+    }
+
+    getAllShapes(shapes : MathEntity[]){
+        super.getAllShapes(shapes);
+        if(this.textBlock != undefined){
+            shapes.push(this.textBlock!);
+        }
+    }
+
+    reading() : Reading {
+        return new Reading(this, "", []);
+    }
+
+    setMathText(value : string){
+        this.mathText = value;
+        this.expression = parser_ts.parseMath(this.mathText) as App;
+
+        if(this.textBlock == undefined){
+            this.textBlock = makeEquationTextBlock(this.expression);
+        }
+        else{
+            this.textBlock.setTextApp(this.mathText, this.expression);
+        }
     }
 }
 

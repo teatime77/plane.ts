@@ -19,6 +19,34 @@ export function makeParallelDetectorByParallelogram(lineA : AbstractLine, lineB 
     return undefined;
 }
 
+export function makeParallelDetectorByCorrespondingAlternateAnglesEqual(angleA : Angle, angleB : Angle) : ParallelDetector | undefined {
+    if(angleA.intersection != angleB.intersection && isEqualAngle(angleA, angleB)){
+        let lineA : AbstractLine;
+        let lineB : AbstractLine;
+
+        if(angleA.lineA == angleB.lineA){
+            lineA = angleA.lineB;
+            lineB = angleB.lineB;
+        }
+        else if(angleA.lineB == angleB.lineB){
+            lineA = angleA.lineA;
+            lineB = angleB.lineA;
+        }
+        else{
+            return undefined;
+        }
+
+        msg(`Parallel-Detector-By-Corresponding-Alternate-Angles-Equal`);
+        return new ParallelDetector({
+            reason : ParallelReason.corresponding_angles_or_alternate_angles_are_equal,
+            auxiliaryShapes : [angleA, angleB],
+            shapes : [lineA, lineB]
+        });
+    }
+
+    return undefined;
+}
+
 export class ParallelDetector extends Statement {
     reading(): Reading {
         return this.textReading(TT("these two lines are parallel."));

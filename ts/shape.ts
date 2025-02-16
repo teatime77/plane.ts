@@ -346,6 +346,12 @@ export class TextBlock extends MathEntity {
         }
     }
 
+    setTextApp(text : string, app : App){
+        this.text = text;
+        this.app  = app;
+        this.updateTextDiv();
+    }
+
     setVisible(visible : boolean){
         this.visible = visible;
 

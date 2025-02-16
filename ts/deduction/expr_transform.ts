@@ -13,6 +13,20 @@ export function makeExprTransformByTransposition(term : Term){
     return exprTransform;
 }
 
+function setEqualShapes(refvars : RefVar[]){
+    const map = new Map<string, Shape>();
+    View.current.allRealShapes().filter(x => x.name != "").forEach(x => map.set(x.name, x));
+    const ref_shapes = refvars.map(x => map.get(x.name)).filter(x => x != undefined);
+    if(ref_shapes.every(x => x instanceof Angle)){
+        msg(`eq angles:${ref_shapes.map(x => x.name).join(" = ")}`);
+        for(const i of range(ref_shapes.length - 1)){
+            const angleA = ref_shapes[i] as Angle;
+            const angleB = ref_shapes[i+1] as Angle;
+            addEqualAngles(angleA, angleB);
+        }
+    }
+}
+
 export function makeExprTransformByEquality(terms : Term[]) : ExprTransform | undefined {
     const refvars : RefVar[] = [];
     let   eq_expr : Term | undefined;    
@@ -48,6 +62,8 @@ export function makeExprTransformByEquality(terms : Term[]) : ExprTransform | un
 
     const text = refvars.map(x => x.name).join(" = ");
     const equation = parser_ts.parseMath(text) as App;
+
+    setEqualShapes(refvars);
 
     const exprTransform = new ExprTransform({
         reason   : ExprTransformReason.equality,
@@ -102,7 +118,7 @@ export class ExprTransform extends MathEntity implements Equation {
     }
 
     reading() : Reading {
-        throw new MyError();
+        return new Reading(this, "", []);
     }
 
     async speakExprTransform(speech : i18n_ts.AbstractSpeech){

@@ -380,6 +380,7 @@ function makeReasonMsgMap(){
         [ RhombusReason.all_sides_are_equal, TT("Since all four sides are equal in length,")],
 
         [ ParallelReason.parallelogram, TT("Since the opposite sides of a parallelogram are parallel,") ],
+        [ ParallelReason.corresponding_angles_or_alternate_angles_are_equal, TT("Since corresponding angles or alternate angles are equal,")],
 
         [ TriangleSimilarityReason.two_equal_angle_pairs, TT("Since both pairs of angles in two triangles are equal,")],
 

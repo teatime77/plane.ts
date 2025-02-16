@@ -224,6 +224,18 @@ export class Builder {
         await Builder.setToolByName(Builder.toolName, false);
     }
 
+    static cancelTool(){
+        const view = View.current;
+        while(view.operations.length != 0){
+            const last_operation = last(view.operations);
+            if(last_operation instanceof ToolSelection){
+                msg(`cancel tool:${last_operation.toolName}`);
+                break;
+            }
+            view.operations.pop();
+        }
+    }
+
     async init(){        
     }
 
@@ -1237,6 +1249,37 @@ class TextBlockBuilder extends Builder {
     }
 }
 
+export class AssumptionBuilder extends Builder {
+    async init(){        
+        const view = View.current;
+
+        let assumption : Assumption;
+
+        if(View.isPlayBack){
+            assumption = new Assumption();
+            addShapeSetRelations(view, assumption);
+        }
+        else{
+
+            let mathText = prompt("Enter a mathematical expression.");
+            if(mathText == null){
+
+                Builder.cancelTool();
+                return;
+            }
+
+            mathText = mathText.trim();
+
+            assumption = new Assumption();
+            addShapeSetRelations(view, assumption);
+
+            const propertySetting = new PropertySetting(assumption.id, "mathText", mathText);
+            View.current.addOperation(propertySetting);
+
+            setProperty(assumption, propertySetting.name, propertySetting.value);
+        }
+    }
+}
 
 export class StatementBuilder extends Builder {
     statement : Statement;
@@ -1574,6 +1617,7 @@ export class AngleEqualityBuilder extends Builder {
 export class ParallelDetectorBuilder extends Builder {
     parallelReason? : ParallelReason;
     lineA? : AbstractLine;
+    angles : Angle[] = [];
 
     async init(){        
         this.parallelReason = await showMenu(parallelReasonDlg);
@@ -1581,34 +1625,50 @@ export class ParallelDetectorBuilder extends Builder {
 
     clear(){
         this.lineA = undefined;
+        this.angles = [];
     }
 
     async click(view : View, position : Vec2, shape : Shape | undefined){
-        if(shape instanceof AbstractLine){
-            if(this.lineA == undefined){
-                this.lineA = shape;
-                shape.setMode(Mode.depend);
-            }
-            else{
-                shape.setMode(Mode.depend);
+        let detector : ParallelDetector | undefined;
+        let finished = false;
 
-                let detector : ParallelDetector | undefined;
+        switch(this.parallelReason){
+        case ParallelReason.parallelogram:
+            if(shape instanceof AbstractLine){
+                if(this.lineA == undefined){
+                    this.lineA = shape;
+                    shape.setMode(Mode.depend);
+                }
+                else{
+                    shape.setMode(Mode.depend);
 
-                switch(this.parallelReason){
-                case ParallelReason.parallelogram:
+                    finished = true;
                     detector = makeParallelDetectorByParallelogram(this.lineA, shape);        
-    
-                    break;
-                default:
-                    throw new MyError();
-                }
-                        
-                if(detector != undefined){
-                    addShapeSetRelations(view, detector);
-                    this.resetTool(detector);
-                    this.clear();    
                 }
             }
+            break;
+
+        case ParallelReason.corresponding_angles_or_alternate_angles_are_equal:
+            if(shape instanceof Angle){
+                this.angles.push(shape);
+                shape.setMode(Mode.depend);
+
+                if(this.angles.length == 2){
+
+                    finished = true;
+                    detector = makeParallelDetectorByCorrespondingAlternateAnglesEqual(this.angles[0], this.angles[1]);
+                }
+            }
+            break;
+
+        default:
+            throw new MyError();
+        }
+                
+        if(detector != undefined){
+            addShapeSetRelations(view, detector);
+            this.resetTool(detector);
+            this.clear();    
         }
     }
 }
@@ -1924,6 +1984,7 @@ const toolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [
     [ AngleEqualityBuilder      , "equal_angle"        , TT("equal angle")        , [ AngleEquality ] ],
     [ ParallelDetectorBuilder   , "parallel_detector"  , TT("parallel detector")  , [ ParallelDetector ] ],
     [ EqualityConstraintBuilder , "equality_constraint", TT("equality constraint"), [ LengthEqualityConstraint, AngleEqualityConstraint ] ],
+    [ AssumptionBuilder         , "assumption"         , TT("assumption")         , [ Assumption ] ],
     [ ParallelConstraintBuilder , "parallel_constraint"      , TT("parallel constraint"), [ ParallelConstraint ]],
     [ PerpendicularConstraintBuilder , "perpendicular_constraint" , TT("perpendicular constraint"), [ PerpendicularConstraint ]],
     [ QuadrilateralClassifierBuilder, "quadrilateral_classifier", TT("quadrilateral classifier"), [ ParallelogramClassifier, RhombusClassifier ]],

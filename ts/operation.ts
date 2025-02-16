@@ -400,7 +400,7 @@ export async function playBack(speech : i18n_ts.AbstractSpeech, operations : Ope
             await Builder.tool.finish(view);
         }
         else if(operation instanceof PropertySetting){
-            const shape = view.allRealShapes().find(x => x.id == operation.id);
+            const shape = view.allShapes().find(x => x.id == operation.id)!;
             assert(shape != undefined);
             setProperty(shape, operation.name, operation.value);
         }
