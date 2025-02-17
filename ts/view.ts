@@ -489,35 +489,18 @@ export class View extends Widget {
     }
 
     async undo(){
-        if(this.shapes.length == 0 || this.operations.length == 0){
+        if(this.operations.length == 0){
             return;
         }
 
         const undo_operations : Operation[] = [];
 
-        undo_operations.unshift( this.operations.pop()! );        
-        while(true){
-            if(this.operations.length == 0){
-                this.shapes = [];
+        while(this.operations.length != 0){
+            const operation = this.operations.pop()!;
+            undo_operations.unshift(operation);     
+            
+            if(operation instanceof ToolSelection){
                 break;
-            }
-            else{
-                const last_operation = last(this.operations);
-                if(last_operation.shapesLength != 0){
-                    assert(last_operation instanceof ClickShape);
-
-                    if(undo_operations.length != 0 && !(undo_operations[0] instanceof ToolSelection)){
-                        const tool_selection = this.operations.slice().reverse().find(x => x instanceof ToolSelection)!;
-                        assert(tool_selection != undefined);
-                        undo_operations.unshift(new ToolSelection(tool_selection.toolName));
-                        msg(`prepend tool-selection:${tool_selection.toolName}`);
-                    }
-
-                    break;
-                }
-                else{
-                    undo_operations.unshift( this.operations.pop()! );        
-                }                
             }
         }
 

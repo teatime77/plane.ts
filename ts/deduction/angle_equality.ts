@@ -7,7 +7,20 @@ export function angleKey(lineA : AbstractLine, directionA : number, lineB : Abst
 export function findAngleBy3points(angles : Angle[], angle_points_arg : Point[]) : Angle | undefined {
     const points = toClockwisePoints(angle_points_arg);
 
-    return angles.find(x => x.intersection == points[1] && x.lineA.includesPoint(points[2]) && x.lineB.includesPoint(points[0]));
+    for(const angle of angles){
+        if(angle.intersection == points[1] && angle.lineA.includesPoint(points[2]) && angle.lineB.includesPoint(points[0])){
+
+            const vB = points[0].sub(points[1]);   // a vector form point1 to point0
+            const vA = points[2].sub(points[1]);   // a vector form point1 to point2
+
+            if(0 < vB.dot(angle.eB) && 0 < vA.dot(angle.eA)){
+                msg("============================== find-Angle-By-3-points ==============================")
+                return angle;
+            }
+        }
+    }
+
+    return undefined;
 }
 
 export function findEqualAnglesBy3pointsPair(points_arg_1 : Point[], points_arg_2 : Point[]) : [Angle, Angle] | undefined {
@@ -33,6 +46,23 @@ export function findEqualAnglesBy3pointsPair(points_arg_1 : Point[], points_arg_
 
     return undefined;
 }
+
+export function findAnglesInPolygon(points_arg: Point[]) : Angle[] {
+    const all_angles = Array.from(angleMap.values());
+    const points = toClockwisePoints(points_arg);
+    const angles : Angle[] = [];
+
+    for(const idx of range(points.length)){
+        const pts = [0, 1, 2].map(i => points[(idx + i) % 3]);
+        const angle = findAngleBy3points(all_angles, pts)!;
+        assert(angle != undefined);
+
+        angles.push(angle);
+    }
+
+    return angles;
+}
+
 
 export function findAngle(angle_points_arg : Point[]) : Angle | undefined {
     let angle_points =angle_points_arg.slice();
@@ -72,9 +102,9 @@ export function addSupplementaryAngles(angle1 : Angle, angle2 : Angle){
     const pair = supplementaryAngles.find(x => x[0].has(angle1) || x[0].has(angle2) || x[1].has(angle1) || x[1].has(angle2));
     if(pair != undefined){
         const angles = [angle1, angle2];
-        for(const [i, line_set] of pair.entries()){
-            for(const [j, line] of angles.entries()){
-                if(line_set.has(line)){
+        for(const [i, angle_set] of pair.entries()){
+            for(const [j, angle] of angles.entries()){
+                if(angle_set.has(angle)){
                     pair[1 - i].add( angles[1 - j] );
                     return;
                 }

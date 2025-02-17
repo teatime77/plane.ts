@@ -4,12 +4,52 @@ export let playBackOperations : Operation[] = [];
 
 export abstract class Operation {
     maxId : number = NaN;
-    shapesLength : number = 0;
     abstract toString() : string;
 
     dump() : string {
         return this.toString();
     }
+}
+
+function convertOperations(version : number, operations : Operation[]) : Operation[] {
+    if(version == 2.0){
+
+        const new_operations : Operation[] = [];
+        let idx = 0;
+        while(idx < operations.length){
+            const operation = operations[idx];
+            new_operations.push(operation);
+        
+            if(operation instanceof ToolSelection && [ "LengthEqualityBuilder", "AngleEqualityBuilder", "ParallelDetectorBuilder"].includes(operation.toolName)){
+                assert(operations[idx + 3] instanceof EnumSelection);
+
+                new_operations.push(operations[idx + 3]);
+                new_operations.push(operations[idx + 1]);
+                new_operations.push(operations[idx + 2]);
+
+                idx += 4;
+            }
+            else if(operation instanceof ToolSelection && operation.toolName ==  "QuadrilateralClassifierBuilder"){
+                assert(operations[idx + 5] instanceof EnumSelection && operations[idx + 6] instanceof EnumSelection);
+
+                new_operations.push(operations[idx + 5]);
+                new_operations.push(operations[idx + 6]);
+
+                new_operations.push(operations[idx + 1]);
+                new_operations.push(operations[idx + 2]);
+                new_operations.push(operations[idx + 3]);
+                new_operations.push(operations[idx + 4]);
+
+                idx += 7;
+            }
+            else{
+                idx++;
+            }
+        }
+        return new_operations;
+    }
+
+    return operations;
 }
 
 export async function loadOperationsText(data : any){
@@ -70,8 +110,10 @@ export async function loadOperationsText(data : any){
             operation = new ToolFinish(items[1]);
             break;
             
-        case "enum":
-            operation = new EnumSelection(parseInt(items[1]));
+        case "enum":{
+                const enum_id = parseInt(items[1]);
+                operation = new EnumSelection(enum_id);
+            }
             break;
 
         case "property":{
@@ -94,42 +136,7 @@ export async function loadOperationsText(data : any){
         operations.push(operation);
     }
 
-    if(data["version"] == 2.0){
-
-        const new_operations : Operation[] = [];
-        let idx = 0;
-        while(idx < operations.length){
-            const operation = operations[idx];
-            new_operations.push(operation);
-        
-            if(operation instanceof ToolSelection && [ "LengthEqualityBuilder", "AngleEqualityBuilder", "ParallelDetectorBuilder"].includes(operation.toolName)){
-                assert(operations[idx + 3] instanceof EnumSelection);
-
-                new_operations.push(operations[idx + 3]);
-                new_operations.push(operations[idx + 1]);
-                new_operations.push(operations[idx + 2]);
-
-                idx += 4;
-            }
-            else if(operation instanceof ToolSelection && operation.toolName ==  "QuadrilateralClassifierBuilder"){
-                assert(operations[idx + 5] instanceof EnumSelection && operations[idx + 6] instanceof EnumSelection);
-
-                new_operations.push(operations[idx + 5]);
-                new_operations.push(operations[idx + 6]);
-
-                new_operations.push(operations[idx + 1]);
-                new_operations.push(operations[idx + 2]);
-                new_operations.push(operations[idx + 3]);
-                new_operations.push(operations[idx + 4]);
-
-                idx += 7;
-            }
-            else{
-                idx++;
-            }
-        }
-        operations = new_operations;
-    }
+    operations = convertOperations(data["version"], operations);
 
     Plane.one.playMode = PlayMode.fastForward;
     await playBack(speech, operations);

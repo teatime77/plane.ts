@@ -16,9 +16,11 @@ export class Angle extends Shape {
     angleMark!  : number;
     lineA       : AbstractLine;
     directionA  : number;
+    eA          : Vec2;
 
     lineB       : AbstractLine;
     directionB  : number;
+    eB          : Vec2;
 
     intersection! : Point;
 
@@ -36,6 +38,9 @@ export class Angle extends Shape {
 
         this.lineB       = obj.lineB;
         this.directionB  = obj.directionB;
+
+        this.eA          = this.lineA.e.mul(this.directionA);
+        this.eB          = this.lineB.e.mul(this.directionB);
         
         this.intersection = getCommonPointOfLines(this.lineA, this.lineB)!;
         if(this.intersection == undefined){
@@ -129,7 +134,7 @@ export class Angle extends Shape {
         const idx = View.current.shapes.indexOf(this);
         let shapes = (idx == -1 ? View.current.shapes : View.current.shapes.slice(0, idx));
 
-        this.outerAngle = shapes.some(x => x instanceof Angle && this.commonLineAA(x));
+        this.outerAngle = shapes.some(x => x instanceof Angle && (this.commonLineAA(x) || this.commonLineBB(x)) );
 
         this.setCaptionPosition();
     }
