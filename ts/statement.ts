@@ -30,6 +30,7 @@ export enum ShapeEquationReason {
     sum_of_angles_is_equal,
     sum_of_lengths_is_equal,
     sum_of_interior_angles_of_triangle_is_pi,
+    sum_of_interior_angles_of_quadrilateral_is_2pi,
 }
 
 export enum LengthEqualityReason {
@@ -109,6 +110,7 @@ export const enumToImgName = new Map<number, string>([
     [ ShapeEquationReason.sum_of_angles_is_equal, "sum_of_angles_is_equal" ],
     [ ShapeEquationReason.sum_of_lengths_is_equal, "sum_of_lengths_is_equal" ],
     [ ShapeEquationReason.sum_of_interior_angles_of_triangle_is_pi, "sum_of_interior_angles_of_triangle_is_pi" ],
+    [ ShapeEquationReason.sum_of_interior_angles_of_quadrilateral_is_2pi, "sum_of_interior_angles_of_quadrilateral_is_2pi" ],
 
     [ LengthEqualityReason.radii_equal, "radii_equal" ],
     [ LengthEqualityReason.common_circle, "common_circle" ],

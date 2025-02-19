@@ -313,7 +313,7 @@ export function toClockwisePoints(points : Point[]) : Point[] {
     if(points.length == 3){
 
         if(isClockwise(points)){
-            return points;
+            return points.slice();
         }
         else{
             return [2, 1, 0].map(i => points[i]);
@@ -353,6 +353,7 @@ function makeReasonMsgMap(){
         [ ShapeEquationReason.sum_of_angles_is_equal, TT("Since the sum of the angles is equal,")],
         [ ShapeEquationReason.sum_of_lengths_is_equal, TT("Since the sum of the lengths is equal,")],
         [ ShapeEquationReason.sum_of_interior_angles_of_triangle_is_pi, TT("Since the sum of the interior angles of a triangle is π,")],
+        [ ShapeEquationReason.sum_of_interior_angles_of_quadrilateral_is_2pi, TT("Since the sum of the interior angles of a quadrilateral is 2 π,")],
 
         [ LengthEqualityReason.radii_equal, TT("Since the two circles have the same radius,")],
         [ LengthEqualityReason.common_circle, TT("Since two length symbols are the radii of the same circle,")],

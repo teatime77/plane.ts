@@ -299,7 +299,6 @@ export class Builder {
         if(View.current.operations.length != 0){
             const last_operation = last(View.current.operations);
             last_operation.maxId = Widget.maxId;
-            last_operation.shapesLength = View.current.shapes.length;
         }
         View.current.resetMode();
 
@@ -1797,7 +1796,8 @@ class QuadrilateralClassifierBuilder extends ClassifierBuilder {
 
                 // msg(`reason:[${reason}]`);
 
-                const classifier = makeQuadrilateralClassifier(this.points, this.reason!);
+                const points = toClockwisePoints(this.points);
+                const classifier = makeQuadrilateralClassifier(points, this.reason!);
                 if(classifier != undefined){
 
                     addShapeSetRelations(view, classifier);
@@ -1819,18 +1819,37 @@ export class ShapeEquationBuilder extends Builder {
     }
 
     async click(view : View, position : Vec2, shape : Shape | undefined){
-        if(shape instanceof Angle){
-            if(shape.name == ""){
-                msg(TT("The name of the shape is blank."))
-                return;
-            }
+        if(shape == undefined || this.shapes.includes(shape)){
+            return;
+        }
 
-            if(! this.shapes.includes(shape)){
+        if( this.reason == ShapeEquationReason.sum_of_interior_angles_of_triangle_is_pi || 
+            this.reason == ShapeEquationReason.sum_of_interior_angles_of_quadrilateral_is_2pi){
+            
+            if(shape instanceof Point){
 
                 this.shapes.push(shape);
                 shape.setMode(Mode.depend);
+
+                const num_vertices = (this.reason == ShapeEquationReason.sum_of_interior_angles_of_triangle_is_pi ? 3 : 4);
+                
+                if(this.shapes.length == num_vertices){
+                    await this.finish(view);
+                }
             }
-            msg(`click eq ${this.shapes.length}`);
+        }
+        else{
+
+            if(shape instanceof Angle){
+                if(shape.name == ""){
+                    msg(TT("The name of the shape is blank."))
+                    return;
+                }
+
+                this.shapes.push(shape);
+                shape.setMode(Mode.depend);
+                msg(`click eq ${this.shapes.length}`);
+            }
         }
     }
 

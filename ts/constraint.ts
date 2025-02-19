@@ -15,8 +15,17 @@ function lastShape<T>(shapes : T[]) : T {
 }
 
 export abstract class Constraint extends Statement {
+    textBlock : TextBlock | undefined;
+
     constructor(obj : {shapes : MathEntity[]}){
         super(obj);
+    }
+
+    getAllShapes(shapes : MathEntity[]){
+        super.getAllShapes(shapes);
+        if(this.textBlock != undefined){
+            shapes.push(this.textBlock);
+        }
     }
 
     applyConstraint(shape : Shape){        
@@ -107,7 +116,18 @@ export class AngleEqualityConstraint extends Constraint {
     constructor(obj : {shapes : MathEntity[]}){
         super(obj);
 
-        Angle.setEqualAngleMarks(this.selectedShapes as Angle[]);
+        const angles = this.selectedShapes as Angle[];
+        if(angles.every(x => x.name != "")){
+            assert(angles.length == 2);
+            const text = `${angles[0].name} == ${angles[1].name}`;
+            const equation = parser_ts.parseMath(text) as App;
+            
+            this.textBlock = makeEquationTextBlock(equation);
+        }
+        else{
+
+            Angle.setEqualAngleMarks(angles);
+        }
     }
 
     setRelations(): void {

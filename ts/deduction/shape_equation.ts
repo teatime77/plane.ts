@@ -92,32 +92,38 @@ export function makeSumOfAnglesIsEqual(angles_arg: Angle[]) : ShapeEquation | un
     return undefined;
 }
 
-export function makeSumOfTriangleAnglesIsPi(angles_arg: Angle[]) : ShapeEquation | undefined {
-    check(angles_arg.length == 3);
-    check(unique(angles_arg.map(x => x.intersection)).length == 3);
-
-    for(const indexes of [ [0, 1, 2], [0, 2, 1] ]){
-        const angles = indexes.map(i => angles_arg[i]);
-        if( range(3).every( i => angles[i].commonLineConnect(angles[(i + 1) % 3]) ) ){
-            const text = angles.map(x => x.name).join(" + ") + " = pi";
-            msg(`angles eq: ${text}`);
-
-            const equation = parser_ts.parseMath(text) as App;
-            if(! equation.isEq()){
-                msg(`can not make an equation: ${text}`);
-                return undefined;
-            }
-
-            const text_block = makeEquationTextBlock(equation);
-
-            return new ShapeEquation({
-                reason : ShapeEquationReason.sum_of_interior_angles_of_triangle_is_pi,
-                auxiliaryShapes : angles,
-                shapes : [ text_block ],
-                equation
-            });
-        }
+export function makeSumOfTriangleQuadrilateralAngles(angles: Angle[], reason : ShapeEquationReason) : ShapeEquation | undefined {
+    let num_vertices : number;
+    let sum_angles : string;
+    if(reason == ShapeEquationReason.sum_of_interior_angles_of_triangle_is_pi){
+        num_vertices = 3;
+        sum_angles   = "pi";
     }
+    else{
+        num_vertices = 4;
+        sum_angles   = "2 * pi";
+    }
+
+    check(angles.length == num_vertices);
+    check(angles.every(x => x.name != ""));
+
+    const text = angles.map(x => x.name).join(" + ") + " = " + sum_angles;
+    msg(`angles eq: ${text}`);
+
+    const equation = parser_ts.parseMath(text) as App;
+    if(! equation.isEq()){
+        msg(`can not make an equation: ${text}`);
+        return undefined;
+    }
+
+    const text_block = makeEquationTextBlock(equation);
+
+    return new ShapeEquation({
+        reason,
+        auxiliaryShapes : angles,
+        shapes : [ text_block ],
+        equation
+    });
 
     return undefined;
 }
@@ -126,32 +132,33 @@ export function makeSumOfTriangleAnglesIsPi(angles_arg: Angle[]) : ShapeEquation
 export function makeShapeEquation(reason : ShapeEquationReason, shapes: Shape[]) : ShapeEquation | undefined {
     switch(reason){
     case ShapeEquationReason.sum_of_angles_is_pi:
-    case ShapeEquationReason.sum_of_angles_is_equal:
-    case ShapeEquationReason.sum_of_interior_angles_of_triangle_is_pi:{
+    case ShapeEquationReason.sum_of_angles_is_equal:{
         check(shapes.every(x => x instanceof Angle && x.name != ""), TT("The selected shapes are not names angles."));
         const angles = shapes as Angle[];
 
-        if(reason == ShapeEquationReason.sum_of_interior_angles_of_triangle_is_pi){
+        const intersections = unique(angles.map(x => intersection));
+        if(intersections.length != 1){
+            msg(TT("Corner vertices do not match."));
+            return undefined;
+        }
 
-            return makeSumOfTriangleAnglesIsPi(angles);
+        if(reason == ShapeEquationReason.sum_of_angles_is_pi){
+
+            return makeSumOfAnglesIsPi(angles);
         }
         else{
 
-            const intersections = unique(angles.map(x => intersection));
-            if(intersections.length != 1){
-                msg(TT("Corner vertices do not match."));
-                return undefined;
-            }
-
-            if(reason == ShapeEquationReason.sum_of_angles_is_pi){
-
-                return makeSumOfAnglesIsPi(angles);
-            }
-            else{
-
-                return makeSumOfAnglesIsEqual(angles);
-            }
+            return makeSumOfAnglesIsEqual(angles);
         }
+    }
+
+    case ShapeEquationReason.sum_of_interior_angles_of_triangle_is_pi:
+    case ShapeEquationReason.sum_of_interior_angles_of_quadrilateral_is_2pi:{
+
+        assert(shapes.every(x => x instanceof Point));
+        const angles = findAnglesInPolygon(shapes as Point[]);
+
+        return makeSumOfTriangleQuadrilateralAngles(angles, reason);
     }
     default:
         throw new MyError();
@@ -173,6 +180,14 @@ export class ShapeEquation extends Statement implements Equation {
 
         assert(this.selectedShapes.length == 1 && this.selectedShapes[0] instanceof TextBlock);
         this.textBlock = this.selectedShapes[0] as TextBlock;
+
+        if(this.reason == ShapeEquationReason.sum_of_angles_is_pi && this.auxiliaryShapes.length == 2){
+            assert(this.auxiliaryShapes.every(x => x instanceof Angle));
+
+            const [angle1, angle2] = this.auxiliaryShapes as Angle[];
+            addSupplementaryAngles(angle1, angle2);
+            msg(`add-Supplementary-Angles ${angle1.name} ${angle2.name}`);
+        }
     }
 }
 }

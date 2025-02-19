@@ -4,28 +4,32 @@ export function angleKey(lineA : AbstractLine, directionA : number, lineB : Abst
     return `${lineA.id}:${directionA}:${lineB.id}:${directionB}:${intersection.id}`;
 }
 
-export function findAngleBy3points(angles : Angle[], angle_points_arg : Point[]) : Angle | undefined {
-    const points = toClockwisePoints(angle_points_arg);
+export function angleMatches3points(angle : Angle, points : Point[]) : boolean {
+    if(angle.intersection == points[1] && angle.lineA.includesPoint(points[2]) && angle.lineB.includesPoint(points[0])){
 
-    for(const angle of angles){
-        if(angle.intersection == points[1] && angle.lineA.includesPoint(points[2]) && angle.lineB.includesPoint(points[0])){
+        const vB = points[0].sub(points[1]);   // a vector form point1 to point0
+        const vA = points[2].sub(points[1]);   // a vector form point1 to point2
 
-            const vB = points[0].sub(points[1]);   // a vector form point1 to point0
-            const vA = points[2].sub(points[1]);   // a vector form point1 to point2
-
-            if(0 < vB.dot(angle.eB) && 0 < vA.dot(angle.eA)){
-                msg("============================== find-Angle-By-3-points ==============================")
-                return angle;
-            }
+        if(0 < vB.dot(angle.eB) && 0 < vA.dot(angle.eA)){
+            return true;
         }
     }
 
-    return undefined;
+    return false;
 }
 
-export function findEqualAnglesBy3pointsPair(points_arg_1 : Point[], points_arg_2 : Point[]) : [Angle, Angle] | undefined {
-    const points1 = toClockwisePoints(points_arg_1);
-    const points2 = toClockwisePoints(points_arg_2);
+export function findAngleBy3points(angles : Angle[], points : Point[]) : Angle | undefined {
+    const matched_angles = angles.filter(x => angleMatches3points(x, points));
+    if(matched_angles.length == 0){
+        return undefined;
+    }
+    assert(matched_angles.length == 1);
+    return matched_angles[0];
+}
+
+export function findEqualAnglesBy3pointsPair(points1 : Point[], points2 : Point[]) : [Angle, Angle] | undefined {
+    assert(isClockwise(points1));
+    assert(isClockwise(points2));
 
     const angles_list = supplementaryAngles.flat();
     angles_list.push(rightAngles);
@@ -53,7 +57,7 @@ export function findAnglesInPolygon(points_arg: Point[]) : Angle[] {
     const angles : Angle[] = [];
 
     for(const idx of range(points.length)){
-        const pts = [0, 1, 2].map(i => points[(idx + i) % 3]);
+        const pts = [0, 1, 2].map(i => points[(idx + i) % points.length]);
         const angle = findAngleBy3points(all_angles, pts)!;
         assert(angle != undefined);
 
