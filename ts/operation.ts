@@ -287,6 +287,36 @@ export class EnumSelection extends Operation {
     }
 }
 
+export function inputTextPrompt(message : string) : string | null {
+    let text : string | null;
+
+    if(View.isPlayBack){
+
+        const operation = playBackOperations.shift()!;
+        View.current.addOperation(operation);
+        if(operation instanceof TextPrompt){
+            text = operation.text;
+        }
+        else{
+            throw new MyError();
+        }
+    }
+    else{
+
+        text = prompt(message);
+        if(text == null){
+
+            Builder.cancelTool();
+        }
+        else{
+
+            View.current.addOperation(new TextPrompt(text.trim()));
+        }
+    }
+    
+    return text;
+}
+
 export class TextPrompt extends Operation {
     text : string;
 

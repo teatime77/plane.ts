@@ -1253,38 +1253,12 @@ export class AssumptionBuilder extends Builder {
         const view = View.current;
 
         let assumption : Assumption;
+        assumption = new Assumption();
+        addShapeSetRelations(view, assumption);
 
-        if(View.isPlayBack){
-            assumption = new Assumption();
-            addShapeSetRelations(view, assumption);
-
-            const operation = playBackOperations.shift()!;
-            View.current.addOperation(operation);
-            if(operation instanceof TextPrompt){
-                const mathText = operation.text;
-
-                assumption.setMathText(mathText);
-            }
-            else{
-                throw new MyError();
-            }
-        }
-        else{
-
-            let mathText = prompt(TT("Enter a mathematical expression."));
-            if(mathText == null){
-
-                Builder.cancelTool();
-                return;
-            }
-
-            mathText = mathText.trim();
-
-            assumption = new Assumption();
-            addShapeSetRelations(view, assumption);
-
+        const mathText = inputTextPrompt(TT("Enter a mathematical expression."));
+        if(mathText != null){
             assumption.setMathText(mathText);
-            View.current.addOperation(new TextPrompt(mathText));
         }
     }
 }
@@ -1903,26 +1877,9 @@ export class ExprTransformBuilder extends Builder {
                 assert(term.isRootEq());
                 this.root = term as App;
 
-                if(View.isPlayBack){
-                    const operation = playBackOperations.shift()!;
-                    View.current.addOperation(operation);
-                    if(operation instanceof TextPrompt){
-                        this.mathText = operation.text;
-                    }
-                    else{
-                        throw new MyError();
-                    }
-                }
-                else{
-
-                    this.mathText = prompt(TT("Enter a mathematical expression."));
-                    if(this.mathText == null){
-        
-                        Builder.cancelTool();
-                        return;
-                    }
-
-                    View.current.addOperation(new TextPrompt(this.mathText));
+                this.mathText = inputTextPrompt(TT("Enter a mathematical expression."));
+                if(this.mathText == null){
+                    return;
                 }
     
                 this.finish(View.current);
