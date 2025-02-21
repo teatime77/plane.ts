@@ -89,7 +89,8 @@ export enum RhombusReason {
 export enum ParallelReason {
     none = 600,
     parallelogram,
-    corresponding_angles_or_alternate_angles_are_equal
+    corresponding_angles_or_alternate_angles_are_equal,
+    supplementary_angles,
 }
 
 export enum TriangleSimilarityReason {
@@ -149,6 +150,7 @@ export const enumToImgName = new Map<number, string>([
 
     [ ParallelReason.parallelogram, "quadrilateral_classifier" ],
     [ ParallelReason.corresponding_angles_or_alternate_angles_are_equal, "parallel_line_angles" ],
+    [ ParallelReason.supplementary_angles, "parallel_by_supplementary_angles" ],
 
     [ TriangleSimilarityReason.two_equal_angle_pairs, "two_equal_angle_pairs" ],
 

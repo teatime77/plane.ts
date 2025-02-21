@@ -382,6 +382,7 @@ function makeReasonMsgMap(){
 
         [ ParallelReason.parallelogram, TT("Since the opposite sides of a parallelogram are parallel,") ],
         [ ParallelReason.corresponding_angles_or_alternate_angles_are_equal, TT("Since corresponding angles or alternate angles are equal,")],
+        [ ParallelReason.supplementary_angles, TT("Since the sum of the two interior angles on the same side is π,")],
 
         [ TriangleSimilarityReason.two_equal_angle_pairs, TT("Since both pairs of angles in two triangles are equal,")],
 

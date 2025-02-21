@@ -47,6 +47,23 @@ export function makeParallelDetectorByCorrespondingAlternateAnglesEqual(angleA :
     return undefined;
 }
 
+export function makeParallelDetectorBySupplementaryAngles(angleA : Angle, angleB : Angle) : ParallelDetector | undefined {
+    for(const [angle1, angle2] of permutation([angleA, angleB])){
+        if(angle1.lineB == angle2.lineA && angle1.directionB == - angle2.directionA){
+            const lines = [angle1.lineA, angle2.lineB];
+
+            msg(`Parallel-Detector-By-Supplementary-Angles`);
+            return new ParallelDetector({
+                reason : ParallelReason.supplementary_angles,
+                auxiliaryShapes : [angle1, angle2],
+                shapes : lines
+            });
+        }    
+    }
+
+    return undefined;
+}
+
 export class ParallelDetector extends Statement {
     reading(): Reading {
         return this.textReading(TT("these two lines are parallel."));

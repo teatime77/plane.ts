@@ -1631,6 +1631,7 @@ export class ParallelDetectorBuilder extends Builder {
             break;
 
         case ParallelReason.corresponding_angles_or_alternate_angles_are_equal:
+        case ParallelReason.supplementary_angles:
             if(shape instanceof Angle){
                 this.angles.push(shape);
                 shape.setMode(Mode.depend);
@@ -1638,7 +1639,12 @@ export class ParallelDetectorBuilder extends Builder {
                 if(this.angles.length == 2){
 
                     finished = true;
-                    detector = makeParallelDetectorByCorrespondingAlternateAnglesEqual(this.angles[0], this.angles[1]);
+                    if(this.parallelReason == ParallelReason.corresponding_angles_or_alternate_angles_are_equal){
+                        detector = makeParallelDetectorByCorrespondingAlternateAnglesEqual(this.angles[0], this.angles[1]);
+                    }
+                    else{
+                        detector = makeParallelDetectorBySupplementaryAngles(this.angles[0], this.angles[1]);
+                    }
                 }
             }
             break;
@@ -1972,6 +1978,8 @@ export class ExprTransformBuilder extends Builder {
                 textBlock.text = exprTransform.equation.tex();
                 textBlock.updateTextDiv();
             }
+
+            checkSupplementaryAngles(exprTransform.equation);
         }
     }
 }

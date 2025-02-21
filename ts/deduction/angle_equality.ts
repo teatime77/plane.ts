@@ -119,6 +119,28 @@ export function addSupplementaryAngles(angle1 : Angle, angle2 : Angle){
     supplementaryAngles.push([ new Set<Angle>([angle1]), new Set<Angle>([angle2])  ])    
 }
 
+export function checkSupplementaryAngles(root : App){
+    if(root.isRootEq()){
+        for(const [side1, side2] of permutation(root.args)){
+            if(side1 instanceof RefVar && side1.name == "pi"){
+                if(side2.isAdd()){
+                    const add = side2 as App;
+                    if(add.args.length == 2 && add.args.every(x => x instanceof RefVar)){
+                        const all_angles = View.current.allRealShapes().filter(x => x instanceof Angle) as Angle[];
+                        const refs = add.args as RefVar[];
+
+                        const angles = refs.map(x => all_angles.find(y => y.name == x.name));
+                        if(angles.every(x => x != undefined)){
+                            msg(`check-Supplementary-Angles ${angles[0].name} ${angles[1].name}`);
+                            addSupplementaryAngles(angles[0], angles[1]);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 export function addEqualAngles(angle1 : Angle, angle2 : Angle){
     const angle_sets = supplementaryAngles.flat().filter(x => x.has(angle1) || x.has(angle2));
 
