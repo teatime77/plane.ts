@@ -1257,10 +1257,21 @@ export class AssumptionBuilder extends Builder {
         if(View.isPlayBack){
             assumption = new Assumption();
             addShapeSetRelations(view, assumption);
+
+            const operation = playBackOperations.shift()!;
+            View.current.addOperation(operation);
+            if(operation instanceof TextPrompt){
+                const mathText = operation.text;
+
+                assumption.setMathText(mathText);
+            }
+            else{
+                throw new MyError();
+            }
         }
         else{
 
-            let mathText = prompt("Enter a mathematical expression.");
+            let mathText = prompt(TT("Enter a mathematical expression."));
             if(mathText == null){
 
                 Builder.cancelTool();
@@ -1272,10 +1283,8 @@ export class AssumptionBuilder extends Builder {
             assumption = new Assumption();
             addShapeSetRelations(view, assumption);
 
-            const propertySetting = new PropertySetting(assumption.id, "mathText", mathText);
-            View.current.addOperation(propertySetting);
-
-            setProperty(assumption, propertySetting.name, propertySetting.value);
+            assumption.setMathText(mathText);
+            View.current.addOperation(new TextPrompt(mathText));
         }
     }
 }
@@ -1869,6 +1878,8 @@ export class ShapeEquationBuilder extends Builder {
 export class ExprTransformBuilder extends Builder {
     reason : ExprTransformReason = ExprTransformReason.none;
     terms : Term[] = [];
+    mathText : string | null = null;
+    root : App | undefined;
 
     async init(){        
         this.reason  = await showMenu(exprTransformReasonDlg);
@@ -1887,6 +1898,35 @@ export class ExprTransformBuilder extends Builder {
 
         if(! this.terms.includes(term)){
             this.terms.push(term);
+
+            if(this.reason == ExprTransformReason.dividing_equation){
+                assert(term.isRootEq());
+                this.root = term as App;
+
+                if(View.isPlayBack){
+                    const operation = playBackOperations.shift()!;
+                    View.current.addOperation(operation);
+                    if(operation instanceof TextPrompt){
+                        this.mathText = operation.text;
+                    }
+                    else{
+                        throw new MyError();
+                    }
+                }
+                else{
+
+                    this.mathText = prompt(TT("Enter a mathematical expression."));
+                    if(this.mathText == null){
+        
+                        Builder.cancelTool();
+                        return;
+                    }
+
+                    View.current.addOperation(new TextPrompt(this.mathText));
+                }
+    
+                this.finish(View.current);
+            }
         }
     }
 
@@ -1907,6 +1947,16 @@ export class ExprTransformBuilder extends Builder {
             }
 
             throw new MyError();
+        }
+        else if(this.reason == ExprTransformReason.dividing_equation){
+            const root = srcTermRect.term.getRoot();
+            const dstTermRect = termRects.find(x => x.term == root);
+            if(dstTermRect == undefined){
+                throw new MyError();
+            }
+            dstTermRect.span.style.backgroundColor = "blue";
+                    
+            return dstTermRect;
         }
         else{
             srcTermRect.span.style.backgroundColor = "blue";
@@ -1944,6 +1994,10 @@ export class ExprTransformBuilder extends Builder {
 
         case ExprTransformReason.substitution:
             exprTransform = makeExprTransformBySubstitution(this.terms);
+            break;
+
+        case ExprTransformReason.dividing_equation:
+            exprTransform = makeExprTransformByDividingEquation(this.root!, this.mathText!);
             break;
         }
 

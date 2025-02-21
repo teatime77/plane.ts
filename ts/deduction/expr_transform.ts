@@ -98,6 +98,19 @@ export function makeExprTransformBySubstitution(terms : Term[]) : ExprTransform 
     return exprTransform;
 }
 
+export function makeExprTransformByDividingEquation(root : App, mathText : string) : ExprTransform | undefined {
+    const term = parser_ts.parseMath(mathText);
+    const equation = algebra_ts.divideEquation(root, term);
+
+    const exprTransform = new ExprTransform({
+        reason   : ExprTransformReason.dividing_equation,
+        equation, 
+        terms    : [root, term]
+    });
+
+    return exprTransform;
+}
+
 export class ExprTransform extends MathEntity implements Equation {
     reason : ExprTransformReason;
     equation : App;
@@ -138,6 +151,10 @@ export class ExprTransform extends MathEntity implements Equation {
 
         case ExprTransformReason.substitution:
             text = TT("Substitute the term.");
+            break;
+
+        case ExprTransformReason.dividing_equation:
+            text = TT("Dividing an equation by the same term.");
             break;
 
         default:

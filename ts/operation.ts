@@ -97,7 +97,13 @@ export async function loadOperationsText(data : any){
 
         case "term":{
                 const textBlock_id = parseInt(items[1]);
-                const indexes = items[2].split(":").map(x => parseInt(x));
+                let indexes : number[];
+                if(items.length == 2){
+                    indexes = [];
+                }
+                else{
+                    indexes = items[2].split(":").map(x => parseInt(x));
+                }
                 operation = new ClickTerm(textBlock_id, indexes);
             }
             break;
@@ -113,6 +119,19 @@ export async function loadOperationsText(data : any){
         case "enum":{
                 const enum_id = parseInt(items[1]);
                 operation = new EnumSelection(enum_id);
+            }
+            break;
+
+        case "text":{
+                const regex = /text\s+'?([^']+)'?/;
+                const matches = line.match(regex);
+                assert(matches != null);
+
+                const items2 = Array.from(matches!);
+                msg(`text len:${items2.length} [${items2[1]}]`)
+
+                const text = items2[1];
+                operation = new TextPrompt(text);
             }
             break;
 
@@ -222,6 +241,9 @@ export class ClickTerm extends Operation {
     }
 
     toString() : string {
+        if(this.indexes.length == 0){
+            msg(`no indexes:term ${this.textBlock_id}`);
+        }
         return `term ${this.textBlock_id}  ${this.indexes.join(":")}`;
     }
 }
@@ -262,6 +284,19 @@ export class EnumSelection extends Operation {
 
     toString() : string {
         return `enum  ${this.value}`;
+    }
+}
+
+export class TextPrompt extends Operation {
+    text : string;
+
+    constructor(text : string){
+        super();
+        this.text = text;
+    }
+
+    toString() : string {
+        return `text  '${this.text}'`;
     }
 }
 
