@@ -143,7 +143,15 @@ export async function loadOperationsText(data : any){
                 const items2 = Array.from(matches!);
                 assert(items2.length == 4);
 
-                const [id, name, value] = items2.slice(1);
+                const [id, name, value_str] = items2.slice(1);
+                let value : string | number;
+
+                if(line.endsWith("'")){
+                    value = value_str;
+                }
+                else{
+                    value = parseFloat(value_str);
+                }
                 operation = new PropertySetting(parseInt(id), name, value);
             }
             break;

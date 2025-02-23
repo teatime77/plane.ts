@@ -134,7 +134,7 @@ export class Angle extends Shape {
         const idx = View.current.shapes.indexOf(this);
         let shapes = (idx == -1 ? View.current.shapes : View.current.shapes.slice(0, idx));
 
-        this.outerAngle = shapes.some(x => x instanceof Angle && (this.commonLineAA(x) || this.commonLineBB(x)) );
+        this.outerAngle = shapes.some(x => x instanceof Angle && this.intersection == x.intersection && (this.commonLineAA(x) || this.commonLineBB(x)) );
 
         this.setCaptionPosition();
     }

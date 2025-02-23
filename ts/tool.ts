@@ -1921,6 +1921,40 @@ export class ExprTransformBuilder extends Builder {
                     
             return dstTermRect;
         }
+        else if(this.reason == ExprTransformReason.substitution){
+            let dstTermRect : TermRect | undefined;
+
+            if(this.terms.length == 0){
+                const side = srcTermRect.term.getEqSide();
+                if(side != null){
+
+                    dstTermRect = termRects.find(x => x.term == side);
+                }
+            }
+            else{
+                const src_term = this.terms[0];
+                algebra_ts.initHashTerm();
+                algebra_ts.setHashTerm([], src_term);
+                for(let dst_term : Term = srcTermRect.term; dst_term.parent != null; dst_term = dst_term.parent){
+                    algebra_ts.setHashTerm([], dst_term);
+                    if(src_term.hash == dst_term.hash){
+
+                        dstTermRect = termRects.find(x => x.term == dst_term);
+                        if(dstTermRect != undefined){
+                            break;
+                        }                            
+                    }
+                }
+            }
+
+            if(dstTermRect != undefined){
+                dstTermRect.span.style.backgroundColor = "blue";
+                      
+                return dstTermRect;                            
+            }
+
+            throw new MyError();
+        }
         else{
             srcTermRect.span.style.backgroundColor = "blue";
             return srcTermRect;

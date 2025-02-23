@@ -97,8 +97,16 @@ export abstract class InputProperty extends Property {
         super(widgets, name);
     }
 
-    valueChanged() : void {
-        this.setValue(this.getInput().value);
+    valueChanged(widget_id : number, name : string, new_value : string | number) : void {
+        this.setValue(new_value);
+
+        const operation = View.current.operations.find(x => x instanceof PropertySetting && x.id == widget_id && x.name == name) as PropertySetting;
+        if(operation != undefined){
+            operation.value = new_value;
+        }
+        else{
+            View.current.addOperation( new PropertySetting(widget_id, name, new_value) );
+        }
     }
 }
 
@@ -114,16 +122,8 @@ class StringProperty extends InputProperty {
             change : async (ev : Event)=>{
                 const new_value = this.input.input.value;
                 msg(`change:${this.value}=>${new_value}`)
-                this.setValue(new_value);
 
-                const id = widgets[0].id;
-                const operation = View.current.operations.find(x => x instanceof PropertySetting && x.id == id && x.name == name) as PropertySetting;
-                if(operation != undefined){
-                    operation.value = new_value;
-                }
-                else{
-                    View.current.addOperation( new PropertySetting(id, name, new_value) );
-                }
+                this.valueChanged(widgets[0].id, name, new_value);
             }
         });
     }
@@ -144,7 +144,8 @@ class NumberProperty extends InputProperty {
             min : min,
             max : max,
             change : async (ev : Event)=>{
-                this.setValue(this.input.getValue());
+                const new_value = this.input.getValue();
+                this.valueChanged(widgets[0].id, name, new_value);
             }
         })
     }
@@ -193,7 +194,7 @@ class BooleanProperty extends InputProperty {
         this.input = $checkbox({
             text : name,
             change : async (ev : Event)=>{
-                this.valueChanged();
+                this.BooleanValueChanged();
             }
         });
 
@@ -204,7 +205,7 @@ class BooleanProperty extends InputProperty {
         return this.input.input;
     }
 
-    valueChanged() : void {
+    BooleanValueChanged() : void {
         this.setValue(this.input.input.checked);
     }
 }
