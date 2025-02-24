@@ -4,6 +4,7 @@
 ///<reference path="deduction/quadrilateral.ts" />
 ///<reference path="deduction/parallel_detector.ts" />
 ///<reference path="deduction/triangle_similarity.ts" />
+///<reference path="deduction/triangle_detector.ts" />
 ///<reference path="deduction/shape_equation.ts" />
 ///<reference path="deduction/expr_transform.ts" />
 ///<reference path="constraint.ts" />
@@ -1757,19 +1758,24 @@ abstract class ClassifierBuilder extends Builder {
 }
 
 class QuadrilateralClassifierBuilder extends ClassifierBuilder {
-    reason : ParallelogramReason | RhombusReason | undefined;
+    shapeType! : ShapeType;
+    reason : ParallelogramReason | RhombusReason | IsoscelesTriangleReason | undefined;
     points : Point[] = [];
 
     async init(){        
-        const shapeType = await showMenu(shapeTypeDlg);
+        this.shapeType = await showMenu(shapeTypeDlg);
 
-        switch(shapeType){
+        switch(this.shapeType){
         case ShapeType.parallelogram:
             this.reason = await showMenu(parallelogramReasonDlg);
             break;
 
         case ShapeType.rhombus:
             this.reason = await showMenu(rhombusReasonDlg);
+            break;
+
+        case ShapeType.isosceles_triangle:
+            this.reason = await showMenu(isoscelesTriangleReasonDlg);
             break;
 
         default:
@@ -1781,16 +1787,27 @@ class QuadrilateralClassifierBuilder extends ClassifierBuilder {
         if(shape instanceof Point){
             this.points.push(shape);
             shape.setMode(Mode.depend);
-            if(this.points.length == 4){
+            const num_points = (this.shapeType == ShapeType.isosceles_triangle ? 3 : 4);
+            if(this.points.length == num_points){
 
                 // msg(`reason:[${reason}]`);
 
                 const points = toClockwisePoints(this.points);
-                const classifier = makeQuadrilateralClassifier(points, this.reason!);
-                if(classifier != undefined){
 
-                    addShapeSetRelations(view, classifier);
-                    this.resetTool(classifier);    
+                let detector : TriangleQuadrilateralDetector | undefined;
+                if(this.shapeType == ShapeType.isosceles_triangle){
+
+                    detector = makeIsoscelesTriangleDetector(points, this.reason as IsoscelesTriangleReason);
+                }
+                else{
+
+                    detector = makeQuadrilateralClassifier(points, this.reason as ParallelogramReason | RhombusReason);
+                }
+
+                if(detector != undefined){
+
+                    addShapeSetRelations(view, detector);
+                    this.resetTool(detector);    
                 }
 
                 this.points = [];
@@ -2059,7 +2076,7 @@ const toolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [
     [ AssumptionBuilder         , "assumption"         , TT("assumption")         , [ Assumption ] ],
     [ ParallelConstraintBuilder , "parallel_constraint"      , TT("parallel constraint"), [ ParallelConstraint ]],
     [ PerpendicularConstraintBuilder , "perpendicular_constraint" , TT("perpendicular constraint"), [ PerpendicularConstraint ]],
-    [ QuadrilateralClassifierBuilder, "quadrilateral_classifier", TT("quadrilateral classifier"), [ ParallelogramClassifier, RhombusClassifier ]],
+    [ QuadrilateralClassifierBuilder, "quadrilateral_classifier", TT("quadrilateral classifier"), [ ParallelogramClassifier, RhombusClassifier, TriangleDetector ]],
     [ ShapeEquationBuilder, "shape_equation", TT("shape equation"), [ ShapeEquation ] ],
     [ ExprTransformBuilder, "expr_transform", TT("expression transformation"), [ ExprTransform ] ],
     [ TextBlockBuilder          , "text"               , TT("text")               , [ TextBlock ] ],

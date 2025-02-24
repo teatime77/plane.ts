@@ -1,6 +1,6 @@
 namespace plane_ts {
 //
-export function makeQuadrilateralClassifier(points : Point[], reason : ParallelogramReason | RhombusReason ){
+export function makeQuadrilateralClassifier(points : Point[], reason : ParallelogramReason | RhombusReason ) : ParallelogramClassifier | RhombusClassifier | undefined{
     let equalSideLengthSymbolsA : LengthSymbol[] | undefined;
     let equalSideLengthSymbolsB : LengthSymbol[] | undefined;
 
@@ -123,16 +123,18 @@ export function makeQuadrilateralClassifier(points : Point[], reason : Parallelo
     return undefined;
 }
 
-abstract class QuadrilateralClassifier extends Statement {
-    shapeClass! : QuadrilateralClass;
+export abstract class TriangleQuadrilateralDetector extends Statement {
+    shapeClass! : TriangleQuadrilateralClass;
+}
 
+abstract class QuadrilateralClassifier extends TriangleQuadrilateralDetector {
     quadrilateral() : Quadrilateral {
         assert(this.selectedShapes.length == 1 && this.selectedShapes[0] instanceof Quadrilateral);
         return this.selectedShapes[0] as Quadrilateral;
     }
 
     isParallelogram() : boolean {
-        return this.shapeClass == QuadrilateralClass.parallelogram || this.shapeClass == QuadrilateralClass.rhombus;
+        return this.shapeClass == TriangleQuadrilateralClass.parallelogram || this.shapeClass == TriangleQuadrilateralClass.rhombus;
     }
 
     setRelations(): void {

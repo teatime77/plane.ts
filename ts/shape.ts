@@ -1635,7 +1635,17 @@ export class Polygon extends Shape {
     }
 }
 
-export class Triangle extends Polygon {    
+export class Triangle extends Polygon {  
+    static fromPoints(points : Point[]) : Triangle {
+        const lines = range(3).map(i => getCommonLineOfPoints(points[i], points[(i + 1) % 3])) as AbstractLine[];
+        if(lines.some(x => x == undefined)){
+            throw new MyError();
+        }
+    
+        const triangle = new Triangle({points, lines});
+        return triangle;
+    }
+
     angleIndex(angle : Angle) : number {
         const idx = this.points.indexOf(angle.intersection);
         if(idx != -1){

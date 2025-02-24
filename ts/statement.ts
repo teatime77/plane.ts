@@ -13,6 +13,7 @@ export let parallelReasonDlg : HTMLDialogElement;
 export let shapeTypeDlg : HTMLDialogElement;
 export let parallelogramReasonDlg : HTMLDialogElement;
 export let rhombusReasonDlg : HTMLDialogElement;
+export let isoscelesTriangleReasonDlg : HTMLDialogElement;
 
 export let shapeEquationReasonDlg : HTMLDialogElement;
 export let exprTransformReasonDlg : HTMLDialogElement;
@@ -65,11 +66,12 @@ export enum AngleEqualityReason {
     similar_triangles,
 }
 
-export enum QuadrilateralClass {
+export enum TriangleQuadrilateralClass {
     none = 300,
     trapezoid,
     parallelogram,
     rhombus,
+    isoscelesTriangle,
 }
 
 export enum ParallelogramReason {
@@ -84,6 +86,11 @@ export enum ParallelogramReason {
 export enum RhombusReason {
     none = 500,
     all_sides_are_equal,
+}
+
+export enum IsoscelesTriangleReason {
+    none = 520,
+    two_sides_are_equal,
 }
 
 export enum ParallelReason {
@@ -101,6 +108,7 @@ export enum TriangleSimilarityReason {
 export enum ShapeType {
     parallelogram = 800,
     rhombus,
+    isosceles_triangle,
 }
 
 export const enumToImgName = new Map<number, string>([
@@ -136,9 +144,9 @@ export const enumToImgName = new Map<number, string>([
     [ AngleEqualityReason.parallelogram_opposite_angles, "each_opposite_angles_are_equal" ],
     [ AngleEqualityReason.similar_triangles, "triangle_similarity" ],
 
-    [ QuadrilateralClass.trapezoid, "" ],
-    [ QuadrilateralClass.parallelogram, "quadrilateral_classifier" ],
-    [ QuadrilateralClass.rhombus, "all_sides_are_equal" ],
+    [ TriangleQuadrilateralClass.trapezoid, "" ],
+    [ TriangleQuadrilateralClass.parallelogram, "quadrilateral_classifier" ],
+    [ TriangleQuadrilateralClass.rhombus, "all_sides_are_equal" ],
 
     [ ParallelogramReason.each_opposite_sides_are_equal, "each_opposite_sides_are_equal" ],
     [ ParallelogramReason.each_opposite_sides_are_parallel, "each_opposite_sides_are_parallel" ],
@@ -148,6 +156,8 @@ export const enumToImgName = new Map<number, string>([
 
     [ RhombusReason.all_sides_are_equal, "all_sides_are_equal" ],
 
+    [ IsoscelesTriangleReason.two_sides_are_equal, "isosceles_triangle" ],
+
     [ ParallelReason.parallelogram, "quadrilateral_classifier" ],
     [ ParallelReason.corresponding_angles_or_alternate_angles_are_equal, "parallel_line_angles" ],
     [ ParallelReason.supplementary_angles, "parallel_by_supplementary_angles" ],
@@ -156,16 +166,18 @@ export const enumToImgName = new Map<number, string>([
 
     [ ShapeType.parallelogram, "quadrilateral_classifier" ],
     [ ShapeType.rhombus, "all_sides_are_equal" ],
+    [ ShapeType.isosceles_triangle, "isosceles_triangle"],
 ]);
 
 export function makeSelectionDlg(){    
     const data : [string, string, (typeof LengthEqualityReason | typeof AngleEqualityReason | typeof ShapeType | 
-        typeof ParallelogramReason | typeof RhombusReason | typeof ParallelReason | typeof ShapeEquationReason | typeof ExprTransformReason)][] = [ 
+        typeof ParallelogramReason | typeof RhombusReason | typeof IsoscelesTriangleReason | typeof ParallelReason | typeof ShapeEquationReason | typeof ExprTransformReason)][] = [ 
         [ "reason for length equality", "length-equality-reason", LengthEqualityReason ],
         [ "reason for angle equality" , "angle-equality-reason" , AngleEqualityReason ],
         [ "shape type"                , "shape-type"            , ShapeType ],
         [ "reason for parallelogram"  , "parallelogram-reason"  , ParallelogramReason ],
         [ "reason for rhombus"        , "rhombus-reason"        , RhombusReason ], 
+        [ "reason for isosceles triangle", "isosceles-triangle-reason", IsoscelesTriangleReason ],
         [ "reason for parallel"       , "parallel-reason"       , ParallelReason ], 
         [ "reason for shape equation"       , "shape-equation-reason"       , ShapeEquationReason ], 
         [ "reason for expression transformation", "expr-transform-reason", ExprTransformReason ], 
@@ -227,12 +239,15 @@ export function makeSelectionDlg(){
             rhombusReasonDlg = dlg;
             break;
         case 5:
-            parallelReasonDlg = dlg;
+            isoscelesTriangleReasonDlg = dlg;
             break;
         case 6:
-            shapeEquationReasonDlg = dlg;
+            parallelReasonDlg = dlg;
             break;
         case 7:
+            shapeEquationReasonDlg = dlg;
+            break;
+        case 8:
             exprTransformReasonDlg = dlg;
         }
 
