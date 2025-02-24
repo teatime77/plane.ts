@@ -1847,7 +1847,7 @@ export class ShapeEquationBuilder extends Builder {
                 msg(`click eq ${this.shapes.length}`);
 
                 if(this.reason == ShapeEquationReason.exterior_angle_theorem && this.shapes.length == 3){
-                    this.finish(view);
+                    await this.finish(view);
                 }
             }
             break;
@@ -1882,6 +1882,8 @@ export class ShapeEquationBuilder extends Builder {
         if(shapeEquation != undefined){
             addShapeSetRelations(view, shapeEquation);
             this.resetTool(shapeEquation);    
+
+            await simplifyEquationTextBlock(shapeEquation);
         }
 
         this.shapes = [];
@@ -1906,7 +1908,7 @@ export class ExprTransformBuilder extends Builder {
         msg(`dblclick eq ${this.terms.length}`);
     }
 
-    termClick(term : Term){
+    async termClick(term : Term){
         msg(`term click ${this.terms.length}`);
 
         if(! this.terms.includes(term)){
@@ -1921,7 +1923,7 @@ export class ExprTransformBuilder extends Builder {
                     return;
                 }
     
-                this.finish(View.current);
+                await this.finish(View.current);
             }
         }
     }
@@ -2036,17 +2038,7 @@ export class ExprTransformBuilder extends Builder {
             addShapeSetRelations(view, exprTransform);
             this.resetTool(exprTransform);    
 
-            const textBlock = exprTransform.textBlock;
-            const gen = algebra_ts.simplify(exprTransform.equation);
-            for(const _ of gen){
-                msg(`simplify ${exprTransform.equation.str()}`);
-                await sleep(1000);
-                textBlock.app  = exprTransform.equation;
-                textBlock.text = exprTransform.equation.tex();
-                textBlock.updateTextDiv();
-            }
-
-            checkSupplementaryAngles(exprTransform.equation);
+            await simplifyEquationTextBlock(exprTransform);
         }
     }
 }

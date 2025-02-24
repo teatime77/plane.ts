@@ -161,12 +161,12 @@ export function makeShapeEquation(reason : ShapeEquationReason, shapes: Shape[])
     }
 }
 
-export interface Equation {
+export interface EquationTextBlock {
     equation  : App;
     textBlock : TextBlock;
 }
 
-export class ShapeEquation extends Statement implements Equation {
+export class ShapeEquation extends Statement implements EquationTextBlock {
     equation : App;
     textBlock : TextBlock;
     
@@ -186,4 +186,20 @@ export class ShapeEquation extends Statement implements Equation {
         }
     }
 }
+
+export async function simplifyEquationTextBlock(eqText : EquationTextBlock){
+    const textBlock = eqText.textBlock;
+    const gen = algebra_ts.simplify(eqText.equation);
+    for(const _ of gen){
+        msg(`simplify ${eqText.equation.str()}`);
+        await sleep(1000);
+        textBlock.app  = eqText.equation;
+        textBlock.text = eqText.equation.tex();
+        textBlock.updateTextDiv();
+    }
+
+    checkSupplementaryAngles(eqText.equation);
+
+}
+
 }

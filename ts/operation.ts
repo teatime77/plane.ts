@@ -466,7 +466,7 @@ export async function playBack(speech : i18n_ts.AbstractSpeech, operations : Ope
         else if(operation instanceof ClickTerm){
             if(Builder.tool instanceof ExprTransformBuilder){
                 const term = operation.getTerm();
-                Builder.tool.termClick(term);
+                await Builder.tool.termClick(term);
             }
             else{
                 throw new MyError();

@@ -291,7 +291,7 @@ export class TextBlock extends MathEntity {
         throw new MyError();
     }
 
-    texClick(ev : MouseEvent){
+    async texClick(ev : MouseEvent){
         ev.stopPropagation();
 
         if(Builder.tool instanceof ExprTransformBuilder){
@@ -308,7 +308,7 @@ export class TextBlock extends MathEntity {
                 View.current.addOperation(operation);
             }
 
-            Builder.tool.termClick(dstTerm);
+            await Builder.tool.termClick(dstTerm);
         }
     }
 

@@ -111,7 +111,7 @@ export function makeExprTransformByDividingEquation(root : App, mathText : strin
     return exprTransform;
 }
 
-export class ExprTransform extends MathEntity implements Equation {
+export class ExprTransform extends MathEntity implements EquationTextBlock {
     reason : ExprTransformReason;
     equation : App;
     terms : Term[];
