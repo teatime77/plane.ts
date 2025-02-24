@@ -28,6 +28,26 @@ export function makeEquationTextBlock(equation : App) : TextBlock {
     return text_block;
 }
 
+function makeShapeEquationByEquationText(reason : ShapeEquationReason, auxiliaryShapes : MathEntity[], text : string) : ShapeEquation | undefined {
+    msg(`angles eq: ${text}`);
+
+    const equation = parser_ts.parseMath(text) as App;
+    if(! equation.isEq()){
+        msg(`can not make an equation: ${text}`);
+        return undefined;
+    }
+
+    const text_block = makeEquationTextBlock(equation);
+
+    return new ShapeEquation({
+        reason,
+        auxiliaryShapes,
+        shapes : [ text_block ],
+        equation
+    });
+
+}
+
 export function makeSumOfAnglesIsPi(angles_arg: Angle[]) : ShapeEquation | undefined {
     const angles_list = permutation(angles_arg);
     for(const angles of angles_list){
@@ -36,22 +56,7 @@ export function makeSumOfAnglesIsPi(angles_arg: Angle[]) : ShapeEquation | undef
             if(first_angle.lineA == last_angle.lineB && first_angle.directionA == - last_angle.directionB){
 
                 const text = angles.map(x => x.name).join(" + ") + " = pi";
-                msg(`angles eq: ${text}`);
-
-                const equation = parser_ts.parseMath(text) as App;
-                if(! equation.isEq()){
-                    msg(`can not make an equation: ${text}`);
-                    return undefined;
-                }
-
-                const text_block = makeEquationTextBlock(equation);
-
-                return new ShapeEquation({
-                    reason : ShapeEquationReason.sum_of_angles_is_pi,
-                    auxiliaryShapes : angles,
-                    shapes : [ text_block ],
-                    equation
-                });
+                return makeShapeEquationByEquationText(ShapeEquationReason.sum_of_angles_is_pi, angles, text);
             }
         }
     }
@@ -69,22 +74,24 @@ export function makeSumOfAnglesIsEqual(angles_arg: Angle[]) : ShapeEquation | un
         if(outer_angle.commonLineAA(inner_angles[0]) && outer_angle.commonLineBB(last(inner_angles))){
             if(range(inner_angles.length - 1).every(i => inner_angles[i].commonLineBA(inner_angles[i + 1]))){
                 const text = `${outer_angle.name} = ` + inner_angles.map(x => x.name).join(" + ");
-                msg(`angles sum eq: ${text}`);
-                const equation = parser_ts.parseMath(text) as App;
-                if(! equation.isEq()){
-                    msg(`can not make an equation: ${text}`);
-                    return undefined;
+                return makeShapeEquationByEquationText(ShapeEquationReason.sum_of_angles_is_equal, angles, text);
+            }
+        }
+    }
+
+    return undefined;
+}
+
+export function makeShapeEquationByExteriorAngleTheorem(angles: Angle[]) : ShapeEquation | undefined {
+    for(const [angle1, angle2, angle3] of permutation(angles)){
+        if(angle1.lineA == angle2.lineB && angle1.directionA == - angle2.directionB){
+            const intersection = getCommonPointOfLines(angle1.lineB, angle2.lineA);
+            if(angle3.intersection == intersection){
+                if(areSetsEqual([angle1.lineB, angle2.lineA], [angle3.lineA, angle3.lineB])){
+
+                    const text = `${angle1.name} + ${angle2.name} = ${angle3.name}`;
+                    return makeShapeEquationByEquationText(ShapeEquationReason.exterior_angle_theorem, angles, text);    
                 }
-
-                const text_block = makeEquationTextBlock(equation);
-
-                return new ShapeEquation({
-                    reason : ShapeEquationReason.sum_of_angles_is_equal,
-                    auxiliaryShapes : angles,
-                    shapes : [ text_block ],
-                    equation
-                });
-                
             }
         }
     }
@@ -108,33 +115,21 @@ export function makeSumOfTriangleQuadrilateralAngles(angles: Angle[], reason : S
     check(angles.every(x => x.name != ""));
 
     const text = angles.map(x => x.name).join(" + ") + " = " + sum_angles;
-    msg(`angles eq: ${text}`);
-
-    const equation = parser_ts.parseMath(text) as App;
-    if(! equation.isEq()){
-        msg(`can not make an equation: ${text}`);
-        return undefined;
-    }
-
-    const text_block = makeEquationTextBlock(equation);
-
-    return new ShapeEquation({
-        reason,
-        auxiliaryShapes : angles,
-        shapes : [ text_block ],
-        equation
-    });
-
-    return undefined;
+    return makeShapeEquationByEquationText(reason, angles, text);
 }
 
 
 export function makeShapeEquation(reason : ShapeEquationReason, shapes: Shape[]) : ShapeEquation | undefined {
     switch(reason){
     case ShapeEquationReason.sum_of_angles_is_pi:
-    case ShapeEquationReason.sum_of_angles_is_equal:{
+    case ShapeEquationReason.sum_of_angles_is_equal:
+    case ShapeEquationReason.exterior_angle_theorem:{
         check(shapes.every(x => x instanceof Angle && x.name != ""), TT("The selected shapes are not names angles."));
         const angles = shapes as Angle[];
+
+        if(reason == ShapeEquationReason.exterior_angle_theorem){
+            return makeShapeEquationByExteriorAngleTheorem(angles);
+        }
 
         const intersections = unique(angles.map(x => intersection));
         if(intersections.length != 1){
@@ -160,6 +155,7 @@ export function makeShapeEquation(reason : ShapeEquationReason, shapes: Shape[])
 
         return makeSumOfTriangleQuadrilateralAngles(angles, reason);
     }
+
     default:
         throw new MyError();
     }

@@ -2,6 +2,14 @@ namespace plane_ts {
 //
 
 export class TriangleDetector extends TriangleQuadrilateralDetector {
+    constructor(obj : { narration? : string, reason? : number, shapes : MathEntity[], auxiliaryShapes? : MathEntity[], mathText? : string }){
+        super(obj);
+        const triangle = this.selectedShapes[0] as Triangle;
+        assert(triangle instanceof Triangle);
+        if(this.reason == IsoscelesTriangleReason.two_sides_are_equal){
+            isoscelesTriangle.push(triangle);
+        }
+    }
 }
 
 export function makeIsoscelesTriangleDetector(points : Point[], reason : IsoscelesTriangleReason ) : TriangleDetector | undefined {

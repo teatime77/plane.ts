@@ -32,6 +32,7 @@ export enum ShapeEquationReason {
     sum_of_lengths_is_equal,
     sum_of_interior_angles_of_triangle_is_pi,
     sum_of_interior_angles_of_quadrilateral_is_2pi,
+    exterior_angle_theorem,
 }
 
 export enum LengthEqualityReason {
@@ -64,6 +65,7 @@ export enum AngleEqualityReason {
     congruent_triangles,
     parallelogram_opposite_angles,
     similar_triangles,
+    isosceles_triangle_base_angles,
 }
 
 export enum TriangleQuadrilateralClass {
@@ -121,6 +123,7 @@ export const enumToImgName = new Map<number, string>([
     [ ShapeEquationReason.sum_of_lengths_is_equal, "sum_of_lengths_is_equal" ],
     [ ShapeEquationReason.sum_of_interior_angles_of_triangle_is_pi, "sum_of_interior_angles_of_triangle_is_pi" ],
     [ ShapeEquationReason.sum_of_interior_angles_of_quadrilateral_is_2pi, "sum_of_interior_angles_of_quadrilateral_is_2pi" ],
+    [ ShapeEquationReason.exterior_angle_theorem, "exterior_angle_theorem" ],
 
     [ LengthEqualityReason.radii_equal, "radii_equal" ],
     [ LengthEqualityReason.common_circle, "common_circle" ],
@@ -143,6 +146,7 @@ export const enumToImgName = new Map<number, string>([
     [ AngleEqualityReason.congruent_triangles, "triangle_congruence" ],
     [ AngleEqualityReason.parallelogram_opposite_angles, "each_opposite_angles_are_equal" ],
     [ AngleEqualityReason.similar_triangles, "triangle_similarity" ],
+    [ AngleEqualityReason.isosceles_triangle_base_angles, "isosceles_triangle_base_angles" ],
 
     [ TriangleQuadrilateralClass.trapezoid, "" ],
     [ TriangleQuadrilateralClass.parallelogram, "quadrilateral_classifier" ],

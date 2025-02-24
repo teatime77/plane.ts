@@ -19,6 +19,7 @@ export let equalLengths : Set<LengthSymbol>[] = [];
 export let equalCircleArcs : Set<CircleArc>[] = [];
 export let congruentTriangles : Triangle[][] = [];
 export let similarTriangles : Triangle[][] = [];
+export let isoscelesTriangle : Triangle[] = [];
 
 export const reasonToDoc = new Map<number, number>([
     // [AngleEqualityReason.vertical_angles, 8],
@@ -61,6 +62,7 @@ export function initRelations(){
     equalCircleArcs = [];
     congruentTriangles = [];
     similarTriangles = [];
+    isoscelesTriangle = [];
 }
 
 export function recalcRelations(view : View){

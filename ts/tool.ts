@@ -1543,6 +1543,9 @@ export class AngleEqualityBuilder extends Builder {
                     case AngleEqualityReason.similar_triangles:
                         angleEquality = makeAngleEqualityBySimilarTriangles(this.angleA, this.angleB);
                         break;
+                    case AngleEqualityReason.isosceles_triangle_base_angles:
+                        angleEquality = makeAngleEqualityByIsoscelesTriangleBaseAngles(this.angleA, this.angleB);
+                        break;
                     default:
                         throw new MyError();
                     }
@@ -1829,9 +1832,31 @@ export class ShapeEquationBuilder extends Builder {
             return;
         }
 
-        if( this.reason == ShapeEquationReason.sum_of_interior_angles_of_triangle_is_pi || 
-            this.reason == ShapeEquationReason.sum_of_interior_angles_of_quadrilateral_is_2pi){
-            
+        switch(this.reason){
+        case ShapeEquationReason.sum_of_angles_is_pi:
+        case ShapeEquationReason.sum_of_angles_is_equal:
+        case ShapeEquationReason.exterior_angle_theorem:
+            if(shape instanceof Angle){
+                if(shape.name == ""){
+                    msg(TT("The name of the shape is blank."))
+                    return;
+                }
+
+                this.shapes.push(shape);
+                shape.setMode(Mode.depend);
+                msg(`click eq ${this.shapes.length}`);
+
+                if(this.reason == ShapeEquationReason.exterior_angle_theorem && this.shapes.length == 3){
+                    this.finish(view);
+                }
+            }
+            break;
+
+        case ShapeEquationReason.sum_of_lengths_is_equal:
+            throw new MyError();
+
+        case ShapeEquationReason.sum_of_interior_angles_of_triangle_is_pi:
+        case ShapeEquationReason.sum_of_interior_angles_of_quadrilateral_is_2pi:
             if(shape instanceof Point){
 
                 this.shapes.push(shape);
@@ -1843,19 +1868,10 @@ export class ShapeEquationBuilder extends Builder {
                     await this.finish(view);
                 }
             }
-        }
-        else{
+            break;
 
-            if(shape instanceof Angle){
-                if(shape.name == ""){
-                    msg(TT("The name of the shape is blank."))
-                    return;
-                }
-
-                this.shapes.push(shape);
-                shape.setMode(Mode.depend);
-                msg(`click eq ${this.shapes.length}`);
-            }
+        default:
+            throw new MyError();
         }
     }
 

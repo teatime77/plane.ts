@@ -264,6 +264,30 @@ export function makeAngleEqualityBySimilarTriangles(angleA : Angle, angleB : Ang
     }
 }
 
+export function makeAngleEqualityByIsoscelesTriangleBaseAngles(angleA : Angle, angleB : Angle) : AngleEquality | undefined {
+    for(const [angle1, angle2] of permutation([angleA, angleB])){
+        if(angle1.lineA == angle2.lineB && angle1.directionA == - angle2.directionB){
+            const triangle = isoscelesTriangle.find(x => x.points[1] == angle1.intersection && x.points[2] == angle2.intersection);
+            if(triangle == undefined){
+                return undefined;
+            }
+
+            const vertex = getCommonPointOfLines(angle1.lineB, angle2.lineA);
+            if(vertex != triangle.points[0]){
+                return undefined;
+            }
+
+            return new AngleEquality({
+                reason : AngleEqualityReason.isosceles_triangle_base_angles,
+                auxiliaryShapes : [ triangle ],
+                shapes : [ angleA, angleB ]
+            });
+        }
+    }
+
+    return undefined;
+}
+
 function getAngleUnitVectors(angleA : Angle, angleB : Angle) : [Vec2, Vec2, Vec2, Vec2]{
     const e_AA = angleA.lineA.e.mul(angleA.directionA);
     const e_AB = angleA.lineB.e.mul(angleA.directionB);
