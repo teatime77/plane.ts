@@ -487,6 +487,14 @@ export class Statement extends Shape {
         this.selectedShapes.forEach(x => x.setRelations());
 
         usedReasons.add(this.reason);
+        if(this.reason == 0){
+
+            msg(`used 0 [${this.constructor.name}]`);
+        }
+        else{
+
+            msg(`used [${reasonMsg(this.reason)}]`);
+        }
     }
 }
 

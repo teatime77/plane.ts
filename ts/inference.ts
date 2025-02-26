@@ -22,16 +22,23 @@ export let similarTriangles : Triangle[][] = [];
 export let isoscelesTriangle : Triangle[] = [];
 
 export const reasonToDoc = new Map<number, number>([
-    // [AngleEqualityReason.vertical_angles, 8],
-    [AngleEqualityReason.parallelogram_opposite_angles, 10],
+    [ ShapeEquationReason.sum_of_interior_angles_of_triangle_is_pi, 18 ],
+    [ ShapeEquationReason.sum_of_interior_angles_of_quadrilateral_is_2pi, 21 ],
+    [ ShapeEquationReason.sum_of_interior_angles_of_quadrilateral_is_2pi, 23 ],
+
+    [ AngleEqualityReason.vertical_angles, 17 ],
+    [ AngleEqualityReason.parallelogram_opposite_angles, 10 ],
     [ AngleEqualityReason.angle_bisector, 2 ],
+    [ AngleEqualityReason.isosceles_triangle_base_angles, 3 ],
 
-    // [LengthEqualityReason.parallel_lines_distance, 42],
-    [LengthEqualityReason.parallelogram_opposite_sides, 10],
-    [LengthEqualityReason.parallelogram_diagonal_bisection, 11],
+    [ LengthEqualityReason.parallel_lines_distance, 16 ],
+    [ LengthEqualityReason.parallelogram_opposite_sides, 10 ],
+    [ LengthEqualityReason.parallelogram_diagonal_bisection, 11 ],
 
-    [ParallelogramReason.each_opposite_sides_are_equal, 1],
-    [ParallelogramReason.each_diagonal_bisections, 9],
+    [ ParallelogramReason.each_opposite_sides_are_equal, 1],
+    [ ParallelogramReason.each_opposite_angles_are_equal, 22],
+    [ ParallelogramReason.one_opposite_sides_are_parallel_and_equal, 12],
+    [ ParallelogramReason.each_diagonal_bisections, 9],
 ]);
 
 export const usedReasons = new Set<number>();
