@@ -60,6 +60,7 @@ export abstract class MathEntity extends Widget implements i18n_ts.Readable, par
 
         if(obj.narration != undefined){
             this.narration = obj.narration;
+            msg(`narration [${this.narration}] ${this.constructor.name}`);
         }
 
         if(obj.interval != undefined){

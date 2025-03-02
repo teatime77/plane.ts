@@ -35,7 +35,8 @@ export class View extends Widget {
     min! : Vec2;
     max! : Vec2;
 
-    textBase : Vec2 = new Vec2(-2, 2);
+    textBase : Vec2;
+    textBaseY : number;
 
     dirty : boolean = false;
 
@@ -68,10 +69,19 @@ export class View extends Widget {
         this.board.height = this.board.clientHeight;
 
         const scale = 100;
-        const max_x = 0.5 * (this.board.clientWidth  / scale);
-        const max_y = 0.5 * (this.board.clientHeight / scale);
+        const span_x = this.board.clientWidth  / scale;
+        const min_x = -0.75 * span_x;
+        const max_x =  0.25 * span_x;
 
-        this.setMinMax(new Vec2(-max_x, -max_y), new Vec2( max_x,  max_y));
+        const span_y = this.board.clientHeight / scale;
+        const max_y = 0.5 * span_y;
+        const min_y = -max_y;
+        msg(`min-x:${min_x} max-x:${max_x} max-y:${max_y}`);
+
+        this.setMinMax(new Vec2(min_x, min_y), new Vec2(max_x,  max_y));
+
+        this.textBaseY = max_y - 0.1 * span_y;
+        this.textBase = new Vec2(min_x + 0.05 * span_x, this.textBaseY);
 
         View.current = this;
 
@@ -86,7 +96,7 @@ export class View extends Widget {
         this.operations = [];
         this.shapes = [];
         this.dirty = true;
-        this.textBase = new Vec2(-2, 2);
+        this.textBase.y = this.textBaseY;
 
         Plane.one.clearPlane();
         clearShapeList();
