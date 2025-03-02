@@ -44,7 +44,6 @@ export abstract class MathEntity extends Widget implements i18n_ts.Readable, par
     mode : Mode = Mode.none;
     isOver : boolean = false;
     mute : boolean = false;
-    narration : string = "";
     interval : number = 1;
 
     constructor(obj : any){
@@ -56,11 +55,6 @@ export abstract class MathEntity extends Widget implements i18n_ts.Readable, par
 
         if(obj.mute != undefined){
             this.mute = obj.mute;
-        }
-
-        if(obj.narration != undefined){
-            this.narration = obj.narration;
-            msg(`narration [${this.narration}] ${this.constructor.name}`);
         }
 
         if(obj.interval != undefined){
@@ -80,10 +74,6 @@ export abstract class MathEntity extends Widget implements i18n_ts.Readable, par
             obj.mute = true;
         }
 
-        if(this.narration != ""){
-            obj.narration = this.narration;
-        }
-
         if(this.interval != 1){
             obj.interval = this.interval;
         }
@@ -97,7 +87,7 @@ export abstract class MathEntity extends Widget implements i18n_ts.Readable, par
 
     getProperties(){
         return super.getProperties().concat([
-            "mute", "narration", "visible", "interval"
+            "mute", "visible", "interval"
         ]);
     }
 

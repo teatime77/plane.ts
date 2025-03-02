@@ -436,7 +436,7 @@ export function makeAngleEqualityByParallelogramOppositeAngles(angleA : Angle, a
 }
 
 export class AngleEquality extends Statement {
-    constructor(obj : { narration? : string, reason? : number, auxiliaryShapes? : MathEntity[], shapes : MathEntity[], mathText? : string }){
+    constructor(obj : { reason? : number, auxiliaryShapes? : MathEntity[], shapes : MathEntity[], mathText? : string }){
         super(obj);
 
         const angles = this.selectedShapes as Angle[];

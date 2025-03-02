@@ -74,7 +74,7 @@ export class TextAreaProperty extends Property {
         this.textArea = $textarea({
             id   : "text-block-text-area",
             cols : 20,
-            rows : (name == "narration" || name == "mathText" ? 6 : 10),
+            rows : name == "mathText" ? 6 : 10,
             value : value,
             change : async (ev : Event)=>{
                 this.setValue(this.textArea.getValue());
@@ -407,7 +407,7 @@ export function showProperty(widget : Widget | Widget[], nest : number){
             let property : InputProperty | TextAreaProperty | SelectProperty | AngleMarkProperty | ShapesProperty;
             let property_element : HTMLElement;
 
-            if(name == "narration" || name == "mathText" || name == "text" && widget instanceof TextBlock){
+            if(name == "mathText" || name == "text" && widget instanceof TextBlock){
 
                 property = new TextAreaProperty(widgets, name, value as string);
                 property_element = property.textArea.textArea;

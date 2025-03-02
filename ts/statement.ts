@@ -302,7 +302,7 @@ export class Statement extends Shape {
     auxiliaryShapes : MathEntity[] = [];
     selectedShapes : MathEntity[];
 
-    constructor(obj : { narration? : string, reason? : number, shapes : MathEntity[], auxiliaryShapes? : MathEntity[], mathText? : string }){
+    constructor(obj : { reason? : number, shapes : MathEntity[], auxiliaryShapes? : MathEntity[], mathText? : string }){
         super(obj);
         this.selectedShapes = obj.shapes;
 
@@ -330,7 +330,7 @@ export class Statement extends Shape {
     }
 
     reading() : Reading {
-        return new Reading(this, this.narration, []);
+        return new Reading(this, "", []);
     }
 
     makeObj() : any {

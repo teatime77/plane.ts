@@ -2,7 +2,7 @@ namespace plane_ts {
 //
 
 export class TriangleDetector extends TriangleQuadrilateralDetector {
-    constructor(obj : { narration? : string, reason? : number, shapes : MathEntity[], auxiliaryShapes? : MathEntity[], mathText? : string }){
+    constructor(obj : { reason? : number, shapes : MathEntity[], auxiliaryShapes? : MathEntity[], mathText? : string }){
         super(obj);
         const triangle = this.selectedShapes[0] as Triangle;
         assert(triangle instanceof Triangle);
