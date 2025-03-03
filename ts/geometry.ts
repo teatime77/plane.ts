@@ -157,7 +157,7 @@ export class PerpendicularLine extends AbstractPerpendicularLine {
     }
 
     reading() : Reading {
-        return new Reading(this, TT('draw a perpendicular line.'), []);
+        return new Reading(this, TT('Draw a perpendicular line.'), []);
     }
 }
 
@@ -649,7 +649,7 @@ export class CirclePointTangent extends Tangent {
     }
 
     reading(): Reading {
-        return new Reading(this, TT('Draw a tangent line from point "A" to the circle, and let the points of tangency be points "B" and "C".'),
+        return new Reading(this, TT('Draw a tangent line from the point to the circle.'),
             [this.point].concat(this.tangentPoints));
     }
 }

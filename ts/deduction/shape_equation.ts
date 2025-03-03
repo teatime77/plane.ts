@@ -124,7 +124,7 @@ export function makeShapeEquation(reason : ShapeEquationReason, shapes: Shape[])
     case ShapeEquationReason.sum_of_angles_is_pi:
     case ShapeEquationReason.sum_of_angles_is_equal:
     case ShapeEquationReason.exterior_angle_theorem:{
-        check(shapes.every(x => x instanceof Angle && x.name != ""), TT("The selected shapes are not names angles."));
+        check(shapes.every(x => x instanceof Angle && x.name != ""), TT("The selected shapes are not named angles."));
         const angles = shapes as Angle[];
 
         if(reason == ShapeEquationReason.exterior_angle_theorem){
@@ -133,7 +133,7 @@ export function makeShapeEquation(reason : ShapeEquationReason, shapes: Shape[])
 
         const intersections = unique(angles.map(x => intersection));
         if(intersections.length != 1){
-            msg(TT("Corner vertices do not match."));
+            msg(TT("The vertices of the angles do not match."));
             return undefined;
         }
 

@@ -1418,11 +1418,11 @@ export class LengthEqualityBuilder extends Builder {
                     lengthEquality = makeEqualLengthByRadiiEqual(this.lengthSymbolA, this.lengthSymbolB);
                     break;
                 case LengthEqualityReason.common_circle:
-                    showPrompt(TT("click the common circle. "));
+                    showPrompt(TT("click the common circle."));
                     break;
                 case LengthEqualityReason.parallel_lines_distance:
                     linesSelector_2.clear();
-                    showPrompt(TT("click two parallel lines. "));
+                    showPrompt(TT("click two parallel lines."));
                     break;
                 case LengthEqualityReason.congruent_triangles:
                     lengthEquality = makeEqualLengthByCongruentTriangles(this.lengthSymbolA, this.lengthSymbolB);
