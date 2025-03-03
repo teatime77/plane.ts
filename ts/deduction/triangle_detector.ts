@@ -10,6 +10,16 @@ export class TriangleDetector extends TriangleQuadrilateralDetector {
             isoscelesTriangle.push(triangle);
         }
     }
+
+    reading(): Reading {
+        switch(this.reason){
+        case IsoscelesTriangleReason.two_sides_are_equal:
+            return this.textReading(TT("The triangle is an isosceles triangle."));
+        }
+
+        throw new MyError();
+    }
+
 }
 
 export function makeIsoscelesTriangleDetector(points : Point[], reason : IsoscelesTriangleReason ) : TriangleDetector | undefined {

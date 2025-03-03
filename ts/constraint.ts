@@ -137,6 +137,11 @@ export class AngleEqualityConstraint extends Constraint {
 
         addEqualAngles(angleA, angleB);
     }
+
+    reading() : Reading {
+        msg(`empty reading:${this.constructor.name}`);
+        return new Reading(this, "", []);
+    }
 }
 
 abstract class LineConstraint extends Constraint {
@@ -197,7 +202,6 @@ export class ParallelConstraint extends ParallelPerpendicularConstraint {
         super.setRelations();
         addParallelLines(this.lineA, this.lineB);
     }
-    
 }
 
 export class PerpendicularConstraint extends ParallelPerpendicularConstraint {

@@ -415,6 +415,7 @@ export class TextBlock extends MathEntity {
     }
 
     reading() : Reading {
+        msg(`empty reading:${this.constructor.name}`);
         return new Reading(this, "", []);
     }
 

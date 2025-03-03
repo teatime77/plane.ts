@@ -131,6 +131,7 @@ export class ExprTransform extends MathEntity implements EquationTextBlock {
     }
 
     reading() : Reading {
+        msg(`empty reading:${this.constructor.name}`);
         return new Reading(this, "", []);
     }
 

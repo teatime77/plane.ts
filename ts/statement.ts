@@ -173,18 +173,18 @@ export const enumToImgName = new Map<number, string>([
     [ ShapeType.isosceles_triangle, "isosceles_triangle"],
 ]);
 
-export function makeSelectionDlg(){    
+export async function makeSelectionDlg(){    
     const data : [string, string, (typeof LengthEqualityReason | typeof AngleEqualityReason | typeof ShapeType | 
         typeof ParallelogramReason | typeof RhombusReason | typeof IsoscelesTriangleReason | typeof ParallelReason | typeof ShapeEquationReason | typeof ExprTransformReason)][] = [ 
-        [ "reason for length equality", "length-equality-reason", LengthEqualityReason ],
-        [ "reason for angle equality" , "angle-equality-reason" , AngleEqualityReason ],
-        [ "shape type"                , "shape-type"            , ShapeType ],
-        [ "reason for parallelogram"  , "parallelogram-reason"  , ParallelogramReason ],
-        [ "reason for rhombus"        , "rhombus-reason"        , RhombusReason ], 
-        [ "reason for isosceles triangle", "isosceles-triangle-reason", IsoscelesTriangleReason ],
-        [ "reason for parallel"       , "parallel-reason"       , ParallelReason ], 
-        [ "reason for shape equation"       , "shape-equation-reason"       , ShapeEquationReason ], 
-        [ "reason for expression transformation", "expr-transform-reason", ExprTransformReason ], 
+        [ TT("Reason for length equality"), "length-equality-reason", LengthEqualityReason ],
+        [ TT("Reason for angle equality" ), "angle-equality-reason" , AngleEqualityReason ],
+        [ TT("Shape type"                ), "shape-type"            , ShapeType ],
+        [ TT("Reason for parallelogram"  ), "parallelogram-reason"  , ParallelogramReason ],
+        [ TT("Reason for rhombus"        ), "rhombus-reason"        , RhombusReason ], 
+        [ TT("Reason for isosceles triangle"), "isosceles-triangle-reason", IsoscelesTriangleReason ],
+        [ TT("Reason for parallel"       ), "parallel-reason"       , ParallelReason ], 
+        [ TT("Equation derived from shapes" ), "shape-equation-reason"       , ShapeEquationReason ], 
+        [ TT("Types of formula transformation"), "expr-transform-reason", ExprTransformReason ], 
     ];
 
     const titles = data.map(x => x[0]);
@@ -277,6 +277,7 @@ export class Assumption extends MathEntity {
     }
 
     reading() : Reading {
+        msg(`empty reading:${this.constructor.name}`);
         return new Reading(this, "", []);
     }
 
@@ -330,8 +331,9 @@ export class Statement extends Shape {
     }
 
     reading() : Reading {
+        msg(`empty reading:${this.constructor.name}`);
         return new Reading(this, "", []);
-    }
+    }    
 
     makeObj() : any {
         let obj = Object.assign(super.makeObj(), {

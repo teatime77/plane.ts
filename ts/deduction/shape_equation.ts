@@ -185,6 +185,13 @@ export class ShapeEquation extends Statement implements EquationTextBlock {
             msg(`add-Supplementary-Angles ${angle1.name} ${angle2.name}`);
         }
     }
+
+
+    reading(): Reading {
+        msg(`empty reading:${this.constructor.name}`);
+        return this.textReading(TT(""));
+    }
+
 }
 
 export async function simplifyEquationTextBlock(eqText : EquationTextBlock){

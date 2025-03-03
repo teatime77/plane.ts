@@ -748,7 +748,7 @@ export class Motion extends MathEntity {
     }
 
     reading(): Reading {
-        return new Reading(this, "", []);
+        throw new MyError();
     }   
 
     async animate(speech : i18n_ts.AbstractSpeech){

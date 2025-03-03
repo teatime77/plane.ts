@@ -24,7 +24,7 @@ export async function initPlane(plane : Plane, root : layout_ts.Grid){
 
     await Builder.setToolByName(SelectionTool.name, false);
 
-    makeSelectionDlg();
+    await makeSelectionDlg();
 }
 
 export function viewEvent(view : View){
