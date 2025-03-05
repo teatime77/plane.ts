@@ -21,6 +21,8 @@ export let congruentTriangles : Triangle[][] = [];
 export let similarTriangles : Triangle[][] = [];
 export let isoscelesTriangle : Triangle[] = [];
 
+export let propositions : Proposition[] = [];
+
 export const reasonToDoc = new Map<number, number>([
     [ ShapeEquationReason.sum_of_interior_angles_of_triangle_is_pi, 18 ],
     [ ShapeEquationReason.sum_of_interior_angles_of_quadrilateral_is_2pi, 21 ],
@@ -70,6 +72,8 @@ export function initRelations(){
     congruentTriangles = [];
     similarTriangles = [];
     isoscelesTriangle = [];
+
+    propositions = [];
 }
 
 export function recalcRelations(view : View){

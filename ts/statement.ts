@@ -17,6 +17,7 @@ export let isoscelesTriangleReasonDlg : HTMLDialogElement;
 
 export let shapeEquationReasonDlg : HTMLDialogElement;
 export let exprTransformReasonDlg : HTMLDialogElement;
+export let propositionReasonDlg : HTMLDialogElement;
 
 export enum TriangleCongruenceReason {
     none,
@@ -66,6 +67,13 @@ export enum AngleEqualityReason {
     parallelogram_opposite_angles,
     similar_triangles,
     isosceles_triangle_base_angles,
+}
+
+export enum PropositionReason {
+    none = 250,
+    angle_equality,
+    length_equality,
+    equation,
 }
 
 export enum TriangleQuadrilateralClass {
@@ -171,11 +179,15 @@ export const enumToImgName = new Map<number, string>([
     [ ShapeType.parallelogram, "quadrilateral_classifier" ],
     [ ShapeType.rhombus, "all_sides_are_equal" ],
     [ ShapeType.isosceles_triangle, "isosceles_triangle"],
+
+    [ PropositionReason.angle_equality, "equal_angle" ],
+    [ PropositionReason.length_equality, "equal_length" ],
+    [ PropositionReason.equation, "expr_transform" ],
 ]);
 
 export async function makeSelectionDlg(){    
     const data : [string, string, (typeof LengthEqualityReason | typeof AngleEqualityReason | typeof ShapeType | 
-        typeof ParallelogramReason | typeof RhombusReason | typeof IsoscelesTriangleReason | typeof ParallelReason | typeof ShapeEquationReason | typeof ExprTransformReason)][] = [ 
+        typeof ParallelogramReason | typeof RhombusReason | typeof IsoscelesTriangleReason | typeof ParallelReason | typeof ShapeEquationReason | typeof ExprTransformReason | typeof PropositionReason)][] = [ 
         [ TT("Reason for length equality"), "length-equality-reason", LengthEqualityReason ],
         [ TT("Reason for angle equality" ), "angle-equality-reason" , AngleEqualityReason ],
         [ TT("Shape type"                ), "shape-type"            , ShapeType ],
@@ -185,6 +197,7 @@ export async function makeSelectionDlg(){
         [ TT("Reason for parallel"       ), "parallel-reason"       , ParallelReason ], 
         [ TT("Equation derived from shapes" ), "shape-equation-reason"       , ShapeEquationReason ], 
         [ TT("Types of formula transformation"), "expr-transform-reason", ExprTransformReason ], 
+        [ TT("Types of proposition"), "proposition-reason", PropositionReason ], 
     ];
 
     const titles = data.map(x => x[0]);
@@ -253,6 +266,10 @@ export async function makeSelectionDlg(){
             break;
         case 8:
             exprTransformReasonDlg = dlg;
+            break;
+        case 9:
+            propositionReasonDlg = dlg;
+            break;
         }
 
         dlg.append(div);

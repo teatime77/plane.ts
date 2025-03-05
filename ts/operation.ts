@@ -312,12 +312,7 @@ export function inputTextPrompt(message : string) : string | null {
     else{
 
         text = prompt(message);
-        if(text == null){
-
-            Builder.cancelTool();
-        }
-        else{
-
+        if(text != null){
             View.current.addOperation(new TextPrompt(text.trim()));
         }
     }

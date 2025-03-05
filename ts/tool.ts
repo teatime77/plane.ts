@@ -7,6 +7,7 @@
 ///<reference path="deduction/triangle_detector.ts" />
 ///<reference path="deduction/shape_equation.ts" />
 ///<reference path="deduction/expr_transform.ts" />
+///<reference path="deduction/proposition.ts" />
 ///<reference path="constraint.ts" />
 
 namespace plane_ts {
@@ -1258,7 +1259,10 @@ export class AssumptionBuilder extends Builder {
         addShapeSetRelations(view, assumption);
 
         const mathText = inputTextPrompt(TT("Enter a mathematical expression."));
-        if(mathText != null){
+        if(mathText == null){
+            Builder.cancelTool();
+        }
+        else{
             assumption.setMathText(mathText);
         }
     }
@@ -1920,10 +1924,11 @@ export class ExprTransformBuilder extends Builder {
 
                 this.mathText = inputTextPrompt(TT("Enter a mathematical expression."));
                 if(this.mathText == null){
-                    return;
+                    Builder.cancelTool();
                 }
-    
-                await this.finish(View.current);
+                else{
+                    await this.finish(View.current);
+                }    
             }
         }
     }
@@ -2043,6 +2048,64 @@ export class ExprTransformBuilder extends Builder {
     }
 }
 
+
+export class PropositionBuilder extends Builder {
+    reason : PropositionReason = PropositionReason.none;
+    shapes : (Angle | LengthSymbol)[] = [];
+
+    async init(){        
+        this.reason  = await showMenu(propositionReasonDlg);
+    }
+
+    async click(view : View, position : Vec2, shape : Shape | undefined){
+        if(shape == undefined || this.shapes.includes(shape as any)){
+            return;
+        }
+
+        switch(this.reason){
+        case PropositionReason.angle_equality:
+        case PropositionReason.length_equality:
+            if( this.reason == PropositionReason.angle_equality  && shape instanceof Angle ||
+                this.reason == PropositionReason.length_equality && shape instanceof LengthSymbol){
+
+                this.shapes.push(shape);
+                shape.setMode(Mode.depend);
+
+                if(this.shapes.length == 2){
+                    const proposition = makeShapeProposition(this.reason, this.shapes);
+                    addShapeSetRelations(view, proposition);
+                    this.resetTool(proposition);    
+                }
+            }
+            break;
+
+        case PropositionReason.equation:{
+                const mathText = inputTextPrompt(TT("Enter a mathematical expression."));
+                if(mathText == null){
+                    Builder.cancelTool();
+                }
+                else{
+                    const proposition = makeEquationProposition(this.reason, mathText);
+                    if(proposition != undefined){
+                        addShapeSetRelations(view, proposition);
+                        this.resetTool(proposition);    
+            
+                        await simplifyEquationTextBlock(proposition);
+                        return;
+                    }
+                }
+
+                Builder.cancelTool();
+            }
+            throw new MyError();
+
+        default:
+            throw new MyError();
+        }
+    }
+}
+
+
 export class MotionBuilder extends SelectionTool { 
     animation : Motion;
 
@@ -2082,11 +2145,12 @@ const toolList : [typeof Builder, string, string, (typeof MathEntity)[]][] = [
     [ ParallelDetectorBuilder   , "parallel_detector"  , TT("parallel detector")  , [ ParallelDetector ] ],
     [ EqualityConstraintBuilder , "equality_constraint", TT("equality constraint"), [ LengthEqualityConstraint, AngleEqualityConstraint ] ],
     [ AssumptionBuilder         , "assumption"         , TT("assumption")         , [ Assumption ] ],
-    [ ParallelConstraintBuilder , "parallel_constraint"      , TT("parallel constraint"), [ ParallelConstraint ]],
+    [ ParallelConstraintBuilder , "parallel_constraint", TT("parallel constraint"), [ ParallelConstraint ]],
     [ PerpendicularConstraintBuilder , "perpendicular_constraint" , TT("perpendicular constraint"), [ PerpendicularConstraint ]],
     [ QuadrilateralClassifierBuilder, "quadrilateral_classifier", TT("quadrilateral classifier"), [ ParallelogramClassifier, RhombusClassifier, TriangleDetector ]],
-    [ ShapeEquationBuilder, "shape_equation", TT("shape equation"), [ ShapeEquation ] ],
-    [ ExprTransformBuilder, "expr_transform", TT("expression transformation"), [ ExprTransform ] ],
+    [ ShapeEquationBuilder      , "shape_equation"     , TT("shape equation")     , [ ShapeEquation ] ],
+    [ ExprTransformBuilder      , "expr_transform"     , TT("expression transformation"), [ ExprTransform ] ],
+    [ PropositionBuilder        , "proposition"        , TT("proposition")        , [ Proposition ] ],
     [ TextBlockBuilder          , "text"               , TT("text")               , [ TextBlock ] ],
 ];
 

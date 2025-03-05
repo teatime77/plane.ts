@@ -161,6 +161,9 @@ export function addEqualAngles(angle1 : Angle, angle2 : Angle){
 
     angle_set.add(angle1);
     angle_set.add(angle2);
+
+    const angle_equality_propositions = propositions.filter(x => x instanceof ShapeProposition && x.reason == PropositionReason.angle_equality) as ShapeProposition[];
+    const proven_proposition = angle_equality_propositions.find(x => areSetsEqual(x.selectedShapes, [angle1, angle2]));
 }
 
 export function isEqualAngle(angleA : Angle, angleB : Angle) : boolean {
