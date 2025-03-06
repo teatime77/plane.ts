@@ -67,8 +67,6 @@ export async function loadOperationsText(data : any){
     const view = View.current;
     view.clearView();
 
-    const speech = new i18n_ts.DummySpeech();
-
     let operations : Operation[] = [];
 
     for(let line of lines){
@@ -165,9 +163,7 @@ export async function loadOperationsText(data : any){
 
     operations = convertOperations(data["version"], operations);
 
-    Plane.one.playMode = PlayMode.fastForward;
-    await playBack(speech, operations);
-    Plane.one.playMode = PlayMode.stop;
+    await playBack(PlayMode.fastForward, operations);
 
     for(const [i, o] of operations.entries()){
         // msg(`load ${i}:${o.dump()}`);
@@ -386,14 +382,22 @@ export async function speakAndHighlight(shape : MathEntity, speech : i18n_ts.Abs
 }
 
 
-export async function playBack(speech : i18n_ts.AbstractSpeech, operations : Operation[]){
+export async function playBack(play_mode : PlayMode, operations : Operation[]){
+    Plane.one.playMode = play_mode;
     View.isPlayBack = true;
 
+    const speech = (play_mode == PlayMode.fastForward ? new i18n_ts.DummySpeech() : makeSpeechFnc());
+
     const view : View = View.current;
+    view.restoreView();
+    view.clearView();
 
     let start_shape_idx = view.shapes.length;
 
     playBackOperations = operations.slice();
+
+    let all_shapes : MathEntity[] = [];
+    const named_all_shape_map = new Map<string, plane_ts.Shape>();
 
     while(playBackOperations.length != 0){
         while(playBackOperations[0] instanceof EnumSelection){
@@ -415,44 +419,6 @@ export async function playBack(speech : i18n_ts.AbstractSpeech, operations : Ope
                 }
             }
             await Builder.tool.click(view, operation.position, shape);
-
-            if(Builder.tool.done){
-                Builder.tool.done = false;
-
-                const shapes = view.shapes.slice(start_shape_idx);
-                for(const shape of shapes){
-                    shape.allShapes().forEach(x => x.show());
-
-                    shape.setRelations();
-            
-                    if(shape.mute){
-                        continue;
-                    }
-                    
-                    if(shape instanceof Statement){
-                        await shape.showReasonAndStatement(speech);
-                    }
-                    else if(shape instanceof Motion){
-                        await shape.animate(speech);
-                    }
-                    else{
-            
-                        const root_reading = shape.reading();
-                        if(root_reading.text == ""){
-            
-                        }
-                        else if(root_reading.args.length == 0){
-            
-                            await speakAndHighlight(shape, speech, [root_reading.text]);
-                        }            
-                    }
-                }
-
-                start_shape_idx = view.shapes.length;
-                await speech.waitEnd();
-            }
-
-            view.dirty = true;
         }
         else if(operation instanceof ClickTerm){
             if(Builder.tool instanceof ExprTransformBuilder){
@@ -478,19 +444,55 @@ export async function playBack(speech : i18n_ts.AbstractSpeech, operations : Ope
         else{
             throw new MyError();
         }
+
+        if(Builder.tool.done){
+            Builder.tool.done = false;
+
+            const shapes = view.shapes.slice(start_shape_idx);
+            for(const shape of shapes){
+                let sub_shapes : Shape[] = [];
+                shape.getAllShapes(sub_shapes);
+                sub_shapes = unique(sub_shapes);
+
+                sub_shapes.forEach(x => x.show());
+                all_shapes = unique(all_shapes.concat(sub_shapes));
+
+                const named_sub_shapes = sub_shapes.filter(x => x instanceof Shape && x.name != "") as Shape[];
+                named_sub_shapes.forEach(x => named_all_shape_map.set(x.name, x));
+        
+                // shape.allShapes().forEach(x => x.show());
+
+                shape.setRelations();
+        
+                if(shape.mute){
+                    continue;
+                }
+
+                await playShape(speech, all_shapes, named_all_shape_map, shape);
+            }
+
+            start_shape_idx = view.shapes.length;
+            await speech.waitEnd();
+        }
+
+        view.dirty = true;
     }
 
+    view.restoreView();
+
+    all_shapes.forEach(x => {x.show(); x.setMode(Mode.none); });
+
+    view.dirty = true;
+    view.updateShapes();
+
+    Plane.one.playMode = PlayMode.stop;
     View.isPlayBack = false;
 }
 
-export async function playBackAll(speech? : i18n_ts.AbstractSpeech){
-    if(speech == undefined){
-        speech = new i18n_ts.DummySpeech();
-    }
-
+export async function playBackAll(play_mode : PlayMode){
     const operations = View.current.operations.slice();
     View.current.clearView();
-    await playBack(speech, operations);
+    await playBack(play_mode, operations);
 }
 
 }

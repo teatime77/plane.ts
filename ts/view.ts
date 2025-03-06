@@ -89,6 +89,11 @@ export class View extends Widget {
     }
 
     clearView(){
+        const all_shapes = this.allShapes();
+        all_shapes.forEach(x => x.hide());
+
+        removeDiv();
+    
         Widget.maxId = this.id;
         idMap.clear();
         idMap.set(this.id, this);
@@ -514,7 +519,7 @@ export class View extends Widget {
             }
         }
 
-        await playBackAll();
+        await playBackAll(PlayMode.fastForward);
 
         this.undoStack.push(undo_operations);
 
@@ -529,7 +534,7 @@ export class View extends Widget {
         const undo_operations = this.undoStack.pop()!;
         this.operations.push(... undo_operations);
 
-        await playBackAll();
+        await playBackAll(PlayMode.fastForward);
 
         this.dirty = true;
     }

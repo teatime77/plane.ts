@@ -197,12 +197,19 @@ export class ShapeEquation extends Statement implements EquationTextBlock {
 export async function simplifyEquationTextBlock(eqText : EquationTextBlock){
     const textBlock = eqText.textBlock;
     const gen = algebra_ts.simplify(eqText.equation);
+    let prev_eq_str = "";
     for(const _ of gen){
-        msg(`simplify ${eqText.equation.str()}`);
-        await sleep(1000);
         textBlock.app  = eqText.equation;
         textBlock.text = eqText.equation.tex();
         textBlock.updateTextDiv();
+
+        const new_eq_str = eqText.equation.str();
+        if(prev_eq_str != new_eq_str){
+            prev_eq_str = new_eq_str;
+
+            msg(`simplify ${new_eq_str}`);
+            await sleep(1000);
+        }
     }
 
     checkSupplementaryAngles(eqText.equation);
