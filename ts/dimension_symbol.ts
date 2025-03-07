@@ -28,7 +28,6 @@ export class Angle extends Shape {
 
     constructor(obj : { angleMark : number, lineA : AbstractLine, directionA : number, lineB : AbstractLine, directionB : number }){
         super(obj);
-        this.mute = true;
         
         assert(obj.angleMark != undefined);
         this.setAngleMark(obj.angleMark);
@@ -195,7 +194,7 @@ export class Angle extends Shape {
     }
 
     reading() : Reading {
-        return new Reading(this, TT('Draw the angle formed by intersecting two lines.'), []);
+        return new Reading(this, TT('Draw an angle.'), []);
     }
 
     setRelations(): void {
@@ -386,7 +385,6 @@ export class LengthSymbol extends Shape {
 
     constructor(obj : { pointA : Point, pointB : Point, lengthKind : number }){
         super(obj);
-        this.mute = true;
 
         if(obj.lengthKind == undefined){
             throw new MyError("length kind is undefined.")

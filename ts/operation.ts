@@ -408,6 +408,7 @@ export async function playBack(play_mode : PlayMode, operations : Operation[]){
         const operation = playBackOperations.shift()!;
         view.addOperation(operation);
         if(operation instanceof ClickShape){
+            await movePointer(operation.position);
             let shape : Shape | undefined;
             if(! isNaN(operation.shapeId)){
                 shape = idMap.get(operation.shapeId) as Shape;
@@ -430,6 +431,7 @@ export async function playBack(play_mode : PlayMode, operations : Operation[]){
             }
         }
         else if(operation instanceof ToolSelection){
+            await moveToolSelectionPointer(operation);
             await Builder.setToolByName(operation.toolName, false);
         }
         else if(operation instanceof ToolFinish){

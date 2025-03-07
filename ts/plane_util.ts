@@ -58,7 +58,8 @@ async function waitForClick(element: HTMLElement): Promise<number> {
 
 
 export async function showMenu(dlg : HTMLDialogElement){
-    dlg.showModal();
+    // dlg.showModal();
+    dlg.show();
     
     let value : number
 
@@ -73,6 +74,7 @@ export async function showMenu(dlg : HTMLDialogElement){
             const enum_value = `${operation.value}`;
             const item  = items.find(x => x.dataset.enum_value == enum_value)!;
             assert(item != undefined);
+            await movePointerToElement(item);
             item.style.borderColor = "DeepSkyBlue";
             await sleepInFastForward(100);
             item.style.borderColor = "";

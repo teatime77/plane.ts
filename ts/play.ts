@@ -1,6 +1,66 @@
+///<reference path="vector.ts" />
+
 namespace plane_ts {
 //
 export let makeSpeechFnc : () => i18n_ts.AbstractSpeech;
+let pointerMove : HTMLImageElement;
+let pointer : HTMLImageElement;
+let pointerPix : Vec2 = Vec2.zero();
+
+export function initPlay(){
+    pointerMove = document.getElementById("pointer_move_img") as HTMLImageElement;
+    pointer = document.getElementById("pointer_img") as HTMLImageElement;
+}
+
+export async function movePointerPix(pix : Vec2){
+    if(Plane.one.playMode != PlayMode.fastForward){
+        pointerMove.style.visibility = "visible";
+
+        const step = 100;
+        for(const i of range(step)){
+            const x = linear(0, i, step - 1, pointerPix.x, pix.x);
+            const y = linear(0, i, step - 1, pointerPix.y, pix.y);
+    
+            pointerMove.style.left = `${x}px`;
+            pointerMove.style.top  = `${y}px`;
+            await sleep(10);
+        }
+
+        pointerMove.style.visibility = "hidden";
+    }
+    
+    pointer.style.left = `${pix.x}px`;
+    pointer.style.top  = `${pix.y}px`;
+    pointer.style.visibility     = "visible";
+    await sleep(Plane.one.playMode == PlayMode.fastForward ? 100 : 500);
+    pointer.style.visibility     = "hidden";
+
+    pointerPix = pix;
+}
+
+export async function movePointer(pos : Vec2){
+    const pix = View.current.toPixPosition(pos);
+    const rect = View.current.board.getBoundingClientRect();
+    const new_pix = new Vec2(rect.x + pix.x, rect.y + pix.y);
+
+    await movePointerPix(new_pix);
+}
+
+export async function movePointerToElement(ele : HTMLElement){
+    const rect = ele.getBoundingClientRect();
+    const x = rect.x + 0.5 * rect.width;
+    const y = rect.y + 0.5 * rect.height;
+
+    await movePointerPix(new Vec2(x, y));
+}
+
+export async function moveToolSelectionPointer(operation : ToolSelection){
+    const id = `${operation.toolName}-radio`;
+    const radio = document.getElementById(id)!;
+    assert(radio != null);
+
+    await movePointerToElement(radio);
+}
 
 export function removeDiv(){
     for(const class_name of [ "tex_div", "selectable_tex" ]){

@@ -5,6 +5,7 @@ type Block = layout_ts.Block;
 export let urlOrigin : string;
 
 export async function initPlane(plane : Plane, root : layout_ts.Grid){
+    initPlay();
     makeCssClass();
 
     plane.tool_block.onChange = async (ui : layout_ts.UI)=>{

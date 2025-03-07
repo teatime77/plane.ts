@@ -207,6 +207,8 @@ export async function makeSelectionDlg(){
     for(const [idx, dic] of dics.entries()){
         const dlg = document.createElement("dialog");
         dlg.className = "menu_dlg";
+        dlg.style.position = "fixed";
+        dlg.style.zIndex = "9";
 
         const div = document.createElement("div");
         div.style.display = "flex";

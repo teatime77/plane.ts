@@ -2237,7 +2237,9 @@ export function makeToolButtons() : layout_ts.RadioButton[] {
     const tool_buttons : layout_ts.RadioButton[] = [];
 
     for(const [ tool, img_name, title, shapes] of toolList){
+        const id = `${tool.name}-radio`;
         const radio = layout_ts.$radio({
+            id,
             value : tool.name,
             title : title,
             url   : `${urlOrigin}/lib/plane/img/${img_name}.png`,
