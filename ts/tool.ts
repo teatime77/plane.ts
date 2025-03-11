@@ -1396,7 +1396,7 @@ export class LengthEqualityBuilder extends Builder {
     }
 
     async init(){        
-        this.lengthEqualityReason = await showMenu(lengthEqualityReasonDlg);
+        this.lengthEqualityReason = await showMenu(LengthEqualityReason);
     }
 
     clear(){
@@ -1505,7 +1505,7 @@ export class AngleEqualityBuilder extends Builder {
     }
 
     async init(){        
-        this.angleEqualityReason = await showMenu(angleEqualityReasonDlg);
+        this.angleEqualityReason = await showMenu(AngleEqualityReason);
     }
 
     clear(){
@@ -1610,7 +1610,7 @@ export class ParallelDetectorBuilder extends Builder {
     angles : Angle[] = [];
 
     async init(){        
-        this.parallelReason = await showMenu(parallelReasonDlg);
+        this.parallelReason = await showMenu(ParallelReason);
     }
 
     clear(){
@@ -1770,19 +1770,19 @@ class QuadrilateralClassifierBuilder extends ClassifierBuilder {
     points : Point[] = [];
 
     async init(){        
-        this.shapeType = await showMenu(shapeTypeDlg);
+        this.shapeType = await showMenu(ShapeType);
 
         switch(this.shapeType){
         case ShapeType.parallelogram:
-            this.reason = await showMenu(parallelogramReasonDlg);
+            this.reason = await showMenu(ParallelogramReason);
             break;
 
         case ShapeType.rhombus:
-            this.reason = await showMenu(rhombusReasonDlg);
+            this.reason = await showMenu(RhombusReason);
             break;
 
         case ShapeType.isosceles_triangle:
-            this.reason = await showMenu(isoscelesTriangleReasonDlg);
+            this.reason = await showMenu(IsoscelesTriangleReason);
             break;
 
         default:
@@ -1828,7 +1828,7 @@ export class ShapeEquationBuilder extends Builder {
     shapes : Shape[] = [];
 
     async init(){        
-        this.reason  = await showMenu(shapeEquationReasonDlg);
+        this.reason  = await showMenu(ShapeEquationReason);
     }
 
     async click(view : View, position : Vec2, shape : Shape | undefined){
@@ -1901,7 +1901,7 @@ export class ExprTransformBuilder extends Builder {
     root : App | undefined;
 
     async init(){        
-        this.reason  = await showMenu(exprTransformReasonDlg);
+        this.reason  = await showMenu(ExprTransformReason);
     }
 
     async click(view : View, position : Vec2, shape : Shape | undefined){
@@ -2054,7 +2054,7 @@ export class PropositionBuilder extends Builder {
     shapes : (Angle | LengthSymbol)[] = [];
 
     async init(){        
-        this.reason  = await showMenu(propositionReasonDlg);
+        this.reason  = await showMenu(PropositionReason);
     }
 
     async click(view : View, position : Vec2, shape : Shape | undefined){

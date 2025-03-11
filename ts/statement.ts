@@ -5,19 +5,9 @@ const parseMath = parser_ts.parseMath;
 
 export const enumSelectionClassName = "enum_selection_item";
 
-export let lengthEqualityReasonDlg : HTMLDialogElement;
-export let angleEqualityReasonDlg : HTMLDialogElement;
-export let parallelReasonDlg : HTMLDialogElement;
-
-
-export let shapeTypeDlg : HTMLDialogElement;
-export let parallelogramReasonDlg : HTMLDialogElement;
-export let rhombusReasonDlg : HTMLDialogElement;
-export let isoscelesTriangleReasonDlg : HTMLDialogElement;
-
-export let shapeEquationReasonDlg : HTMLDialogElement;
-export let exprTransformReasonDlg : HTMLDialogElement;
-export let propositionReasonDlg : HTMLDialogElement;
+export type menuDialogType = typeof LengthEqualityReason | typeof AngleEqualityReason | typeof ShapeType | 
+typeof ParallelogramReason | typeof RhombusReason | typeof IsoscelesTriangleReason | typeof ParallelReason | typeof ShapeEquationReason | typeof ExprTransformReason | typeof PropositionReason;
+export const menuDialogs = new Map<menuDialogType, layout_ts.Dialog>();
 
 export enum TriangleCongruenceReason {
     none,
@@ -204,19 +194,17 @@ export async function makeSelectionDlg(){
     const span_id_prefixes = data.map(x => x[1]);
     const dics = data.map(x => x[2]);
 
+    menuDialogs.clear();
     for(const [idx, dic] of dics.entries()){
-        const dlg = document.createElement("dialog");
-        dlg.className = "menu_dlg";
-        dlg.style.position = "fixed";
-        dlg.style.zIndex = "9";
+        const children : layout_ts.UI[] = [];
 
-        const div = document.createElement("div");
-        div.style.display = "flex";
-        div.style.flexDirection = "column";
-
-        const title = document.createElement("span");
-        title.innerText = titles[idx];
-        div.append(title);
+        const title = layout_ts.$label({
+            text : titles[idx],
+            borderWidth : 5,
+            borderStyle : "ridge",
+            padding : 5,
+        });
+        children.push(title);
 
         for(const [key, value] of Object.entries(dic)){
             if (isNaN(Number(key))){
@@ -228,54 +216,32 @@ export async function makeSelectionDlg(){
                 assert(img_name != undefined && img_name != "");
 
                 // console.log(`of key:[${key}]${typeof key} value:[${value}]${typeof value} dic[value]:[${dic[value]}]`); 
-                const img = document.createElement("img");
-                img.src = `./lib/plane/img/${img_name}.png`;
-                img.width  = 64;
-                img.height = 64;
-                img.id = `${span_id_prefixes[idx]}-${key}`;
-                img.className = enumSelectionClassName;
-                img.dataset.enum_value = `${value}`;
+                const img = layout_ts.$img({
+                    id     : `${span_id_prefixes[idx]}-${key}`,
+                    className : enumSelectionClassName,
+                    imgUrl : `./lib/plane/img/${img_name}.png`,
+                    width  : "64px",
+                    height : "64px",
+                    borderWidth : 5,
+                    borderStyle : "ridge",
+                    horizontalAlign : "center",
+                });
+                img.html().dataset.enum_value = `${value}`;
+                // img.html().style.position = "";
 
-                div.append(img);
-
+                children.push(img);
             }
         }
 
-        switch(idx){
-        case 0:
-            lengthEqualityReasonDlg = dlg;
-            break;
-        case 1:
-            angleEqualityReasonDlg = dlg;
-            break;
-        case 2:
-            shapeTypeDlg = dlg;
-            break;
-        case 3:
-            parallelogramReasonDlg = dlg;
-            break;
-        case 4:
-            rhombusReasonDlg = dlg;
-            break;
-        case 5:
-            isoscelesTriangleReasonDlg = dlg;
-            break;
-        case 6:
-            parallelReasonDlg = dlg;
-            break;
-        case 7:
-            shapeEquationReasonDlg = dlg;
-            break;
-        case 8:
-            exprTransformReasonDlg = dlg;
-            break;
-        case 9:
-            propositionReasonDlg = dlg;
-            break;
-        }
+        const grid = layout_ts.$grid({
+            children : children
+        });
 
-        dlg.append(div);
-        document.body.append(dlg);
+        const dlg = layout_ts.$dialog({
+            content : grid
+        })
+
+        menuDialogs.set(dic, dlg);
     }
 }
 

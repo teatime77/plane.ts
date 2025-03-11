@@ -251,6 +251,7 @@ export class View extends Widget {
     }
 
     async click(event : MouseEvent){
+        msg("click");
         let position = this.eventPosition(event);
         if(Plane.one.snap_to_grid.checked()){
             position = this.grid.snap(position);
@@ -336,6 +337,11 @@ export class View extends Widget {
 
 
     pointerdown(event : PointerEvent){
+        if(event.button != 0){
+            msg(`pointerdown:${event.button.toString(2)}`);
+            return;
+        }
+
         let position = this.eventPosition(event);
         if(Plane.one.snap_to_grid.checked()){
             position = this.grid.snap(position);
@@ -390,6 +396,11 @@ export class View extends Widget {
     }
 
     pointerup(event : PointerEvent){
+        if(event.button != 0){
+            msg(`pointerup:${event.button.toString(2)}`);
+            return;
+        }
+        
         let position = this.eventPosition(event);
         if(Plane.one.snap_to_grid.checked()){
             position = this.grid.snap(position);

@@ -137,7 +137,7 @@ export class Plane {
             id : "narration-box",
             text : "",
             color : fgColor,
-            padding : "20px",
+            padding : 20,
             textAlign : "center",
             fontSize : "48px",
         });this.text_block.div.style.color

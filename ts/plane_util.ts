@@ -57,9 +57,10 @@ async function waitForClick(element: HTMLElement): Promise<number> {
 }
 
 
-export async function showMenu(dlg : HTMLDialogElement){
-    // dlg.showModal();
-    dlg.show();
+export async function showMenu(dlgType : menuDialogType){
+    const dlg = menuDialogs.get(dlgType)!;
+    assert(dlg != undefined);
+    dlg.showModal();
     
     let value : number
 
@@ -69,7 +70,7 @@ export async function showMenu(dlg : HTMLDialogElement){
         View.current.addOperation(operation);
         if(operation instanceof EnumSelection){
 
-            const items = Array.from(dlg.getElementsByClassName(enumSelectionClassName)) as HTMLElement[];
+            const items = Array.from(dlg.html().getElementsByClassName(enumSelectionClassName)) as HTMLElement[];
 
             const enum_value = `${operation.value}`;
             const item  = items.find(x => x.dataset.enum_value == enum_value)!;
@@ -87,7 +88,7 @@ export async function showMenu(dlg : HTMLDialogElement){
     }
     else{
 
-        value = await waitForClick(dlg);
+        value = await waitForClick(dlg.html());
 
         View.current.addOperation(new EnumSelection(value));
     }

@@ -38,6 +38,11 @@ export function viewEvent(view : View){
     view.board.addEventListener("dblclick"   , async (ev : MouseEvent)=>{
         await view.dblclick(ev);
     });
+    view.board.addEventListener("contextmenu", async (ev : MouseEvent)=>{
+        msg("contextmenu");
+        ev.stopPropagation();
+        ev.preventDefault();
+    })
 
     document.addEventListener('keydown', async (ev : KeyboardEvent) => {
         if(View.isPlayBack){
@@ -46,6 +51,11 @@ export function viewEvent(view : View){
 
         if (ev.key === "Escape") {
             msg("Escape key pressed!");
+            const closed = layout_ts.closeDlg();
+            if(closed){
+                return;
+            }
+            
             await Builder.builderResetTool(view);
         }
         else if(ev.key == "Enter"){
