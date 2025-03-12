@@ -1327,7 +1327,12 @@ export class StatementBuilder extends Builder {
             const button = makeShapeButton(selected_shape, false);
             button.button.style.position = "";
 
-            ShapesProperty.one.span.append(button.button);
+            if(ShapesProperty.one.buttonsUI instanceof layout_ts.Grid){
+                ShapesProperty.one.buttonsUI.addChild(button);
+            }
+            else{
+                throw new MyError();
+            }
         }
     }
 }

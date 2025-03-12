@@ -1,5 +1,8 @@
 namespace plane_ts {
 //
+export type Grid = layout_ts.Grid;
+export type UI   = layout_ts.UI;
+
 export const sum  = i18n_ts.sum;
 export const list  = i18n_ts.list;
 export const intersection  = i18n_ts.intersection;

@@ -24,7 +24,7 @@ export class Plane {
     tool_block : Block;
     text_block : Block;
     canvas_block : Block;
-    property_block : Block;
+    property_block : Grid;
     shapes_block : Block;
     narration_box : layout_ts.TextBox;
     editMode : boolean;
@@ -122,8 +122,9 @@ export class Plane {
             // backgroundColor : "cornsilk"
         });
     
-        this.property_block = $block({
+        this.property_block = $grid({
             id : "property-div",
+            columns  : "50% 50%",
             children : [],
         });
     
@@ -152,44 +153,6 @@ export class Plane {
         this.text_block.div.innerHTML = "";
         this.narration_box.div.innerHTML = "";
     }
-}
-
-export function makePropertyTable(div : HTMLElement){
-    const table = document.createElement("table");
-    table.id = "property-list";
-    table.style.color = fgColor;
-    table.style.backgroundColor = bgColor;
-    table.style.height = "min-content";
-
-    div.append(table);
-}
-
-export function makeImageButtons(span : HTMLSpanElement, img_url : string, button_img_urls : string[]) 
-    : [HTMLImageElement, HTMLDialogElement, HTMLImageElement[]] {
-    const img = document.createElement("img");
-    img.src = img_url;
-    img.style.width  = "36px";
-    img.style.height = "36px";
-
-    span.append(img);
-
-    const dlg = document.createElement("dialog");
-
-    const imgs : HTMLImageElement[] = [];
-    for(const url of button_img_urls){
-
-        const img = document.createElement("img");
-        img.src = url;
-        img.style.width  = "36px";
-        img.style.height = "36px";
-
-        dlg.append(img);
-        imgs.push(img);
-    }
-
-    span.append(dlg);
-
-    return [img, dlg, imgs];
 }
 
 export function makeCanvas(div : HTMLElement) : HTMLCanvasElement {

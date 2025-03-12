@@ -17,8 +17,6 @@ export async function initPlane(plane : Plane, root : layout_ts.Grid){
 
     const canvas = makeCanvas(plane.canvas_block.div);
 
-    makePropertyTable(plane.property_block.div);
-
     const view = new View(canvas);
 
     viewEvent(view);

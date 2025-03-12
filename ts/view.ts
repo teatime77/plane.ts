@@ -21,7 +21,7 @@ export class View extends Widget {
     name  : string = "";
     board : HTMLCanvasElement;
     canvas : Canvas;
-    grid : Grid;
+    grid : CanvasGrid;
 
     operations : Operation[] = [];
     shapes : MathEntity[] = [];
@@ -63,7 +63,7 @@ export class View extends Widget {
         this.board.innerHTML = "";
         
         this.canvas = new Canvas(this, this.board);
-        this.grid   = new Grid(this);
+        this.grid   = new CanvasGrid(this);
 
         this.board.width  = this.board.clientWidth;
         this.board.height = this.board.clientHeight;
@@ -556,7 +556,7 @@ export class View extends Widget {
     }
 }
 
-class Grid {
+class CanvasGrid {
     view : View;
     subSpanX : number | undefined;
     subSpanY : number | undefined;

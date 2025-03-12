@@ -21,22 +21,14 @@ const $input_color = layout_ts.$input_color;
 
 let used_property_names : Set<string>;
 
-function appendRow(tbl : HTMLTableElement, nest : number, name : string, value : HTMLElement){
-    const row = document.createElement("tr");
+function appendRow(grid : Grid, nest : number, name : string, value : UI){
+    const label = $label({ 
+        text : name,
+        paddingLeft : `${nest * 10}px`,
+    });
 
-    value.style.position = "";
-
-    const span = document.createElement("span");
-    span.innerText = name;
-    span.style.paddingLeft = `${nest * 10}px`;
-    
-    for(const ele of [span, value]){
-        const cell = document.createElement("td");
-        cell.append(ele);
-        row.append(cell);    
-    }
-
-    tbl.append(row);
+    grid.addChild(label);
+    grid.addChild(value);
 }
 
 export abstract class Property {
@@ -64,6 +56,8 @@ export abstract class Property {
 
         View.current.dirty = true;
     }
+
+    abstract ui() : UI;
 }
 
 export class TextAreaProperty extends Property {
@@ -87,6 +81,10 @@ export class TextAreaProperty extends Property {
                 }
             }
         });
+    }
+
+    ui() : UI {
+        return this.textArea;
     }
 }
 
@@ -131,6 +129,10 @@ class StringProperty extends InputProperty {
     getInput()  : HTMLInputElement {
         return this.input.input;
     }
+
+    ui() : UI {
+        return this.input;
+    }
 }
 
 class NumberProperty extends InputProperty {
@@ -152,6 +154,10 @@ class NumberProperty extends InputProperty {
 
     getInput()  : HTMLInputElement {
         return this.input.input;
+    }
+
+    ui() : UI {
+        return this.input;
     }
 }
 
@@ -183,6 +189,10 @@ class SelectProperty extends Property {
             msg(`select ${idx} ${option_texts[idx]}`);
         });
     }
+
+    ui() : UI {
+        throw new MyError();
+    }
 }
 
 
@@ -208,6 +218,10 @@ class BooleanProperty extends InputProperty {
     BooleanValueChanged() : void {
         this.setValue(this.input.input.checked);
     }
+
+    ui() : UI {
+        return this.input;
+    }
 }
 
 class ColorProperty extends InputProperty {
@@ -223,107 +237,99 @@ class ColorProperty extends InputProperty {
     getInput()  : HTMLInputElement {
         return this.input.input;
     }
+
+    ui() : UI {
+        return this.input;
+    }
 }
 
 export class AngleMarkProperty extends Property {
-    span : HTMLSpanElement;
-    // ellipsisButton : HTMLButtonElement;
-    dlg : HTMLDialogElement;
-    img : HTMLImageElement;
-    imgButtons : HTMLImageElement[];
+    selectionList : layout_ts.SelectionList;
 
     constructor(angles : Angle[], name : string, value : number){
         super(angles, name);
 
         const [ origin, , ] = i18n_ts.parseURL();
 
-        this.span = document.createElement("span");
-
         const button_img_urls = range(Angle.numMarks).map(i => `${origin}/lib/plane/img/angle_${i}.png`) as string[];
-    
-        [this.img, this.dlg, this.imgButtons] = makeImageButtons(this.span, `${origin}/lib/plane/img/angle_${angles[0].angleMark}.png`, button_img_urls);
-    
-        this.img.addEventListener("click", (ev:MouseEvent)=>{
-            this.dlg.showModal();
-        });
 
-        for(const [idx, button] of this.imgButtons.entries()){
-            button.addEventListener("click", (ev : MouseEvent)=>{
-                this.imgButtonClick(idx);
-            })
+        const buttons : layout_ts.RadioButton[] = [];
+        for(const [idx, url] of button_img_urls.entries()){
+            const radio = layout_ts.$radio({
+                value : `${idx}`,
+                url,
+                width  : "36px",
+                height : "36px",    
+            });
+
+            buttons.push(radio);
         }
+
+        this.selectionList = layout_ts.$selection({
+            children : buttons,
+            selectedIndex : angles[0].angleMark,
+            selectionChanged : (index : number)=>{
+                this.setValue(index);
+            }
+        });
     }
 
-    imgButtonClick(idx : number) : void {
-        this.setValue(idx);
+    ui() : UI {
+        return this.selectionList;
     }
 }
 
 export class ShapesProperty extends Property {
     static one : ShapesProperty;
 
-    span : HTMLSpanElement;
+    buttonsUI : UI;
 
     constructor(widgets : Widget[], name : string, value : MathEntity[]){
         super(widgets, name);
 
-        this.span = document.createElement("span");
-
         if(name == "selectedShapes"){
 
             ShapesProperty.one = this;
-            this.span.id = "selected-shapes-property-span";
         }
 
         const buttons = value.map(x => makeShapeButton(x, false));
         for(const button of buttons){
             button.button.style.position = "";
-            this.span.append(button.button);
         }
+
+        if(buttons.length == 0){
+            this.buttonsUI = $label({ text : "" });
+        }
+        else{
+            this.buttonsUI = $grid({
+                columns : buttons.map(x => "auto").join(" "),
+                children : buttons
+            });    
+        }
+    }
+
+    ui() : UI {
+        return this.buttonsUI;
     }
 }
 
-function makeConstantProperty(tbl : HTMLTableElement, nest : number, name : string, text : string){
-    const span = document.createElement("span");
-    span.innerText = text;
-
-    appendRow(tbl, nest, name, span);
+function makeConstantProperty(grid : Grid, nest : number, name : string, text : string){
+    grid.addChild($label({ text : name }));
+    grid.addChild($label({ text : text }));
 }
 
-function appendTitle(tbl : HTMLTableElement, nest : number, title : string){
-    const row = document.createElement("tr");
-    const cell = document.createElement("td");
-
-    cell.colSpan = 2;
-    cell.innerText = title;
-    cell.style.paddingLeft = `${nest * 10}px`;
-    row.append(cell);    
-
-    tbl.append(row);
-}
-
-function addPopSelectedShapes(tbl : HTMLTableElement, shape : Statement){
-    const row = document.createElement("tr");
-    const cell = document.createElement("td");
-    cell.colSpan = 2;
-
-    const button = $button({
-        text : "pop shape",
-        color : fgColor,
-        backgroundColor : bgColor,
-        click : async (ev : MouseEvent)=>{
-            shape.selectedShapes.pop();
-
-            const span = $("selected-shapes-property-span") as HTMLSpanElement;
-            span.removeChild(span.lastChild!);
-        }
+function appendTitle(grid : Grid, nest : number, title : string){
+    const label = $label({
+        text : title,
+        paddingLeft : `${nest * 10}px`,
     });
-    button.button.style.position = "";
 
-    cell.append(button.button);
-    row.append(cell);    
+    const filler = $label({
+        text : ""
+    });
 
-    tbl.append(row);
+    grid.addChild(label);
+    grid.addChild(filler);
 }
 
 function appendDelete(tbl : HTMLTableElement, shape : MathEntity){
@@ -376,15 +382,16 @@ export function showProperty(widget : Widget | Widget[], nest : number){
         }
     }
 
-    const tbl = $("property-list") as HTMLTableElement;
+    const grid = Plane.one.property_block;
     if(nest == 0){
-        tbl.innerHTML = "";
+        grid.clear();
     }
 
     const constructor_names = unique(widgets.map(x => x.constructor.name));
     for(const constructor_name of constructor_names){
-        appendTitle(tbl, nest, constructor_name);
+        appendTitle(grid, nest, constructor_name);
     }
+
 
     for(const property_name of properties){
         if(used_property_names.has(property_name)){
@@ -405,35 +412,30 @@ export function showProperty(widget : Widget | Widget[], nest : number){
             }
 
             let property : InputProperty | TextAreaProperty | SelectProperty | AngleMarkProperty | ShapesProperty;
-            let property_element : HTMLElement;
 
             if(name == "mathText" || name == "text" && widget instanceof TextBlock){
 
                 property = new TextAreaProperty(widgets, name, value as string);
-                property_element = property.textArea.textArea;
             }
             else if(name == "angleMark"){
 
                 const angles = widgets.filter(x => x instanceof Angle) as Angle[];
                 property = new AngleMarkProperty(angles, name, value);
-                property_element  = property.span;
             }
             else if(name == "reason"){
 
                 const text = reasonMsg(value);
                 assert(typeof text == "string");
-                makeConstantProperty(tbl, nest + 1, name, text);
+                makeConstantProperty(grid, nest + 1, name, text);
                 continue;
             }
             else if(name == "selectedShapes" || name == "auxiliaryShapes"){
 
                 property = new ShapesProperty(widgets, name, value);
-                property_element  = property.span;
             }
             else if(name == "line"){
 
                 property = new ShapesProperty(widgets, name, [value]);
-                property_element  = property.span;
             }
             else{
                 switch(typeof value){
@@ -459,7 +461,7 @@ export function showProperty(widget : Widget | Widget[], nest : number){
                         property = new NumberProperty(widgets, name, value, 1, 0, 3);
                     }
                     else if(name == "id" || name == "order"){
-                        makeConstantProperty(tbl, nest + 1, name, `${value}`);
+                        makeConstantProperty(grid, nest + 1, name, `${value}`);
                         continue;
                     }
                     else{
@@ -477,7 +479,7 @@ export function showProperty(widget : Widget | Widget[], nest : number){
                     }
                     else if(value instanceof Vec2){
                         const text = `x:${value.x.toFixed(1)} y:${value.y.toFixed(1)}`;
-                        makeConstantProperty(tbl, nest + 1, name, text);
+                        makeConstantProperty(grid, nest + 1, name, text);
                     }
                     else{
                         msg(`unknown property:${value.constructor.name}`);
@@ -488,11 +490,16 @@ export function showProperty(widget : Widget | Widget[], nest : number){
                 default:
                     throw new MyError();
                 }
-
-                property_element = property.getInput();
             }
 
-            appendRow(tbl, nest + 1, property.name, property_element);
+            try{
+                const ui = property.ui();
+                appendRow(grid, nest + 1, property.name, ui);
+            }
+            catch(e){
+                msg(`no property:${property.name}`);
+            }        
+
 
             used_property_names.add(property_name);
         }
@@ -505,12 +512,10 @@ export function showProperty(widget : Widget | Widget[], nest : number){
         return;
     }
 
-    if(widget instanceof Statement){
-        addPopSelectedShapes(tbl, widget);
+    if(nest == 0 && widget instanceof MathEntity){
+//++++++++++        appendDelete(tbl, widget);
     }
 
-    if(nest == 0 && widget instanceof MathEntity){
-        appendDelete(tbl, widget);
-    }
+    layout_ts.Layout.root.updateRootLayout();
 }
 }
