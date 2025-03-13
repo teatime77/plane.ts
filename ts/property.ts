@@ -243,15 +243,11 @@ class ColorProperty extends InputProperty {
     }
 }
 
-export class AngleMarkProperty extends Property {
+export class ImgSelectionProperty extends Property {
     selectionList : layout_ts.SelectionList;
 
-    constructor(angles : Angle[], name : string, value : number){
-        super(angles, name);
-
-        const [ origin, , ] = i18n_ts.parseURL();
-
-        const button_img_urls = range(Angle.numMarks).map(i => `${origin}/lib/plane/img/angle_${i}.png`) as string[];
+    constructor(widgets : Widget[], name : string, value : number, button_img_urls : string[]){
+        super(widgets, name);
 
         const buttons : layout_ts.RadioButton[] = [];
         for(const [idx, url] of button_img_urls.entries()){
@@ -267,7 +263,7 @@ export class AngleMarkProperty extends Property {
 
         this.selectionList = layout_ts.$selection({
             children : buttons,
-            selectedIndex : angles[0].angleMark,
+            selectedIndex : value,
             selectionChanged : (index : number)=>{
                 this.setValue(index);
             }
@@ -411,7 +407,7 @@ export function showProperty(widget : Widget | Widget[], nest : number){
                 continue;
             }
 
-            let property : InputProperty | TextAreaProperty | SelectProperty | AngleMarkProperty | ShapesProperty;
+            let property : InputProperty | TextAreaProperty | SelectProperty | ImgSelectionProperty | ShapesProperty;
 
             if(name == "mathText" || name == "text" && widget instanceof TextBlock){
 
@@ -420,7 +416,10 @@ export function showProperty(widget : Widget | Widget[], nest : number){
             else if(name == "angleMark"){
 
                 const angles = widgets.filter(x => x instanceof Angle) as Angle[];
-                property = new AngleMarkProperty(angles, name, value);
+
+                const button_img_urls = range(Angle.numMarks).map(i => `${urlOrigin}/lib/plane/img/angle_${i}.png`) as string[];
+
+                property = new ImgSelectionProperty(angles, name, value, button_img_urls);
             }
             else if(name == "reason"){
 
@@ -455,7 +454,9 @@ export function showProperty(widget : Widget | Widget[], nest : number){
                         property = new NumberProperty(widgets, name, value, 0.1, 0, 10000);
                     }
                     else if(name == "lineKind"){
-                        property = new NumberProperty(widgets, name, value, 1, 0, 3);
+                        const img_names = [ "line", "half_line_1", "half_line_2", "line_segment" ]
+                        const button_img_urls = img_names.map(x => `${urlOrigin}/lib/plane/img/${x}.png`) as string[];
+                        property = new ImgSelectionProperty(widgets, name, value, button_img_urls);
                     }
                     else if(name == "lengthKind"){
                         property = new NumberProperty(widgets, name, value, 1, 0, 3);
