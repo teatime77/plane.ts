@@ -123,7 +123,6 @@ class StringProperty extends InputProperty {
         super(widgets, name, "text");
         this.value = value;
         this.input = $input_text({
-            id   : `${name}-property`,
             text : value,
             change : async (ev : Event)=>{
                 const new_value = this.input.input.value;
@@ -538,6 +537,8 @@ export async function showPropertyDlg(widget : Widget, operation :PropertySettin
         children : [],
     });
 
+    const propertyMap = new Map<string, Property>();
+
     for(const name of names){
         const value = (widget as any)[name];
         if(value == undefined){
@@ -565,6 +566,8 @@ export async function showPropertyDlg(widget : Widget, operation :PropertySettin
             continue;
         }
 
+        propertyMap.set(name, property);
+
         const ui = property.ui();
         appendRow(grid, 1, property.name, ui);
     }
@@ -583,6 +586,9 @@ export async function showPropertyDlg(widget : Widget, operation :PropertySettin
             assert(text != undefined);
             await i18n_ts.AbstractSpeech.one.speak(text);
             msg(`opr ${operation.id} ${operation.toString()}`);
+
+            const property = propertyMap.get(operation.name)!;
+            assert(property != undefined);
 
             let item : HTMLElement;
             switch(operation.name){
@@ -607,10 +613,7 @@ export async function showPropertyDlg(widget : Widget, operation :PropertySettin
                 break;
 
             case "name":{
-                    const input = (dlg.content as Block).getElementById(`${operation.name}-property`) as HTMLInputElement;
-                    if(input == undefined){
-                        throw new MyError();                        
-                    }
+                    const input = (property as StringProperty).input.html() as HTMLInputElement;
 
                     await movePointerToElement(input);
                     await typeIntoInput(input, operation.value as string);

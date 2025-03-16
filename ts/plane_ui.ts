@@ -141,7 +141,11 @@ export class Plane {
             padding : 20,
             textAlign : "center",
             fontSize : "48px",
-        });this.text_block.div.style.color
+        });
+
+        i18n_ts.onSpeak = (text : string)=>{
+            this.narration_box.setText(text);
+        }
     }
 
     clearPlane(){
