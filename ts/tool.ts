@@ -300,7 +300,6 @@ export class Builder {
     resetTool(shape : MathEntity | undefined){
         if(View.current.operations.length != 0){
             const last_operation = last(View.current.operations);
-            last_operation.maxId = Widget.maxId;
         }
         View.current.resetMode();
 

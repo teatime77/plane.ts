@@ -32,14 +32,22 @@ export function viewEvent(view : View){
     view.board.addEventListener("pointerup"  , view.pointerup.bind(view));   
     view.board.addEventListener("click"      , async (ev : MouseEvent)=>{
         await view.click(ev);
-    });   
+    }); 
+
     view.board.addEventListener("dblclick"   , async (ev : MouseEvent)=>{
         await view.dblclick(ev);
     });
+
     view.board.addEventListener("contextmenu", async (ev : MouseEvent)=>{
         msg("contextmenu");
         ev.stopPropagation();
         ev.preventDefault();
+
+        const position = view.eventPosition(ev);
+        const shape = view.getShape(position);
+        if(shape != undefined){
+            await showPropertyDlg(shape, undefined);
+        }
     })
 
     document.addEventListener('keydown', async (ev : KeyboardEvent) => {

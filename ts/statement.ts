@@ -226,7 +226,7 @@ export async function makeSelectionDlg(){
                     borderStyle : "ridge",
                     horizontalAlign : "center",
                 });
-                img.html().dataset.enum_value = `${value}`;
+                img.html().dataset.operation_value = `${value}`;
                 // img.html().style.position = "";
 
                 children.push(img);
@@ -239,7 +239,7 @@ export async function makeSelectionDlg(){
 
         const dlg = layout_ts.$dialog({
             content : grid
-        })
+        });
 
         menuDialogs.set(dic, dlg);
     }

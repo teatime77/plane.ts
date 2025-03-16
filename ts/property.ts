@@ -19,6 +19,13 @@ const $checkbox = layout_ts.$checkbox;
 const $input_text = layout_ts.$input_text;
 const $input_color = layout_ts.$input_color;
 
+const lineKindImgNames = [ "line", "half_line_1", "half_line_2", "line_segment" ];
+const propertySettingText = new Map<string, string>([
+    [ "angleMark", TT("Set the angle mark.")],
+    [ "lineKind" , TT("Set the line kind.")],
+    [ "name"     , TT("Set the name.")],
+])
+
 let used_property_names : Set<string>;
 
 function appendRow(grid : Grid, nest : number, name : string, value : UI){
@@ -116,6 +123,7 @@ class StringProperty extends InputProperty {
         super(widgets, name, "text");
         this.value = value;
         this.input = $input_text({
+            id   : `${name}-property`,
             text : value,
             change : async (ev : Event)=>{
                 const new_value = this.input.input.value;
@@ -246,17 +254,20 @@ class ColorProperty extends InputProperty {
 export class ImgSelectionProperty extends Property {
     selectionList : layout_ts.SelectionList;
 
-    constructor(widgets : Widget[], name : string, value : number, button_img_urls : string[]){
+    constructor(widgets : Widget[], name : string, value : number, img_names : string[]){
         super(widgets, name);
 
+        const img_urls = img_names.map(x => `${urlOrigin}/lib/plane/img/${x}.png`) as string[];
         const buttons : layout_ts.RadioButton[] = [];
-        for(const [idx, url] of button_img_urls.entries()){
+        for(const [idx, url] of img_urls.entries()){
             const radio = layout_ts.$radio({
                 value : `${idx}`,
                 url,
                 width  : "36px",
                 height : "36px",    
             });
+            radio.html().dataset.operation_value = `${idx}`;
+            radio.html().dataset.property_name   = name;
 
             buttons.push(radio);
         }
@@ -417,9 +428,9 @@ export function showProperty(widget : Widget | Widget[], nest : number){
 
                 const angles = widgets.filter(x => x instanceof Angle) as Angle[];
 
-                const button_img_urls = range(Angle.numMarks).map(i => `${urlOrigin}/lib/plane/img/angle_${i}.png`) as string[];
+                const img_names = range(Angle.numMarks).map(i => `angle_${i}`);
 
-                property = new ImgSelectionProperty(angles, name, value, button_img_urls);
+                property = new ImgSelectionProperty(angles, name, value, img_names);
             }
             else if(name == "reason"){
 
@@ -454,9 +465,7 @@ export function showProperty(widget : Widget | Widget[], nest : number){
                         property = new NumberProperty(widgets, name, value, 0.1, 0, 10000);
                     }
                     else if(name == "lineKind"){
-                        const img_names = [ "line", "half_line_1", "half_line_2", "line_segment" ]
-                        const button_img_urls = img_names.map(x => `${urlOrigin}/lib/plane/img/${x}.png`) as string[];
-                        property = new ImgSelectionProperty(widgets, name, value, button_img_urls);
+                        property = new ImgSelectionProperty(widgets, name, value, lineKindImgNames);
                     }
                     else if(name == "lengthKind"){
                         property = new NumberProperty(widgets, name, value, 1, 0, 3);
@@ -518,5 +527,112 @@ export function showProperty(widget : Widget | Widget[], nest : number){
     }
 
     layout_ts.Layout.root.updateRootLayout();
+}
+
+export async function showPropertyDlg(widget : Widget, operation :PropertySetting | undefined){
+    const basic_names = [ "name", "lineKind", "angleMark"  ]
+    const names = widget.getProperties().filter(x => basic_names.includes(x));
+
+    const grid = $grid({
+        columns  : "50% 50%",
+        children : [],
+    });
+
+    for(const name of names){
+        const value = (widget as any)[name];
+        if(value == undefined){
+            continue;
+        }
+
+        let property : InputProperty | TextAreaProperty | SelectProperty | ImgSelectionProperty | ShapesProperty;
+
+        switch(name){
+        case "name":
+            property = new StringProperty([widget], name, value);
+            break;
+
+        case "lineKind":
+            property = new ImgSelectionProperty([widget], name, value, lineKindImgNames);
+            break;
+
+        case "angleMark":{
+                const img_names = range(Angle.numMarks).map(i => `angle_${i}`);
+                property = new ImgSelectionProperty([widget], name, value, img_names);
+            }
+            break;
+
+        default:
+            continue;
+        }
+
+        const ui = property.ui();
+        appendRow(grid, 1, property.name, ui);
+    }
+
+    const dlg = layout_ts.$dialog({
+        content : grid
+    });
+
+    dlg.showModal();
+
+    if(View.isPlayBack){
+        if(operation instanceof PropertySetting){
+            // View.current.addOperation(operation);
+
+            const text = propertySettingText.get(operation.name)!;
+            assert(text != undefined);
+            await i18n_ts.AbstractSpeech.one.speak(text);
+            msg(`opr ${operation.id} ${operation.toString()}`);
+
+            let item : HTMLElement;
+            switch(operation.name){
+            case "angleMark":
+            case "lineKind":{
+                    const value = operation.value as number;
+
+                    const all_buttons = Array.from(dlg.html().getElementsByTagName("button")) as HTMLButtonElement[];
+                    const buttons = all_buttons.filter(x => x.dataset.property_name == operation.name);
+                    item  = buttons.find(x => x.dataset.operation_value == `${operation.value}`)!;
+                    assert(item != undefined);
+                    await movePointerAndHighlight(item);
+
+                    if(operation.name == "angleMark"){
+                        (widget as Angle).setAngleMark(value);
+                    }
+                    else{
+                        (widget as AbstractLine).lineKind = value;
+                    }
+                }
+
+                break;
+
+            case "name":{
+                    const input = (dlg.content as Block).getElementById(`${operation.name}-property`) as HTMLInputElement;
+                    if(input == undefined){
+                        throw new MyError();                        
+                    }
+
+                    await movePointerToElement(input);
+                    await typeIntoInput(input, operation.value as string);
+                    (widget as Shape).setName(operation.value as string);
+                }
+                break;
+            
+            default:
+                throw new MyError();
+            }
+        }
+        else{
+            throw new MyError();
+        }
+    }
+    else{
+
+        await waitForClick(dlg.html());
+
+        // View.current.addOperation(new EnumSelection(value));
+    }
+
+    dlg.close();
 }
 }

@@ -16,7 +16,7 @@ export async function movePointerPix(pix : Vec2){
     if(Plane.one.playMode != PlayMode.fastForward){
         pointerMove.style.visibility = "visible";
 
-        const step = 100;
+        const step = 20;
         for(const i of range(step)){
             const x = linear(0, i, step - 1, pointerPix.x, pix.x);
             const y = linear(0, i, step - 1, pointerPix.y, pix.y);

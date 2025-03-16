@@ -3,8 +3,14 @@ namespace plane_ts {
 export let playBackOperations : Operation[] = [];
 
 export abstract class Operation {
-    maxId : number = NaN;
+    static maxId : number = 0;
+    operationId : number;
+
     abstract toString() : string;
+
+    constructor(){
+        this.operationId = Operation.maxId++;
+    }
 
     dump() : string {
         return this.toString();
@@ -69,11 +75,17 @@ export async function loadOperationsText(data : any){
 
     let operations : Operation[] = [];
 
+    let prev_line : string = "";
     for(let line of lines){
         line = line.trim().replaceAll(/\s+/g, " ");        
         if(line == ""){
             continue;
         }
+        if(prev_line == line && line.startsWith("property")){
+            msg(`dup line:[${line}]`);
+            continue;
+        }
+        prev_line = line;
 
         let operation : Operation;
 
@@ -162,8 +174,10 @@ export async function loadOperationsText(data : any){
     }
 
     operations = convertOperations(data["version"], operations);
+    const num_operations = operations.length;
 
     await playBack(PlayMode.fastForward, operations);
+    assert(num_operations == View.current.operations.length);
 
     for(const [i, o] of operations.entries()){
         // msg(`load ${i}:${o.dump()}`);
@@ -339,6 +353,7 @@ export class PropertySetting extends Operation {
         this.id    = id;
         this.name  = name;
         this.value = value;
+        msg(`========== Property-Setting:${name} [${value}] ==================================================`)
     }
 
     toString() : string {
@@ -351,6 +366,22 @@ export class PropertySetting extends Operation {
             return `property ${this.id} ${this.name} ${this.value}`;
         }
     }
+}
+
+export async function typeIntoInput(element: HTMLInputElement, text: string, delay = 100) {
+    for (let i = 0; i < text.length; i++) {
+        element.value += text[i];
+        await new Promise(resolve => setTimeout(resolve, delay));
+    }
+}
+
+export async function movePointerAndHighlight(item : HTMLElement){
+    const borderColor = item.style.borderColor;
+
+    await movePointerToElement(item);
+    item.style.borderColor = "DeepSkyBlue";
+    await sleepInFastForward(100);
+    item.style.borderColor = borderColor;
 }
 
 export async function speakAndHighlight(shape : MathEntity, speech : i18n_ts.AbstractSpeech, lines : string[]){
@@ -441,7 +472,12 @@ export async function playBack(play_mode : PlayMode, operations : Operation[]){
         else if(operation instanceof PropertySetting){
             const shape = view.allShapes().find(x => x.id == operation.id)!;
             assert(shape != undefined);
-            setProperty(shape, operation.name, operation.value);
+            if([ "name", "lineKind", "angleMark" ].includes(operation.name)){
+                await showPropertyDlg(shape, operation);
+            }
+            else{
+                setProperty(shape, operation.name, operation.value);
+            }
         }
         else{
             throw new MyError();

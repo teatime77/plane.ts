@@ -42,17 +42,19 @@ export function $sel(id : string) : HTMLSelectElement {
 }
 
 // Define a function that returns a Promise
-async function waitForClick(element: HTMLElement): Promise<number> {
+export async function waitForClick(element: HTMLElement): Promise<number> {
     return new Promise<number>((resolve : (id:number)=>void) => {
 
         const clickHandler = (ev : MouseEvent) => {
+            element.removeEventListener('click', clickHandler);
+
             const target = ev.target as HTMLElement;
+            let result_value = NaN;
             if(target.className == enumSelectionClassName){
 
-                element.removeEventListener('click', clickHandler);
-                const enum_value = parseInt(target.dataset.enum_value!);
-                resolve(enum_value); 
+                result_value = parseInt(target.dataset.operation_value!);
             }
+            resolve(result_value); 
         }
 
         element.addEventListener('click', clickHandler);
@@ -76,12 +78,9 @@ export async function showMenu(dlgType : menuDialogType){
             const items = Array.from(dlg.html().getElementsByClassName(enumSelectionClassName)) as HTMLElement[];
 
             const enum_value = `${operation.value}`;
-            const item  = items.find(x => x.dataset.enum_value == enum_value)!;
+            const item  = items.find(x => x.dataset.operation_value == enum_value)!;
             assert(item != undefined);
-            await movePointerToElement(item);
-            item.style.borderColor = "DeepSkyBlue";
-            await sleepInFastForward(100);
-            item.style.borderColor = "";
+            await movePointerAndHighlight(item);
 
             value = operation.value;
         }
