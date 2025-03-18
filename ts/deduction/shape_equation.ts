@@ -29,7 +29,7 @@ export function makeEquationTextBlock(equation : App) : TextBlock {
 }
 
 function makeShapeEquationByEquationText(reason : ShapeEquationReason, auxiliaryShapes : MathEntity[], text : string) : ShapeEquation | undefined {
-    msg(`angles eq: ${text}`);
+    // msg(`angles eq: ${text}`);
 
     const equation = parser_ts.parseMath(text) as App;
     if(! equation.isEq()){

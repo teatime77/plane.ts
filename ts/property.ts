@@ -585,7 +585,7 @@ export async function showPropertyDlg(widget : Widget, operation :PropertySettin
             const text = propertySettingText.get(operation.name)!;
             assert(text != undefined);
             await i18n_ts.AbstractSpeech.one.speak(text);
-            msg(`opr ${operation.id} ${operation.toString()}`);
+            // msg(`opr ${operation.id} ${operation.toString()}`);
 
             const property = propertyMap.get(operation.name)!;
             assert(property != undefined);

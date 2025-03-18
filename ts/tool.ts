@@ -1852,7 +1852,7 @@ export class ShapeEquationBuilder extends Builder {
 
                 this.shapes.push(shape);
                 shape.setMode(Mode.depend);
-                msg(`click eq ${this.shapes.length}`);
+                // msg(`click eq ${this.shapes.length}`);
 
                 if(this.reason == ShapeEquationReason.exterior_angle_theorem && this.shapes.length == 3){
                     await this.finish(view);
@@ -1884,7 +1884,7 @@ export class ShapeEquationBuilder extends Builder {
     }
 
     async finish(view : View){        
-        msg(`finish shapes ${this.shapes.length}`);
+        // msg(`finish shapes ${this.shapes.length}`);
 
         const shapeEquation = makeShapeEquation(this.reason, this.shapes);
         if(shapeEquation != undefined){
@@ -1909,7 +1909,7 @@ export class ExprTransformBuilder extends Builder {
     }
 
     async click(view : View, position : Vec2, shape : Shape | undefined){
-        msg(`click eq ${this.terms.length}`);
+        // msg(`click eq ${this.terms.length}`);
     }
 
     async dblclick(view : View, position : Vec2, shape : Shape | undefined){
@@ -1917,7 +1917,7 @@ export class ExprTransformBuilder extends Builder {
     }
 
     async termClick(term : Term){
-        msg(`term click ${this.terms.length}`);
+        // msg(`term click ${this.terms.length}`);
 
         if(! this.terms.includes(term)){
             this.terms.push(term);
