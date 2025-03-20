@@ -464,7 +464,7 @@ export async function speakAndHighlight(shape : MathEntity, speech : i18n_ts.Abs
 export async function playBack(play_mode : PlayMode){
     const view : View = View.current;
 
-    const operations = view.operations.slice();
+    const operations_copy = view.operations.slice();
     view.restoreView();
     view.clearView();
 
@@ -480,12 +480,18 @@ export async function playBack(play_mode : PlayMode){
 
     let start_shape_idx = view.shapes.length;
 
-    playBackOperations = new PlayBack(view, operations);
+    playBackOperations = new PlayBack(view, operations_copy);
 
     let all_shapes : MathEntity[] = [];
     const named_all_shape_map = new Map<string, plane_ts.Shape>();
 
     while(!playBackOperations.done()){
+        if(getPlayMode() == PlayMode.stop){
+
+            view.operations = operations_copy;
+            break;
+        }
+
         while(playBackOperations.peek() instanceof EnumSelection){
             msg(`wait for show menu`);
             await sleep(100);

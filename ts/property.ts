@@ -598,7 +598,9 @@ export async function showPropertyDlg(widget : Widget, operation :PropertySettin
 
             const text = propertySettingText.get(operation.name)!;
             assert(text != undefined);
-            await i18n_ts.AbstractSpeech.one.speak(text);
+
+            const speech = i18n_ts.AbstractSpeech.one;
+            await speech.speak(text);
             // msg(`opr ${operation.id} ${operation.toString()}`);
 
             const property = propertyMap.get(operation.name)!;
@@ -638,6 +640,8 @@ export async function showPropertyDlg(widget : Widget, operation :PropertySettin
             default:
                 throw new MyError();
             }
+
+            await speech.waitEnd();
         }
         else{
             throw new MyError();
