@@ -2174,7 +2174,7 @@ function initToolList(){
     }
 }
 
-export function makeShapeButton(shape : MathEntity, add_to_view_shapes : boolean) : layout_ts.Button {
+export function makeShapeButton(shape : MathEntity, in_shape_history : boolean) : layout_ts.Button {
     let shape_img_name : string | undefined;
 
     for(const [ tool, img_name, title, shape_classes] of toolList){
@@ -2202,7 +2202,8 @@ export function makeShapeButton(shape : MathEntity, add_to_view_shapes : boolean
     });
 
     button.click = async (ev : MouseEvent)=>{
-        if(add_to_view_shapes){
+        if(in_shape_history){
+            PlayBack.setStartIndex(shape);
 
             if(button.parent == Plane.one.shapes_block && shape instanceof Statement){
                 Builder.setToolByShape(shape);
@@ -2218,7 +2219,7 @@ export function makeShapeButton(shape : MathEntity, add_to_view_shapes : boolean
     return button;
 }
 
-export function addToViewShapesList(shape : MathEntity){
+export function addToShapeHistory(shape : MathEntity){
     const button = makeShapeButton(shape, true);
     
     Plane.one.shapes_block.addChild(button);

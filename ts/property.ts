@@ -324,6 +324,11 @@ function makeConstantProperty(grid : Grid, nest : number, name : string, text : 
     grid.addChild($label({ text : text }));
 }
 
+function makeTexProperty(grid : Grid, nest : number, name : string, text : string){
+    grid.addChild($label({ text : name }));
+    grid.addChild(layout_ts.$latex({ text : text }));
+}
+
 function appendTitle(grid : Grid, nest : number, title : string){
     const label = $label({
         text : title,
@@ -400,6 +405,8 @@ export function showProperty(widget : Widget | Widget[], nest : number){
 
 
     for(const property_name of properties){
+        assert(typeof property_name == "string");
+
         if(used_property_names.has(property_name)){
             continue;
         }
@@ -410,111 +417,118 @@ export function showProperty(widget : Widget | Widget[], nest : number){
             }
         }
 
-        if(typeof property_name == "string"){
-            const name = property_name;
-            const value = (widgets[0] as any)[name];
-            if(value == undefined){
-                continue;
-            }
+        const name = property_name;
+        const value = (widgets[0] as any)[name];
+        if(value == undefined){
+            continue;
+        }
 
-            let property : InputProperty | TextAreaProperty | SelectProperty | ImgSelectionProperty | ShapesProperty;
+        let property : InputProperty | TextAreaProperty | SelectProperty | ImgSelectionProperty | ShapesProperty;
 
-            if(name == "mathText" || name == "text" && widget instanceof TextBlock){
+        if(name == "mathText" || name == "text" && widget instanceof TextBlock){
 
-                property = new TextAreaProperty(widgets, name, value as string);
-            }
-            else if(name == "angleMark"){
+            property = new TextAreaProperty(widgets, name, value as string);
+        }
+        else if(name == "angleMark"){
 
-                const angles = widgets.filter(x => x instanceof Angle) as Angle[];
+            const angles = widgets.filter(x => x instanceof Angle) as Angle[];
 
-                const img_names = range(Angle.numMarks).map(i => `angle_${i}`);
+            const img_names = range(Angle.numMarks).map(i => `angle_${i}`);
 
-                property = new ImgSelectionProperty(angles, name, value, img_names);
-            }
-            else if(name == "reason"){
+            property = new ImgSelectionProperty(angles, name, value, img_names);
+        }
+        else if(name == "reason"){
 
-                const text = reasonMsg(value);
-                assert(typeof text == "string");
-                makeConstantProperty(grid, nest + 1, name, text);
-                continue;
-            }
-            else if(name == "selectedShapes" || name == "auxiliaryShapes"){
+            const text = reasonMsg(value);
+            makeConstantProperty(grid, nest + 1, name, text);
+            continue;
+        }
+        else if(name == "equation"){
+            assert(value instanceof App);
+            makeTexProperty(grid, nest + 1, name, (value as App).tex());
+            continue;
+        }
+        else if(name == "terms"){
+            assert(Array.isArray(value));
+            const terms = value as Term[];
+            assert(terms.every(x => x instanceof Term));
 
-                property = new ShapesProperty(widgets, name, value);
-            }
-            else if(name == "line"){
+            const text = terms.map(x => x.tex()).join("\\quad , \\quad");
+            makeTexProperty(grid, nest + 1, name, text);
+            continue;
+        }
+        else if(name == "selectedShapes" || name == "auxiliaryShapes"){
 
-                property = new ShapesProperty(widgets, name, [value]);
-            }
-            else{
-                switch(typeof value){
-                case "string":
-                    if(name == "color"){
+            property = new ShapesProperty(widgets, name, value);
+        }
+        else if(name == "line"){
 
-                        property = new ColorProperty(widgets, name, value);
-                    }
-                    else{
-
-                        property = new StringProperty(widgets, name, value);
-                    }
-                    break;
-                    
-                case "number":
-                    if(name == "interval"){
-                        property = new NumberProperty(widgets, name, value, 0.1, 0, 10000);
-                    }
-                    else if(name == "lineKind"){
-                        property = new ImgSelectionProperty(widgets, name, value, lineKindImgNames);
-                    }
-                    else if(name == "lengthKind"){
-                        property = new NumberProperty(widgets, name, value, 1, 0, 3);
-                    }
-                    else if(name == "id" || name == "order"){
-                        makeConstantProperty(grid, nest + 1, name, `${value}`);
-                        continue;
-                    }
-                    else{
-                        property = new NumberProperty(widgets, name, value, 0.1, -100, 100);
-                    }
-                    break;
-                    
-                case "boolean":
-                    property = new BooleanProperty(widgets, name, value);
-                    break;
-                    
-                case "object":
-                    if(value instanceof Widget){
-                        showProperty(value, nest + 1);
-                    }
-                    else if(value instanceof Vec2){
-                        const text = `x:${value.x.toFixed(1)} y:${value.y.toFixed(1)}`;
-                        makeConstantProperty(grid, nest + 1, name, text);
-                    }
-                    else{
-                        msg(`unknown property:${value.constructor.name}`);
-                    }
-
-                    continue;
-
-                default:
-                    throw new MyError();
-                }
-            }
-
-            try{
-                const ui = property.ui();
-                appendRow(grid, nest + 1, property.name, ui);
-            }
-            catch(e){
-                msg(`no property:${property.name}`);
-            }        
-
-
-            used_property_names.add(property_name);
+            property = new ShapesProperty(widgets, name, [value]);
         }
         else{
-            throw new MyError();
+            switch(typeof value){
+            case "string":
+                if(name == "color"){
+
+                    property = new ColorProperty(widgets, name, value);
+                }
+                else{
+
+                    property = new StringProperty(widgets, name, value);
+                }
+                break;
+                
+            case "number":
+                if(name == "interval"){
+                    property = new NumberProperty(widgets, name, value, 0.1, 0, 10000);
+                }
+                else if(name == "lineKind"){
+                    property = new ImgSelectionProperty(widgets, name, value, lineKindImgNames);
+                }
+                else if(name == "lengthKind"){
+                    property = new NumberProperty(widgets, name, value, 1, 0, 3);
+                }
+                else if(name == "id" || name == "order"){
+                    makeConstantProperty(grid, nest + 1, name, `${value}`);
+                    continue;
+                }
+                else{
+                    property = new NumberProperty(widgets, name, value, 0.1, -100, 100);
+                }
+                break;
+                
+            case "boolean":
+                property = new BooleanProperty(widgets, name, value);
+                break;
+                
+            case "object":
+                if(value instanceof Widget){
+                    showProperty(value, nest + 1);
+                }
+                else if(value instanceof Vec2){
+                    const text = `x:${value.x.toFixed(1)} y:${value.y.toFixed(1)}`;
+                    makeConstantProperty(grid, nest + 1, name, text);
+                }
+                else{
+                    msg(`unknown property:${value.constructor.name}`);
+                }
+
+                continue;
+
+            default:
+                throw new MyError();
+            }
         }
+
+        try{
+            const ui = property.ui();
+            appendRow(grid, nest + 1, property.name, ui);
+        }
+        catch(e){
+            msg(`no property:${property.name}`);
+        }        
+
+        used_property_names.add(property_name);
     }
 
     if(i18n_ts.appMode == i18n_ts.AppMode.play){

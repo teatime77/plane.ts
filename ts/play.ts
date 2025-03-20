@@ -2,7 +2,6 @@
 
 namespace plane_ts {
 //
-export let makeSpeechFnc : () => i18n_ts.AbstractSpeech;
 let pointerMove : HTMLImageElement;
 let pointer : HTMLImageElement;
 let pointerPix : Vec2 = Vec2.zero();
@@ -13,7 +12,7 @@ export function initPlay(){
 }
 
 export async function movePointerPix(pix : Vec2){
-    if(Plane.one.playMode != PlayMode.fastForward){
+    if(getPlayMode() != PlayMode.fastForward){
         pointerMove.style.visibility = "visible";
 
         const step = 20;
@@ -32,7 +31,7 @@ export async function movePointerPix(pix : Vec2){
     pointer.style.left = `${pix.x}px`;
     pointer.style.top  = `${pix.y}px`;
     pointer.style.visibility     = "visible";
-    await sleep(Plane.one.playMode == PlayMode.fastForward ? 100 : 500);
+    await sleep(500);
     pointer.style.visibility     = "hidden";
 
     pointerPix = pix;

@@ -324,7 +324,7 @@ export function loadData(obj : any){
     (view.shapes.filter(x => x instanceof TextBlock) as TextBlock[]).forEach(x => x.updateTextPosition());
 
     Plane.one.shapes_block.clear();
-    view.shapes.forEach(x => addToViewShapesList(x));
+    view.shapes.forEach(x => addToShapeHistory(x));
 }
 
 export function handleDragOver(evt: DragEvent) {

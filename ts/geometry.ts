@@ -756,7 +756,7 @@ export class Motion extends MathEntity {
         while(true){
             const endTime = Date.now();
             let rate = (endTime - startTime) / 3000;
-            if(Plane.one.playMode == PlayMode.fastForward){
+            if(getPlayMode() == PlayMode.fastForward){
                 rate *= 3;
             }
             if(1 < rate){

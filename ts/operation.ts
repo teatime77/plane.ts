@@ -1,6 +1,6 @@
 namespace plane_ts {
 //
-export let playBackOperations : Operation[] = [];
+export let playBackOperations : PlayBack;
 
 export abstract class Operation {
     static maxId : number = 0;
@@ -175,8 +175,9 @@ export async function loadOperationsText(data : any){
 
     operations = convertOperations(data["version"], operations);
     const num_operations = operations.length;
+    operations.forEach(x => view.addOperation(x));
 
-    await playBack(PlayMode.fastForward, operations);
+    await playBack(PlayMode.fastForward);
     assert(num_operations == View.current.operations.length);
 
     for(const [i, o] of operations.entries()){
@@ -310,7 +311,7 @@ export function inputTextPrompt(message : string) : string | null {
 
     if(View.isPlayBack){
 
-        const operation = playBackOperations.shift()!;
+        const operation = playBackOperations.next();
         View.current.addOperation(operation);
         if(operation instanceof TextPrompt){
             text = operation.text;
@@ -368,6 +369,57 @@ export class PropertySetting extends Operation {
     }
 }
 
+export class PlayBack {
+    static startIndex : number = NaN;
+
+    static setStartIndex(shape : MathEntity){
+        if(playBackOperations != undefined){
+            const index = playBackOperations.shapeToIndex.get(shape);
+            if(index != undefined){
+                PlayBack.startIndex = index;
+                msg(`play start:${PlayBack.startIndex}`);
+            }
+        }
+    }
+
+    private view : View;
+    private operations : Operation[];
+    private index : number;
+    private shapeToIndex = new Map<MathEntity,number>();
+    private viewShapesLength : number;
+
+    constructor(view : View, operations : Operation[]){
+        this.view = view;
+        this.operations = operations.slice();
+        this.index = 0;
+        this.viewShapesLength = view.shapes.length;
+    }
+
+    done() : boolean {
+        return this.operations.length == this.index;
+    }
+
+    next() : Operation {
+        if(this.index == PlayBack.startIndex && getPlayMode() == PlayMode.fastForward){
+            PlayBack.startIndex = NaN;
+            setPlayMode(PlayMode.normal);
+        }
+
+        const shapes = this.view.shapes.slice(this.viewShapesLength);
+        for(const shape of shapes){
+            this.shapeToIndex.set(shape, this.index);
+        }
+
+        this.viewShapesLength = this.view.shapes.length;
+
+        return this.operations[this.index++];
+    }
+
+    peek() : Operation {
+        return this.operations[this.index];
+    }
+}
+
 export async function typeIntoInput(element: HTMLInputElement, text: string, delay = 100) {
     for (let i = 0; i < text.length; i++) {
         element.value += text[i];
@@ -391,9 +443,7 @@ export async function speakAndHighlight(shape : MathEntity, speech : i18n_ts.Abs
         
         dep.setMode(Mode.depend);
 
-        if(Plane.one.playMode == PlayMode.normal){
-            await sleep(0.5 * 1000 * shape.interval);
-        }
+        await sleep(0.5 * 1000 * shape.interval);
     }
 
 
@@ -407,36 +457,41 @@ export async function speakAndHighlight(shape : MathEntity, speech : i18n_ts.Abs
         }
     }
 
-    if(Plane.one.playMode == PlayMode.normal){
-        await sleep(1000 * shape.interval);
-    }
+    await sleep(1000 * shape.interval);
 }
 
 
-export async function playBack(play_mode : PlayMode, operations : Operation[]){
-    Plane.one.playMode = play_mode;
-    View.isPlayBack = true;
-
-    const speech = (play_mode == PlayMode.fastForward ? new i18n_ts.DummySpeech() : makeSpeechFnc());
-
+export async function playBack(play_mode : PlayMode){
     const view : View = View.current;
+
+    const operations = view.operations.slice();
     view.restoreView();
     view.clearView();
 
+    if(!isNaN(PlayBack.startIndex)){
+        play_mode = PlayMode.fastForward;
+    }
+    
+    setPlayMode(play_mode);
+    View.isPlayBack = true;
+
+    const speech = new i18n_ts.Speech();
+
+
     let start_shape_idx = view.shapes.length;
 
-    playBackOperations = operations.slice();
+    playBackOperations = new PlayBack(view, operations);
 
     let all_shapes : MathEntity[] = [];
     const named_all_shape_map = new Map<string, plane_ts.Shape>();
 
-    while(playBackOperations.length != 0){
-        while(playBackOperations[0] instanceof EnumSelection){
+    while(!playBackOperations.done()){
+        while(playBackOperations.peek() instanceof EnumSelection){
             msg(`wait for show menu`);
             await sleep(100);
         }
 
-        const operation = playBackOperations.shift()!;
+        const operation = playBackOperations.next();
         view.addOperation(operation);
         if(operation instanceof ClickShape){
             await movePointer(operation.position);
@@ -523,14 +578,9 @@ export async function playBack(play_mode : PlayMode, operations : Operation[]){
     view.dirty = true;
     view.updateShapes();
 
-    Plane.one.playMode = PlayMode.stop;
+    setPlayMode(PlayMode.stop);
     View.isPlayBack = false;
-}
-
-export async function playBackAll(play_mode : PlayMode){
-    const operations = View.current.operations.slice();
-    View.current.clearView();
-    await playBack(play_mode, operations);
+    PlayBack.startIndex = NaN;
 }
 
 }

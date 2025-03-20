@@ -125,6 +125,12 @@ export class ExprTransform extends MathEntity implements EquationTextBlock {
         this.textBlock = makeEquationTextBlock(this.equation);
     }
 
+    getProperties(){
+        return super.getProperties().concat([
+            "reason", "equation", "terms"
+        ]);
+    }
+
     getAllShapes(shapes : MathEntity[]){
         super.getAllShapes(shapes);
         shapes.push(this.textBlock);
@@ -136,31 +142,7 @@ export class ExprTransform extends MathEntity implements EquationTextBlock {
     }
 
     async speakExprTransform(speech : i18n_ts.AbstractSpeech){
-        let text : string;
-        switch(this.reason){
-        case ExprTransformReason.transposition:
-            text = TT("Transpose the term.");
-            break;
-
-        case ExprTransformReason.equality:
-            text = TT("From the above equations,");
-            break;
-
-        case ExprTransformReason.add_equation:
-            text = TT("Add two equations together.");
-            break;
-
-        case ExprTransformReason.substitution:
-            text = TT("Substitute the term.");
-            break;
-
-        case ExprTransformReason.dividing_equation:
-            text = TT("Dividing an equation by the same term.");
-            break;
-
-        default:
-            throw new MyError();
-        }        
+        const text = reasonMsg(this.reason);
 
         await speech.speak(text);
     }

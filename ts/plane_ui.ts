@@ -13,12 +13,6 @@ const $input_number = layout_ts.$input_number;
 type CheckBox = layout_ts.CheckBox;
 const $checkbox = layout_ts.$checkbox;
 
-export enum PlayMode {
-    stop,
-    normal,
-    fastForward,
-}
-
 export class Plane {
     menu_block : Block;
     tool_block : Block;
@@ -32,8 +26,6 @@ export class Plane {
     show_axis! : CheckBox;
     show_grid! : CheckBox;
     snap_to_grid! : CheckBox;
-
-    playMode : PlayMode = PlayMode.stop;
 
     static one : Plane;
 

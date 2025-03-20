@@ -3,6 +3,12 @@ namespace plane_ts {
 export type Grid = layout_ts.Grid;
 export type UI   = layout_ts.UI;
 
+export type  PlayMode = i18n_ts.PlayMode;
+export const PlayMode = i18n_ts.PlayMode;
+export const setPlayMode = i18n_ts.setPlayMode;
+export const getPlayMode = i18n_ts.getPlayMode;
+
+export const sleep = i18n_ts.sleep;
 export const sum  = i18n_ts.sum;
 export const list  = i18n_ts.list;
 export const intersection  = i18n_ts.intersection;
@@ -70,7 +76,7 @@ export async function showMenu(dlgType : menuDialogType){
     let value : number
 
     if(View.isPlayBack){
-        const operation = playBackOperations.shift()!;
+        const operation = playBackOperations.next();
         // msg(`show Menu:${operation.dump()}`);
         View.current.addOperation(operation);
         if(operation instanceof EnumSelection){
@@ -216,18 +222,6 @@ export function MinMaxXY(p1 : Vec2, p2 : Vec2) : [number,number,number,number] {
 
 export function pairKey(a : Widget, b : Widget) : string {
     return a.id <= b.id ? `${a.id}:${b.id}` : `${b.id}:${a.id}`;
-}
-
-export async function sleep(milliseconds : number) : Promise<void> {
-    if(Plane.one.playMode == PlayMode.fastForward){
-        milliseconds = 50;
-    }
-
-    return new Promise((resolve) => {
-        setTimeout(()=>{
-            resolve();
-        }, milliseconds);
-    });
 }
 
 export async function sleepInFastForward(milliseconds : number) : Promise<void> {
@@ -394,6 +388,12 @@ function makeReasonMsgMap(){
         [ ParallelReason.supplementary_angles, TT("Since the sum of the two interior angles on the same side is π,")],
 
         [ TriangleSimilarityReason.two_equal_angle_pairs, TT("Since both pairs of angles in two triangles are equal,")],
+
+        [ ExprTransformReason.transposition, TT("Transpose the term.") ],
+        [ ExprTransformReason.equality, TT("From the above equations,") ],
+        [ ExprTransformReason.add_equation, TT("Add two equations together.") ],
+        [ ExprTransformReason.substitution, TT("Substitute the term.") ],
+        [ ExprTransformReason.dividing_equation, TT("Dividing an equation by the same term.") ],
 
         [0 , TT("no reason")],
     ]);

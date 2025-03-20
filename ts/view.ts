@@ -229,7 +229,7 @@ export class View extends Widget {
             const shapes = this.allRealShapes();
             const visible_shapes = shapes.filter(x => x.visible);
             
-            if(Plane.one.playMode != PlayMode.stop || !Plane.one.editMode){
+            if(getPlayMode() != PlayMode.stop || !Plane.one.editMode){
 
                 visible_shapes.forEach(c => c.draw());
             }
@@ -452,7 +452,7 @@ export class View extends Widget {
     addShape(shape : MathEntity){
         this.shapes.push(shape);
         shape.setOrder();
-        addToViewShapesList(shape);
+        addToShapeHistory(shape);
     }
 
     getShape(position : Vec2) : Shape | undefined {
@@ -530,7 +530,7 @@ export class View extends Widget {
             }
         }
 
-        await playBackAll(PlayMode.fastForward);
+        await playBack(PlayMode.fastForward);
 
         this.undoStack.push(undo_operations);
 
@@ -545,7 +545,7 @@ export class View extends Widget {
         const undo_operations = this.undoStack.pop()!;
         this.operations.push(... undo_operations);
 
-        await playBackAll(PlayMode.fastForward);
+        await playBack(PlayMode.fastForward);
 
         this.dirty = true;
     }
