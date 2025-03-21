@@ -7,6 +7,8 @@ export type  PlayMode = i18n_ts.PlayMode;
 export const PlayMode = i18n_ts.PlayMode;
 export const setPlayMode = i18n_ts.setPlayMode;
 export const getPlayMode = i18n_ts.getPlayMode;
+export type  AbstractSpeech = i18n_ts.AbstractSpeech;
+export const AbstractSpeech = i18n_ts.AbstractSpeech;
 
 export const sleep = i18n_ts.sleep;
 export const sum  = i18n_ts.sum;

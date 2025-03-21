@@ -28,7 +28,7 @@ export function makeEquationTextBlock(equation : App) : TextBlock {
     return text_block;
 }
 
-function makeShapeEquationByEquationText(reason : ShapeEquationReason, auxiliaryShapes : MathEntity[], text : string) : ShapeEquation | undefined {
+async function makeShapeEquationByEquationText(reason : ShapeEquationReason, auxiliaryShapes : MathEntity[], text : string) : Promise<ShapeEquation | undefined> {
     // msg(`angles eq: ${text}`);
 
     const equation = parser_ts.parseMath(text) as App;
@@ -37,6 +37,13 @@ function makeShapeEquationByEquationText(reason : ShapeEquationReason, auxiliary
         return undefined;
     }
 
+    if(View.isPlayBack){
+        const speech = AbstractSpeech.one;
+        await speakReason(speech, reason);
+        await showAuxiliaryShapes(reason, auxiliaryShapes);
+        await speech.waitEnd();
+    }
+    
     const text_block = makeEquationTextBlock(equation);
 
     return new ShapeEquation({
@@ -48,7 +55,7 @@ function makeShapeEquationByEquationText(reason : ShapeEquationReason, auxiliary
 
 }
 
-export function makeSumOfAnglesIsPi(angles_arg: Angle[]) : ShapeEquation | undefined {
+export async function makeSumOfAnglesIsPi(angles_arg: Angle[]) : Promise<ShapeEquation | undefined>  {
     const angles_list = permutation(angles_arg);
     for(const angles of angles_list){
         if( range(angles.length - 1).every( i => angles[i].commonLineBA(angles[i + 1]) ) ){
@@ -56,7 +63,7 @@ export function makeSumOfAnglesIsPi(angles_arg: Angle[]) : ShapeEquation | undef
             if(first_angle.lineA == last_angle.lineB && first_angle.directionA == - last_angle.directionB){
 
                 const text = angles.map(x => x.name).join(" + ") + " = pi";
-                return makeShapeEquationByEquationText(ShapeEquationReason.sum_of_angles_is_pi, angles, text);
+                return await makeShapeEquationByEquationText(ShapeEquationReason.sum_of_angles_is_pi, angles, text);
             }
         }
     }
@@ -65,7 +72,7 @@ export function makeSumOfAnglesIsPi(angles_arg: Angle[]) : ShapeEquation | undef
 }
 
 
-export function makeSumOfAnglesIsEqual(angles_arg: Angle[]) : ShapeEquation | undefined {
+export async function makeSumOfAnglesIsEqual(angles_arg: Angle[]) : Promise<ShapeEquation | undefined>  {
     check(3 <= angles_arg.length);
     const angles_list = permutation(angles_arg);
     for(const angles of angles_list){
@@ -74,7 +81,7 @@ export function makeSumOfAnglesIsEqual(angles_arg: Angle[]) : ShapeEquation | un
         if(outer_angle.commonLineAA(inner_angles[0]) && outer_angle.commonLineBB(last(inner_angles))){
             if(range(inner_angles.length - 1).every(i => inner_angles[i].commonLineBA(inner_angles[i + 1]))){
                 const text = `${outer_angle.name} = ` + inner_angles.map(x => x.name).join(" + ");
-                return makeShapeEquationByEquationText(ShapeEquationReason.sum_of_angles_is_equal, angles, text);
+                return await makeShapeEquationByEquationText(ShapeEquationReason.sum_of_angles_is_equal, angles, text);
             }
         }
     }
@@ -82,7 +89,7 @@ export function makeSumOfAnglesIsEqual(angles_arg: Angle[]) : ShapeEquation | un
     return undefined;
 }
 
-export function makeShapeEquationByExteriorAngleTheorem(angles: Angle[]) : ShapeEquation | undefined {
+export async function makeShapeEquationByExteriorAngleTheorem(angles: Angle[]) : Promise<ShapeEquation | undefined>  {
     for(const [angle1, angle2, angle3] of permutation(angles)){
         if(angle1.lineA == angle2.lineB && angle1.directionA == - angle2.directionB){
             const intersection = getCommonPointOfLines(angle1.lineB, angle2.lineA);
@@ -90,7 +97,7 @@ export function makeShapeEquationByExteriorAngleTheorem(angles: Angle[]) : Shape
                 if(areSetsEqual([angle1.lineB, angle2.lineA], [angle3.lineA, angle3.lineB])){
 
                     const text = `${angle1.name} + ${angle2.name} = ${angle3.name}`;
-                    return makeShapeEquationByEquationText(ShapeEquationReason.exterior_angle_theorem, angles, text);    
+                    return await makeShapeEquationByEquationText(ShapeEquationReason.exterior_angle_theorem, angles, text);    
                 }
             }
         }
@@ -99,7 +106,7 @@ export function makeShapeEquationByExteriorAngleTheorem(angles: Angle[]) : Shape
     return undefined;
 }
 
-export function makeSumOfTriangleQuadrilateralAngles(angles: Angle[], reason : ShapeEquationReason) : ShapeEquation | undefined {
+export async function makeSumOfTriangleQuadrilateralAngles(angles: Angle[], reason : ShapeEquationReason) : Promise<ShapeEquation | undefined>  {
     let num_vertices : number;
     let sum_angles : string;
     if(reason == ShapeEquationReason.sum_of_interior_angles_of_triangle_is_pi){
@@ -115,11 +122,11 @@ export function makeSumOfTriangleQuadrilateralAngles(angles: Angle[], reason : S
     check(angles.every(x => x.name != ""));
 
     const text = angles.map(x => x.name).join(" + ") + " = " + sum_angles;
-    return makeShapeEquationByEquationText(reason, angles, text);
+    return await makeShapeEquationByEquationText(reason, angles, text);
 }
 
 
-export function makeShapeEquation(reason : ShapeEquationReason, shapes: Shape[]) : ShapeEquation | undefined {
+export async function makeShapeEquation(reason : ShapeEquationReason, shapes: Shape[]) : Promise<ShapeEquation | undefined>  {
     switch(reason){
     case ShapeEquationReason.sum_of_angles_is_pi:
     case ShapeEquationReason.sum_of_angles_is_equal:
@@ -128,7 +135,7 @@ export function makeShapeEquation(reason : ShapeEquationReason, shapes: Shape[])
         const angles = shapes as Angle[];
 
         if(reason == ShapeEquationReason.exterior_angle_theorem){
-            return makeShapeEquationByExteriorAngleTheorem(angles);
+            return await makeShapeEquationByExteriorAngleTheorem(angles);
         }
 
         const intersections = unique(angles.map(x => intersection));
@@ -139,11 +146,11 @@ export function makeShapeEquation(reason : ShapeEquationReason, shapes: Shape[])
 
         if(reason == ShapeEquationReason.sum_of_angles_is_pi){
 
-            return makeSumOfAnglesIsPi(angles);
+            return await makeSumOfAnglesIsPi(angles);
         }
         else{
 
-            return makeSumOfAnglesIsEqual(angles);
+            return await makeSumOfAnglesIsEqual(angles);
         }
     }
 
@@ -153,7 +160,7 @@ export function makeShapeEquation(reason : ShapeEquationReason, shapes: Shape[])
         assert(shapes.every(x => x instanceof Point));
         const angles = findAnglesInPolygon(shapes as Point[]);
 
-        return makeSumOfTriangleQuadrilateralAngles(angles, reason);
+        return await makeSumOfTriangleQuadrilateralAngles(angles, reason);
     }
 
     default:

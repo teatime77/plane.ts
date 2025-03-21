@@ -417,18 +417,10 @@ export class Statement extends Shape {
         }
     }
 
-    async showAuxiliaryShapes(){
-        for(const shape of this.auxiliaryShapes){
-            shape.setMode(Mode.depend);
-            await sleep(500);
-        }
-    }
-
-    async showReasonAndStatement(speech : i18n_ts.AbstractSpeech){
+    async showReasonAndStatement(speech : AbstractSpeech){
         if(this.reason != 0){
 
-            const reason_msg = reasonMsg(this.reason);
-            await speech.speak(reason_msg);
+            await speakReason(speech, this.reason);
 
             if([LengthEqualityReason.congruent_triangles, AngleEqualityReason.congruent_triangles].includes(this.reason)){
                 assert( this.auxiliaryShapes.every(x => x instanceof Triangle) );
@@ -440,7 +432,7 @@ export class Statement extends Shape {
             }
             else{
 
-                await this.showAuxiliaryShapes();
+                await showAuxiliaryShapes(this.reason, this.auxiliaryShapes);
             }
 
             await speech.waitEnd();
@@ -485,38 +477,44 @@ export class Statement extends Shape {
     }
 }
 
-/*
-These two lines are parallel.
-These two angles are equal.
-The sum of these two angles is 180 degrees.
-These two lines are equal in length.
-The two triangles are congruent.
+export async function speakReason(speech : AbstractSpeech, reason : number) {
+    const reason_msg = reasonMsg(reason);
+    await speech.speak(reason_msg);
+}
 
-These two lines are radii of a circle.
+export async function showAuxiliaryShapes(reason : number, auxiliaryShapes : MathEntity[]){
+    switch(reason){
+    case ParallelogramReason.each_opposite_sides_are_equal:
+    case ParallelogramReason.each_opposite_sides_are_parallel:
+    case ParallelogramReason.each_opposite_angles_are_equal:
+    case ParallelogramReason.each_diagonal_bisections:
+        assert(auxiliaryShapes.length == 4);
 
-therefore
+        for(const shape of auxiliaryShapes.slice(0, 2)){
+            shape.setMode(Mode.depend1);
+        }
+        await sleep(500);
+
+        for(const shape of auxiliaryShapes.slice(2)){
+            shape.setMode(Mode.depend2);
+        }
+        break;
+
+    case ParallelogramReason.one_opposite_sides_are_parallel_and_equal:
+    case RhombusReason.all_sides_are_equal:
+        auxiliaryShapes.forEach(x => x.setMode(Mode.depend));
+        break;
+
+    default:
+        for(const shape of auxiliaryShapes){
+            shape.setMode(Mode.depend);
+            await sleep(500);
+        }
+        break;
+    }
+
+    await sleep(500);
+}
 
 
-
-The radii of these two circles are equal
-
-For two triangles
-
-The three sides of the two triangles are equal in length.
-
-We now prove the following.
-
-Two corresponding angles are equal.
-
-The sum of the two angles is 180 degrees, so each angle is 90 degrees.
-
-Angle bisector
-
-Perpendicular bisector
-
-The two corresponding sides of a triangle are equal.
-
-The angles between the two sides are equal
-
-*/
 }

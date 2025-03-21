@@ -1886,7 +1886,7 @@ export class ShapeEquationBuilder extends Builder {
     async finish(view : View){        
         // msg(`finish shapes ${this.shapes.length}`);
 
-        const shapeEquation = makeShapeEquation(this.reason, this.shapes);
+        const shapeEquation = await makeShapeEquation(this.reason, this.shapes);
         if(shapeEquation != undefined){
             addShapeSetRelations(view, shapeEquation);
             this.resetTool(shapeEquation);    

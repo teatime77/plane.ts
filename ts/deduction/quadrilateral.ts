@@ -180,37 +180,6 @@ abstract class QuadrilateralClassifier extends TriangleQuadrilateralDetector {
 }
 
 export class ParallelogramClassifier extends QuadrilateralClassifier {   
-    async showAuxiliaryShapes(){
-
-        switch(this.reason){
-        case ParallelogramReason.each_opposite_sides_are_equal:
-        case ParallelogramReason.each_opposite_sides_are_parallel:
-        case ParallelogramReason.each_opposite_angles_are_equal:
-        case ParallelogramReason.each_diagonal_bisections:
-            assert(this.auxiliaryShapes.length == 4);
-
-            for(const shape of this.auxiliaryShapes.slice(0, 2)){
-                shape.setMode(Mode.depend1);
-            }
-            await sleep(500);
-
-            for(const shape of this.auxiliaryShapes.slice(2)){
-                shape.setMode(Mode.depend2);
-            }
-            break;
-
-        case ParallelogramReason.one_opposite_sides_are_parallel_and_equal:
-        case RhombusReason.all_sides_are_equal:
-            this.auxiliaryShapes.forEach(x => x.setMode(Mode.depend));
-            break;
-
-        default:
-            throw new MyError();
-        }
-
-        await sleep(500);
-    } 
-
     reading(): Reading {
         return this.textReading(TT("this is a parallelogram."));
     }

@@ -68,39 +68,6 @@ export function removeDiv(){
     }
 }
 
-async function generateTex(shape : TextBlock | Statement, speech : i18n_ts.AbstractSpeech, named_all_shape_map : Map<string, plane_ts.Shape>) {
-    let text : string;
-    let div  : HTMLDivElement;
-
-    if(shape instanceof TextBlock){
-        text = shape.text;
-        div  = shape.div;
-    }
-    else{
-
-        text = shape.mathText;
-        if(shape.latexBox == undefined){
-            shape.latexBox = shape.makeTexUI();
-        }
-
-        div  = shape.latexBox.div;
-    }
-    try{
-
-        const term = parser_ts.parseMath(text);
-
-        await parser_ts.showFlow(speech, term, div, named_all_shape_map);
-
-    }
-    catch(e){
-        if(e instanceof parser_ts.SyntaxError){
-            return;
-        }
-
-        throw e;
-    }
-}
-
 export async function playShape(speech : i18n_ts.AbstractSpeech, all_shapes : MathEntity[], named_all_shape_map : Map<string, plane_ts.Shape>, shape : MathEntity){
     plane_ts.showProperty(shape, 0);
 
@@ -108,6 +75,8 @@ export async function playShape(speech : i18n_ts.AbstractSpeech, all_shapes : Ma
 
     if(shape instanceof plane_ts.ExprTransform){
         await shape.speakExprTransform(speech);
+    }
+    else if(shape instanceof ShapeEquation){
     }
     else if(shape instanceof Statement){
         await shape.showReasonAndStatement(speech);
@@ -192,9 +161,19 @@ export async function playShape(speech : i18n_ts.AbstractSpeech, all_shapes : Ma
         await speech.waitEnd();                
         div_child.style.backgroundColor = "";
     }
-    else if(shape instanceof TextBlock && shape.isTex || shape instanceof Statement && shape.mathText != ""){
+    else if(shape instanceof TextBlock && shape.isTex){
+        const term = parser_ts.parseMath(shape.text);
 
-        await generateTex(shape, speech, named_all_shape_map);
+        await parser_ts.showFlow(speech, term, shape.div, named_all_shape_map);
+    }
+    else if(shape instanceof Statement && shape.mathText != ""){
+        const term = parser_ts.parseMath(shape.mathText);
+
+        if(shape.latexBox == undefined){
+            shape.latexBox = shape.makeTexUI();
+        }
+
+        await parser_ts.showFlow(speech, term, shape.latexBox.div, named_all_shape_map);
     }
 
     all_shapes.forEach(x => {x.setMode(Mode.none); });
