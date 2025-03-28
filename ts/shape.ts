@@ -212,13 +212,14 @@ export class TextBlock extends MathEntity {
     parent : MathEntity | undefined;
     text  : string;
     isTex : boolean;
+    // equationIdx : number = NaN;
     div   : HTMLDivElement;
 
     offset : Vec2 = new Vec2(0, 0);
     app : App | undefined;
     termRects : TermRect[] = [];
 
-    constructor(obj : { parent? : MathEntity, text : string, isTex : boolean, offset : Vec2, app? : App }){
+    constructor(obj : { parent? : MathEntity, text : string, isTex : boolean, equationIdx? : number, offset : Vec2, app? : App }){
         super(obj);
         this.parent = obj.parent;
         this.text  = obj.text;
@@ -237,6 +238,10 @@ export class TextBlock extends MathEntity {
             this.div.className = "tex_div";
         }
         this.div.style.fontSize = "x-large";
+
+        if(obj.equationIdx != undefined){
+            // this.equationIdx = obj.equationIdx;
+        }
 
         this.setVisible(this.visible);
 
@@ -299,7 +304,7 @@ export class TextBlock extends MathEntity {
                 View.current.addOperation(operation);
             }
 
-            await Builder.tool.termClick(dstTerm);
+            await Builder.tool.termClick(dstTerm, this);
         }
     }
 
@@ -315,7 +320,7 @@ export class TextBlock extends MathEntity {
                 text = `\\${text}`;
             }
 
-            parser_ts.renderKatexSub(this.div, text);
+            renderKatexSub(this.div, text);
 
             if(this.app != undefined){
                 const terms = this.app.allTerms();
@@ -415,7 +420,7 @@ export class TextBlock extends MathEntity {
     }
 
     reading() : Reading {
-        msg(`empty reading:${this.constructor.name}`);
+        // msg(`empty reading:${this.constructor.name}`);
         return new Reading(this, "", []);
     }
 
@@ -1617,7 +1622,7 @@ export class Polygon extends Shape {
         }
 
         if(range(this.points.length).some(i => lines[i] != this.lines[i])){
-            msg(`modify lines of ${this.id}:${this.constructor.name}`);
+            // msg(`modify lines of ${this.id}:${this.constructor.name}`);
             this.lines = lines;
         }
     }

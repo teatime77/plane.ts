@@ -1,8 +1,8 @@
 namespace plane_ts {
 //
-export function makeExprTransformByTransposition(term : Term){
+export async function makeExprTransformByTransposition(term : Term, textBlock : TextBlock, speech : Speech){
     const [equation, term_cp] = term.cloneRoot();
-    algebra_ts.transpose(equation, term_cp);
+    await algebra_ts.transpose(equation, term_cp, textBlock.div, speech);
 
     const exprTransform = new ExprTransform({
         reason   : ExprTransformReason.transposition,
@@ -18,7 +18,7 @@ function setEqualShapes(refvars : RefVar[]){
     View.current.allRealShapes().filter(x => x.name != "").forEach(x => map.set(x.name, x));
     const ref_shapes = refvars.map(x => map.get(x.name)).filter(x => x != undefined);
     if(ref_shapes.every(x => x instanceof Angle)){
-        msg(`eq angles:${ref_shapes.map(x => x.name).join(" = ")}`);
+        // msg(`eq angles:${ref_shapes.map(x => x.name).join(" = ")}`);
         for(const i of range(ref_shapes.length - 1)){
             const angleA = ref_shapes[i] as Angle;
             const angleB = ref_shapes[i+1] as Angle;
@@ -27,16 +27,19 @@ function setEqualShapes(refvars : RefVar[]){
     }
 }
 
-export function makeExprTransformByEquality(terms : Term[]) : ExprTransform | undefined {
+/*
+    a = e , b = e ⇒ a = b
+*/
+export async function makeExprTransformByEquality(terms : Term[], textBlocks : TextBlock[], speech : Speech) : Promise<ExprTransform | undefined> {
     const refvars : RefVar[] = [];
     let   eq_expr : Term | undefined;    
+    let   roots : App[] = [];
 
     for(const term of terms){
         const [equation, term_cp] = term.cloneRoot();
         if(!(term_cp instanceof RefVar)){
             return undefined;
         }
-
 
         if(!equation.isEq() || equation.args.length != 2){
             return undefined;
@@ -58,7 +61,15 @@ export function makeExprTransformByEquality(terms : Term[]) : ExprTransform | un
         }
 
         refvars.push(term_cp);
+        roots.push(term.getRoot());
     }
+
+    for(const [idx, term] of terms.entries()){
+        term.colorName = "blue";
+        renderKatexSub(textBlocks[idx].div, roots[idx].tex());
+    }
+    await sleep(1000);
+    refvars.forEach(x => x.colorName = undefined);
 
     const text = refvars.map(x => x.name).join(" = ");
     const equation = parser_ts.parseMath(text) as App;
@@ -74,8 +85,9 @@ export function makeExprTransformByEquality(terms : Term[]) : ExprTransform | un
     return exprTransform;
 }
 
-export function makeExprTransformByAddEquation(terms : Term[]) : ExprTransform | undefined {
-    const equation = algebra_ts.addEquations(terms);
+export async function makeExprTransformByAddEquation(terms : Term[], textBlocks : TextBlock[], speech : Speech) : Promise<ExprTransform | undefined> {
+    const divs = textBlocks.map(x => x.div);
+    const equation = await algebra_ts.addEquations(terms, divs, speech);
 
     const exprTransform = new ExprTransform({
         reason   : ExprTransformReason.add_equation,
@@ -86,8 +98,8 @@ export function makeExprTransformByAddEquation(terms : Term[]) : ExprTransform |
     return exprTransform;
 }
 
-export function makeExprTransformBySubstitution(terms : Term[]) : ExprTransform | undefined {
-    const equation = algebra_ts.substitute(terms[0], terms[1]);
+export async function makeExprTransformBySubstitution(terms : Term[], textBlocks : TextBlock[], speech : Speech) : Promise<ExprTransform | undefined> {
+    const equation = await algebra_ts.substitute(terms[0], terms[1], textBlocks[0].div, textBlocks[1].div, speech);
 
     const exprTransform = new ExprTransform({
         reason   : ExprTransformReason.substitution,
@@ -98,9 +110,9 @@ export function makeExprTransformBySubstitution(terms : Term[]) : ExprTransform 
     return exprTransform;
 }
 
-export function makeExprTransformByDividingEquation(root : App, mathText : string) : ExprTransform | undefined {
+export async function makeExprTransformByDividingEquation(root : App, mathText : string, textBlock : TextBlock, speech : Speech) : Promise<ExprTransform | undefined> {
     const term = parser_ts.parseMath(mathText);
-    const equation = algebra_ts.divideEquation(root, term);
+    const equation = await algebra_ts.divideEquation(root, term, textBlock.div, speech);
 
     const exprTransform = new ExprTransform({
         reason   : ExprTransformReason.dividing_equation,
@@ -137,7 +149,7 @@ export class ExprTransform extends MathEntity implements EquationTextBlock {
     }
 
     reading() : Reading {
-        msg(`empty reading:${this.constructor.name}`);
+        // msg(`empty reading:${this.constructor.name}`);
         return new Reading(this, "", []);
     }
 

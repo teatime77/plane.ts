@@ -138,7 +138,7 @@ export async function loadOperationsText(data : any){
                 assert(matches != null);
 
                 const items2 = Array.from(matches!);
-                msg(`text len:${items2.length} [${items2[1]}]`)
+                // msg(`text len:${items2.length} [${items2[1]}]`);
 
                 const text = items2[1];
                 operation = new TextPrompt(text);
@@ -184,7 +184,7 @@ export async function loadOperationsText(data : any){
         // msg(`load ${i}:${o.dump()}`);
     }
 
-    msg(`load Operations Text completes.`);
+    // msg(`load Operations Text completes.`);
 }
 
 export function getOperationsText(){
@@ -239,6 +239,7 @@ export class ClickShape extends Operation {
 
 export class ClickTerm extends Operation {
     textBlock_id : number;
+    // equationIdx : number;
     indexes : number[];
 
     constructor(textBlock_id : number, indexes : number[]){
@@ -247,16 +248,16 @@ export class ClickTerm extends Operation {
         this.indexes = indexes.slice();
     }
 
-    getTerm() : Term {
+    getTextBlockTerm() : [TextBlock, Term] {
         const textBlock = View.current.allShapes().find(x => x.id == this.textBlock_id) as TextBlock;
         if(!(textBlock instanceof TextBlock) || textBlock.app == undefined){
             throw new MyError();
         }
 
         const path = new parser_ts.Path(this.indexes);
-        const term  = path.getTerm(textBlock.app);
+        const term  = path.getTerm(textBlock.app!);
 
-        return term;
+        return [textBlock, term];
     }
 
     toString() : string {
@@ -354,7 +355,7 @@ export class PropertySetting extends Operation {
         this.id    = id;
         this.name  = name;
         this.value = value;
-        msg(`========== Property-Setting:${name} [${value}] ==================================================`)
+        // msg(`========== Property-Setting:${name} [${value}] ==================================================`)
     }
 
     toString() : string {
@@ -515,8 +516,8 @@ export async function playBack(play_mode : PlayMode){
         }
         else if(operation instanceof ClickTerm){
             if(Builder.tool instanceof ExprTransformBuilder){
-                const term = operation.getTerm();
-                await Builder.tool.termClick(term);
+                const [textBlock, term] = operation.getTextBlockTerm();
+                await Builder.tool.termClick(term, textBlock);
             }
             else{
                 throw new MyError();

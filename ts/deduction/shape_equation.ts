@@ -11,14 +11,16 @@ export type App = parser_ts.App;
 export const App = parser_ts.App;
 
 export function makeEquationTextBlock(equation : App) : TextBlock {
+    const view = View.current;
+
     const text_block = new TextBlock( {
         text : equation.tex(),
         isTex : true,
         offset : Vec2.zero(),
-        app : equation
+        app : equation,
+        // equationIdx : view.equationIdx++
     });
 
-    const view = View.current;
     text_block.setTextPosition(view.textBase.x, view.textBase.y);
     text_block.updateTextDiv();
 
@@ -189,13 +191,13 @@ export class ShapeEquation extends Statement implements EquationTextBlock {
 
             const [angle1, angle2] = this.auxiliaryShapes as Angle[];
             addSupplementaryAngles(angle1, angle2);
-            msg(`add-Supplementary-Angles ${angle1.name} ${angle2.name}`);
+            // msg(`add-Supplementary-Angles ${angle1.name} ${angle2.name}`);
         }
     }
 
 
     reading(): Reading {
-        msg(`empty reading:${this.constructor.name}`);
+        // msg(`empty reading:${this.constructor.name}`);
         return this.textReading(TT(""));
     }
 
@@ -203,21 +205,12 @@ export class ShapeEquation extends Statement implements EquationTextBlock {
 
 export async function simplifyEquationTextBlock(eqText : EquationTextBlock){
     const textBlock = eqText.textBlock;
-    const gen = algebra_ts.simplify(eqText.equation);
-    let prev_eq_str = "";
-    for(const _ of gen){
-        textBlock.app  = eqText.equation;
-        textBlock.text = eqText.equation.tex();
-        textBlock.updateTextDiv();
+    const speech = new Speech()
+    eqText.equation = await algebra_ts.simplify(speech, textBlock.div, eqText.equation) as App;
 
-        const new_eq_str = eqText.equation.str();
-        if(prev_eq_str != new_eq_str){
-            prev_eq_str = new_eq_str;
-
-            msg(`simplify ${new_eq_str}`);
-            await sleep(1000);
-        }
-    }
+    textBlock.app  = eqText.equation;
+    textBlock.text = eqText.equation.tex();
+    textBlock.updateTextDiv();
 
     checkSupplementaryAngles(eqText.equation);
 

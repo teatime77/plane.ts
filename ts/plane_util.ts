@@ -20,6 +20,10 @@ export const areSetsEqual  = i18n_ts.areSetsEqual;
 export const isSubSet  = i18n_ts.isSubSet;
 export const check = i18n_ts.check;
 export const remove  = i18n_ts.remove;
+export type  Speech = i18n_ts.Speech;
+export const Speech = i18n_ts.Speech;
+
+export const renderKatexSub = parser_ts.renderKatexSub;
 
 const $dic = new Map<string, HTMLElement>();
 

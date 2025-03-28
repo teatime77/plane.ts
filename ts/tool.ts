@@ -1901,6 +1901,7 @@ export class ShapeEquationBuilder extends Builder {
 export class ExprTransformBuilder extends Builder {
     reason : ExprTransformReason = ExprTransformReason.none;
     terms : Term[] = [];
+    textBlocks : TextBlock[] = [];
     mathText : string | null = null;
     root : App | undefined;
 
@@ -1916,11 +1917,12 @@ export class ExprTransformBuilder extends Builder {
         msg(`dblclick eq ${this.terms.length}`);
     }
 
-    async termClick(term : Term){
+    async termClick(term : Term, textBlock : TextBlock){
         // msg(`term click ${this.terms.length}`);
 
         if(! this.terms.includes(term)){
             this.terms.push(term);
+            this.textBlocks.push(textBlock);
 
             if(this.reason == ExprTransformReason.dividing_equation){
                 assert(term.isRootEq());
@@ -2006,43 +2008,53 @@ export class ExprTransformBuilder extends Builder {
     }
 
     async finish(view : View){
-        msg(`finish terms ${this.terms.length}`);
+        // msg(`finish terms ${this.terms.length}`);
 
+        const speech = new Speech();
         let exprTransform : ExprTransform | undefined;
 
+        msg(`expr:${enumToImgName.get(this.reason)}`)
+        this.terms.forEach(x => msg(`${x.getRoot().str()}[${x.str()}]`));
         switch(this.reason){
         case ExprTransformReason.transposition:
+            // msg("Expr-Transform-Reason.transposition");
             if(this.terms.length == 1){
-                exprTransform = makeExprTransformByTransposition(this.terms[0]);
+                exprTransform = await makeExprTransformByTransposition(this.terms[0], this.textBlocks[0], speech);
             }
             else{
-                msg(`terms length != 1`);
+                throw new MyError(`terms length != 1`);
             }
             break;
 
         case ExprTransformReason.equality:
+            // msg("Expr-Transform-Reason.equality");
             if(2 <= this.terms.length){
-                exprTransform = makeExprTransformByEquality(this.terms);
+                exprTransform = await makeExprTransformByEquality(this.terms, this.textBlocks, speech);
             }
             else{
-                msg(`terms length < 2`);
+                throw new MyError(`terms length < 2`);
             }
             break;
 
         case ExprTransformReason.add_equation:
-            exprTransform = makeExprTransformByAddEquation(this.terms);
+            // msg("Expr-Transform-Reason.add-equation");
+            exprTransform = await makeExprTransformByAddEquation(this.terms, this.textBlocks, speech);
             break;
 
         case ExprTransformReason.substitution:
-            exprTransform = makeExprTransformBySubstitution(this.terms);
+            // msg("Expr-Transform-Reason.substitution");
+            exprTransform = await makeExprTransformBySubstitution(this.terms, this.textBlocks, speech);
             break;
 
         case ExprTransformReason.dividing_equation:
-            exprTransform = makeExprTransformByDividingEquation(this.root!, this.mathText!);
+            // msg("Expr-Transform-Reason.dividing-equation");
+            assert(this.textBlocks.length == 1);
+            exprTransform = await makeExprTransformByDividingEquation(this.root!, this.mathText!, this.textBlocks[0], speech);
             break;
         }
 
         if(exprTransform != undefined){
+            msg(`result:${exprTransform.equation.str()}`);
 
             addShapeSetRelations(view, exprTransform);
             this.resetTool(exprTransform);    

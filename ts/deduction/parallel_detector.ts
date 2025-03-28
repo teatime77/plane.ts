@@ -7,7 +7,7 @@ export function makeParallelDetectorByParallelogram(lineA : AbstractLine, lineB 
         const parallelogram = classifier.quadrilateral();
         if(isSubSet(lines, parallelogram.lines)){
 
-            msg(`Parallel-Detector-By-Parallelogram`);
+            // msg(`Parallel-Detector-By-Parallelogram`);
             return new ParallelDetector({
                 reason : ParallelReason.parallelogram,
                 auxiliaryShapes : [parallelogram],
@@ -36,7 +36,7 @@ export function makeParallelDetectorByCorrespondingAlternateAnglesEqual(angleA :
             return undefined;
         }
 
-        msg(`Parallel-Detector-By-Corresponding-Alternate-Angles-Equal`);
+        // msg(`Parallel-Detector-By-Corresponding-Alternate-Angles-Equal`);
         return new ParallelDetector({
             reason : ParallelReason.corresponding_angles_or_alternate_angles_are_equal,
             auxiliaryShapes : [angleA, angleB],
@@ -52,7 +52,7 @@ export function makeParallelDetectorBySupplementaryAngles(angleA : Angle, angleB
         if(angle1.lineB == angle2.lineA && angle1.directionB == - angle2.directionA){
             const lines = [angle1.lineA, angle2.lineB];
 
-            msg(`Parallel-Detector-By-Supplementary-Angles`);
+            // msg(`Parallel-Detector-By-Supplementary-Angles`);
             return new ParallelDetector({
                 reason : ParallelReason.supplementary_angles,
                 auxiliaryShapes : [angle1, angle2],

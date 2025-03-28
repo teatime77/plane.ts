@@ -262,7 +262,7 @@ export class Assumption extends MathEntity {
     }
 
     reading() : Reading {
-        msg(`empty reading:${this.constructor.name}`);
+        // msg(`empty reading:${this.constructor.name}`);
         return new Reading(this, "", []);
     }
 
@@ -316,7 +316,7 @@ export class Statement extends Shape {
     }
 
     reading() : Reading {
-        msg(`empty reading:${this.constructor.name}`);
+        // msg(`empty reading:${this.constructor.name}`);
         return new Reading(this, "", []);
     }    
 

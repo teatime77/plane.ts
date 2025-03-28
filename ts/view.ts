@@ -35,6 +35,7 @@ export class View extends Widget {
     min! : Vec2;
     max! : Vec2;
 
+    equationIdx : number = 0;
     textBase : Vec2;
     textBaseY : number;
 
@@ -101,6 +102,7 @@ export class View extends Widget {
         this.operations = [];
         this.shapes = [];
         this.dirty = true;
+        this.equationIdx = 0;
         this.textBase.y = this.textBaseY;
 
         Plane.one.clearPlane();
@@ -553,6 +555,10 @@ export class View extends Widget {
     restoreView(){
         const motions = this.shapes.filter(x => x instanceof Motion) as Motion[];
         motions.reverse().forEach(x => x.restorePropertyChanges());
+    }
+
+    texPosition(){
+
     }
 }
 

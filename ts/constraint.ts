@@ -80,7 +80,7 @@ export class LengthEqualityConstraint extends Constraint {
         const length = this.lengthSymbolA.length();
         const anchor = this.getAnchor();
         if(anchor == undefined){
-            msg(`no anchor for length-Symbol-B:${this.lengthSymbolB.id}`)
+            // msg(`no anchor for length-Symbol-B:${this.lengthSymbolB.id}`)
             return;
         }
 
@@ -139,7 +139,7 @@ export class AngleEqualityConstraint extends Constraint {
     }
 
     reading() : Reading {
-        msg(`empty reading:${this.constructor.name}`);
+        // msg(`empty reading:${this.constructor.name}`);
         return new Reading(this, "", []);
     }
 }

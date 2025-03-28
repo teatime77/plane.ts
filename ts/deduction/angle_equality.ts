@@ -131,7 +131,7 @@ export function checkSupplementaryAngles(root : App){
 
                         const angles = refs.map(x => all_angles.find(y => y.name == x.name));
                         if(angles.every(x => x != undefined)){
-                            msg(`check-Supplementary-Angles ${angles[0].name} ${angles[1].name}`);
+                            // msg(`check-Supplementary-Angles ${angles[0].name} ${angles[1].name}`);
                             addSupplementaryAngles(angles[0], angles[1]);
                         }
                     }

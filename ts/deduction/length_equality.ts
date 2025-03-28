@@ -244,7 +244,7 @@ export function makeEqualLengthByParallelogramDiagonalBisection(lengthSymbolA : 
                 if(areSetsEqual(lengthSymbol_vertices, [parallelogram.points[0], parallelogram.points[2]]) ||
                    areSetsEqual(lengthSymbol_vertices, [parallelogram.points[1], parallelogram.points[3]]) ){
 
-                    msg(`parallelogram-diagonal-bisection`);
+                    // msg(`parallelogram-diagonal-bisection`);
                     return new LengthEquality({
                         reason : LengthEqualityReason.parallelogram_diagonal_bisection,
                         auxiliaryShapes : [parallelogram],
