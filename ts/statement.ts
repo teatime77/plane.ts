@@ -46,6 +46,7 @@ export enum ExprTransformReason {
     add_equation,
     substitution,
     dividing_equation,
+    arg_shift,
 }
 
 export enum AngleEqualityReason {
@@ -137,6 +138,7 @@ export const enumToImgName = new Map<number, string>([
     [ ExprTransformReason.add_equation, "add_equation" ],
     [ ExprTransformReason.substitution, "substitution" ],
     [ ExprTransformReason.dividing_equation, "dividing_equation" ],
+    [ ExprTransformReason.arg_shift, "arg_shift" ],
 
     [ AngleEqualityReason.vertical_angles, "vertical_angles" ],
     [ AngleEqualityReason.parallel_line_angles, "parallel_line_angles" ],

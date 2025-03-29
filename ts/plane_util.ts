@@ -400,6 +400,7 @@ function makeReasonMsgMap(){
         [ ExprTransformReason.add_equation, TT("Add two equations together.") ],
         [ ExprTransformReason.substitution, TT("Substitute the term.") ],
         [ ExprTransformReason.dividing_equation, TT("Dividing an equation by the same term.") ],
+        [ ExprTransformReason.arg_shift, TT("Shift the argument.")],
 
         [0 , TT("no reason")],
     ]);

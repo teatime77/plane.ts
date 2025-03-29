@@ -123,6 +123,20 @@ export async function makeExprTransformByDividingEquation(root : App, mathText :
     return exprTransform;
 }
 
+
+export async function makeExprTransformByArgShift(term : Term, shift : number, textBlock : TextBlock, speech : Speech) : Promise<ExprTransform | undefined> {
+    const equation = term.getRoot();
+
+    const exprTransform = new ExprTransform({
+        reason   : ExprTransformReason.arg_shift,
+        equation : equation, 
+        terms    : [term]
+    });
+
+    return exprTransform;
+}
+
+
 export class ExprTransform extends MathEntity implements EquationTextBlock {
     reason : ExprTransformReason;
     equation : App;

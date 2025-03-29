@@ -71,6 +71,9 @@ export function viewEvent(view : View){
                 await Builder.tool.finish(view);
             }
         }
+        else{
+            await Builder.tool.keyDown(ev);
+        }
     });    
 
     window.addEventListener("resize", view.resizeView.bind(view));
