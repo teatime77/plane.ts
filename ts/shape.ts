@@ -253,6 +253,8 @@ export class TextBlock extends MathEntity {
         }
 
         this.updateTextPosition();
+
+        textBlockEvent.setTextBlockEvent(this);
     }
 
     makeObj() : any {

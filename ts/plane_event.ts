@@ -4,6 +4,133 @@ type Block = layout_ts.Block;
 
 export let urlOrigin : string;
 
+export class TextBlockEvent {
+    startTerm : Term | undefined;
+    term : Term | undefined;
+    textBlock : TextBlock | undefined;
+    downTime : number = NaN;
+
+    setTextBlockEvent(textBlock : TextBlock){
+        textBlock.div.addEventListener("pointerdown", (ev : PointerEvent)=>{
+            if(this.textBlock != textBlock){
+
+                this.textBlock = textBlock;
+            }
+
+            if(textBlock.app == undefined){
+                msg(`pointer-down:no app`);
+                return;
+            }
+
+            this.term = getTermFromPointerEvent(ev, textBlock.app);
+            this.downTime = Date.now();
+            msg(`pointer-down:${this.term.str()}`);
+        });
+
+        textBlock.div.addEventListener("pointerup", (ev : PointerEvent)=>{
+            if(this.term != undefined && this.textBlock == textBlock){
+                const elapsed_time = Date.now() - this.downTime;
+                msg(`pointer-up:${elapsed_time} ${this.term.str()}`);
+
+                if(this.startTerm == this.term){
+                    this.startTerm = undefined;
+                }
+
+                this.term.colorName = (elapsed_time < 500 ? "blue" : "red");
+                const root = this.term.getRoot();
+
+                if(elapsed_time < 500){
+
+                    if(this.startTerm != undefined){
+                        const parent = this.startTerm.parent as App;
+                        if(parent != null && this.term.parent == parent && (parent.isAdd() || parent.isMul())){
+                            let idx1 = this.startTerm.argIdx();
+                            let idx2 = this.term.argIdx();
+                            if(idx2 < idx1){
+                                [idx1, idx2] = [idx2, idx1];
+                            }
+
+                            const args = parent.args.slice(idx1, idx2 + 1);
+                            const app = new App(operator(parent.fncName), args);
+                            app.colorName = "red";
+                            parent.args.splice(idx1, (idx2 + 1 - idx1));
+                            parent.insArg(app, idx1);
+
+                            this.term = app;
+                        }
+                    }
+                }
+                else{
+
+                    this.startTerm = this.term;
+                    this.term = undefined;
+                }
+
+                renderKatexSub(this.textBlock.div, root.tex());
+            }
+        });
+    }
+
+    async keyDown(ev : KeyboardEvent){
+        if(this.term == undefined || this.textBlock == undefined){
+            return;
+        }
+        const div = this.textBlock.div;
+
+        if (ev.key === "Escape"){
+            const root = this.term.getRoot();
+            root.allTerms().forEach(x => x.colorName = undefined);
+            renderKatexSub(div, root.tex());
+
+            this.startTerm = undefined;
+            this.term = undefined;
+            this.textBlock = undefined;
+            return;
+        }
+
+        const parent = this.term.parent;
+        if(parent != null && (parent.isAdd() || parent.isMul())){
+            msg(`key-down:${ev.key}`);
+
+            let diff : number;
+            if(ev.key == "ArrowRight"){
+                diff = 1;
+            }
+            else if(ev.key == "ArrowLeft"){
+                diff = -1;
+            }
+            else{
+                return;
+            }
+
+            const new_idx = this.term.argIdx() + diff;
+            const root = this.term.getRoot();
+            if(new_idx == -1){
+                if(parent.isAdd() && parent.parent != null && parent.parent.isEq() && 0 < parent.argIdx()){
+                    await algebra_ts.transpose(root, this.term, div, new Speech(), true, false);
+                    renderKatexSub(div, root.tex());
+                }
+            }
+            else if(new_idx < parent.args.length){
+
+                this.term.argShift(diff);
+                renderKatexSub(div, root.tex());
+            }
+            else if(new_idx == parent.args.length){
+                if(parent.isAdd() && parent.parent != null && parent.parent.isEq() && parent.argIdx() == 0){
+                    await algebra_ts.transpose(root, this.term, div, new Speech(), false, false);
+                    renderKatexSub(div, root.tex());
+                }
+            }
+            else{
+                msg("can not move.");
+            }
+        }
+    }
+}
+
+export const textBlockEvent = new TextBlockEvent();
+
 export async function initPlane(plane : Plane, root : layout_ts.Grid){
     initPlay();
     makeCssClass();
@@ -55,6 +182,8 @@ export function viewEvent(view : View){
             return;
         }
 
+        await textBlockEvent.keyDown(ev);
+
         if (ev.key === "Escape") {
             msg("Escape key pressed!");
             const closed = layout_ts.closeDlg();
@@ -71,9 +200,6 @@ export function viewEvent(view : View){
                 await Builder.tool.finish(view);
             }
         }
-        else{
-            await Builder.tool.keyDown(ev);
-        }
     });    
 
     window.addEventListener("resize", view.resizeView.bind(view));
@@ -85,6 +211,25 @@ export function viewEvent(view : View){
     dropEvent(view);
     
     window.requestAnimationFrame(view.drawShapes.bind(view));
+}
+
+function getTermFromPointerEvent(ev : PointerEvent, app : App) : Term {
+    const terms = app.allTerms();
+
+    let ele : HTMLElement | null = ev.target as HTMLElement;
+    for(; ele != null; ele = ele.parentElement){
+        if(ele.id.startsWith("tex-term-")){
+
+            const id_offset = "tex-term-".length;
+            const id = parseInt(ele.id.substring(id_offset));
+            const term = terms.find(x => x.id == id)!;
+            assert(term != undefined);
+
+            return term;
+        }
+    }
+
+    throw new MyError();
 }
 
 function dropEvent(view : View){

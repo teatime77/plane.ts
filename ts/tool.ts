@@ -241,9 +241,6 @@ export class Builder {
     async init(){        
     }
 
-    async keyDown(ev : KeyboardEvent){
-    }
-
     async click(view : View, position : Vec2, shape : Shape | undefined){        
     }
 
@@ -1911,53 +1908,6 @@ export class ExprTransformBuilder extends Builder {
 
     async init(){        
         this.reason  = await showMenu(ExprTransformReason);
-    }
-
-    async keyDown(ev : KeyboardEvent){
-        if(this.reason == ExprTransformReason.arg_shift && this.terms.length != 0){
-            const term = this.terms[0];
-            const parent = term.parent;
-            if(parent != null && (parent.isAdd() || parent.isMul())){
-                msg(`key-down:${ev.key}`);
-
-                let diff : number;
-                if(ev.key == "ArrowRight"){
-                    diff = 1;
-                }
-                else if(ev.key == "ArrowLeft"){
-                    diff = -1;
-                }
-                else{
-                    return;
-                }
-
-                const new_idx = term.argIdx() + diff;
-                const div = this.textBlocks[0].div;
-                const root = term.getRoot();
-                if(new_idx == -1){
-                    if(parent.isAdd() && parent.parent != null && parent.parent.isEq() && 0 < parent.argIdx()){
-                        await algebra_ts.transpose(root, term, div, new Speech(), true, false);
-                        renderKatexSub(div, root.tex());
-                    }
-                }
-                else if(new_idx < parent.args.length){
-
-                    this.shift += diff;
-
-                    term.argShift(diff);
-                    renderKatexSub(div, root.tex());
-                }
-                else if(new_idx == parent.args.length){
-                    if(parent.isAdd() && parent.parent != null && parent.parent.isEq() && parent.argIdx() == 0){
-                        await algebra_ts.transpose(root, term, div, new Speech(), false, false);
-                        renderKatexSub(div, root.tex());
-                    }
-                }
-                else{
-                    msg("can not move.");
-                }
-            }
-        }
     }
 
     async click(view : View, position : Vec2, shape : Shape | undefined){

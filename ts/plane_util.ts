@@ -24,6 +24,7 @@ export type  Speech = i18n_ts.Speech;
 export const Speech = i18n_ts.Speech;
 
 export const renderKatexSub = parser_ts.renderKatexSub;
+export const operator = parser_ts.operator;
 
 const $dic = new Map<string, HTMLElement>();
 
