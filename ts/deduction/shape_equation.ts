@@ -10,15 +10,25 @@ export const RefVar = parser_ts.RefVar;
 export type App = parser_ts.App;
 export const App = parser_ts.App;
 
-export function makeEquationTextBlock(equation : App) : TextBlock {
+export type EquationTextBlockClass = AngleEqualityConstraint | Assumption | ExprTransform | ShapeEquation;
+
+export function isEquationTextBlock(x : MathEntity | undefined){
+    if(x == undefined){
+        return false;
+    }
+
+    const classes = [AngleEqualityConstraint , Assumption , ExprTransform , ShapeEquation];
+    return classes.some(c => x instanceof c);
+}
+
+export function makeEquationTextBlock(parent : EquationTextBlockClass, equation : App) : TextBlock {
     const view = View.current;
 
     const text_block = new TextBlock( {
+        parent,
         text : equation.tex(),
         isTex : true,
         offset : Vec2.zero(),
-        app : equation,
-        // equationIdx : view.equationIdx++
     });
 
     text_block.setTextPosition(view.textBase.x, view.textBase.y);
@@ -46,12 +56,10 @@ async function makeShapeEquationByEquationText(reason : ShapeEquationReason, aux
         await speech.waitEnd();
     }
     
-    const text_block = makeEquationTextBlock(equation);
-
     return new ShapeEquation({
         reason,
         auxiliaryShapes,
-        shapes : [ text_block ],
+        shapes : [],
         equation
     });
 
@@ -183,8 +191,7 @@ export class ShapeEquation extends Statement implements EquationTextBlock {
         super(obj);
         this.equation = obj.equation;
 
-        assert(this.selectedShapes.length == 1 && this.selectedShapes[0] instanceof TextBlock);
-        this.textBlock = this.selectedShapes[0] as TextBlock;
+        this.textBlock = makeEquationTextBlock(this, this.equation);
 
         if(this.reason == ShapeEquationReason.sum_of_angles_is_pi && this.auxiliaryShapes.length == 2){
             assert(this.auxiliaryShapes.every(x => x instanceof Angle));
@@ -208,7 +215,6 @@ export async function simplifyEquationTextBlock(eqText : EquationTextBlock){
     const speech = new Speech()
     eqText.equation = await algebra_ts.simplify(speech, textBlock.div, eqText.equation) as App;
 
-    textBlock.app  = eqText.equation;
     textBlock.text = eqText.equation.tex();
     textBlock.updateTextDiv();
 

@@ -17,12 +17,12 @@ export class TextBlockEvent {
                 this.textBlock = textBlock;
             }
 
-            if(textBlock.app == undefined){
+            if(textBlock.getEquation() == undefined){
                 msg(`pointer-down:no app`);
                 return;
             }
 
-            this.term = getTermFromPointerEvent(ev, textBlock.app);
+            this.term = getTermFromPointerEvent(ev, textBlock.getEquation()!);
             this.downTime = Date.now();
             msg(`pointer-down:${this.term.str()}`);
         });

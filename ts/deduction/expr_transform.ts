@@ -148,7 +148,7 @@ export class ExprTransform extends MathEntity implements EquationTextBlock {
         this.reason   = obj.reason;
         this.equation = obj.equation;
         this.terms    = obj.terms;
-        this.textBlock = makeEquationTextBlock(this.equation);
+        this.textBlock = makeEquationTextBlock(this, this.equation);
     }
 
     getProperties(){

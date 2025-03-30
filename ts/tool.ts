@@ -1253,16 +1253,16 @@ export class AssumptionBuilder extends Builder {
     async init(){        
         const view = View.current;
 
-        let assumption : Assumption;
-        assumption = new Assumption();
-        addShapeSetRelations(view, assumption);
-
         const mathText = inputTextPrompt(TT("Enter a mathematical expression."));
         if(mathText == null){
             Builder.cancelTool();
         }
         else{
-            assumption.setMathText(mathText);
+            const equation = parser_ts.parseMath(mathText) as App;
+
+            let assumption : Assumption;
+            assumption = new Assumption({equation});
+            addShapeSetRelations(view, assumption);
         }
     }
 }

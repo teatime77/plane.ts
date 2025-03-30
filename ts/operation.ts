@@ -239,7 +239,6 @@ export class ClickShape extends Operation {
 
 export class ClickTerm extends Operation {
     textBlock_id : number;
-    // equationIdx : number;
     indexes : number[];
 
     constructor(textBlock_id : number, indexes : number[]){
@@ -249,13 +248,20 @@ export class ClickTerm extends Operation {
     }
 
     getTextBlockTerm() : [TextBlock, Term] {
-        const textBlock = View.current.allShapes().find(x => x.id == this.textBlock_id) as TextBlock;
-        if(!(textBlock instanceof TextBlock) || textBlock.app == undefined){
-            throw new MyError();
+        let textBlock = View.current.allShapes().find(x => x.id == this.textBlock_id) as TextBlock;
+        if(!(textBlock instanceof TextBlock) || textBlock.getEquation() == undefined){
+            if(textBlock instanceof ShapeEquation){
+                // !!!!!!!!!!!!!!!!!!!!!!!! ソース修正の副作用の経過措置 !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                textBlock = textBlock.textBlock;
+                assert(textBlock.getEquation() != undefined);
+            }
+            else{
+                throw new MyError();
+            }
         }
 
         const path = new parser_ts.Path(this.indexes);
-        const term  = path.getTerm(textBlock.app!);
+        const term  = path.getTerm(textBlock.getEquation()!);
 
         return [textBlock, term];
     }

@@ -247,13 +247,15 @@ export async function makeSelectionDlg(){
     }
 }
 
-export class Assumption extends MathEntity {
-    mathText : string = "";
-    expression! : App;
-    textBlock : TextBlock | undefined;
+export class Assumption extends MathEntity implements EquationTextBlock {
+    equation  : App;
+    textBlock : TextBlock;
 
-    constructor(){
-        super({});
+    constructor(obj : { equation : App } ){
+        super(obj);
+
+        this.equation = obj.equation;
+        this.textBlock = makeEquationTextBlock(this, this.equation);
     }
 
     getAllShapes(shapes : MathEntity[]){
@@ -266,18 +268,6 @@ export class Assumption extends MathEntity {
     reading() : Reading {
         // msg(`empty reading:${this.constructor.name}`);
         return new Reading(this, "", []);
-    }
-
-    setMathText(value : string){
-        this.mathText = value;
-        this.expression = parser_ts.parseMath(this.mathText) as App;
-
-        if(this.textBlock == undefined){
-            this.textBlock = makeEquationTextBlock(this.expression);
-        }
-        else{
-            this.textBlock.setTextApp(this.mathText, this.expression);
-        }
     }
 }
 
@@ -381,16 +371,6 @@ export class Statement extends Shape {
         }
 
         this.latexBox.setText(tex_text);
-    }
-
-    setMathText(value : string){
-        this.mathText = value;
-
-        if(Statement.idTimeout != undefined){
-            clearTimeout(Statement.idTimeout);
-        }
-        
-        Statement.idTimeout = setTimeout(this.showMathText.bind(this), 500);
     }
 
     setMode(mode : Mode){

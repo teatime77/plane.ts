@@ -35,7 +35,6 @@ export class View extends Widget {
     min! : Vec2;
     max! : Vec2;
 
-    equationIdx : number = 0;
     textBase : Vec2;
     textBaseY : number;
 
@@ -102,7 +101,6 @@ export class View extends Widget {
         this.operations = [];
         this.shapes = [];
         this.dirty = true;
-        this.equationIdx = 0;
         this.textBase.y = this.textBaseY;
 
         Plane.one.clearPlane();

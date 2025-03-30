@@ -113,6 +113,8 @@ export class LengthEqualityConstraint extends Constraint {
 }
 
 export class AngleEqualityConstraint extends Constraint {
+    equation : App | undefined;
+
     constructor(obj : {shapes : MathEntity[]}){
         super(obj);
 
@@ -120,9 +122,9 @@ export class AngleEqualityConstraint extends Constraint {
         if(angles.every(x => x.name != "")){
             assert(angles.length == 2);
             const text = `${angles[0].name} == ${angles[1].name}`;
-            const equation = parser_ts.parseMath(text) as App;
+            this.equation = parser_ts.parseMath(text) as App;
             
-            this.textBlock = makeEquationTextBlock(equation);
+            this.textBlock = makeEquationTextBlock(this, this.equation);
         }
         else{
 

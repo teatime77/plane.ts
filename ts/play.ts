@@ -130,15 +130,7 @@ export async function playShape(speech : i18n_ts.AbstractSpeech, all_shapes : Ma
     if(shape instanceof ShapeEquation || shape instanceof ExprTransform){
         const [node, text] = parser_ts.makeNodeTextByApp(shape.equation);
 
-        let text_block : TextBlock;
-        if(shape instanceof ShapeEquation){
-            text_block = shape.selectedShapes[0] as TextBlock;
-        }
-        else{
-            text_block = shape.textBlock;
-        }
-
-        const div_child = text_block.div.children[0] as HTMLElement;
+        const div_child = shape.textBlock.div.children[0] as HTMLElement;
 
         /*
             const id = setInterval(()=>{
@@ -150,7 +142,7 @@ export async function playShape(speech : i18n_ts.AbstractSpeech, all_shapes : Ma
         */
         if(i18n_ts.isEdge){
 
-            await parser_ts.showFlow(speech, shape.equation, text_block.div, named_all_shape_map);
+            await parser_ts.showFlow(speech, shape.equation, shape.textBlock.div, named_all_shape_map);
         }
         else{
 

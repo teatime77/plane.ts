@@ -212,14 +212,12 @@ export class TextBlock extends MathEntity {
     parent : MathEntity | undefined;
     text  : string;
     isTex : boolean;
-    // equationIdx : number = NaN;
     div   : HTMLDivElement;
 
     offset : Vec2 = new Vec2(0, 0);
-    app : App | undefined;
     termRects : TermRect[] = [];
 
-    constructor(obj : { parent? : MathEntity, text : string, isTex : boolean, equationIdx? : number, offset : Vec2, app? : App }){
+    constructor(obj : { parent? : MathEntity, text : string, isTex : boolean, offset : Vec2 }){
         super(obj);
         this.parent = obj.parent;
         this.text  = obj.text;
@@ -227,9 +225,8 @@ export class TextBlock extends MathEntity {
         this.offset = obj.offset;
 
         this.div   = document.createElement("div");
-        if(obj.app != undefined){
+        if(this.getEquation() != undefined){
 
-            this.app = obj.app;
             this.div.className = "selectable_tex";
             this.div.addEventListener("click", this.texClick.bind(this));
         }
@@ -239,15 +236,11 @@ export class TextBlock extends MathEntity {
         }
         this.div.style.fontSize = "x-large";
 
-        if(obj.equationIdx != undefined){
-            // this.equationIdx = obj.equationIdx;
-        }
-
         this.setVisible(this.visible);
 
         View.current.board.parentElement!.append(this.div);
 
-        if(this.app == undefined){
+        if(this.getEquation() == undefined){
 
             setCaptionEvent(this);
         }
@@ -255,6 +248,14 @@ export class TextBlock extends MathEntity {
         this.updateTextPosition();
 
         textBlockEvent.setTextBlockEvent(this);
+    }
+
+    getEquation() : App | undefined {
+        if(isEquationTextBlock(this.parent)){
+            return (this.parent as EquationTextBlockClass).equation;
+        }
+
+        return undefined;
     }
 
     makeObj() : any {
@@ -324,8 +325,8 @@ export class TextBlock extends MathEntity {
 
             renderKatexSub(this.div, text);
 
-            if(this.app != undefined){
-                const terms = this.app.allTerms();
+            if(this.getEquation() != undefined){
+                const terms = this.getEquation()!.allTerms();
                 const tex_spans = Array.from(this.div.getElementsByClassName("enclosing")) as HTMLSpanElement[];
                 this.termRects = [];
 
@@ -342,12 +343,6 @@ export class TextBlock extends MathEntity {
 
             this.div.innerText = text;
         }
-    }
-
-    setTextApp(text : string, app : App){
-        this.text = text;
-        this.app  = app;
-        this.updateTextDiv();
     }
 
     setVisible(visible : boolean){
