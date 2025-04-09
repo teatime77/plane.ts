@@ -17,7 +17,7 @@ export abstract class Operation {
     }
 }
 
-function convertOperations(version : number, operations : Operation[]) : Operation[] {
+export function convertOperations(version : number, operations : Operation[]) : Operation[] {
     if(version == 2.0){
 
         const new_operations : Operation[] = [];
@@ -58,7 +58,7 @@ function convertOperations(version : number, operations : Operation[]) : Operati
     return operations;
 }
 
-export async function loadOperationsText(data : any){
+export async function loadOperationsText(data : any) : Promise<Operation[]> {
     let lines : string[];
 
     if(2 <= data["version"]){
@@ -173,18 +173,9 @@ export async function loadOperationsText(data : any){
         operations.push(operation);
     }
 
-    operations = convertOperations(data["version"], operations);
-    const num_operations = operations.length;
-    operations.forEach(x => view.addOperation(x));
+    operations = plane_ts.convertOperations(data["version"], operations);
 
-    await playBack(PlayMode.fastForward);
-    assert(num_operations == View.current.operations.length);
-
-    for(const [i, o] of operations.entries()){
-        // msg(`load ${i}:${o.dump()}`);
-    }
-
-    // msg(`load Operations Text completes.`);
+    return operations;
 }
 
 export function getOperationsText(){

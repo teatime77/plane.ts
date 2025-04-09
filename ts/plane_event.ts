@@ -23,8 +23,15 @@ export class TextBlockEvent {
             }
 
             this.term = getTermFromPointerEvent(ev, textBlock.getEquation()!);
-            this.downTime = Date.now();
-            msg(`pointer-down:${this.term.str()}`);
+            if(this.term == undefined){
+
+                msg(`pointer-down: no term`);
+            }
+            else{
+
+                this.downTime = Date.now();
+                msg(`pointer-down:${this.term.str()}`);
+            }
         });
 
         textBlock.div.addEventListener("pointerup", (ev : PointerEvent)=>{
@@ -68,6 +75,12 @@ export class TextBlockEvent {
 
                 renderKatexSub(this.textBlock.div, root.tex());
             }
+        });
+
+        textBlock.div.addEventListener("contextmenu", (ev : MouseEvent)=>{
+            msg("text-Block-context-menu");
+            ev.stopPropagation();
+            ev.preventDefault();
         });
     }
 
@@ -213,7 +226,7 @@ export function viewEvent(view : View){
     window.requestAnimationFrame(view.drawShapes.bind(view));
 }
 
-function getTermFromPointerEvent(ev : PointerEvent, app : App) : Term {
+function getTermFromPointerEvent(ev : PointerEvent, app : App) : Term | undefined {
     const terms = app.allTerms();
 
     let ele : HTMLElement | null = ev.target as HTMLElement;
@@ -223,7 +236,10 @@ function getTermFromPointerEvent(ev : PointerEvent, app : App) : Term {
             const id_offset = "tex-term-".length;
             const id = parseInt(ele.id.substring(id_offset));
             const term = terms.find(x => x.id == id)!;
-            assert(term != undefined);
+            if(term == undefined){
+                msg(`get-Term-From-Pointer-Event:no term id:[${id}]`)
+                return undefined;
+            }
 
             return term;
         }
