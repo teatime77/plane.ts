@@ -3,7 +3,7 @@ namespace plane_ts {
 export function addEqualLengths(lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol){
     let set = equalLengths.find(x => x.has(lengthSymbolA) || x.has(lengthSymbolB));
     if(set == undefined){
-        set = new Set<LengthSymbol>([ lengthSymbolA, lengthSymbolB ]);
+        set = new MySet<LengthSymbol>([ lengthSymbolA, lengthSymbolB ]);
         equalLengths.push(set);
     }
     else{
@@ -79,7 +79,7 @@ function findParallelLinesOfLengthSymbols(lengthSymbolA : LengthSymbol, lengthSy
     return undefined;
 }
 
-function findTrianglePairByLengthSymbols(lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol, triangles_list : Triangle[][]) : [Triangle, Triangle] | undefined {
+function findTrianglePairByLengthSymbols(lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol, triangles_list : MyArray<MyArray<Triangle>>) : [Triangle, Triangle] | undefined {
     for(const triangles of triangles_list){
         const trianglesA = getTrianglesByLengthSymbol(lengthSymbolA, triangles);
         if(trianglesA.length == 0){

@@ -26,6 +26,216 @@ export const Speech = i18n_ts.Speech;
 export const renderKatexSub = parser_ts.renderKatexSub;
 export const operator = parser_ts.operator;
 
+export class MySet<T> {
+    protected data: Set<T> = new Set<T>();
+
+    constructor(data: T[] = []){
+        this.data = new Set<T>(data);
+    }
+
+    clear(){
+        this.data.clear();
+    }
+  
+    add(item: T): void {
+      this.data.add(item);
+    }
+  
+    has(item: T): boolean {
+      return this.data.has(item);
+    }
+  
+    get size(): number {
+      return this.data.size;
+    }
+
+    values(){
+        return this.data.values();
+    }
+  
+    forEach(callback: (value: T, value2: T, set: Set<T>) => void, thisArg?: any): void {
+      this.data.forEach(callback, thisArg);
+    }
+  
+    toArray(): T[] {
+      return Array.from(this.data);
+    }
+
+    [Symbol.iterator](): Iterator<T>{
+        return this.data.values();
+    }
+}
+
+export class MyArray<T> {
+    private data: T[] = [];
+  
+    constructor(initialData: T[] = []) {
+      this.data = initialData;
+    }
+
+    clear(){
+        this.data = [];
+    }
+  
+    getItem(index: number): T | undefined {
+      return this.data[index];
+    }
+  
+    addItem(item: T): void {
+      this.data.push(item);
+    }
+  
+    removeItem(index: number): T | undefined {
+      if (index >= 0 && index < this.data.length) {
+        return this.data.splice(index, 1)[0];
+      }
+      return undefined;
+    }
+  
+    get length(): number {
+      return this.data.length;
+    }
+  
+    forEach(callback: (item: T, index: number, array: T[]) => void): void {
+      this.data.forEach(callback);
+    }
+  
+    map<U>(callback: (item: T, index: number, array: T[]) => U): MyArray<U> {
+      const mappedArray = this.data.map(callback);
+      return new MyArray<U>(mappedArray);
+    }
+  
+    filter(callback: (item: T, index: number, array: T[]) => boolean): MyArray<T> {
+      const filteredArray = this.data.filter(callback);
+      return new MyArray<T>(filteredArray);
+    }
+  
+    toString(): string {
+      return this.data.toString();
+    }
+
+    toArray(): T[] {
+        return this.data;
+    }
+
+    some(fnc : (x:T)=>boolean){
+        return this.data.some(fnc);
+    }
+
+    find(fnc : (x:T)=>boolean){
+        return this.data.find(fnc);
+    }
+
+    push(x : T){
+        this.data.push(x);
+    }
+
+    flat(){
+        return this.data.flat();
+    }
+
+    [Symbol.iterator](): Iterator<T> {
+        let index = 0;
+        const array = this.data;
+
+        return {
+            next(): IteratorResult<T> {
+                if (index < array.length) {
+                    return { value: array[index++], done: false };
+                } else {
+                    return { value: undefined, done: true };
+                }
+            },
+        };
+    }
+
+    remove(x : T, existence_check : boolean = true){
+        const idx = this.data.indexOf(x);
+        if(idx == -1){
+            if(existence_check){
+                throw new MyError();
+            }
+        }
+        else{
+            this.data.splice(idx, 1);
+        }
+    }
+}
+
+export class MyMap<K, V> {
+    private map: Map<K, V> = new Map<K, V>();
+  
+    constructor() {}
+  
+    /**
+     * Sets a key-value pair in the map.
+     *
+     * @param key The key to set. It will be converted to a string.
+     * @param value The value to associate with the key.
+     */
+    set(key: K, value: V): void {
+      this.map.set(key, value);
+    }
+  
+    /**
+     * Gets the value associated with a given key.
+     *
+     * @param key The key to retrieve the value for. It will be converted to a string.
+     * @returns The value associated with the key, or undefined if the key is not found.
+     */
+    get(key: K): V | undefined {
+      return this.map.get(key);
+    }
+  
+    /**
+     * Checks if the map contains a given key.
+     *
+     * @param key The key to check for. It will be converted to a string.
+     * @returns True if the key exists in the map, false otherwise.
+     */
+    has(key: K): boolean {
+      return this.map.has(key);
+    }
+  
+    clear(){
+        this.map.clear();
+    }
+
+    entries() {
+        return this.map.entries();
+    }
+
+    keys(){
+        return this.map.keys();
+    }
+
+    values(){
+        return this.map.values();
+    }
+}
+  
+
+
+export function Mylist<T>(set : MySet<T> | undefined) : T[] {
+    if(set == undefined){
+        return [];
+    }
+    else{
+
+        return set.toArray();
+    }
+}
+
+
+export function MyIntersection<T>(set1 : MySet<T> | undefined, set2 : MySet<T> | undefined) : T[] {
+    if(set1 == undefined || set2 == undefined){
+        return [];
+    }
+
+    return Array.from(set1.values()).filter(x => set2.has(x));
+}
+
+
 const $dic = new Map<string, HTMLElement>();
 
 export function $(id : string) : HTMLElement {

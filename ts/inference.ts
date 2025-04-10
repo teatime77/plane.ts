@@ -1,27 +1,28 @@
+///<reference path="plane_util.ts" />
 ///<reference path="statement.ts" />
 ///<reference path="deduction/triangle_congruence.ts" />
 
 namespace plane_ts {
 //
-export let perpendicularPairs : [Set<AbstractLine>, Set<AbstractLine>][] = [];
-export let supplementaryAngles : [Set<Angle>, Set<Angle>][];
-export const rightAngles = new Set<Angle>();
+let perpendicularPairs = new MyArray<[MySet<AbstractLine>, MySet<AbstractLine>]>();
+export let supplementaryAngles = new MyArray<[MySet<Angle>, MySet<Angle>]>();
+export const rightAngles = new MySet<Angle>();
 
-export const pointsToLengthSymbol = new Map<string, LengthSymbol>();
-export const centerOfCircleArcs = new Map<Point,Set<CircleArc>>();
-export const pointOnCircleArcs = new Map<Point,Set<CircleArc>>();
-export const pointOnLines = new Map<Point,Set<AbstractLine>>();
-export const angleMap = new Map<string,Angle>();
+export const pointsToLengthSymbol = new MyMap<string, LengthSymbol>();
+export const centerOfCircleArcs = new MyMap<Point,MySet<CircleArc>>();
+export const pointOnCircleArcs = new MyMap<Point,MySet<CircleArc>>();
+export const pointOnLines = new MyMap<Point,MySet<AbstractLine>>();
+export const angleMap = new MyMap<string,Angle>();
 
-export let parallelogramClassifiers = new Set<ParallelogramClassifier>();
+export let parallelogramClassifiers = new MySet<ParallelogramClassifier>();
 
-export let equalLengths : Set<LengthSymbol>[] = [];
-export let equalCircleArcs : Set<CircleArc>[] = [];
-export let congruentTriangles : Triangle[][] = [];
-export let similarTriangles : Triangle[][] = [];
-export let isoscelesTriangle : Triangle[] = [];
+export let equalLengths = new MyArray<MySet<LengthSymbol>>();
+export let equalCircleArcs = new MyArray<MySet<CircleArc>>();
+export let congruentTriangles = new MyArray<MyArray<Triangle>>();
+export let similarTriangles = new MyArray<MyArray<Triangle>>();
+export let isoscelesTriangle = new MyArray<Triangle>();
 
-export let propositions : Proposition[] = [];
+export let propositions = new MyArray<Proposition>();
 
 export const reasonToDoc = new Map<number, number>([
     [ ShapeEquationReason.sum_of_interior_angles_of_triangle_is_pi, 18 ],
@@ -45,18 +46,27 @@ export const reasonToDoc = new Map<number, number>([
 
 export const usedReasons = new Set<number>();
 
-function addSetMap<T, V>(a : T, b : V, map:Map<T, Set<V>>){
+function addMySetMap<T, V>(a : T, b : V, map:MyMap<T, MySet<V>>){
     let set = map.get(a);
     if(set == undefined){
-        set = new Set<V>();
+        set = new MySet<V>();
+        map.set(a, set);
+    }
+    set.add(b);
+}
+
+function addSetMap<T, V>(a : T, b : V, map:Map<T, MySet<V>>){
+    let set = map.get(a);
+    if(set == undefined){
+        set = new MySet<V>();
         map.set(a, set);
     }
     set.add(b);
 }
 
 export function initRelations(){
-    perpendicularPairs = [];
-    supplementaryAngles = [];
+    perpendicularPairs.clear();
+    supplementaryAngles.clear();
     rightAngles.clear();
 
     pointsToLengthSymbol.clear();
@@ -67,13 +77,13 @@ export function initRelations(){
 
     parallelogramClassifiers.clear();
 
-    equalLengths = [];
-    equalCircleArcs = [];
-    congruentTriangles = [];
-    similarTriangles = [];
-    isoscelesTriangle = [];
+    equalLengths.clear();
+    equalCircleArcs.clear();
+    congruentTriangles.clear();
+    similarTriangles.clear();
+    isoscelesTriangle.clear();
 
-    propositions = [];
+    propositions.clear();
 }
 
 export function recalcRelations(view : View){
@@ -82,17 +92,17 @@ export function recalcRelations(view : View){
 }
 
 export function addCenterOfCircleArcs(point : Point, circle : CircleArc){
-    addSetMap<Point,CircleArc>(point, circle, centerOfCircleArcs);
+    addMySetMap<Point,CircleArc>(point, circle, centerOfCircleArcs);
     assert(centerOfCircleArcs.get(point) != undefined);
 }
 
 export function addPointOnCircleArcs(point : Point, circle : CircleArc){
-    addSetMap<Point,CircleArc>(point, circle, pointOnCircleArcs);
+    addMySetMap<Point,CircleArc>(point, circle, pointOnCircleArcs);
     assert(pointOnCircleArcs.get(point) != undefined);
 }
 
 export function addPointOnLines(point : Point, line : AbstractLine){
-    addSetMap<Point,AbstractLine>(point, line, pointOnLines);
+    addMySetMap<Point,AbstractLine>(point, line, pointOnLines);
     // msg(`add-Point-On-Lines point${point.id} line:${line.id}`);
     assert(pointOnLines.get(point) != undefined);
 }
@@ -103,7 +113,7 @@ export function getLinesByPoint(point : Point) : AbstractLine[] {
         return [];
     }
     else{
-        return Array.from(lines);
+        return lines.toArray();
     }
 }
 
@@ -113,7 +123,7 @@ export function getCircleArcsByPoint(point : Point) : CircleArc[] {
         return [];
     }
     else{
-        return Array.from(circles);
+        return circles.toArray();
     }
 }
 
@@ -136,18 +146,18 @@ export function addPerpendicularPairs(line1 : AbstractLine, line2 : AbstractLine
         }
     }
 
-    perpendicularPairs.push([ new Set<AbstractLine>([line1]), new Set<AbstractLine>([line2])  ])    
+    perpendicularPairs.push([ new MySet<AbstractLine>([line1]), new MySet<AbstractLine>([line2])  ])    
 }
 
 export function addParallelLines(line1 : AbstractLine, line2 : AbstractLine){
     const line_sets = perpendicularPairs.flat().filter(x => x.has(line1) || x.has(line2));
 
-    let line_set : Set<AbstractLine>; 
+    let line_set : MySet<AbstractLine>; 
 
     switch(line_sets.length){
     case 0 : 
-        line_set = new Set<AbstractLine>(); 
-        perpendicularPairs.push([line_set, new Set<AbstractLine>()]);
+        line_set = new MySet<AbstractLine>(); 
+        perpendicularPairs.push([line_set, new MySet<AbstractLine>()]);
         break;
 
     case 1 : 
@@ -161,7 +171,7 @@ export function addParallelLines(line1 : AbstractLine, line2 : AbstractLine){
     line_set.add(line2);
 }
 
-export function getPerpendicularLines(line : AbstractLine) : Set<AbstractLine> | undefined {
+export function getPerpendicularLines(line : AbstractLine) : MySet<AbstractLine> | undefined {
     for(const [lines1, lines2] of perpendicularPairs){
         if(lines1.has(line)){
             return lines2;
@@ -174,7 +184,7 @@ export function getPerpendicularLines(line : AbstractLine) : Set<AbstractLine> |
     return undefined;
 }
 
-export function getParallelLines(line : AbstractLine) : Set<AbstractLine> | undefined {
+export function getParallelLines(line : AbstractLine) : MySet<AbstractLine> | undefined {
     return perpendicularPairs.flat().find(x => x.has(line));
 }
 
@@ -213,8 +223,8 @@ export function addEqualCircleArcs(circle1 : CircleArc, circle2 : CircleArc){
         if(circle_set2 != undefined){
             if(circle_set1 != circle_set2){
 
-                list(circle_set2).forEach(x => circle_set1.add(x));
-                remove(equalCircleArcs, circle_set2);
+                Mylist(circle_set2).forEach(x => circle_set1.add(x));
+                equalCircleArcs.remove(circle_set2);
             }
         }
         else{
@@ -226,7 +236,7 @@ export function addEqualCircleArcs(circle1 : CircleArc, circle2 : CircleArc){
             circle_set2.add(circle1);
         }
         else{
-            const new_set = new Set<CircleArc>([ circle1, circle2 ]);
+            const new_set = new MySet<CircleArc>([ circle1, circle2 ]);
             equalCircleArcs.push(new_set);
         }
     }
@@ -239,7 +249,7 @@ export function getCommonLineOfPoints(pointA : Point, pointB : Point) : Abstract
         return undefined;
     }
 
-    const common_lines = intersection<AbstractLine>(linesA, linesB);
+    const common_lines = MyIntersection<AbstractLine>(linesA, linesB);
     switch(common_lines.length){
     case 0: return undefined;
     case 1: return common_lines[0];
@@ -320,7 +330,7 @@ export function addCongruentSimilarTriangles(is_congruent : boolean, triangle1 :
         }
     }
 
-    triangles_list.push([triangle1, triangle2]);
+    triangles_list.push(new MyArray<Triangle>([triangle1, triangle2]));
 }
 
 export function addCongruentTriangles(triangle1 : Triangle, triangle2 : Triangle){
@@ -352,7 +362,7 @@ export function findEqualLengthsByPointsPair(As : [Point, Point], Bs : [Point, P
 }
 
 export function getParallelogramClassifier(points : Point[]) : ParallelogramClassifier | undefined {
-    return list(parallelogramClassifiers).find(x => areSetsEqual(x.quadrilateral().points, points) );
+    return Mylist(parallelogramClassifiers).find(x => areSetsEqual(x.quadrilateral().points, points) );
 }
 
 export function getParallelogramsByDiagonalLengthSymbols(lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol) : Quadrilateral[]{
@@ -386,7 +396,7 @@ export function isParallelogramPoints(points : Point[]) : boolean {
     return getParallelogramClassifier(points) != undefined;
 }
 
-export function getTrianglesByAngle(angle : Angle, triangles : Triangle[]) : Triangle[] {
+export function getTrianglesByAngle(angle : Angle, triangles : MyArray<Triangle>) : Triangle[] {
     const triangles_with_inner_angle : Triangle[] = [];
 
     LA : for(const triangle of triangles){
@@ -419,7 +429,7 @@ export function getTrianglesByAngle(angle : Angle, triangles : Triangle[]) : Tri
 }
 
 
-export function getTrianglesByLengthSymbol(length_symbol : LengthSymbol, triangles : Triangle[]) : Triangle[] {
+export function getTrianglesByLengthSymbol(length_symbol : LengthSymbol, triangles : MyArray<Triangle>) : Triangle[] {
     const triangles_with_length_symbol : Triangle[] = [];
 
     const Length_symbol_points = [ length_symbol.pointA, length_symbol.pointB ];

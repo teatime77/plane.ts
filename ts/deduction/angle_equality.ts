@@ -35,7 +35,7 @@ export function findEqualAnglesBy3pointsPair(points1 : Point[], points2 : Point[
     angles_list.push(rightAngles);
     
     for(const angle_set of angles_list){
-        const angles = Array.from(angle_set);
+        const angles = angle_set.toArray();
         const angle1 = findAngleBy3points(angles, points1);
         if(angle1 != undefined){
             const angle2 = findAngleBy3points(angles, points2);
@@ -116,7 +116,7 @@ export function addSupplementaryAngles(angle1 : Angle, angle2 : Angle){
         }
     }
 
-    supplementaryAngles.push([ new Set<Angle>([angle1]), new Set<Angle>([angle2])  ])    
+    supplementaryAngles.push([ new MySet<Angle>([angle1]), new MySet<Angle>([angle2])  ])    
 }
 
 export function checkSupplementaryAngles(root : App){
@@ -144,12 +144,12 @@ export function checkSupplementaryAngles(root : App){
 export function addEqualAngles(angle1 : Angle, angle2 : Angle){
     const angle_sets = supplementaryAngles.flat().filter(x => x.has(angle1) || x.has(angle2));
 
-    let angle_set : Set<Angle>; 
+    let angle_set : MySet<Angle>; 
 
     switch(angle_sets.length){
     case 0 : 
-        angle_set = new Set<Angle>(); 
-        supplementaryAngles.push([angle_set, new Set<Angle>()]);
+        angle_set = new MySet<Angle>(); 
+        supplementaryAngles.push([angle_set, new MySet<Angle>()]);
         break;
 
     case 1 : 
@@ -162,7 +162,7 @@ export function addEqualAngles(angle1 : Angle, angle2 : Angle){
     angle_set.add(angle1);
     angle_set.add(angle2);
 
-    const angle_equality_propositions = propositions.filter(x => x instanceof ShapeProposition && x.reason == PropositionReason.angle_equality) as ShapeProposition[];
+    const angle_equality_propositions = propositions.filter(x => x instanceof ShapeProposition && x.reason == PropositionReason.angle_equality).toArray() as ShapeProposition[];
     const proven_proposition = angle_equality_propositions.find(x => areSetsEqual(x.selectedShapes, [angle1, angle2]));
 }
 
@@ -191,7 +191,7 @@ export function isEqualAnglePoints(angle_pointsA : Point[], angle_pointsB : Poin
     return false;
 }
 
-function findTrianglePairByAngles(angleA : Angle, angleB : Angle, triangles_list : Triangle[][]) : [Triangle, Triangle] | undefined {
+function findTrianglePairByAngles(angleA : Angle, angleB : Angle, triangles_list : MyArray<MyArray<Triangle>>) : [Triangle, Triangle] | undefined {
     for(const triangles of triangles_list){
         const trianglesA = getTrianglesByAngle(angleA, triangles);
         if(trianglesA.length == 0){

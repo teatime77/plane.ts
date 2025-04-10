@@ -543,7 +543,7 @@ export class LengthSymbol extends Shape {
         this.circle = undefined;
 
         for(const [center, point] of [[this.pointA, this.pointB], [this.pointB, this.pointA]]){
-            const circles = list(centerOfCircleArcs.get(center));
+            const circles = Mylist(centerOfCircleArcs.get(center));
             if(circles.length != 0){
     
                 this.circle = circles.find(x => x.includesPoint(point)) as CircleByRadius | ArcByRadius;
