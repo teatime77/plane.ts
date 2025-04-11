@@ -84,6 +84,8 @@ export function initRelations(){
     isoscelesTriangle.clear();
 
     propositions.clear();
+
+    View.current.relationLogs = [];
 }
 
 export function recalcRelations(view : View){

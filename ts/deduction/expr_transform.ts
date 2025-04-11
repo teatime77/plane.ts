@@ -172,5 +172,13 @@ export class ExprTransform extends MathEntity implements EquationTextBlock {
 
         await speech.speak(text);
     }
+
+    show(){        
+        this.textBlock.show();
+    }
+
+    hide(){        
+        this.textBlock.hide();
+    }
 }
 }

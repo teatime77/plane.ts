@@ -300,6 +300,8 @@ export class Builder {
     resetTool(shape : MathEntity | undefined){
         if(View.current.operations.length != 0){
             const last_operation = last(View.current.operations);
+            last_operation.shapesLength = View.current.shapes.length;
+            last_operation.relationLogsLength = View.current.relationLogs.length;
         }
         View.current.resetMode();
 
@@ -2244,12 +2246,19 @@ export function addToShapeHistory(shape : MathEntity){
     const button = makeShapeButton(shape, true);
     
     Plane.one.shapes_block.addChild(button);
+    assert(Plane.one.shapes_block.children.length == View.current.shapes.length);
     layout_ts.Layout.root.updateRootLayout();
 }
 
-export function popShapeList(){
-    Plane.one.shapes_block.popChild();
+export function pushShapeList(ui : UI){
+    Plane.one.shapes_block.addChild(ui);
     layout_ts.Layout.root.updateRootLayout();
+}
+
+export function popShapeList() : UI | undefined {
+    const child = Plane.one.shapes_block.popChild();
+    layout_ts.Layout.root.updateRootLayout();
+    return child;
 }
 
 export function clearShapeList(){

@@ -26,6 +26,109 @@ export const Speech = i18n_ts.Speech;
 export const renderKatexSub = parser_ts.renderKatexSub;
 export const operator = parser_ts.operator;
 
+class T1 { 
+    set   : Set<any>; 
+    value : any;
+
+    constructor(set : Set<any>, value : any){
+        this.set   = set;
+        this.value = value;
+    }
+}
+
+class T2 { 
+    array : Array<any>;
+    value : any;
+
+    constructor(array : Array<any>, value  : any){
+        this.array = array;
+        this.value = value;
+    }
+}
+
+class T3 { 
+    array : Array<any>;
+    value : any;
+    index : number;
+
+    constructor(array : Array<any>, value : any, index : number){
+        this.array = array;
+        this.value = value;
+        this.index = index;
+    }
+}
+
+class T4 { 
+    map   : Map<any,any>;
+    key   : any;
+    value : any;
+
+    constructor(map : Map<any,any>, key : any, value : any){
+        this.map   = map;
+        this.key   = key;
+        this.value = value;
+    }
+}
+
+export type RelationLog = T1|T2|T3|T4;
+
+export class UndoData {
+    operations : Operation[] = [];
+    shapes     : MathEntity[] = [];
+    relationLogs : RelationLog[] = [];
+    historyUIs   : UI[] = [];
+}
+
+export function undoRelations(relationLogs : RelationLog[]){
+    for(const x of relationLogs.slice().reverse()){
+        if(x instanceof T1){
+            assert(x.set.has(x.value));
+            x.set.delete(x.value);
+        }
+        else if(x instanceof T2){
+            assert(x.array.includes(x.value));
+            remove(x.array, x.value);
+        }
+        else if(x instanceof T3){
+            x.array.splice(x.index, 0, x.value);
+            
+        }
+        else if(x instanceof T4){
+            assert(x.map.get(x.key) == x.value);
+            x.map.delete(x.key);
+        }
+        else{
+            throw new MyError();
+        }
+    }
+}
+
+
+export function redoRelations(relationLogs : RelationLog[]){
+    for(const x of relationLogs){
+        if(x instanceof T1){
+            assert(!x.set.has(x.value));
+            x.set.add(x.value);
+        }
+        else if(x instanceof T2){
+            assert(!x.array.includes(x.value));
+            x.array.push(x.value);
+        }
+        else if(x instanceof T3){
+            remove(x.array, x.value);            
+        }
+        else if(x instanceof T4){
+            assert(!x.map.has(x.key));
+            x.map.set(x.key, x.value);
+        }
+        else{
+            throw new MyError();
+        }
+
+        View.current.relationLogs.push(x);
+    }
+}
+
 export class MySet<T> {
     protected data: Set<T> = new Set<T>();
 
@@ -37,16 +140,16 @@ export class MySet<T> {
         this.data.clear();
     }
   
-    add(item: T): void {
-      this.data.add(item);
+    add(value: T): void {
+        if(!this.data.has(value)){
+            this.data.add(value);
+
+            View.current.relationLogs.push(new T1(this.data, value));
+        }
     }
   
     has(item: T): boolean {
       return this.data.has(item);
-    }
-  
-    get size(): number {
-      return this.data.size;
     }
 
     values(){
@@ -76,42 +179,10 @@ export class MyArray<T> {
     clear(){
         this.data = [];
     }
-  
-    getItem(index: number): T | undefined {
-      return this.data[index];
-    }
-  
-    addItem(item: T): void {
-      this.data.push(item);
-    }
-  
-    removeItem(index: number): T | undefined {
-      if (index >= 0 && index < this.data.length) {
-        return this.data.splice(index, 1)[0];
-      }
-      return undefined;
-    }
-  
-    get length(): number {
-      return this.data.length;
-    }
-  
-    forEach(callback: (item: T, index: number, array: T[]) => void): void {
-      this.data.forEach(callback);
-    }
-  
-    map<U>(callback: (item: T, index: number, array: T[]) => U): MyArray<U> {
-      const mappedArray = this.data.map(callback);
-      return new MyArray<U>(mappedArray);
-    }
-  
+    
     filter(callback: (item: T, index: number, array: T[]) => boolean): MyArray<T> {
       const filteredArray = this.data.filter(callback);
       return new MyArray<T>(filteredArray);
-    }
-  
-    toString(): string {
-      return this.data.toString();
     }
 
     toArray(): T[] {
@@ -126,8 +197,10 @@ export class MyArray<T> {
         return this.data.find(fnc);
     }
 
-    push(x : T){
-        this.data.push(x);
+    push(value : T){
+        this.data.push(value);
+
+        View.current.relationLogs.push(new T2(this.data, value));
     }
 
     flat(){
@@ -149,15 +222,16 @@ export class MyArray<T> {
         };
     }
 
-    remove(x : T, existence_check : boolean = true){
-        const idx = this.data.indexOf(x);
-        if(idx == -1){
-            if(existence_check){
-                throw new MyError();
-            }
+    remove(x : T){
+        const index = this.data.indexOf(x);
+        if(index == -1){
+            throw new MyError();
         }
         else{
-            this.data.splice(idx, 1);
+            this.data.splice(index, 1);
+
+            const value = this.data[index];
+            View.current.relationLogs.push(new T3(this.data, value, index));
         }
     }
 }
@@ -167,34 +241,17 @@ export class MyMap<K, V> {
   
     constructor() {}
   
-    /**
-     * Sets a key-value pair in the map.
-     *
-     * @param key The key to set. It will be converted to a string.
-     * @param value The value to associate with the key.
-     */
     set(key: K, value: V): void {
-      this.map.set(key, value);
+        if(!this.map.has(key)){
+
+            this.map.set(key, value);
+
+            View.current.relationLogs.push(new T4(this.map, key, value));
+        }
     }
   
-    /**
-     * Gets the value associated with a given key.
-     *
-     * @param key The key to retrieve the value for. It will be converted to a string.
-     * @returns The value associated with the key, or undefined if the key is not found.
-     */
     get(key: K): V | undefined {
       return this.map.get(key);
-    }
-  
-    /**
-     * Checks if the map contains a given key.
-     *
-     * @param key The key to check for. It will be converted to a string.
-     * @returns True if the key exists in the map, false otherwise.
-     */
-    has(key: K): boolean {
-      return this.map.has(key);
     }
   
     clear(){

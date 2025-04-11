@@ -5,6 +5,8 @@ export let playBackOperations : PlayBack;
 export abstract class Operation {
     static maxId : number = 0;
     operationId : number;
+    shapesLength = NaN;
+    relationLogsLength = NaN;
 
     abstract toString() : string;
 
@@ -416,6 +418,125 @@ export class PlayBack {
     peek() : Operation {
         return this.operations[this.index];
     }
+
+    async play(){
+        View.isPlayBack = true;
+
+        const view : View = View.current;
+        let start_shape_idx = view.shapes.length;
+
+        const speech = new i18n_ts.Speech();
+
+        let new_shapes : MathEntity[] = view.shapes.slice();
+        const named_all_shape_map = new Map<string, plane_ts.Shape>();
+
+        while(!this.done()){
+            if(getPlayMode() == PlayMode.stop){
+    
+                // view.operations = operations_copy;
+                break;
+            }
+    
+            while(this.peek() instanceof EnumSelection){
+                msg(`wait for show menu`);
+                await sleep(100);
+            }
+    
+            const operation = this.next();
+            view.addOperation(operation);
+            if(operation instanceof ClickShape){
+                await movePointer(operation.position);
+                let shape : Shape | undefined;
+                if(! isNaN(operation.shapeId)){
+                    shape = idMap.get(operation.shapeId) as Shape;
+                    if(shape instanceof TextBlock){
+                        shape = undefined;
+                    }
+                    else if(shape instanceof Shape){
+                    }
+                    else{
+                        msg(`no shape: ${operation.shapeId}`)
+                        const ids = Array.from(idMap.keys()).sort();
+                        for(const id of ids){
+                            msg(`  ${id} ${idMap.get(id)!.constructor.name}`);
+                        }
+
+                        throw new MyError();
+                    }
+                }
+                await Builder.tool.click(view, operation.position, shape);
+            }
+            else if(operation instanceof ClickTerm){
+                if(Builder.tool instanceof ExprTransformBuilder){
+                    const [textBlock, term] = operation.getTextBlockTerm();
+                    await Builder.tool.termClick(term, textBlock);
+                }
+                else{
+                    throw new MyError();
+                }
+            }
+            else if(operation instanceof ToolSelection){
+                await moveToolSelectionPointer(operation);
+                await Builder.setToolByName(operation.toolName, false);
+            }
+            else if(operation instanceof ToolFinish){
+                assert(Builder.toolName == operation.toolName);
+                await Builder.tool.finish(view);
+            }
+            else if(operation instanceof PropertySetting){
+                const shape = view.allShapes().find(x => x.id == operation.id)!;
+                assert(shape != undefined);
+                if([ "name", "lineKind", "angleMark" ].includes(operation.name)){
+                    await showPropertyDlg(shape, operation);
+                }
+                else{
+                    setProperty(shape, operation.name, operation.value);
+                }
+            }
+            else{
+                throw new MyError();
+            }
+    
+            if(Builder.tool.done){
+                Builder.tool.done = false;
+    
+                const shapes = view.shapes.slice(start_shape_idx);
+                for(const shape of shapes){
+                    let sub_shapes : Shape[] = [];
+                    shape.getAllShapes(sub_shapes);
+                    sub_shapes = unique(sub_shapes);
+    
+                    sub_shapes.forEach(x => x.show());
+                    new_shapes = unique(new_shapes.concat(sub_shapes));
+    
+                    const named_sub_shapes = sub_shapes.filter(x => x instanceof Shape && x.name != "") as Shape[];
+                    named_sub_shapes.forEach(x => named_all_shape_map.set(x.name, x));
+            
+                    // shape.allShapes().forEach(x => x.show());
+    
+                    shape.setRelations();
+            
+                    if(shape.mute){
+                        continue;
+                    }
+    
+                    await playShape(speech, new_shapes, named_all_shape_map, shape);
+                }
+    
+                start_shape_idx = view.shapes.length;
+                await speech.waitEnd();
+            }
+    
+            view.dirty = true;
+        }
+    
+        new_shapes.forEach(x => {x.show(); x.setMode(Mode.none); });
+
+        View.isPlayBack = false;
+
+        setPlayMode(PlayMode.stop);
+        PlayBack.startIndex = NaN;    
+    }
 }
 
 export async function typeIntoInput(element: HTMLInputElement, text: string, delay = 100) {
@@ -471,120 +592,17 @@ export async function playBack(play_mode : PlayMode){
     }
     
     setPlayMode(play_mode);
-    View.isPlayBack = true;
-
-    const speech = new i18n_ts.Speech();
-
-
-    let start_shape_idx = view.shapes.length;
 
     playBackOperations = new PlayBack(view, operations_copy);
 
-    let all_shapes : MathEntity[] = [];
-    const named_all_shape_map = new Map<string, plane_ts.Shape>();
+    assert(view.shapes.length == 0);
 
-    while(!playBackOperations.done()){
-        if(getPlayMode() == PlayMode.stop){
-
-            view.operations = operations_copy;
-            break;
-        }
-
-        while(playBackOperations.peek() instanceof EnumSelection){
-            msg(`wait for show menu`);
-            await sleep(100);
-        }
-
-        const operation = playBackOperations.next();
-        view.addOperation(operation);
-        if(operation instanceof ClickShape){
-            await movePointer(operation.position);
-            let shape : Shape | undefined;
-            if(! isNaN(operation.shapeId)){
-                shape = idMap.get(operation.shapeId) as Shape;
-                if(shape instanceof TextBlock){
-                    shape = undefined;
-                }
-                else{
-                    assert(shape instanceof Shape);
-                }
-            }
-            await Builder.tool.click(view, operation.position, shape);
-        }
-        else if(operation instanceof ClickTerm){
-            if(Builder.tool instanceof ExprTransformBuilder){
-                const [textBlock, term] = operation.getTextBlockTerm();
-                await Builder.tool.termClick(term, textBlock);
-            }
-            else{
-                throw new MyError();
-            }
-        }
-        else if(operation instanceof ToolSelection){
-            await moveToolSelectionPointer(operation);
-            await Builder.setToolByName(operation.toolName, false);
-        }
-        else if(operation instanceof ToolFinish){
-            assert(Builder.toolName == operation.toolName);
-            await Builder.tool.finish(view);
-        }
-        else if(operation instanceof PropertySetting){
-            const shape = view.allShapes().find(x => x.id == operation.id)!;
-            assert(shape != undefined);
-            if([ "name", "lineKind", "angleMark" ].includes(operation.name)){
-                await showPropertyDlg(shape, operation);
-            }
-            else{
-                setProperty(shape, operation.name, operation.value);
-            }
-        }
-        else{
-            throw new MyError();
-        }
-
-        if(Builder.tool.done){
-            Builder.tool.done = false;
-
-            const shapes = view.shapes.slice(start_shape_idx);
-            for(const shape of shapes){
-                let sub_shapes : Shape[] = [];
-                shape.getAllShapes(sub_shapes);
-                sub_shapes = unique(sub_shapes);
-
-                sub_shapes.forEach(x => x.show());
-                all_shapes = unique(all_shapes.concat(sub_shapes));
-
-                const named_sub_shapes = sub_shapes.filter(x => x instanceof Shape && x.name != "") as Shape[];
-                named_sub_shapes.forEach(x => named_all_shape_map.set(x.name, x));
-        
-                // shape.allShapes().forEach(x => x.show());
-
-                shape.setRelations();
-        
-                if(shape.mute){
-                    continue;
-                }
-
-                await playShape(speech, all_shapes, named_all_shape_map, shape);
-            }
-
-            start_shape_idx = view.shapes.length;
-            await speech.waitEnd();
-        }
-
-        view.dirty = true;
-    }
+    await playBackOperations.play();
 
     view.restoreView();
 
-    all_shapes.forEach(x => {x.show(); x.setMode(Mode.none); });
-
     view.dirty = true;
     view.updateShapes();
-
-    setPlayMode(PlayMode.stop);
-    View.isPlayBack = false;
-    PlayBack.startIndex = NaN;
 }
 
 }

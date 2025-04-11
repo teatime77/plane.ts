@@ -208,6 +208,13 @@ export class ShapeEquation extends Statement implements EquationTextBlock {
         return this.textReading(TT(""));
     }
 
+    show(){        
+        this.textBlock.show();
+    }
+
+    hide(){        
+        this.textBlock.hide();
+    }
 }
 
 export async function simplifyEquationTextBlock(eqText : EquationTextBlock){

@@ -25,7 +25,9 @@ export class View extends Widget {
 
     operations : Operation[] = [];
     shapes : MathEntity[] = [];
-    undoStack : Operation[][] = [];
+    relationLogs : RelationLog[] = [];
+
+    undoStack : UndoData[] = [];
 
     changed : Set<MathEntity> = new Set<MathEntity>();
 
@@ -519,33 +521,71 @@ export class View extends Widget {
             return;
         }
 
-        const undo_operations : Operation[] = [];
+        let undoData : UndoData | undefined;
 
-        while(this.operations.length != 0){
-            const operation = this.operations.pop()!;
-            undo_operations.unshift(operation);     
-            
-            if(operation instanceof ToolSelection){
+        for(let idx = this.operations.length - 1 - 1; 0 <= idx; idx--){
+            const operation = this.operations[idx];
+            if(!isNaN(operation.shapesLength)){
+                undoData = {
+                    operations : this.operations.slice(idx + 1),
+                    shapes     : this.shapes.slice(operation.shapesLength),
+                    relationLogs : this.relationLogs.slice(operation.relationLogsLength),
+                    historyUIs   : []
+                }
+
+                this.operations   = this.operations.slice(0, idx + 1);
+                this.shapes       = this.shapes.slice(0, operation.shapesLength);
+                this.relationLogs = this.relationLogs.slice(0, operation.relationLogsLength);
                 break;
             }
         }
 
-        await playBack(PlayMode.fastForward);
+        if(undoData == undefined){
 
-        this.undoStack.push(undo_operations);
+            undoData = {
+                operations : this.operations.slice(),
+                shapes     : this.shapes.slice(),
+                relationLogs : this.relationLogs.slice(),
+                historyUIs   : []
+            }
+
+            this.operations   = [];
+            this.shapes       = [];
+            this.relationLogs = [];
+
+            initRelations();
+        }
+
+        undoData.shapes.forEach(x => x.hide());
+
+        while(View.current.shapes.length < Plane.one.shapes_block.children.length){
+            const ui = popShapeList();
+            if(ui != undefined){
+                undoData.historyUIs.unshift(ui);
+            }
+        }
+
+        this.undoStack.push(undoData);
 
         this.dirty = true;
     }
 
     async redo(){
+        const view : View = View.current;
+
         if(this.undoStack.length == 0){
             return;
         }
 
-        const undo_operations = this.undoStack.pop()!;
-        this.operations.push(... undo_operations);
+        const undoData = this.undoStack.pop()!;
 
-        await playBack(PlayMode.fastForward);
+        this.operations.push(... undoData.operations);
+        this.shapes.push(... undoData.shapes);
+        this.relationLogs.push(... undoData.relationLogs);
+
+        undoData.shapes.forEach(x => x.show());
+
+        undoData.historyUIs.forEach(x => pushShapeList(x));
 
         this.dirty = true;
     }
