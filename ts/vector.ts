@@ -36,6 +36,11 @@ export class Vec2 {
         return new Vec2(this.x, this.y);
     }
 
+    copyFrom(pt : Vec2) : void {
+        this.x = pt.x;
+        this.y = pt.y;
+    }
+
     equals(pt: Vec2): boolean {
         return this.x == pt.x && this.y == pt.y;
     }
