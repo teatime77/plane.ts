@@ -9,6 +9,10 @@ export class Vec2 {
         return new Vec2(0, 0);
     }
 
+    static fromXY(x : number, y : number) : Vec2 {
+        return new Vec2(x, y);
+    }
+
     typeName: string = "Vec2";
     x: number;
     y: number;
