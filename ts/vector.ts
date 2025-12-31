@@ -45,6 +45,11 @@ export class Vec2 {
         this.y = pt.y;
     }
 
+    setXY(x : number, y : number){
+        this.x = x;
+        this.y = y;
+    }
+
     equals(pt: Vec2): boolean {
         return this.x == pt.x && this.y == pt.y;
     }
