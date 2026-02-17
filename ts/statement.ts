@@ -1,251 +1,18 @@
-namespace plane_ts {
-//
+import { AbstractSpeech, assert, Reading, sleep } from "@i18n";
+import { LaTeXBox } from "@layout";
+import { App, Term, parseMath, SyntaxError } from "@parser";
 
-const parseMath = parser_ts.parseMath;
+import { AngleEqualityReason, ExprTransformReason, IsoscelesTriangleReason, LengthEqualityReason, ParallelogramReason, ParallelReason, PropositionReason, RhombusReason, ShapeEquationReason, ShapeMode, ShapeType } from "./enums";
+import { AppServices, GlobalState, usedReasons } from "./inference";
+import { TextBlock, MathEntity, registerEntity } from "./json";
+import { getModeColor, showAuxiliaryShapes, speakReason } from "./all_functions";
 
-export const enumSelectionClassName = "enum_selection_item";
+import { Shape, Triangle } from "./shape";
+import { EquationTextBlock } from "./deduction/shape_equation";
+import type { StatementBuilder } from "./tool";
 
 export type menuDialogType = typeof LengthEqualityReason | typeof AngleEqualityReason | typeof ShapeType | 
 typeof ParallelogramReason | typeof RhombusReason | typeof IsoscelesTriangleReason | typeof ParallelReason | typeof ShapeEquationReason | typeof ExprTransformReason | typeof PropositionReason;
-export const menuDialogs = new Map<menuDialogType, layout_ts.Dialog>();
-
-export enum TriangleCongruenceReason {
-    none,
-    side_side_side,
-    side_angle_side,
-    angle_side_angle,
-};
-
-export enum ShapeEquationReason {
-    none = 50,
-    sum_of_angles_is_pi,
-    sum_of_angles_is_equal,
-    sum_of_lengths_is_equal,
-    sum_of_interior_angles_of_triangle_is_pi,
-    sum_of_interior_angles_of_quadrilateral_is_2pi,
-    exterior_angle_theorem,
-}
-
-export enum LengthEqualityReason {
-    none = 100,
-    radii_equal,
-    common_circle,
-    parallel_lines_distance,
-    not_used,
-    congruent_triangles,
-    parallelogram_opposite_sides,
-    parallelogram_diagonal_bisection,
-    equivalence_class,
-    midpoint,
-};
-
-export enum ExprTransformReason {
-    none = 150,
-    transposition,
-    equality,
-    add_equation,
-    substitution,
-    dividing_equation,
-    arg_shift,
-}
-
-export enum AngleEqualityReason {
-    none = 200,
-    vertical_angles,
-    parallel_line_angles,
-    angle_bisector,
-    congruent_triangles,
-    parallelogram_opposite_angles,
-    similar_triangles,
-    isosceles_triangle_base_angles,
-}
-
-export enum PropositionReason {
-    none = 250,
-    angle_equality,
-    length_equality,
-    equation,
-}
-
-export enum TriangleQuadrilateralClass {
-    none = 300,
-    trapezoid,
-    parallelogram,
-    rhombus,
-    isoscelesTriangle,
-}
-
-export enum ParallelogramReason {
-    none = 400,
-    each_opposite_sides_are_equal,
-    each_opposite_sides_are_parallel,
-    each_opposite_angles_are_equal,
-    one_opposite_sides_are_parallel_and_equal,
-    each_diagonal_bisections,
-}
-
-export enum RhombusReason {
-    none = 500,
-    all_sides_are_equal,
-}
-
-export enum IsoscelesTriangleReason {
-    none = 520,
-    two_sides_are_equal,
-}
-
-export enum ParallelReason {
-    none = 600,
-    parallelogram,
-    corresponding_angles_or_alternate_angles_are_equal,
-    supplementary_angles,
-}
-
-export enum TriangleSimilarityReason {
-    none = 700,
-    two_equal_angle_pairs,
-};
-
-export enum ShapeType {
-    parallelogram = 800,
-    rhombus,
-    isosceles_triangle,
-}
-
-export const enumToImgName = new Map<number, string>([
-    [ TriangleCongruenceReason.side_side_side, "side_side_side" ],
-    [ TriangleCongruenceReason.side_angle_side, "side_angle_side" ],
-    [ TriangleCongruenceReason.angle_side_angle, "angle_side_angle" ],
-
-    [ ShapeEquationReason.sum_of_angles_is_pi, "sum_of_angles_is_pi" ],
-    [ ShapeEquationReason.sum_of_angles_is_equal, "sum_of_angles_is_equal" ],
-    [ ShapeEquationReason.sum_of_lengths_is_equal, "sum_of_lengths_is_equal" ],
-    [ ShapeEquationReason.sum_of_interior_angles_of_triangle_is_pi, "sum_of_interior_angles_of_triangle_is_pi" ],
-    [ ShapeEquationReason.sum_of_interior_angles_of_quadrilateral_is_2pi, "sum_of_interior_angles_of_quadrilateral_is_2pi" ],
-    [ ShapeEquationReason.exterior_angle_theorem, "exterior_angle_theorem" ],
-
-    [ LengthEqualityReason.radii_equal, "radii_equal" ],
-    [ LengthEqualityReason.common_circle, "common_circle" ],
-    [ LengthEqualityReason.parallel_lines_distance, "parallel_lines_distance" ],
-    [ LengthEqualityReason.congruent_triangles, "triangle_congruence" ],
-    [ LengthEqualityReason.parallelogram_opposite_sides, "each_opposite_sides_are_equal" ],
-    [ LengthEqualityReason.parallelogram_diagonal_bisection, "each_diagonal_bisections" ],
-    [ LengthEqualityReason.equivalence_class, "equivalence_class" ],
-    [ LengthEqualityReason.midpoint, "midpoint" ],
-
-    [ ExprTransformReason.transposition, "transposition" ],
-    [ ExprTransformReason.equality, "equality" ],
-    [ ExprTransformReason.add_equation, "add_equation" ],
-    [ ExprTransformReason.substitution, "substitution" ],
-    [ ExprTransformReason.dividing_equation, "dividing_equation" ],
-    [ ExprTransformReason.arg_shift, "arg_shift" ],
-
-    [ AngleEqualityReason.vertical_angles, "vertical_angles" ],
-    [ AngleEqualityReason.parallel_line_angles, "parallel_line_angles" ],
-    [ AngleEqualityReason.angle_bisector, "angle_bisector" ],
-    [ AngleEqualityReason.congruent_triangles, "triangle_congruence" ],
-    [ AngleEqualityReason.parallelogram_opposite_angles, "each_opposite_angles_are_equal" ],
-    [ AngleEqualityReason.similar_triangles, "triangle_similarity" ],
-    [ AngleEqualityReason.isosceles_triangle_base_angles, "isosceles_triangle_base_angles" ],
-
-    [ TriangleQuadrilateralClass.trapezoid, "" ],
-    [ TriangleQuadrilateralClass.parallelogram, "quadrilateral_classifier" ],
-    [ TriangleQuadrilateralClass.rhombus, "all_sides_are_equal" ],
-
-    [ ParallelogramReason.each_opposite_sides_are_equal, "each_opposite_sides_are_equal" ],
-    [ ParallelogramReason.each_opposite_sides_are_parallel, "each_opposite_sides_are_parallel" ],
-    [ ParallelogramReason.each_opposite_angles_are_equal, "each_opposite_angles_are_equal" ],
-    [ ParallelogramReason.one_opposite_sides_are_parallel_and_equal, "one_opposite_sides_are_parallel_and_equal" ],
-    [ ParallelogramReason.each_diagonal_bisections, "each_diagonal_bisections" ],
-
-    [ RhombusReason.all_sides_are_equal, "all_sides_are_equal" ],
-
-    [ IsoscelesTriangleReason.two_sides_are_equal, "isosceles_triangle" ],
-
-    [ ParallelReason.parallelogram, "quadrilateral_classifier" ],
-    [ ParallelReason.corresponding_angles_or_alternate_angles_are_equal, "parallel_line_angles" ],
-    [ ParallelReason.supplementary_angles, "parallel_by_supplementary_angles" ],
-
-    [ TriangleSimilarityReason.two_equal_angle_pairs, "two_equal_angle_pairs" ],
-
-    [ ShapeType.parallelogram, "quadrilateral_classifier" ],
-    [ ShapeType.rhombus, "all_sides_are_equal" ],
-    [ ShapeType.isosceles_triangle, "isosceles_triangle"],
-
-    [ PropositionReason.angle_equality, "equal_angle" ],
-    [ PropositionReason.length_equality, "equal_length" ],
-    [ PropositionReason.equation, "expr_transform" ],
-]);
-
-export async function makeSelectionDlg(){    
-    const data : [string, string, (typeof LengthEqualityReason | typeof AngleEqualityReason | typeof ShapeType | 
-        typeof ParallelogramReason | typeof RhombusReason | typeof IsoscelesTriangleReason | typeof ParallelReason | typeof ShapeEquationReason | typeof ExprTransformReason | typeof PropositionReason)][] = [ 
-        [ TT("Reason for length equality"), "length-equality-reason", LengthEqualityReason ],
-        [ TT("Reason for angle equality" ), "angle-equality-reason" , AngleEqualityReason ],
-        [ TT("Shape type"                ), "shape-type"            , ShapeType ],
-        [ TT("Reason for parallelogram"  ), "parallelogram-reason"  , ParallelogramReason ],
-        [ TT("Reason for rhombus"        ), "rhombus-reason"        , RhombusReason ], 
-        [ TT("Reason for isosceles triangle"), "isosceles-triangle-reason", IsoscelesTriangleReason ],
-        [ TT("Reason for parallel"       ), "parallel-reason"       , ParallelReason ], 
-        [ TT("Equation derived from shapes" ), "shape-equation-reason"       , ShapeEquationReason ], 
-        [ TT("Types of formula transformation"), "expr-transform-reason", ExprTransformReason ], 
-        [ TT("Types of proposition"), "proposition-reason", PropositionReason ], 
-    ];
-
-    const titles = data.map(x => x[0]);
-    const span_id_prefixes = data.map(x => x[1]);
-    const dics = data.map(x => x[2]);
-
-    menuDialogs.clear();
-    for(const [idx, dic] of dics.entries()){
-        const children : layout_ts.UI[] = [];
-
-        const title = layout_ts.$label({
-            text : titles[idx],
-            borderWidth : 5,
-            borderStyle : "ridge",
-            padding : 5,
-        });
-        children.push(title);
-
-        for(const [key, value] of Object.entries(dic)){
-            if (isNaN(Number(key))){
-                if(["none", "not_used"].includes(key)){
-                    continue;
-                }
-
-                let img_name = enumToImgName.get(value);
-                assert(img_name != undefined && img_name != "");
-
-                // console.log(`of key:[${key}]${typeof key} value:[${value}]${typeof value} dic[value]:[${dic[value]}]`); 
-                const img = layout_ts.$img({
-                    id     : `${span_id_prefixes[idx]}-${key}`,
-                    className : enumSelectionClassName,
-                    imgUrl : `./lib/plane/img/${img_name}.png`,
-                    width  : "64px",
-                    height : "64px",
-                    borderWidth : 5,
-                    borderStyle : "ridge",
-                    horizontalAlign : "center",
-                });
-                img.html().dataset.operation_value = `${value}`;
-                // img.html().style.position = "";
-
-                children.push(img);
-            }
-        }
-
-        const grid = layout_ts.$grid({
-            children : children
-        });
-
-        const dlg = layout_ts.$dialog({
-            content : grid
-        });
-
-        menuDialogs.set(dic, dlg);
-    }
-}
 
 export class Assumption extends MathEntity implements EquationTextBlock {
     equation  : App;
@@ -255,7 +22,7 @@ export class Assumption extends MathEntity implements EquationTextBlock {
         super(obj);
 
         this.equation = obj.equation;
-        this.textBlock = makeEquationTextBlock(this, this.equation);
+        this.textBlock = AppServices.makeEquationTextBlock(this, this.equation);
     }
 
     getAllShapes(shapes : MathEntity[]){
@@ -272,11 +39,10 @@ export class Assumption extends MathEntity implements EquationTextBlock {
 }
 
 export class Statement extends Shape {
-    static idTimeout : number | undefined;
 
     reason : number = 0;
     mathText : string = "";
-    latexBox? : layout_ts.LaTeXBox;
+    latexBox? : LaTeXBox;
     auxiliaryShapes : MathEntity[] = [];
     selectedShapes : MathEntity[];
 
@@ -332,13 +98,13 @@ export class Statement extends Shape {
         return obj;
     }
 
-    makeTexUI() : layout_ts.LaTeXBox {
-        return new layout_ts.LaTeXBox({
-            parent : Plane.one.text_block,
+    makeTexUI() : LaTeXBox {
+        return new LaTeXBox({
+            parent : GlobalState.Plane__one!.text_block,
             text : "",
             click : async (ev : MouseEvent)=>{
-                const position = View.current.eventPosition(ev);
-                await (Builder.tool as StatementBuilder).clickWithMouseEvent(ev, View.current, position, this);
+                const position = GlobalState.View__current!.eventPosition(ev);
+                await (GlobalState.Builder__tool as StatementBuilder).clickWithMouseEvent(ev, GlobalState.View__current!, position, this);
             }
         });
     }
@@ -350,7 +116,7 @@ export class Statement extends Shape {
     }
 
     showMathText(){
-        Statement.idTimeout = undefined;
+        GlobalState.Statement__idTimeout = undefined;
 
         let term : Term;
         try{
@@ -358,7 +124,7 @@ export class Statement extends Shape {
             term = parseMath(this.mathText);
         }
         catch(e){
-            if(e instanceof parser_ts.SyntaxError){
+            if(e instanceof SyntaxError){
                 return;
             }
 
@@ -373,10 +139,10 @@ export class Statement extends Shape {
         this.latexBox.setText(tex_text);
     }
 
-    setMode(mode : Mode){
+    setMode(mode : ShapeMode){
         super.setMode(mode);
         if(this.latexBox != undefined){
-            const color = (mode == Mode.none ? "transparent" : getModeColor(mode));
+            const color = (mode == ShapeMode.none ? "transparent" : getModeColor(mode));
 
             this.latexBox.setBorderColor(color);
         }
@@ -384,7 +150,7 @@ export class Statement extends Shape {
 
     draw() : void {
         const shapes = this.auxiliaryShapes.concat(this.selectedShapes).filter(x => x instanceof Shape) as Shape[];
-        shapes.filter(x => x.mode != Mode.none).forEach(x => x.draw());
+        shapes.filter(x => x.mode != ShapeMode.none).forEach(x => x.draw());
     }
 
     show(){    
@@ -399,6 +165,13 @@ export class Statement extends Shape {
         }
     }
 
+    async showSelectedShapes(){
+        for(const shape of this.selectedShapes){
+            shape.setMode(ShapeMode.target);
+            await sleep(500);
+        }
+    }
+
     async showReasonAndStatement(speech : AbstractSpeech){
         if(this.reason != 0){
 
@@ -408,7 +181,7 @@ export class Statement extends Shape {
                 assert( this.auxiliaryShapes.every(x => x instanceof Triangle) );
 
                 for(const [i, shape] of this.auxiliaryShapes.entries()){
-                    shape.setMode(i == 0 ? Mode.target1 : Mode.target2);
+                    shape.setMode(i == 0 ? ShapeMode.target1 : ShapeMode.target2);
                     await sleep(500);
                 }    
             }
@@ -423,20 +196,7 @@ export class Statement extends Shape {
         const reading = this.reading();
         await speech.speak(reading.text);
 
-        if(this instanceof TriangleCongruence){
-            assert( this.selectedShapes.every(x => x instanceof Triangle) );
-
-            for(const [i, shape] of this.selectedShapes.entries()){
-                shape.setMode(i == 0 ? Mode.target1 : Mode.target2);
-                await sleep(500);
-            }
-        }
-        else{
-            for(const shape of this.selectedShapes){
-                shape.setMode(Mode.target);
-                await sleep(500);
-            }
-        }
+        await this.showSelectedShapes();
         
         await speech.waitEnd();
     }
@@ -459,44 +219,6 @@ export class Statement extends Shape {
     }
 }
 
-export async function speakReason(speech : AbstractSpeech, reason : number) {
-    const reason_msg = reasonMsg(reason);
-    await speech.speak(reason_msg);
-}
+registerEntity(Statement.name, (obj: any) => new Statement(obj));
 
-export async function showAuxiliaryShapes(reason : number, auxiliaryShapes : MathEntity[]){
-    switch(reason){
-    case ParallelogramReason.each_opposite_sides_are_equal:
-    case ParallelogramReason.each_opposite_sides_are_parallel:
-    case ParallelogramReason.each_opposite_angles_are_equal:
-    case ParallelogramReason.each_diagonal_bisections:
-        assert(auxiliaryShapes.length == 4);
-
-        for(const shape of auxiliaryShapes.slice(0, 2)){
-            shape.setMode(Mode.depend1);
-        }
-        await sleep(500);
-
-        for(const shape of auxiliaryShapes.slice(2)){
-            shape.setMode(Mode.depend2);
-        }
-        break;
-
-    case ParallelogramReason.one_opposite_sides_are_parallel_and_equal:
-    case RhombusReason.all_sides_are_equal:
-        auxiliaryShapes.forEach(x => x.setMode(Mode.depend));
-        break;
-
-    default:
-        for(const shape of auxiliaryShapes){
-            shape.setMode(Mode.depend);
-            await sleep(500);
-        }
-        break;
-    }
-
-    await sleep(500);
-}
-
-
-}
+console.log(`Loaded: statement`);

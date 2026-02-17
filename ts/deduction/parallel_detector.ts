@@ -1,68 +1,10 @@
-namespace plane_ts {
-//
-export function makeParallelDetectorByParallelogram(lineA : AbstractLine, lineB : AbstractLine) : ParallelDetector | undefined {
-    const lines = [lineA, lineB];
+import { Reading, TT, assert } from "@i18n";
 
-    for(const classifier of parallelogramClassifiers){
-        const parallelogram = classifier.quadrilateral();
-        if(isSubSet(lines, parallelogram.lines)){
+import { registerEntity } from "../json";
+import { addParallelLines } from "../all_functions";
 
-            // msg(`Parallel-Detector-By-Parallelogram`);
-            return new ParallelDetector({
-                reason : ParallelReason.parallelogram,
-                auxiliaryShapes : [parallelogram],
-                shapes : [lineA, lineB]
-            });
-        }
-    }
-
-    return undefined;
-}
-
-export function makeParallelDetectorByCorrespondingAlternateAnglesEqual(angleA : Angle, angleB : Angle) : ParallelDetector | undefined {
-    if(angleA.intersection != angleB.intersection && isEqualAngle(angleA, angleB)){
-        let lineA : AbstractLine;
-        let lineB : AbstractLine;
-
-        if(angleA.lineA == angleB.lineA){
-            lineA = angleA.lineB;
-            lineB = angleB.lineB;
-        }
-        else if(angleA.lineB == angleB.lineB){
-            lineA = angleA.lineA;
-            lineB = angleB.lineA;
-        }
-        else{
-            return undefined;
-        }
-
-        // msg(`Parallel-Detector-By-Corresponding-Alternate-Angles-Equal`);
-        return new ParallelDetector({
-            reason : ParallelReason.corresponding_angles_or_alternate_angles_are_equal,
-            auxiliaryShapes : [angleA, angleB],
-            shapes : [lineA, lineB]
-        });
-    }
-
-    return undefined;
-}
-
-export function makeParallelDetectorBySupplementaryAngles(angleA : Angle, angleB : Angle) : ParallelDetector | undefined {
-    for(const [angle1, angle2] of permutation([angleA, angleB])){
-        if(angle1.lineB == angle2.lineA && angle1.directionB == - angle2.directionA){
-            const lines = [angle1.lineA, angle2.lineB];
-
-            // msg(`Parallel-Detector-By-Supplementary-Angles`);
-            return new ParallelDetector({
-                reason : ParallelReason.supplementary_angles,
-                auxiliaryShapes : [angle1, angle2],
-                shapes : lines
-            });
-        }    
-    }
-
-    return undefined;
-}
+import { AbstractLine } from "../shape";
+import { Statement } from "../statement";
 
 export class ParallelDetector extends Statement {
     reading(): Reading {
@@ -76,4 +18,7 @@ export class ParallelDetector extends Statement {
         addParallelLines(lineA, lineB);
     }
 }
-}
+
+registerEntity(ParallelDetector.name, (obj: any) => new ParallelDetector(obj));
+
+console.log(`Loaded: parallel-detector`);

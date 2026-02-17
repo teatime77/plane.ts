@@ -2,10 +2,248 @@
 ///<reference path="statement.ts" />
 ///<reference path="deduction/triangle_congruence.ts" />
 
-namespace plane_ts {
-//
-let perpendicularPairs = new MyArray<[MySet<AbstractLine>, MySet<AbstractLine>]>();
-export let supplementaryAngles = new MyArray<[MySet<Angle>, MySet<Angle>]>();
+import { MyError, parseURL, Speech, TT, Vec2 } from "@i18n";
+import { App, Term } from "@parser";
+import { Dialog, fgColor } from "@layout";
+
+import { AngleEqualityReason, ExprTransformReason, IsoscelesTriangleReason, LengthEqualityReason, ParallelogramReason, ParallelReason, PropositionReason, RhombusReason, ShapeEquationReason, ShapeMode, ShapeType, TriangleCongruenceReason, TriangleQuadrilateralClass, TriangleSimilarityReason } from "./enums";
+
+import type { Widget, MathEntity, TextBlock } from "./json";
+import type { AbstractLine, CircleArc, Triangle, Point, LineByPoints, Quadrilateral, Polygon, Shape } from "./shape";
+import type { ParallelogramClassifier, RhombusClassifier } from "./deduction/quadrilateral";
+import type { Angle, LengthSymbol } from "./dimension_symbol";
+import type { Assumption, menuDialogType, Statement } from "./statement";
+import type { Plane } from "./plane_ui";
+import type { ShapesProperty } from "./property";
+import type { Builder, ExprTransformBuilder } from "./tool";
+import type { View } from "./view";
+import type { ClickTerm, EnumSelection, PlayBack, PropertySetting, ToolSelection } from "./operation";
+import type { EquationProposition, Proposition, ShapeProposition } from "./deduction/proposition";
+import type { EquationTextBlockClass, ShapeEquation } from "./deduction/shape_equation";
+import type { AngleEquality } from "./deduction/angle_equality";
+import type { AngleBisector, Motion } from "./geometry";
+import type { LengthEquality } from "./deduction/length_equality";
+import type { TriangleCongruence } from "./deduction/triangle_congruence";
+import type { TriangleSimilarity } from "./deduction/triangle_similarity";
+import type { ParallelDetector } from "./deduction/parallel_detector";
+import type { TriangleDetector } from "./deduction/triangle_detector";
+import type { ExprTransform } from "./deduction/expr_transform";
+import type { AngleEqualityConstraint } from "./constraint";
+
+export class T1 { 
+    set   : Set<any>; 
+    value : any;
+
+    constructor(set : Set<any>, value : any){
+        this.set   = set;
+        this.value = value;
+    }
+}
+
+export class T2 { 
+    array : Array<any>;
+    value : any;
+
+    constructor(array : Array<any>, value  : any){
+        this.array = array;
+        this.value = value;
+    }
+}
+
+export class T3 { 
+    array : Array<any>;
+    value : any;
+    index : number;
+
+    constructor(array : Array<any>, value : any, index : number){
+        this.array = array;
+        this.value = value;
+        this.index = index;
+    }
+}
+
+export class T4 { 
+    map   : Map<any,any>;
+    key   : any;
+    value : any;
+
+    constructor(map : Map<any,any>, key : any, value : any){
+        this.map   = map;
+        this.key   = key;
+        this.value = value;
+    }
+}
+
+export type RelationLog = T1|T2|T3|T4;
+
+export class MySet<T> {
+    protected data: Set<T> = new Set<T>();
+
+    constructor(data: T[] = []){
+        this.data = new Set<T>(data);
+    }
+
+    clear(){
+        this.data.clear();
+    }
+  
+    add(value: T): void {
+        if(!this.data.has(value)){
+            this.data.add(value);
+
+            GlobalState.View__current!.relationLogs.push(new T1(this.data, value));
+        }
+    }
+  
+    has(item: T): boolean {
+      return this.data.has(item);
+    }
+
+    values(){
+        return this.data.values();
+    }
+  
+    forEach(callback: (value: T, value2: T, set: Set<T>) => void, thisArg?: any): void {
+      this.data.forEach(callback, thisArg);
+    }
+  
+    toArray(): T[] {
+      return Array.from(this.data);
+    }
+
+    [Symbol.iterator](): Iterator<T>{
+        return this.data.values();
+    }
+}
+
+export class MyArray<T> {
+    private data: T[] = [];
+  
+    constructor(initialData: T[] = []) {
+      this.data = initialData;
+    }
+
+    clear(){
+        this.data = [];
+    }
+    
+    filter(callback: (item: T, index: number, array: T[]) => boolean): MyArray<T> {
+      const filteredArray = this.data.filter(callback);
+      return new MyArray<T>(filteredArray);
+    }
+
+    toArray(): T[] {
+        return this.data;
+    }
+
+    some(fnc : (x:T)=>boolean){
+        return this.data.some(fnc);
+    }
+
+    find(fnc : (x:T)=>boolean){
+        return this.data.find(fnc);
+    }
+
+    push(value : T){
+        this.data.push(value);
+
+        GlobalState.View__current!.relationLogs.push(new T2(this.data, value));
+    }
+
+    flat(){
+        return this.data.flat();
+    }
+
+    [Symbol.iterator](): Iterator<T> {
+        let index = 0;
+        const array = this.data;
+
+        return {
+            next(): IteratorResult<T> {
+                if (index < array.length) {
+                    return { value: array[index++], done: false };
+                } else {
+                    return { value: undefined, done: true };
+                }
+            },
+        };
+    }
+
+    remove(x : T){
+        const index = this.data.indexOf(x);
+        if(index == -1){
+            throw new MyError();
+        }
+        else{
+            this.data.splice(index, 1);
+
+            const value = this.data[index];
+            GlobalState.View__current!.relationLogs.push(new T3(this.data, value, index));
+        }
+    }
+}
+
+export class MyMap<K, V> {
+    private map: Map<K, V> = new Map<K, V>();
+  
+    constructor() {}
+  
+    set(key: K, value: V): void {
+        if(!this.map.has(key)){
+
+            this.map.set(key, value);
+
+            GlobalState.View__current!.relationLogs.push(new T4(this.map, key, value));
+        }
+    }
+  
+    get(key: K): V | undefined {
+      return this.map.get(key);
+    }
+  
+    clear(){
+        this.map.clear();
+    }
+
+    entries() {
+        return this.map.entries();
+    }
+
+    keys(){
+        return this.map.keys();
+    }
+
+    values(){
+        return this.map.values();
+    }
+}
+
+export const GlobalState = {
+    Widget__maxId : 0,
+    Operation__maxId : 0,
+    PlayBack__startIndex : NaN,
+    View__isPlayBack : false,
+    Widget__refMap : new Map<number, any>(),
+    Widget__isLoading : false,
+    Plane__one : undefined as undefined | Plane,
+    ShapesProperty__one : undefined as undefined | ShapesProperty,
+    Statement__idTimeout : undefined as number | undefined,
+    Builder__toolName : undefined as undefined | string,
+    Builder__tool : undefined as undefined | Builder,
+    View__nearThreshold : 8,
+    View__current : undefined as undefined | View,
+    Point__radius : undefined as undefined | number,
+    Angle__radius1 : undefined as undefined | number,
+    MathEntity__orderSet : new Set<MathEntity>(),
+    Polygon__colorIndex : 0,
+    Point__tempPoints : [] as Point[],
+    Angle__RightAngleMark : 0,
+    Angle__DefaultAngleMark : 1,
+    LengthSymbol__DefaultLengthKind : 0,
+    playBackOperations : undefined as undefined | PlayBack,
+};
+
+export const supplementaryAngles = new MyArray<[MySet<Angle>, MySet<Angle>]>();
 export const rightAngles = new MySet<Angle>();
 
 export const pointsToLengthSymbol = new MyMap<string, LengthSymbol>();
@@ -14,15 +252,14 @@ export const pointOnCircleArcs = new MyMap<Point,MySet<CircleArc>>();
 export const pointOnLines = new MyMap<Point,MySet<AbstractLine>>();
 export const angleMap = new MyMap<string,Angle>();
 
-export let parallelogramClassifiers = new MySet<ParallelogramClassifier>();
+export const parallelogramClassifiers = new MySet<ParallelogramClassifier>();
 
-export let equalLengths = new MyArray<MySet<LengthSymbol>>();
-export let equalCircleArcs = new MyArray<MySet<CircleArc>>();
-export let congruentTriangles = new MyArray<MyArray<Triangle>>();
-export let similarTriangles = new MyArray<MyArray<Triangle>>();
-export let isoscelesTriangle = new MyArray<Triangle>();
+export const equalLengths = new MyArray<MySet<LengthSymbol>>();
+export const congruentTriangles = new MyArray<MyArray<Triangle>>();
+export const similarTriangles = new MyArray<MyArray<Triangle>>();
+export const isoscelesTriangle = new MyArray<Triangle>();
 
-export let propositions = new MyArray<Proposition>();
+export const propositions = new MyArray<Proposition>();
 
 export const reasonToDoc = new Map<number, number>([
     [ ShapeEquationReason.sum_of_interior_angles_of_triangle_is_pi, 18 ],
@@ -46,406 +283,220 @@ export const reasonToDoc = new Map<number, number>([
 
 export const usedReasons = new Set<number>();
 
-function addMySetMap<T, V>(a : T, b : V, map:MyMap<T, MySet<V>>){
-    let set = map.get(a);
-    if(set == undefined){
-        set = new MySet<V>();
-        map.set(a, set);
-    }
-    set.add(b);
+export const idMap = new Map<number, Widget>();
+
+export const lineKindImgNames = [ "line", "half_line_1", "half_line_2", "line_segment" ];
+export const propertySettingText = new Map<string, string>([
+    [ "angleMark", TT("Set the angle mark.")],
+    [ "lineKind" , TT("Set the line kind.")],
+    [ "name"     , TT("Set the name.")],
+])
+
+
+export const dependColor = "blue";
+export const targetColor = "red";
+export const defaultLineWidth = 3;
+export const OverLineWidth = 5;
+
+export const enumSelectionClassName = "enum_selection_item";
+export const menuDialogs = new Map<menuDialogType, Dialog>();
+
+export const modeColorMap = new Map<ShapeMode,string>([
+    [ ShapeMode.none   , fgColor ],
+    [ ShapeMode.depend , dependColor ],
+    [ ShapeMode.depend1, "Aqua" ],
+    [ ShapeMode.depend2, "lime" ],
+    [ ShapeMode.target , targetColor ],
+    [ ShapeMode.target1, "orange" ],
+    [ ShapeMode.target2, "magenta" ],
+]);
+
+export let urlOrigin : string;
+export let urlParams : Map<string, string>;
+export let urlBase   : string;
+export let capturedShape : MathEntity | undefined;
+
+export function setUrlOriginParams(){
+    [ urlOrigin, , urlParams, urlBase ] = parseURL();
 }
 
-function addSetMap<T, V>(a : T, b : V, map:Map<T, MySet<V>>){
-    let set = map.get(a);
-    if(set == undefined){
-        set = new MySet<V>();
-        map.set(a, set);
-    }
-    set.add(b);
+export function setCapturedShape(captured_shape : MathEntity | undefined){
+    capturedShape = captured_shape;
 }
 
-export function initRelations(){
-    perpendicularPairs.clear();
-    supplementaryAngles.clear();
-    rightAngles.clear();
+export let Angle__radius1Pix = 20;
+export let Angle__numMarks = 5;
+export let Angle__outerAngleScale = 2;
 
-    pointsToLengthSymbol.clear();
-    centerOfCircleArcs.clear();
-    pointOnCircleArcs.clear();
-    pointOnLines.clear();
-    angleMap.clear();
+export let Widget__processed : Set<number>;
 
-    parallelogramClassifiers.clear();
+export let Point__radiusPix = 4;
 
-    equalLengths.clear();
-    equalCircleArcs.clear();
-    congruentTriangles.clear();
-    similarTriangles.clear();
-    isoscelesTriangle.clear();
 
-    propositions.clear();
+export const enumToImgName = new Map<number, string>([
+    [ TriangleCongruenceReason.side_side_side, "side_side_side" ],
+    [ TriangleCongruenceReason.side_angle_side, "side_angle_side" ],
+    [ TriangleCongruenceReason.angle_side_angle, "angle_side_angle" ],
 
-    View.current.relationLogs = [];
+    [ ShapeEquationReason.sum_of_angles_is_pi, "sum_of_angles_is_pi" ],
+    [ ShapeEquationReason.sum_of_angles_is_equal, "sum_of_angles_is_equal" ],
+    [ ShapeEquationReason.sum_of_lengths_is_equal, "sum_of_lengths_is_equal" ],
+    [ ShapeEquationReason.sum_of_interior_angles_of_triangle_is_pi, "sum_of_interior_angles_of_triangle_is_pi" ],
+    [ ShapeEquationReason.sum_of_interior_angles_of_quadrilateral_is_2pi, "sum_of_interior_angles_of_quadrilateral_is_2pi" ],
+    [ ShapeEquationReason.exterior_angle_theorem, "exterior_angle_theorem" ],
+
+    [ LengthEqualityReason.radii_equal, "radii_equal" ],
+    [ LengthEqualityReason.common_circle, "common_circle" ],
+    [ LengthEqualityReason.parallel_lines_distance, "parallel_lines_distance" ],
+    [ LengthEqualityReason.congruent_triangles, "triangle_congruence" ],
+    [ LengthEqualityReason.parallelogram_opposite_sides, "each_opposite_sides_are_equal" ],
+    [ LengthEqualityReason.parallelogram_diagonal_bisection, "each_diagonal_bisections" ],
+    [ LengthEqualityReason.equivalence_class, "equivalence_class" ],
+    [ LengthEqualityReason.midpoint, "midpoint" ],
+
+    [ ExprTransformReason.transposition, "transposition" ],
+    [ ExprTransformReason.equality, "equality" ],
+    [ ExprTransformReason.add_equation, "add_equation" ],
+    [ ExprTransformReason.substitution, "substitution" ],
+    [ ExprTransformReason.dividing_equation, "dividing_equation" ],
+    [ ExprTransformReason.arg_shift, "arg_shift" ],
+
+    [ AngleEqualityReason.vertical_angles, "vertical_angles" ],
+    [ AngleEqualityReason.parallel_line_angles, "parallel_line_angles" ],
+    [ AngleEqualityReason.angle_bisector, "angle_bisector" ],
+    [ AngleEqualityReason.congruent_triangles, "triangle_congruence" ],
+    [ AngleEqualityReason.parallelogram_opposite_angles, "each_opposite_angles_are_equal" ],
+    [ AngleEqualityReason.similar_triangles, "triangle_similarity" ],
+    [ AngleEqualityReason.isosceles_triangle_base_angles, "isosceles_triangle_base_angles" ],
+
+    [ TriangleQuadrilateralClass.trapezoid, "" ],
+    [ TriangleQuadrilateralClass.parallelogram, "quadrilateral_classifier" ],
+    [ TriangleQuadrilateralClass.rhombus, "all_sides_are_equal" ],
+
+    [ ParallelogramReason.each_opposite_sides_are_equal, "each_opposite_sides_are_equal" ],
+    [ ParallelogramReason.each_opposite_sides_are_parallel, "each_opposite_sides_are_parallel" ],
+    [ ParallelogramReason.each_opposite_angles_are_equal, "each_opposite_angles_are_equal" ],
+    [ ParallelogramReason.one_opposite_sides_are_parallel_and_equal, "one_opposite_sides_are_parallel_and_equal" ],
+    [ ParallelogramReason.each_diagonal_bisections, "each_diagonal_bisections" ],
+
+    [ RhombusReason.all_sides_are_equal, "all_sides_are_equal" ],
+
+    [ IsoscelesTriangleReason.two_sides_are_equal, "isosceles_triangle" ],
+
+    [ ParallelReason.parallelogram, "quadrilateral_classifier" ],
+    [ ParallelReason.corresponding_angles_or_alternate_angles_are_equal, "parallel_line_angles" ],
+    [ ParallelReason.supplementary_angles, "parallel_by_supplementary_angles" ],
+
+    [ TriangleSimilarityReason.two_equal_angle_pairs, "two_equal_angle_pairs" ],
+
+    [ ShapeType.parallelogram, "quadrilateral_classifier" ],
+    [ ShapeType.rhombus, "all_sides_are_equal" ],
+    [ ShapeType.isosceles_triangle, "isosceles_triangle"],
+
+    [ PropositionReason.angle_equality, "equal_angle" ],
+    [ PropositionReason.length_equality, "equal_length" ],
+    [ PropositionReason.equation, "expr_transform" ],
+]);
+
+export interface IShapesSelector {
+    clear() : void;
 }
 
-export function recalcRelations(view : View){
-    initRelations();
-    view.shapes.forEach(x => x.setRelations());
-}
-
-export function addCenterOfCircleArcs(point : Point, circle : CircleArc){
-    addMySetMap<Point,CircleArc>(point, circle, centerOfCircleArcs);
-    assert(centerOfCircleArcs.get(point) != undefined);
-}
-
-export function addPointOnCircleArcs(point : Point, circle : CircleArc){
-    addMySetMap<Point,CircleArc>(point, circle, pointOnCircleArcs);
-    assert(pointOnCircleArcs.get(point) != undefined);
-}
-
-export function addPointOnLines(point : Point, line : AbstractLine){
-    addMySetMap<Point,AbstractLine>(point, line, pointOnLines);
-    // msg(`add-Point-On-Lines point${point.id} line:${line.id}`);
-    assert(pointOnLines.get(point) != undefined);
-}
-
-export function getLinesByPoint(point : Point) : AbstractLine[] {
-    const lines = pointOnLines.get(point);
-    if(lines == undefined){
-        return [];
-    }
-    else{
-        return lines.toArray();
-    }
-}
-
-export function getCircleArcsByPoint(point : Point) : CircleArc[] {
-    const circles = pointOnCircleArcs.get(point);
-    if(circles == undefined){
-        return [];
-    }
-    else{
-        return circles.toArray();
-    }
-}
-
-//------------------------------------------------------------ perpendicular / parallel lines
-
-export function addPerpendicularPairs(line1 : AbstractLine, line2 : AbstractLine){
-    if(perpendicularPairs.some(x => x[0].has(line1) && x[1].has(line2) || x[0].has(line2) && x[1].has(line1)) ){
-        return;
-    }
-    const pair = perpendicularPairs.find(x => x[0].has(line1) || x[0].has(line2) || x[1].has(line1) || x[1].has(line2));
-    if(pair != undefined){
-        const lines = [line1, line2];
-        for(const [i, line_set] of pair.entries()){
-            for(const [j, line] of lines.entries()){
-                if(line_set.has(line)){
-                    pair[1 - i].add( lines[1 - j] );
-                    return;
-                }
-            }
-        }
-    }
-
-    perpendicularPairs.push([ new MySet<AbstractLine>([line1]), new MySet<AbstractLine>([line2])  ])    
-}
-
-export function addParallelLines(line1 : AbstractLine, line2 : AbstractLine){
-    const line_sets = perpendicularPairs.flat().filter(x => x.has(line1) || x.has(line2));
-
-    let line_set : MySet<AbstractLine>; 
-
-    switch(line_sets.length){
-    case 0 : 
-        line_set = new MySet<AbstractLine>(); 
-        perpendicularPairs.push([line_set, new MySet<AbstractLine>()]);
-        break;
-
-    case 1 : 
-        line_set = line_sets[0]; 
-        break;
-    default : 
-        throw new MyError();
-    }
-
-    line_set.add(line1);
-    line_set.add(line2);
-}
-
-export function getPerpendicularLines(line : AbstractLine) : MySet<AbstractLine> | undefined {
-    for(const [lines1, lines2] of perpendicularPairs){
-        if(lines1.has(line)){
-            return lines2;
-        }
-        else if(lines2.has(line)){
-            return lines1;
-        }
-    }
-
-    return undefined;
-}
-
-export function getParallelLines(line : AbstractLine) : MySet<AbstractLine> | undefined {
-    return perpendicularPairs.flat().find(x => x.has(line));
-}
-
-export function isParallel(lineA : AbstractLine, lineB : AbstractLine) : boolean {
-    const line_set = getParallelLines(lineA);
-    return line_set != undefined && line_set.has(lineB);
-}
-
-export function isPerpendicular(lineA : AbstractLine, lineB : AbstractLine) : boolean {
-    const perpendicular_lines = getPerpendicularLines(lineA);
-    
-    if(perpendicular_lines == undefined){
-        return false;
-    }
-    else{
-        return perpendicular_lines.has(lineB);
-    }
-}
-
-export function areEqualCircleArcs(circle1 : CircleArc, circle2 : CircleArc) : boolean {
-    if(circle1 == circle2){
-        return true;
-    }
-    
-    const circle_set1 = equalCircleArcs.find(x => x.has(circle1));
-    const circle_set2 = equalCircleArcs.find(x => x.has(circle2));
-
-    return circle_set1 != undefined && circle_set1 == circle_set2;
-}
-
-export function addEqualCircleArcs(circle1 : CircleArc, circle2 : CircleArc){
-    const circle_set1 = equalCircleArcs.find(x => x.has(circle1));
-    const circle_set2 = equalCircleArcs.find(x => x.has(circle2));
-
-    if(circle_set1 != undefined){
-        if(circle_set2 != undefined){
-            if(circle_set1 != circle_set2){
-
-                Mylist(circle_set2).forEach(x => circle_set1.add(x));
-                equalCircleArcs.remove(circle_set2);
-            }
-        }
-        else{
-            circle_set1.add(circle2);
-        }
-    }
-    else{
-        if(circle_set2 != undefined){
-            circle_set2.add(circle1);
-        }
-        else{
-            const new_set = new MySet<CircleArc>([ circle1, circle2 ]);
-            equalCircleArcs.push(new_set);
-        }
-    }
-}
-
-export function getCommonLineOfPoints(pointA : Point, pointB : Point) : AbstractLine | undefined {
-    const linesA = pointOnLines.get(pointA);
-    const linesB = pointOnLines.get(pointB);
-    if(linesA == undefined || linesB == undefined){
-        return undefined;
-    }
-
-    const common_lines = MyIntersection<AbstractLine>(linesA, linesB);
-    switch(common_lines.length){
-    case 0: return undefined;
-    case 1: return common_lines[0];
-    default : throw new MyError();
-    }
-}
-
-export function getPointsFromLine(line : AbstractLine) : Set<Point>{
-    const points = Array.from(pointOnLines.entries()).filter(x => x[1].has(line)).map(x => x[0]);
-    return new Set<Point>(points);
-}
-
-export function getCommonPointOfLines(lineA : AbstractLine, lineB : AbstractLine) : Point | undefined {
-    const pointsA = getPointsFromLine(lineA);
-    const pointsB = getPointsFromLine(lineB);
-    const common_points = intersection<Point>(pointsA, pointsB);
-    if(common_points.length == 1){
-        return common_points[0];
-    }
-
-    return undefined;
-}
-
-export function getLineFromPoints(lines : AbstractLine[], pointA : Point, pointB : Point) : AbstractLine | undefined {
-    return lines.find(x => x.includesPoint(pointA) && x.includesPoint(pointB));
-}
-
-export function addCongruentSimilarTriangles(is_congruent : boolean, triangle1 : Triangle, triangle2 : Triangle){
-    if(!(triangle1 instanceof Triangle && triangle2 instanceof Triangle)){
-        msg("old Congruent Triangles")
-        return;
-    }
-
-    const triangles_list = is_congruent ? congruentTriangles : similarTriangles;
-
-    for(const triangles of triangles_list){
-        let equal_triangle1 = triangles.find(x => x.isEqual(triangle1));
-        let equal_triangle2 = triangles.find(x => x.isEqual(triangle2));
-
-        let indexes1 : number[] | undefined;
-        let indexes2 : number[] | undefined;
-        if(equal_triangle1 != undefined){
-            indexes1 = triangle1.points.map(p => equal_triangle1.points.indexOf(p)) ;
-        }
-
-        if(equal_triangle2 != undefined){
-            indexes2 = triangle2.points.map(p => equal_triangle2.points.indexOf(p)) ;
-        }
-
-        if(indexes1 != undefined){
-            if(indexes2 != undefined){
-                if(range(3).every(i => indexes1[i] == indexes2[i])){
-                    return;
-                }
-                else{
-                    throw new MyError();
-                }
-            }
-            else{
-                if(range(3).every(i => indexes1[i] == i)){
-                    triangles.push(triangle2);
-                    return;
-                }
-                else{
-                    throw new MyError();
-                }
-            }
-        }
-        else if(indexes2 != undefined){
-            if(range(3).every(i => indexes2[i] == i)){
-                triangles.push(triangle1);
-                return;
-            }
-            else{
-                throw new MyError();
-            }
-
-        }
-    }
-
-    triangles_list.push(new MyArray<Triangle>([triangle1, triangle2]));
-}
-
-export function addCongruentTriangles(triangle1 : Triangle, triangle2 : Triangle){
-    return addCongruentSimilarTriangles(true, triangle1, triangle2);
-}
-
-export function addSimilarTriangles(triangle1 : Triangle, triangle2 : Triangle){
-    return addCongruentSimilarTriangles(false, triangle1, triangle2);
-}
-
-export function findEqualLengthsByPointsPair(As : [Point, Point], Bs : [Point, Point]) : [LengthSymbol, LengthSymbol] | undefined {
-    for(const length_symbol_set of equalLengths){
-        const length_symbols = Array.from(length_symbol_set);
-
-        const length_symbolA = length_symbols.find(x => areSetsEqual<Point>([x.pointA, x.pointB], [As[0], As[1]]));
-        if(length_symbolA != undefined){
-
-            const length_symbolB = length_symbols.find(x => areSetsEqual<Point>([x.pointA, x.pointB], [Bs[0], Bs[1]]));
-            if(length_symbolB != undefined){
-                return [length_symbolA, length_symbolB];
-            }
-            else{
-                return undefined;
-            }
-        }
-    }
-
-    return undefined;
-}
-
-export function getParallelogramClassifier(points : Point[]) : ParallelogramClassifier | undefined {
-    return Mylist(parallelogramClassifiers).find(x => areSetsEqual(x.quadrilateral().points, points) );
-}
-
-export function getParallelogramsByDiagonalLengthSymbols(lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol) : Quadrilateral[]{
-    if(lengthSymbolA.line == undefined || lengthSymbolA.line != lengthSymbolB.line){
-        msg(TT("length symbols are not on the same line."));
-        return [];
-    }
-
-    const connection_point = lengthSymbolA.points().find(x => lengthSymbolB.points().includes(x));
-    if(connection_point == undefined){
-        msg(TT("no connection point of two length symbols"));
-        return [];
-    }
-
-    const pointA = lengthSymbolA.points().find(x => x != connection_point);
-    const pointB = lengthSymbolB.points().find(x => x != connection_point);
-
-    const parallelograms : Quadrilateral[] = [];
-    for(const parallelogramClassifier of parallelogramClassifiers){
-        const parallelogram = parallelogramClassifier.quadrilateral();
-        const points = parallelogram.points;
-        if(areSetsEqual([points[0], points[2]], [pointA, pointB]) || areSetsEqual([points[1], points[3]], [pointA, pointB]) ){
-            parallelograms.push(parallelogram);
-        }
-    }
-
-    return parallelograms;
-}
-
-export function isParallelogramPoints(points : Point[]) : boolean {
-    return getParallelogramClassifier(points) != undefined;
-}
-
-export function getTrianglesByAngle(angle : Angle, triangles : MyArray<Triangle>) : Triangle[] {
-    const triangles_with_inner_angle : Triangle[] = [];
-
-    LA : for(const triangle of triangles){
-        const angle_points : Point[] = [ angle.intersection ];
-
-        for(const line of [angle.lineA, angle.lineB]){
-            const points = triangle.points.filter(point => line.includesPoint(point));
-            if(points.length != 2){
-                continue LA;
-            }
-
-            if(points[0] == angle.intersection){
-                angle_points.push(points[1]);
-            }
-            else if(points[1] == angle.intersection){
-                angle_points.push(points[0]);
-            }
-            else{
-                continue LA;
-            }
-        }
-        assert(angle_points.length == 3);
-
-        if(isClockwise(angle_points)){
-            triangles_with_inner_angle.push(triangle);
-        }
-    }
-
-    return triangles_with_inner_angle;
+export let ilinesSelector_2 : IShapesSelector;
+export function setLinesSelector_2(line_selector_2 : IShapesSelector){
+    ilinesSelector_2 = line_selector_2;
 }
 
 
-export function getTrianglesByLengthSymbol(length_symbol : LengthSymbol, triangles : MyArray<Triangle>) : Triangle[] {
-    const triangles_with_length_symbol : Triangle[] = [];
+interface AppServicesType {
+    Builder__setToolByName : (tool_name : string, record_operation : boolean)=>Promise<void>,
+    showProperty : (widget : Widget | Widget[], nest : number)=>void,
+    Builder__setToolByShape : (shape : Statement) => void,
+    makeShapeEquationByEquationText : (reason : ShapeEquationReason, auxiliaryShapes : MathEntity[], text : string) => Promise<ShapeEquation | undefined>,
+    Point__fromArgs : (position : Vec2) => Point,
+    makeEquationTextBlock : (parent : EquationTextBlockClass, equation : App) => TextBlock,
+    makeLineSegment : (pointA: Point, pointB: Point) => LineByPoints,
+    makeAngleEqualityByVertical_angles : (angleA : Angle, angleB : Angle) => AngleEquality | undefined,
+    showPropertyDlg : (widget : Widget, operation :PropertySetting | undefined) => Promise<void>,
+    makeAngleEqualityByParallelLines : (angleA : Angle, angleB : Angle) => AngleEquality | undefined,
+    makeAngleEqualityByAngleBisector : (angleA : Angle, angleB : Angle, angle_bisector : AngleBisector) => AngleEquality,
+    makeAngleEqualityByCongruentTriangles : (angleA : Angle, angleB : Angle) => AngleEquality | undefined,
+    makeAngleEqualityByParallelogramOppositeAngles : (angleA : Angle, angleB : Angle, parallelogram : Quadrilateral) => AngleEquality | undefined,
+    makeAngleEqualityBySimilarTriangles : (angleA : Angle, angleB : Angle) => AngleEquality | undefined,
+    makeEqualLengthByRadiiEqual : (lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol) => LengthEquality | undefined,
+    makeEqualLengthByCommonCircle : (lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol, circle : CircleArc) => LengthEquality | undefined,
+    makeEqualLengthByParallelLines : (lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol, parallel_lines : AbstractLine[]) => LengthEquality | undefined,
+    makeEqualLengthByCongruentTriangles : (lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol) => LengthEquality | undefined,
+    makeEqualLengthByParallelogramOppositeSides : (lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol) => LengthEquality | undefined,
+    makeEqualLengthByParallelogramDiagonalBisection : (lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol) => LengthEquality | undefined,
+    makeEqualLengthByEquivalenceClass : (lengthSymbolA : LengthSymbol, lengthSymbolB : LengthSymbol) => LengthEquality | undefined,
+    makeRay : (pointA: Point, pointB: Point) => LineByPoints,
+    inputTextPrompt : (message : string) => string | null,
+    makeTriangleCongruence : (A : Triangle, B : Triangle) => TriangleCongruence | undefined,
+    makeTriangleSimilarity : (A : Triangle, B : Triangle) => TriangleSimilarity | undefined,
+    showMenu : (dlgType : menuDialogType) => Promise<number>,
+    makeAngleEqualityByIsoscelesTriangleBaseAngles : (angleA : Angle, angleB : Angle) => AngleEquality | undefined,
+    makeParallelDetectorByParallelogram : (lineA : AbstractLine, lineB : AbstractLine) => ParallelDetector | undefined,
+    makeParallelDetectorByCorrespondingAlternateAnglesEqual : (angleA : Angle, angleB : Angle) => ParallelDetector | undefined,
+    makeParallelDetectorBySupplementaryAngles : (angleA : Angle, angleB : Angle) => ParallelDetector | undefined,
+    makeIsoscelesTriangleDetector : (points : Point[], reason : IsoscelesTriangleReason ) => TriangleDetector | undefined,
+    makeQuadrilateralClassifier : (points : Point[], reason : ParallelogramReason | RhombusReason ) => ParallelogramClassifier | RhombusClassifier | undefined,
+    makeExprTransformByTransposition : (term : Term, textBlock : TextBlock, speech : Speech) => Promise<ExprTransform>,
+    makeExprTransformByEquality : (terms : Term[], textBlocks : TextBlock[], speech : Speech) => Promise<ExprTransform | undefined>,
+    makeExprTransformByAddEquation : (terms : Term[], textBlocks : TextBlock[], speech : Speech) => Promise<ExprTransform | undefined>,
+    makeExprTransformBySubstitution : (terms : Term[], textBlocks : TextBlock[], speech : Speech) => Promise<ExprTransform | undefined>,
+    makeExprTransformByDividingEquation : (root : App, mathText : string, textBlock : TextBlock, speech : Speech) => Promise<ExprTransform | undefined>,
+    makeShapeProposition : (reason : PropositionReason, shapes: (Angle | LengthSymbol)[]) => ShapeProposition,
+    makeEquationProposition : (reason : PropositionReason, mathText : string) => EquationProposition | undefined,
+    isEquationTextBlock : (x : MathEntity | undefined) => boolean,
+    setCaptionEvent : (caption : TextBlock) => void,
+    getEquationOfTextBlock : (self : TextBlock) => App | undefined,
+    texClickOfTextBlock : (self : TextBlock, ev : MouseEvent) => Promise<void>,
+    getTextOfTextBlock : (self : TextBlock) => string,
+    addSupplementaryAngles : (angle1 : Angle, angle2 : Angle) => void,
+    makeClickTerm : (textBlock_id : number, indexes : number[]) => ClickTerm,
+    isAngle : (obj : any) => obj is Angle,
+    isAngleEqualityConstraint : (obj : any) => obj is AngleEqualityConstraint,
+    isAssumption : (obj : any) => obj is Assumption,
+    isEnumSelection : (obj : any) => obj is EnumSelection,
+    isExprTransform : (obj : any) => obj is ExprTransform,
+    isExprTransformBuilder : (obj : any) => obj is ExprTransformBuilder,
+    isLengthSymbol : (obj : any) => obj is LengthSymbol,
+    isMotion : (obj : any) => obj is Motion,
+    isPoint : (obj : any) => obj is Point,
+    isPolygon : (obj : any) => obj is Polygon, 
+    isShape : (obj : any) => obj is Shape, 
+    isShapeEquation : (obj : any) => obj is ShapeEquation, 
+    isShapeProposition : (obj : any) => obj is ShapeProposition, 
+    isStatement : (obj : any) => obj is Statement, 
+    isT1 : (obj : any) => obj is T1, 
+    isT2 : (obj : any) => obj is T2, 
+    isT3 : (obj : any) => obj is T3, 
+    isT4 : (obj : any) => obj is T4, 
+    isTextBlock : (obj : any) => obj is TextBlock, 
+    isToolSelection : (obj : any) => obj is ToolSelection, 
+    isTriangle : (obj : any) => obj is Triangle, 
+    isWidget : (obj : any) => obj is Widget,
+    isTriangleCongruence : (obj : any) => obj is TriangleCongruence
+};
 
-    const Length_symbol_points = [ length_symbol.pointA, length_symbol.pointB ];
+export let AppServices : AppServicesType;
 
-    for(const triangle of triangles){
-        const points = triangle.points.filter(point => Length_symbol_points.includes(point) );
-        if(points.length == 2){
-            triangles_with_length_symbol.push(triangle);
-        }
-    }
+export function setAppServices(app_services : AppServicesType){
+    AppServices = app_services;
+}
 
-    return triangles_with_length_symbol;
+export let toolList : [typeof Builder, string, string, (typeof MathEntity)[]][];
+export let editToolList : [typeof Builder, string, string, (typeof MathEntity)[]][];
+
+export function setToolList(
+    tool_list : [typeof Builder, string, string, (typeof MathEntity)[]][],
+    edit_tool_list : [typeof Builder, string, string, (typeof MathEntity)[]][]) : void {
+
+    toolList = tool_list;
+    editToolList = edit_tool_list;
 }
 
 
 
-}
+console.log(`Loaded: inference`);

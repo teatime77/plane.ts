@@ -1,18 +1,15 @@
 ///<reference path="shape.ts" />
 
-namespace plane_ts {
-//
-export const TT = i18n_ts.TT;
-export const TTs = i18n_ts.TTs;
+import { assert, MyError, range, Reading, TT, permutation, areSetsEqual, Vec2 } from "@i18n";
+
+import { rightAngles, angleMap, equalLengths, pointsToLengthSymbol, centerOfCircleArcs, Angle__outerAngleScale, Angle__numMarks, GlobalState } from "./inference";
+import { MathEntity, fromXPixScale, fromYPixScale, registerEntity, TextBlock } from "./json";
+import { addEqualLengths, angleKey, drawLine, getCommonLineOfPoints, getCommonPointOfLines, inRange, Mylist, pairKey, toDegree } from "./all_functions";
+
+import { Shape, AbstractLine, Point, CircleByRadius, ArcByRadius } from "./shape";
+import { Midpoint } from "./geometry";
 
 export class Angle extends Shape {
-    static radius1Pix = 20;
-    static radius1 : number;
-    static numMarks = 5;
-    static RightAngleMark = 0;
-    static DefaultAngleMark = 1;
-    static outerAngleScale = 2;
-
     angleMark!  : number;
     lineA       : AbstractLine;
     directionA  : number;
@@ -72,13 +69,13 @@ export class Angle extends Shape {
 
     setAngleMark(angle_mark : number){
         this.angleMark = angle_mark;
-        if(angle_mark == Angle.RightAngleMark){
+        if(angle_mark == GlobalState.Angle__RightAngleMark){
             rightAngles.add(this);
         }
     }
 
     isRightAngle() : boolean {
-        return this.angleMark == Angle.RightAngleMark;
+        return this.angleMark == GlobalState.Angle__RightAngleMark;
     }
 
     dependencies() : MathEntity[] {
@@ -96,13 +93,13 @@ export class Angle extends Shape {
     }
 
     radiusPlus(){
-        return this.outerAngle ? Angle.outerAngleScale * Angle.radius1 : 0;
+        return this.outerAngle ? Angle__outerAngleScale * GlobalState.Angle__radius1! : 0;
     }
 
     isNear(position : Vec2) : boolean {  
         const distance = this.intersection.position.distance(position);
 
-        let radius = Angle.radius1 * 1.2;
+        let radius = GlobalState.Angle__radius1! * 1.2;
 
         let near_radius;
         if(this.outerAngle){
@@ -130,8 +127,8 @@ export class Angle extends Shape {
     }
 
     calc(){       
-        const idx = View.current.shapes.indexOf(this);
-        let shapes = (idx == -1 ? View.current.shapes : View.current.shapes.slice(0, idx));
+        const idx = GlobalState.View__current!.shapes.indexOf(this);
+        let shapes = (idx == -1 ? GlobalState.View__current!.shapes : GlobalState.View__current!.shapes.slice(0, idx));
 
         this.outerAngle = shapes.some(x => x instanceof Angle && this.intersection == x.intersection && (this.commonLineAA(x) || this.commonLineBB(x)) );
 
@@ -139,7 +136,7 @@ export class Angle extends Shape {
     }
 
     draw() : void {
-        assert(this.angleMark < Angle.numMarks);
+        assert(this.angleMark < Angle__numMarks);
 
         const [start, end] = this.startEndAngle();
         
@@ -147,12 +144,12 @@ export class Angle extends Shape {
 
         if(this.isRightAngle()){
 
-            const vx = (new Vec2(Angle.radius1, 0)).rot(start);
-            const vy = (new Vec2(Angle.radius1, 0)).rot(end);
+            const vx = (new Vec2(GlobalState.Angle__radius1!, 0)).rot(start);
+            const vy = (new Vec2(GlobalState.Angle__radius1!, 0)).rot(end);
             const positions : Vec2[] = [
                 center, center.add(vx), center.add(vx).add(vy), center.add(vy)
             ];
-            View.current.canvas.drawPolygon(this, positions);
+            GlobalState.View__current!.drawPolygon(this, positions);
         }
         else{
 
@@ -160,8 +157,8 @@ export class Angle extends Shape {
 
             for(const i of range(this.angleMark)){    
                 assert(i < scales.length);
-                const radius = Angle.radius1 * scales[i] + this.radiusPlus();
-                View.current.canvas.drawArc(this, center, radius, start, end);
+                const radius = GlobalState.Angle__radius1! * scales[i] + this.radiusPlus();
+                GlobalState.View__current!.drawArc(this, center, radius, start, end);
             }
         }
     }
@@ -178,12 +175,12 @@ export class Angle extends Shape {
         const mid_angle = (start + end) / 2;
         const center = this.intersection.position;
 
-        const radius = Angle.radius1 * 2 + this.radiusPlus();
+        const radius = GlobalState.Angle__radius1! * 2 + this.radiusPlus();
 
         const dx = radius * Math.cos(mid_angle);
         const dy = radius * Math.sin(mid_angle);
         const caption_center = center.add(new Vec2(dx, dy));
-        const caption_center_pix = View.current.toPixPosition(caption_center);
+        const caption_center_pix = GlobalState.View__current!.toPixPosition(caption_center);
 
         const rect = this.caption.div.getBoundingClientRect();
         const x = caption_center_pix.x - 0.5 * rect.width;
@@ -208,57 +205,6 @@ export class Angle extends Shape {
         return [this.lineA, this.lineB];
     }
 
-    static setEqualAngleMarks(angles : Angle[]){
-        assert(angles.length == 2 && angles.every(x => x instanceof Angle));
-
-        const named_angle = angles.find(x => x.name != "");
-        if(named_angle != undefined){
-            for(const angle of angles){
-                if(angle != named_angle){
-                    angle.setAngleMark(Angle.DefaultAngleMark);
-                    angle.setName(named_angle.name);    
-                }
-            }
-
-            return;
-        }
-        
-        for(const [angle1, angle2] of permutation([angles[0], angles[1]])){
-            if(angle1.intersection == angle2.intersection){
-                if(angle1.lineA == angle2.lineB && angle1.lineB == angle2.lineA){
-
-                    // msg("Angle Equality:Since the two angles bisect the line, they are right angles.");
-                    angles.forEach(x => x.setAngleMark(Angle.RightAngleMark));
-                    return;
-                }
-            }
-        }
-
-        if(angles.some(x => x.isRightAngle())){
-            // msg("Angle Equality:Since one angle is a right angle, the other angle is also a right angle.");
-            angles.forEach(x => x.setAngleMark(Angle.RightAngleMark));
-        }
-        else{
-
-            const max_angleMark = Math.max(... angles.map(x => x.angleMark));
-            if(max_angleMark != Angle.DefaultAngleMark){
-                angles.forEach(x => x.angleMark = max_angleMark);
-            }
-            else{
-                const all_angles = View.current.allShapes().filter(x => x instanceof Angle);
-                if(all_angles.length == 0){
-
-                    angles.forEach(x => x.angleMark = Angle.DefaultAngleMark + 1);
-                }
-                else{
-
-                    const max_all_angleMark = Math.max(... all_angles.map(x => x.angleMark));
-                    angles.forEach(x => x.angleMark = max_all_angleMark + 1);
-                }
-            }
-        }
-    }
-
     commonLineAA(angle : Angle) : boolean {
         return this.lineA == angle.lineA && this.directionA == angle.directionA;
     }
@@ -275,6 +221,8 @@ export class Angle extends Shape {
         return this.lineB == angle.lineB && this.directionB == angle.directionB;
     }
 }
+
+registerEntity(Angle.name, (obj: any) => new Angle(obj));
 
 
 export class DimensionLine extends Shape {
@@ -309,7 +257,7 @@ export class DimensionLine extends Shape {
     setShift(shift : number){
         this.shift = shift;
         this.calc();
-        View.current.dirty = true;
+        GlobalState.View__current!.dirty = true;
     }
 
     getProperties(){
@@ -354,7 +302,7 @@ export class DimensionLine extends Shape {
         const A_shift = A.add(this.shiftVec);
         const B_shift = B.add(this.shiftVec);
 
-        const shift_pix_len = View.current.toXPixScale(Math.abs(this.shift));
+        const shift_pix_len = GlobalState.View__current!.toXPixScale(Math.abs(this.shift));
         const ratio = (shift_pix_len + 5) / shift_pix_len;
         const shift_plus = this.shiftVec.mul(ratio);
         const A_shift_plus = A.add(shift_plus);
@@ -366,16 +314,17 @@ export class DimensionLine extends Shape {
         const degree = toDegree( Math.atan2(-AB.y, AB.x) );
         this.caption.setRotation(degree);
 
-        View.current.canvas.drawLine(this, A, A_shift_plus);
-        View.current.canvas.drawLine(this, B, B_shift_plus);
+        GlobalState.View__current!.drawLine(this, A, A_shift_plus);
+        GlobalState.View__current!.drawLine(this, B, B_shift_plus);
 
-        View.current.canvas.drawLine(this, A_shift, A_shift_inside);
-        View.current.canvas.drawLine(this, B_shift, B_shift_inside);
+        GlobalState.View__current!.drawLine(this, A_shift, A_shift_inside);
+        GlobalState.View__current!.drawLine(this, B_shift, B_shift_inside);
     }
 }
 
+registerEntity(DimensionLine.name, (obj: any) => new DimensionLine(obj));
+
 export class LengthSymbol extends Shape {
-    static DefaultLengthKind = 0;
 
     pointA : Point;
     pointB : Point;
@@ -431,7 +380,7 @@ export class LengthSymbol extends Shape {
     isNear(position : Vec2) : boolean {
         const center = this.center();        
         const real_distance = center.distance(position);
-        return View.current.isNear(real_distance);
+        return GlobalState.View__current!.isNear(real_distance);
     }
 
     length() : number {
@@ -451,7 +400,7 @@ export class LengthSymbol extends Shape {
     }
 
     draw() : void {
-        View.current.canvas.drawLine(this, this.pointA.position, this.pointB.position);
+        GlobalState.View__current!.drawLine(this, this.pointA.position, this.pointB.position);
 
         const tick_half_length = fromXPixScale(10);
 
@@ -499,7 +448,7 @@ export class LengthSymbol extends Shape {
     }
 
     findEqualLengthByMidPoint(){
-        const all_shapes = View.current.allShapes();
+        const all_shapes = GlobalState.View__current!.allShapes();
         
         const length_symbols = all_shapes.filter(x => x instanceof LengthSymbol && x != this && x.line == this.line) as LengthSymbol[];
         if(length_symbols.length == 0){
@@ -560,30 +509,8 @@ export class LengthSymbol extends Shape {
         return [this.pointA, this.pointB];
     }
 
-    static setEqualLengthKinds(lengthSymbols : LengthSymbol[]){
-        assert(lengthSymbols.every(x => x instanceof LengthSymbol));
-        
-        const max_lengthKind = Math.max(... lengthSymbols.map(x => x.lengthKind));
-        if(max_lengthKind != LengthSymbol.DefaultLengthKind){
-            lengthSymbols.forEach(x => x.lengthKind = max_lengthKind);
-        }
-        else{
-            const all_lengthSymbols = View.current.allShapes().filter(x => x instanceof LengthSymbol);
-            if(all_lengthSymbols.length == 0){
-
-                lengthSymbols.forEach(x => x.lengthKind = LengthSymbol.DefaultLengthKind + 1);
-            }
-            else{
-
-                const max_all_lengthKind = Math.max(... all_lengthSymbols.map(x => x.lengthKind));
-                lengthSymbols.forEach(x => x.lengthKind = max_all_lengthKind + 1);
-            }
-        }
-    }
-
 }
 
+registerEntity(LengthSymbol.name, (obj: any) => new LengthSymbol(obj));
 
-
-
-}
+console.log(`Loaded: dimension-symbol`);

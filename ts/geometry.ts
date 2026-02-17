@@ -1,24 +1,13 @@
 ///<reference path="shape.ts" />
 
-namespace plane_ts {
+import { Reading, TT, MyError, msg, getPlayMode, PlayMode, sleep, AbstractSpeech, Vec2 } from "@i18n";
 
-export function calcFootFrom2Pos(position : Vec2, pos1 : Vec2, e : Vec2) : Vec2 {
-    const v = position.sub(pos1);
-    const h = e.dot(v);
+import { ShapeMode } from "./enums";
+import { AppServices, GlobalState } from "./inference";
+import { Widget, MathEntity, registerEntity } from "./json";
+import { addPerpendicularPairs, addPointOnCircleArcs, addPointOnLines, anyToObj, calcCirclePointTangent, calcFootOfPerpendicular, calcLineLineIntersection, getCommonLineOfPoints, getCommonPointOfLines, Point__zero, setProperty } from "./all_functions";
 
-    const foot = pos1.add(e.mul(h));
-
-    return foot;
-}
-
-export function calcFootOfPerpendicular(position:Vec2, line: AbstractLine) : Vec2 {
-    return calcFootFrom2Pos(position, line.pointA.position, line.e);
-}
-    
-
-export function distanceFromLine(normal : Vec2, pointA : Vec2, position : Vec2) : number {
-    return Math.abs( normal.dot(position.sub(pointA)) );
-}
+import { AbstractLine, Point, Shape, CircleArc, Circle, Arc, LineByPoints } from "./shape";
 
 export class Midpoint extends Point {
     pointA   : Point;
@@ -69,6 +58,8 @@ export class Midpoint extends Point {
     }
 }
 
+registerEntity(Midpoint.name, (obj: any) => new Midpoint(obj));
+
 abstract class AbstractPerpendicularLine extends AbstractLine {
     line: AbstractLine;
 
@@ -115,7 +106,7 @@ export class FootOfPerpendicular extends AbstractPerpendicularLine {
         return super.dependencies().concat([ this.line ]);
     }
 
-    setMode(mode : Mode){
+    setMode(mode : ShapeMode){
         super.setMode(mode);
         this.foot.setMode(mode);
     }
@@ -128,7 +119,7 @@ export class FootOfPerpendicular extends AbstractPerpendicularLine {
     }
 
     draw() : void {
-        View.current.canvas.drawLineWith2Points(this, this.foot);
+        GlobalState.View__current!.drawLineWith2Points(this, this.foot);
     }
 
     reading() : Reading {
@@ -141,6 +132,8 @@ export class FootOfPerpendicular extends AbstractPerpendicularLine {
         addPointOnLines(this.foot, this.line);
     }
 }
+
+registerEntity(FootOfPerpendicular.name, (obj: any) => new FootOfPerpendicular(obj));
 
 
 export class PerpendicularLine extends AbstractPerpendicularLine {
@@ -161,35 +154,10 @@ export class PerpendicularLine extends AbstractPerpendicularLine {
     }
 }
 
+registerEntity(PerpendicularLine.name, (obj: any) => new PerpendicularLine(obj));
 
 
-export function calcLineLineIntersection(l1 : AbstractLine, l2 : AbstractLine) : Vec2 {
-    l1.calc();
-    l2.calc();
-    if(l1.e == undefined || l2.e == undefined){
-        throw new MyError();
-    }
 
-    /*
-    l1.p1 + u l1.e = l2.p1 + v l2.e
-
-    l1.p1.x + u l1.e.x = l2.p1.x + v l2.e.x
-    l1.p1.y + u l1.e.y = l2.p1.y + v l2.e.y
-
-    l1.e.x, - l2.e.x   u = l2.p1.x - l1.p1.x
-    l1.e.y, - l2.e.y   v = l2.p1.y - l1.p1.y
-    
-    */
-    const m = new Mat2([[l1.e.x, - l2.e.x], [l1.e.y, - l2.e.y]]);
-    const v = new Vec2(l2.pointA.position.x - l1.pointA.position.x, l2.pointA.position.y - l1.pointA.position.y);
-    const mi = m.inv();
-    const uv = mi.dot(v);
-    const u = uv.x;
-
-    const position = l1.pointA.position.add(l1.e.mul(u));
-
-    return position;
-}
 
 export class LineLineIntersection extends Point {
     lineA : AbstractLine;
@@ -233,6 +201,8 @@ export class LineLineIntersection extends Point {
     }
 }
 
+registerEntity(LineLineIntersection.name, (obj: any) => new LineLineIntersection(obj));
+
 export class LineArcIntersection extends Shape {
     line : AbstractLine;
     arc  : CircleArc;
@@ -270,7 +240,7 @@ export class LineArcIntersection extends Shape {
         return [ this.line, this.arc ];
     }
 
-    setMode(mode : Mode){
+    setMode(mode : ShapeMode){
         this.pointA.setMode(mode);
         this.pointB.setMode(mode);
     }
@@ -338,6 +308,8 @@ export class LineArcIntersection extends Shape {
     }
 }
 
+registerEntity(LineArcIntersection.name, (obj: any) => new LineArcIntersection(obj));
+
 export class ArcArcIntersection extends Shape {
     arc1 : CircleArc;
     arc2 : CircleArc;
@@ -375,7 +347,7 @@ export class ArcArcIntersection extends Shape {
         return [ this.arc1, this.arc2 ];
     }
 
-    setMode(mode : Mode){
+    setMode(mode : ShapeMode){
         this.pointA.setMode(mode);
         this.pointB.setMode(mode);
     }
@@ -448,6 +420,8 @@ export class ArcArcIntersection extends Shape {
     }
 }
 
+registerEntity(ArcArcIntersection.name, (obj: any) => new ArcArcIntersection(obj));
+
 export abstract class Tangent extends Shape {
 
 }
@@ -479,15 +453,15 @@ export class CircleCircleTangent extends Tangent {
             this.point = data.point;
         }
         else{
-            this.point = Point.zero();
+            this.point = Point__zero();
         }
 
         if(data.lines != undefined){
             this.lines = data.lines;
         }
         else{
-            const line_a = makeLineSegment( Point.zero(), Point.zero());
-            const line_b = makeLineSegment( Point.zero(), Point.zero());
+            const line_a = AppServices.makeLineSegment( Point__zero(), Point__zero());
+            const line_b = AppServices.makeLineSegment( Point__zero(), Point__zero());
             this.lines = [ line_a, line_b ];
         }
 
@@ -515,7 +489,7 @@ export class CircleCircleTangent extends Tangent {
         return super.dependencies().concat([ this.circle1, this.circle2 ]);
     }
 
-    setMode(mode : Mode){
+    setMode(mode : ShapeMode){
         this.lines.forEach(x => x.setMode(mode));
     }
 
@@ -557,25 +531,8 @@ export class CircleCircleTangent extends Tangent {
     }
 }
 
-function calcCirclePointTangent(center : Vec2, radius : number, position : Vec2) : [Vec2, Vec2] {
-    const center_point_distance = center.distance(position);
-    const tangent_point_distance = Math.sqrt(center_point_distance * center_point_distance - radius * radius);
+registerEntity(CircleCircleTangent.name, (obj: any) => new CircleCircleTangent(obj));
 
-    const [a, b, c] = [ radius, tangent_point_distance, center_point_distance ];
-    const cos_theta = (b*b + c*c - a*a) / (2 * b * c );
-    const theta  = Math.acos(cos_theta);
-
-    const pc = center.sub(position);
-    const tangent_positions : Vec2[] = [];
-    for(const th of [theta, -theta]){
-        const v = pc.rot(th).unit().mul(tangent_point_distance);
-
-        const tangent_position = position.add(v);
-        tangent_positions.push(tangent_position);
-    }
-
-    return tangent_positions as [Vec2, Vec2];
-}
 
 export class CirclePointTangent extends Tangent {
     circle : Circle;
@@ -594,15 +551,15 @@ export class CirclePointTangent extends Tangent {
             this.tangentPoints = data.tangentPoints;
         }
         else{
-            this.tangentPoints = [ Point.zero(), Point.zero() ];
+            this.tangentPoints = [ Point__zero(), Point__zero() ];
         }
 
         if(data.lines != undefined){
             this.lines = data.lines;
         }
         else{
-            const line_a = makeLineSegment(this.point, Point.zero());
-            const line_b = makeLineSegment(this.point, Point.zero());
+            const line_a = AppServices.makeLineSegment(this.point, Point__zero());
+            const line_b = AppServices.makeLineSegment(this.point, Point__zero());
             this.lines = [ line_a, line_b ];
         }
 
@@ -629,7 +586,7 @@ export class CirclePointTangent extends Tangent {
         return super.dependencies().concat([ this.circle, this.point ]);
     }
 
-    setMode(mode : Mode){
+    setMode(mode : ShapeMode){
         this.tangentPoints.forEach(x => x.setMode(mode));
         this.lines.forEach(x => x.setMode(mode));
     }
@@ -653,6 +610,8 @@ export class CirclePointTangent extends Tangent {
             [this.point].concat(this.tangentPoints));
     }
 }
+
+registerEntity(CirclePointTangent.name, (obj: any) => new CirclePointTangent(obj));
 
 export class AngleBisector extends AbstractLine {
     lineA       : AbstractLine;
@@ -698,6 +657,8 @@ export class AngleBisector extends AbstractLine {
 
 }
 
+registerEntity(AngleBisector.name, (obj: any) => new AngleBisector(obj));
+
 
 
 export class PropertyChange {
@@ -728,6 +689,8 @@ export class PropertyChange {
     }
 }
 
+registerEntity(PropertyChange.name, (obj: any) => new PropertyChange(obj));
+
 export class Motion extends MathEntity {
     propertyChanges : PropertyChange[] = [];
 
@@ -751,7 +714,7 @@ export class Motion extends MathEntity {
         throw new MyError();
     }   
 
-    async animate(speech : i18n_ts.AbstractSpeech){
+    async animate(speech : AbstractSpeech){
         const startTime = Date.now();
         while(true){
             const endTime = Date.now();
@@ -773,8 +736,8 @@ export class Motion extends MathEntity {
                 }
             }
 
-            View.current.dirty = true;
-            View.current.updateShapes();
+            GlobalState.View__current!.dirty = true;
+            GlobalState.View__current!.updateShapes();
             await sleep(10);
         }
     }
@@ -784,4 +747,6 @@ export class Motion extends MathEntity {
     }
 }
 
-}
+registerEntity(Motion.name, (obj: any) => new Motion(obj));
+
+console.log(`Loaded: geometry`);

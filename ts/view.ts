@@ -1,26 +1,24 @@
-namespace plane_ts {
-//
-function recalc(shape : MathEntity, changed : Set<MathEntity>){
-    const dependencies = shape.dependencies();
-    for(const dep of dependencies){
-        recalc(dep, changed);
-    }
+import { msg, getPlayMode, PlayMode, Vec2, unique } from "@i18n";
+import { bgColor, fgColor } from "@layout";
 
-    if(shape instanceof Shape && dependencies.some(x => changed.has(x)) ){
-        shape.calc();
+import { LineKind, ShapeMode } from "./enums";
+import { Angle__radius1Pix, defaultLineWidth, equalLengths, GlobalState, idMap, Point__radiusPix, RelationLog, supplementaryAngles } from "./inference";
+import { Widget, MathEntity, TextBlock } from "./json";
+import { addToShapeHistory, clearShapeList, getModeColor, getParallelLines, getPerpendicularLines, getPointsFromLine, initRelations, linear, modeLineWidth, modePointRadius, popShapeList, pushShapeList, recalc, removeDiv } from "./all_functions";
 
-        changed.add(shape);
-    }
-}
+import { Shape, Point, AbstractLine, CircleArcEllipse } from "./shape";
+import { Angle, LengthSymbol, DimensionLine } from "./dimension_symbol";
+import { Motion } from "./geometry";
+import { Operation, ClickShape } from "./operation";
+import { SelectionTool, StatementBuilder } from "./tool";
+
+import type { UndoData } from "./plane_util";
 
 export class View extends Widget {
-    static nearThreshold = 8;
-    static current : View;
-    static isPlayBack : boolean = false;
 
     name  : string = "";
-    board : HTMLCanvasElement;
-    canvas : Canvas;
+    canvas : HTMLCanvasElement;
+    ctx    : CanvasRenderingContext2D;
     grid : CanvasGrid;
 
     operations : Operation[] = [];
@@ -45,7 +43,7 @@ export class View extends Widget {
     makeObj() : any {
         let obj = Object.assign(super.makeObj(), {
             name   : this.name,
-            scale  : this.board.clientWidth / (this.max.x - this.min.x),
+            scale  : this.canvas.clientWidth / (this.max.x - this.min.x),
             min    : this.min,
             max    : this.max,
             shapes : this.shapes.map(x => x.toObj())
@@ -56,26 +54,27 @@ export class View extends Widget {
 
     isNear(real_distance : number) : boolean {
         const pix_distance = this.toXPixScale(real_distance);
-        return pix_distance < View.nearThreshold;
+        return pix_distance < GlobalState.View__nearThreshold;
     }
 
     constructor(canvas : HTMLCanvasElement){
         super({});
-        this.board = canvas;
-        this.board.innerHTML = "";
+        this.canvas = canvas;
+        this.canvas.innerHTML = "";
         
-        this.canvas = new Canvas(this, this.board);
+        this.ctx = canvas.getContext("2d")!;
+
         this.grid   = new CanvasGrid(this);
 
-        this.board.width  = this.board.clientWidth;
-        this.board.height = this.board.clientHeight;
+        this.canvas.width  = this.canvas.clientWidth;
+        this.canvas.height = this.canvas.clientHeight;
 
         const scale = 100;
-        const span_x = this.board.clientWidth  / scale;
+        const span_x = this.canvas.clientWidth  / scale;
         const min_x = -0.75 * span_x;
         const max_x =  0.25 * span_x;
 
-        const span_y = this.board.clientHeight / scale;
+        const span_y = this.canvas.clientHeight / scale;
         const max_y = 0.5 * span_y;
         const min_y = -max_y;
         msg(`min-x:${min_x} max-x:${max_x} max-y:${max_y}`);
@@ -85,7 +84,7 @@ export class View extends Widget {
         this.textBaseY = max_y - 0.1 * span_y;
         this.textBase = new Vec2(min_x + 0.05 * span_x, this.textBaseY);
 
-        View.current = this;
+        GlobalState.View__current = this;
 
         this.resizeView();
     }
@@ -96,7 +95,7 @@ export class View extends Widget {
 
         removeDiv();
     
-        Widget.maxId = this.id;
+        GlobalState.Widget__maxId = this.id;
         idMap.clear();
         idMap.set(this.id, this);
 
@@ -105,7 +104,7 @@ export class View extends Widget {
         this.dirty = true;
         this.textBase.y = this.textBaseY;
 
-        Plane.one.clearPlane();
+        GlobalState.Plane__one!.clearPlane();
         clearShapeList();
         
         initRelations();    
@@ -115,25 +114,25 @@ export class View extends Widget {
         this.min = min;
         this.max = max;
 
-        Point.radius  = this.fromXPixScale(Point.radiusPix);
-        Angle.radius1 = this.fromXPixScale(Angle.radius1Pix);
+        GlobalState.Point__radius  = this.fromXPixScale(Point__radiusPix);
+        GlobalState.Angle__radius1 = this.fromXPixScale(Angle__radius1Pix);
     }
 
     eventPosition(event : MouseEvent) : Vec2 {
-        const flipped_y = this.board.clientHeight - event.offsetY;
+        const flipped_y = this.canvas.clientHeight - event.offsetY;
 
-        const x = linear(0, event.offsetX, this.board.clientWidth , this.min.x, this.max.x);
-        const y = linear(0, flipped_y , this.board.clientHeight, this.min.y, this.max.y);
+        const x = linear(0, event.offsetX, this.canvas.clientWidth , this.min.x, this.max.x);
+        const y = linear(0, flipped_y , this.canvas.clientHeight, this.min.y, this.max.y);
 
         return new Vec2(x, y);
     }
 
     fromXPixScale(pix : number) : number {
-        return(this.max.x - this.min.x) * (pix / this.board.clientWidth);
+        return(this.max.x - this.min.x) * (pix / this.canvas.clientWidth);
     }
 
     fromYPixScale(pix : number) : number {
-        return(this.max.y - this.min.y) * (pix / this.board.clientHeight);
+        return(this.max.y - this.min.y) * (pix / this.canvas.clientHeight);
     }
 
     fromPixScale(position : Vec2) : Vec2 {
@@ -141,11 +140,11 @@ export class View extends Widget {
     }
 
     fromXPix(pix : number) : number {
-        return linear(0, pix, this.board.clientWidth, this.min.x, this.max.x);
+        return linear(0, pix, this.canvas.clientWidth, this.min.x, this.max.x);
     }
 
     fromYPix(pix : number) : number {
-        return linear(0, pix, this.board.clientHeight, this.min.y, this.max.y);
+        return linear(0, pix, this.canvas.clientHeight, this.min.y, this.max.y);
     }
 
     fromPix(position : Vec2) : Vec2 {
@@ -153,22 +152,22 @@ export class View extends Widget {
     }
 
     toXPixScale(n : number) : number {
-        return this.board.clientWidth * n / (this.max.x - this.min.x);
+        return this.canvas.clientWidth * n / (this.max.x - this.min.x);
     }
 
     toYPixScale(n : number) : number {
-        return this.board.clientHeight * n / (this.max.y - this.min.y);
+        return this.canvas.clientHeight * n / (this.max.y - this.min.y);
     }
 
     toXPix(x : number) : number {
-        const x_pix = linear(this.min.x, x, this.max.x, 0, this.board.clientWidth);
+        const x_pix = linear(this.min.x, x, this.max.x, 0, this.canvas.clientWidth);
         return x_pix;
     }
 
     toYPix(y : number) : number {
-        const pix_y = linear(this.min.y, y, this.max.y, 0, this.board.clientHeight);
+        const pix_y = linear(this.min.y, y, this.max.y, 0, this.canvas.clientHeight);
 
-        const flipped_y = this.board.clientHeight - pix_y;
+        const flipped_y = this.canvas.clientHeight - pix_y;
         return flipped_y;
     }
 
@@ -199,20 +198,20 @@ export class View extends Widget {
     removeUnusedDivs(){
         const used_divs = this.allRealShapes().filter(x => x.caption != undefined).map(x => x.caption!.div);
         const used_divs_set = new Set<HTMLDivElement>(used_divs);
-        const canvas_divs = Array.from(this.board.getElementsByTagName("div"));
+        const canvas_divs = Array.from(this.canvas.getElementsByTagName("div"));
         const unused_divs = canvas_divs.filter(x => !used_divs_set.has);
         for(const div of unused_divs){
-            this.board.removeChild(div);
+            this.canvas.removeChild(div);
         }
     }
 
     resetMode(){
-        this.allShapes().forEach(x =>{ x.setMode(Mode.none); x.isOver = false; });
+        this.allShapes().forEach(x =>{ x.setMode(ShapeMode.none); x.isOver = false; });
         this.dirty = true;
     }
 
     resetOrders(){
-        MathEntity.orderSet.clear();
+        GlobalState.MathEntity__orderSet.clear();
         this.allShapes().forEach(x => x.order = NaN);
         this.shapes.forEach(x => x.setOrder());
     }
@@ -223,15 +222,15 @@ export class View extends Widget {
 
             // msg("redraw");
 
-            this.canvas.clear();
-            Polygon.colorIndex = 0;
+            this.clear();
+            GlobalState.Polygon__colorIndex = 0;
 
-            this.grid.showGrid(Plane.one.show_axis.checked(), Plane.one.show_grid.checked());
+            this.grid.showGrid(GlobalState.Plane__one!.show_axis.checked(), GlobalState.Plane__one!.show_grid.checked());
 
             const shapes = this.allRealShapes();
             const visible_shapes = shapes.filter(x => x.visible);
             
-            if(getPlayMode() != PlayMode.stop || !Plane.one.editMode){
+            if(getPlayMode() != PlayMode.stop || ! GlobalState.Plane__one!.editMode){
 
                 visible_shapes.forEach(c => c.draw());
             }
@@ -240,11 +239,11 @@ export class View extends Widget {
                 shapes.forEach(c => c.draw());
             }
 
-            visible_shapes.filter(x =>  x.mode != Mode.none).forEach(c => c.draw());
+            visible_shapes.filter(x =>  x.mode != ShapeMode.none).forEach(c => c.draw());
 
-            Builder.tool.drawTool(this);
+            GlobalState.Builder__tool!.drawTool(this);
 
-            if(Plane.one.snap_to_grid.checked()){
+            if(GlobalState.Plane__one!.snap_to_grid.checked()){
                 this.grid.showPointer();
             }
         }
@@ -255,15 +254,15 @@ export class View extends Widget {
     async click(event : MouseEvent){
         msg("click");
         let position = this.eventPosition(event);
-        if(Plane.one.snap_to_grid.checked()){
+        if(GlobalState.Plane__one!.snap_to_grid.checked()){
             position = this.grid.snap(position);
         }
 
-        Point.tempPoints = [];
+        GlobalState.Point__tempPoints = [];
         const shape = this.getShape(position);
 
 
-        if(Builder.tool instanceof SelectionTool){
+        if(GlobalState.Builder__tool instanceof SelectionTool){
             if(shape instanceof Point){
 
                 const click_shape = this.operations.find(x => x instanceof ClickShape && x.createdPoint === shape) as ClickShape;
@@ -273,18 +272,18 @@ export class View extends Widget {
                 }
             }
 
-            await Builder.tool.click(this, position, shape);
+            await GlobalState.Builder__tool.click(this, position, shape);
         }
         else{
             this.addOperation(new ClickShape(position, (shape != undefined ? shape.id : NaN)));
 
-            if(Builder.tool instanceof StatementBuilder){
+            if(GlobalState.Builder__tool instanceof StatementBuilder){
 
-                await Builder.tool.clickWithMouseEvent(event, this, position, shape);
+                await GlobalState.Builder__tool.clickWithMouseEvent(event, this, position, shape);
             }
             else{
 
-                await Builder.tool.click(this, position, shape);
+                await GlobalState.Builder__tool!.click(this, position, shape);
             }
         }
 
@@ -298,13 +297,13 @@ export class View extends Widget {
             return;
         }
 
-        if(Builder.tool instanceof SelectionTool){
+        if(GlobalState.Builder__tool instanceof SelectionTool){
             this.resetMode();
 
             if(shape instanceof LengthSymbol){
                 const length_symbols = equalLengths.find(x => x.has(shape));
                 if(length_symbols != undefined){
-                    Array.from(length_symbols.values()).forEach(x => x.setMode(Mode.depend));
+                    Array.from(length_symbols.values()).forEach(x => x.setMode(ShapeMode.depend));
                     this.dirty = true;
                 }
             }
@@ -312,26 +311,26 @@ export class View extends Widget {
                 const angles = Array.from(supplementaryAngles.flat()).find(x => x.has(shape));
                 if(angles != undefined){
                     this.resetMode();
-                    angles.forEach(x => x.setMode(Mode.depend));
+                    angles.forEach(x => x.setMode(ShapeMode.depend));
                     this.dirty = true;
                 }
             }
             else if(shape instanceof AbstractLine){
                 const points = getPointsFromLine(shape);
-                points.forEach(x => x.setMode(Mode.depend));
+                points.forEach(x => x.setMode(ShapeMode.depend));
 
                 const parallel_lines = getParallelLines(shape);
                 if(parallel_lines != undefined){
-                    parallel_lines.forEach(x => x.setMode(Mode.target));
+                    parallel_lines.forEach(x => x.setMode(ShapeMode.target));
                 }
 
                 const perpendicular_lines = getPerpendicularLines(shape);
                 if(perpendicular_lines != undefined){
-                    perpendicular_lines.forEach(x => x.setMode(Mode.depend));
+                    perpendicular_lines.forEach(x => x.setMode(ShapeMode.depend));
                 }
             }
 
-            shape.setMode(Mode.target);
+            shape.setMode(ShapeMode.target);
         }
 
         this.dirty = true;
@@ -345,7 +344,7 @@ export class View extends Widget {
         }
 
         let position = this.eventPosition(event);
-        if(Plane.one.snap_to_grid.checked()){
+        if(GlobalState.Plane__one!.snap_to_grid.checked()){
             position = this.grid.snap(position);
         }
 
@@ -353,7 +352,7 @@ export class View extends Widget {
 
         const shape = this.getShape(position);
 
-        Builder.tool.pointerdown(event, this, position, shape);
+        GlobalState.Builder__tool!.pointerdown(event, this, position, shape);
     }
 
     pointermove(event : PointerEvent){
@@ -361,11 +360,11 @@ export class View extends Widget {
         event.preventDefault(); 
 
         let position = this.eventPosition(event);
-        if(Plane.one.snap_to_grid.checked()){
+        if(GlobalState.Plane__one!.snap_to_grid.checked()){
             position = this.grid.snap(position);
         }
 
-        const shapes = this.allShapes().concat(Builder.tool.pendingShapes());
+        const shapes = this.allShapes().concat(GlobalState.Builder__tool!.pendingShapes());
 
         const old_near_shape = shapes.find(x => x.isOver);
         const near_shape = this.getShape(position);
@@ -384,11 +383,11 @@ export class View extends Widget {
         }
 
         const shape = this.getShape(position);
-        Builder.tool.pointermove(event, this, position, shape);
+        GlobalState.Builder__tool!.pointermove(event, this, position, shape);
 
         this.movePosition = position;
 
-        if(Plane.one.snap_to_grid.checked()){
+        if(GlobalState.Plane__one!.snap_to_grid.checked()){
             const prev_snap_position = this.grid.snapPosition;
             this.grid.setSnapPosition();
             if(! prev_snap_position.equals(this.grid.snapPosition)){
@@ -404,12 +403,12 @@ export class View extends Widget {
         }
         
         let position = this.eventPosition(event);
-        if(Plane.one.snap_to_grid.checked()){
+        if(GlobalState.Plane__one!.snap_to_grid.checked()){
             position = this.grid.snap(position);
         }
 
         const shape = this.getShape(position);
-        Builder.tool.pointerup(event, this, position, shape);
+        GlobalState.Builder__tool!.pointerup(event, this, position, shape);
 
 
         this.downPosition = undefined;
@@ -419,7 +418,7 @@ export class View extends Widget {
         event.preventDefault();
 
         let position = this.eventPosition(event);
-        if(Plane.one.snap_to_grid.checked()){
+        if(GlobalState.Plane__one!.snap_to_grid.checked()){
             position = this.grid.snap(position);
         }
 
@@ -434,17 +433,17 @@ export class View extends Widget {
 
         this.allRealShapes().forEach(x => x.updateCaption());
 
-        View.current.dirty = true;
+        GlobalState.View__current!.dirty = true;
     }
 
     resizeView(){
-        this.board.width  = this.board.clientWidth;
-        this.board.height = this.board.clientHeight;
+        this.canvas.width  = this.canvas.clientWidth;
+        this.canvas.height = this.canvas.clientHeight;
 
         this.updateTextBlockPositions();
         this.dirty = true;
 
-        msg(`resize: w:${this.board.width} h:${this.board.height} max:${this.max}`);
+        msg(`resize: w:${this.canvas.width} h:${this.canvas.height} max:${this.max}`);
     }
 
     addOperation(operation : Operation){
@@ -458,7 +457,7 @@ export class View extends Widget {
     }
 
     getShape(position : Vec2) : Shape | undefined {
-        const shapes = this.allRealShapes().concat(Builder.tool.pendingShapes());
+        const shapes = this.allRealShapes().concat(GlobalState.Builder__tool!.pendingShapes());
         const point = shapes.filter(x => x instanceof Point).find(x => x.isNear(position));
         if(point != undefined){
             return point;
@@ -558,7 +557,7 @@ export class View extends Widget {
 
         undoData.shapes.forEach(x => x.hide());
 
-        while(View.current.shapes.length < Plane.one.shapes_block.children.length){
+        while(GlobalState.View__current!.shapes.length < GlobalState.Plane__one!.shapes_block.children.length){
             const ui = popShapeList();
             if(ui != undefined){
                 undoData.historyUIs.unshift(ui);
@@ -571,7 +570,7 @@ export class View extends Widget {
     }
 
     async redo(){
-        const view : View = View.current;
+        const view : View = GlobalState.View__current!;
 
         if(this.undoStack.length == 0){
             return;
@@ -598,6 +597,233 @@ export class View extends Widget {
     texPosition(){
 
     }
+
+    getAttributes(shape : Shape | undefined) : [string, number]{
+        let color : string;
+        let line_width : number;
+
+        if(shape != undefined){
+
+            color      = shape.modeColor();
+            line_width = shape.modeLineWidth();
+        }
+        else{
+
+            color = fgColor;
+            line_width = defaultLineWidth;
+        }
+
+        return [color, line_width];
+    }
+
+    clear(){
+        const rc = this.canvas.getBoundingClientRect();
+        this.ctx.fillStyle = bgColor;
+        this.ctx.fillRect(0, 0, rc.width, rc.height);
+    }
+
+    drawLineRaw(p1 : Vec2, p2 : Vec2, color : string, line_width : number){
+        const pix1 = this.toPixPosition(p1);
+        const pix2 = this.toPixPosition(p2);
+
+        const ctx = this.ctx;
+        ctx.beginPath();
+        ctx.moveTo(pix1.x, pix1.y);
+        ctx.lineTo(pix2.x, pix2.y);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = line_width;
+        ctx.stroke();   
+    }
+
+    drawLine(shape : Shape | undefined, p1 : Vec2, p2 : Vec2){
+        const [color, line_width] = this.getAttributes(shape);
+        this.drawLineRaw(p1, p2, color, line_width);
+    }
+
+    drawLineWith2Points(line : AbstractLine, pointB : Point){
+        const l = GlobalState.View__current!.max.distance(GlobalState.View__current!.min);
+        const p_plus  = line.pointA.position.add(line.e.mul( l));
+        const p_minus = line.pointA.position.add(line.e.mul(-l));
+
+        switch(line.lineKind){
+        case LineKind.line_segment:
+            this.drawLine(line, line.pointA.position, pointB.position);
+            break;
+
+        case LineKind.ray:
+            this.drawLine(line, line.pointA.position, p_plus);
+            break;
+
+        case LineKind.ray_reverse:
+            this.drawLine(line, line.pointA.position, p_minus);
+            break;
+
+        case LineKind.line:
+            this.drawLine(line, p_minus, p_plus);
+            break;
+        }
+    }
+
+    drawPolygonRaw(positions : Vec2[], color : string, line_width : number, fill : boolean = false){
+        const ctx = this.ctx;
+
+        ctx.beginPath();
+        if(fill){
+
+            ctx.globalAlpha = 0.5;
+            ctx.fillStyle = color;
+        }
+        else{
+
+            ctx.strokeStyle = color;
+            ctx.lineWidth   = line_width;
+        }
+
+        for(const [idx, position] of positions.entries()){
+            const pix = this.toPixPosition(position);
+
+            if(idx == 0){
+
+                ctx.moveTo(pix.x, pix.y);
+            }
+            else{
+
+                ctx.lineTo(pix.x, pix.y);
+            }
+        }
+
+        ctx.closePath();
+
+        if(fill){
+
+            ctx.fill();
+            ctx.globalAlpha = 1;
+        }
+        else{
+
+            ctx.stroke();
+        }
+    }
+
+    drawPolygon(shape : Shape, positions : Vec2[]){
+        const [color, line_width] = this.getAttributes(shape);
+        this.drawPolygonRaw(positions, color, line_width);
+    }
+
+    drawPartialPolygon(points : Point[], mode : ShapeMode){
+        const color = getModeColor(mode);
+        const radius = modePointRadius(mode);
+
+        const positions = points.map(x => x.position);
+        positions.forEach(x => GlobalState.View__current!.drawCircleRaw(x, radius, color));
+
+        const line_width = modeLineWidth(mode);
+        GlobalState.View__current!.drawPolygonRaw(positions, color, line_width);
+    }
+
+    drawLinesRaw(lines : [Vec2, Vec2][], color : string, line_width : number){
+        const ctx = this.ctx;
+
+        for(const [p1, p2] of lines){
+            const pix1 = this.toPixPosition(p1);
+            const pix2 = this.toPixPosition(p2);
+
+            ctx.beginPath();
+            ctx.moveTo(pix1.x, pix1.y);
+            ctx.lineTo(pix2.x, pix2.y);
+            ctx.strokeStyle = color;
+            ctx.lineWidth   = line_width;
+            ctx.stroke();
+        }
+    }
+
+    drawLines(shape : Shape, lines : [Vec2, Vec2][]){
+        const [color, line_width] = this.getAttributes(shape);
+        this.drawLinesRaw(lines, color, line_width);
+    }
+
+    drawArcRaw(center : Vec2, radius : number, start_angle : number, end_angle : number, color : string, line_width? : number){
+        const ctx = this.ctx;
+        const pix = this.toPixPosition(center);
+
+        // flip Y
+        start_angle = 2 * Math.PI - start_angle;
+        end_angle   = 2 * Math.PI - end_angle;
+
+        const radius_pix = this.toXPixScale(radius);
+
+        ctx.beginPath();
+        ctx.arc(pix.x, pix.y, radius_pix, start_angle, end_angle, true);
+
+        if(line_width == undefined){
+
+            ctx.fillStyle = color;
+            ctx.fill();
+        }
+        else{
+
+            ctx.lineWidth   = line_width;
+            ctx.strokeStyle = color;
+            ctx.stroke();
+        }
+    }
+
+    drawCircleRaw(center : Vec2, radius : number, color : string, line_width? : number){
+        this.drawArcRaw(center, radius, 0, 2 * Math.PI, color, line_width)
+    }
+
+    drawArc(shape : Shape, center : Vec2, radius : number, start_angle : number, end_angle : number){
+        const [color, line_width] = this.getAttributes(shape);
+        this.drawArcRaw(center, radius, start_angle, end_angle, color, line_width)
+    }
+
+    drawCircle(shape : Shape, center : Vec2, radius : number){
+        this.drawArc(shape, center, radius, 0, 2 * Math.PI)
+    }
+
+    drawEllipse(center : Vec2, radius_x : number, radius_y : number, rotation : number, color : string, line_width : number){
+
+        const center_pix = this.toPixPosition(center);
+        const radius_x_pix = this.toXPixScale(radius_x);
+        const radius_y_pix = this.toXPixScale(radius_y);
+
+        const ctx = this.ctx;
+
+        ctx.beginPath();
+        ctx.ellipse(center_pix.x, center_pix.y, radius_x_pix, radius_y_pix, rotation, 0, 2 * Math.PI);
+        ctx.lineWidth = line_width;
+        ctx.strokeStyle = color;
+        ctx.stroke();
+    }
+
+    drawText(position : Vec2, text : string, color : string){
+        const pos_pix = this.toPixPosition(position);
+        const ctx = this.ctx;
+        ctx.font = "16px serif";
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = color;
+        ctx.strokeText(text, pos_pix.x, pos_pix.y);
+    }
+
+    drawRect(shape : Shape | undefined, p1 : Vec2, p2 : Vec2){
+        const [color, line_width] = this.getAttributes(shape);
+
+        const pix1 = this.toPixPosition(p1);
+        const pix2 = this.toPixPosition(p2);
+
+        const x = Math.min(pix1.x, pix2.x);
+        const y = Math.min(pix1.y, pix2.y);
+        const w = Math.abs(pix1.x - pix2.x);
+        const h = Math.abs(pix1.y - pix2.y);
+
+        const ctx = this.ctx;
+        ctx.beginPath();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = line_width;
+        ctx.rect(x, y, w, h);
+        ctx.stroke();   
+    }
+
 }
 
 class CanvasGrid {
@@ -691,9 +917,9 @@ class CanvasGrid {
                 }
             }        
 
-            this.view.canvas.drawLinesRaw(axis_lines, fgColor, 1.0);
-            this.view.canvas.drawLinesRaw(main_lines, "gray", 0.5);
-            this.view.canvas.drawLinesRaw(sub_lines , "gray", 0.2);
+            this.view.drawLinesRaw(axis_lines, fgColor, 1.0);
+            this.view.drawLinesRaw(main_lines, "gray", 0.5);
+            this.view.drawLinesRaw(sub_lines , "gray", 0.2);
         }
 
         if(show_axis){
@@ -705,11 +931,11 @@ class CanvasGrid {
 
                 const text = (n == 0 ? "0" : a.toFixed(fraction_digits));
                 if(axis == "X"){                    
-                    this.view.canvas.drawText(new Vec2(a, 0), text, fgColor);
+                    this.view.drawText(new Vec2(a, 0), text, fgColor);
                 }
                 else{
 
-                    this.view.canvas.drawText(new Vec2(0, a), text, fgColor);
+                    this.view.drawText(new Vec2(0, a), text, fgColor);
                 }
             }
         }
@@ -748,7 +974,7 @@ class CanvasGrid {
             [ new Vec2(position.x, position.y - this.subSpanY), new Vec2(position.x, position.y + this.subSpanY) ]
         ]
 
-        this.view.canvas.drawLinesRaw(lines, "blue", 1);
+        this.view.drawLinesRaw(lines, "blue", 1);
     }
 
     snap(position : Vec2) : Vec2 {
@@ -761,8 +987,8 @@ class CanvasGrid {
 
         return new Vec2(x, y);
     }
+
+
 }
 
-
-
-}
+console.log(`Loaded: view`);

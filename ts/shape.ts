@@ -1,435 +1,15 @@
 ///<reference path="json.ts" />
 
-type  Reading = i18n_ts.Reading;
-const Reading = i18n_ts.Reading;
-
-namespace plane_ts {
-//
-export const fgColor = layout_ts.fgColor;
-export const bgColor = layout_ts.bgColor;
-export const dependColor = "blue";
-export const targetColor = "red";
-export const defaultLineWidth = 3;
-export const OverLineWidth = 5;
-let capturedShape : MathEntity | undefined;
-
-export enum Mode {
-    none,
-    depend,
-    depend1,
-    depend2,
-    target,
-    target1,
-    target2,
-}
-
-const modeColorMap = new Map<Mode,string>([
-    [ Mode.none   , fgColor ],
-    [ Mode.depend , dependColor ],
-    [ Mode.depend1, "Aqua" ],
-    [ Mode.depend2, "lime" ],
-    [ Mode.target , targetColor ],
-    [ Mode.target1, "orange" ],
-    [ Mode.target2, "magenta" ],
-]);
-
-export function getModeColor(mode : Mode) : string {
-    return modeColorMap.get(mode)!;
-}
-
-export abstract class MathEntity extends Widget implements i18n_ts.Readable, parser_ts.Highlightable {
-    static orderSet = new Set<MathEntity>();
-    setRelationsCount : number = 0;
-    visible : boolean = true;
-    mode : Mode = Mode.none;
-    isOver : boolean = false;
-    mute : boolean = false;
-    interval : number = 1;
-
-    constructor(obj : any){
-        super(obj);
-
-        if(obj.visible != undefined && !obj.visible){
-            this.visible = false;
-        }
-
-        if(obj.mute != undefined){
-            this.mute = obj.mute;
-        }
-
-        if(obj.interval != undefined){
-            this.interval = obj.interval;
-        }
-        
-        if(View.current != undefined){
-
-            View.current.dirty = true;
-        }
-    }
-
-    makeObj() : any {
-        let obj = super.makeObj();
-
-        if(this.mute){
-            obj.mute = true;
-        }
-
-        if(this.interval != 1){
-            obj.interval = this.interval;
-        }
-
-        if(!this.visible){
-            obj.visible = false;
-        }
-
-        return obj;
-    }
-
-    getProperties(){
-        return super.getProperties().concat([
-            "mute", "visible", "interval"
-        ]);
-    }
-
-    abstract reading() : Reading;
-
-    textReading(text : string) : Reading {
-        return new Reading(this, text, []);
-    }
-
-    highlight(on : boolean) : void {
-        if(on){
-            this.setMode(Mode.target);
-        }
-        else{
-            this.setMode(Mode.none);
-        }
-    }
-
-    getAllShapes(shapes : MathEntity[]){
-        shapes.push(this);
-    }
-
-
-    allShapes() : Shape[] {
-        const shapes : Shape[] = [];
-        this.getAllShapes(shapes);
-
-        return unique(shapes);
-    }
-
-    dependencies() : MathEntity[] {
-        return [];
-    }
-
-    setOrder(){
-        if(MathEntity.orderSet.has(this)){
-            assert(!isNaN(this.order));
-            return;
-        }
-        for(const dep of this.dependencies()){
-            dep.setOrder();
-        }
-
-        assert(!MathEntity.orderSet.has(this));
-        this.order = MathEntity.orderSet.size;
-        MathEntity.orderSet.add(this);
-    }
-
-    setMode(mode : Mode){
-        this.mode = mode;
-        View.current.dirty = true;
-    }
-
-    delete(deleted : Set<number>){
-        if(deleted.has(this.id)){
-            return;
-        }
-        deleted.add(this.id);
-
-        for(let [name, val] of Object.entries(this)){
-            if(val instanceof MathEntity){
-                val.delete(deleted);
-            }
-        }    
-    }
-
-    async play(speech : i18n_ts.AbstractSpeech){
-    }
-
-    getTextBlock() : TextBlock | undefined {
-        if(this instanceof TextBlock){
-            return this;
-        }
-        else if(this instanceof Shape && this.caption != undefined){
-            return this.caption;
-        }
-        else{
-            return undefined;
-        }
-    }
-
-    hideTextBlock(){
-        const text_block = this.getTextBlock();
-        if(text_block != undefined){
-
-            text_block.div.dataset.display_backup = text_block.div.style.display;
-            text_block.div.style.display = "none";
-        }
-    }
-
-    restoreTextBlock(){
-        const text_block = this.getTextBlock();
-        if(text_block != undefined && text_block.div.dataset.display_backup != undefined){
-            text_block.div.style.display = text_block.div.dataset.display_backup;
-        }
-    }
-
-    show(){        
-    }
-
-    hide(){        
-    }
-
-    setRelations(){
-        this.setRelationsCount++;
-    }
-}
-
-export class TermRect {
-    term : Term;
-    span : HTMLSpanElement;
-    rect : DOMRect;
-
-    constructor(term : Term, span : HTMLSpanElement){
-        this.term = term;
-        this.span = span;
-        this.rect = span.getBoundingClientRect();
-    }
-}
-
-export class TextBlock extends MathEntity {
-    parent : MathEntity | undefined;
-    text  : string;
-    isTex : boolean;
-    div   : HTMLDivElement;
-
-    offset : Vec2 = new Vec2(0, 0);
-    termRects : TermRect[] = [];
-
-    constructor(obj : { parent? : MathEntity, text : string, isTex : boolean, offset : Vec2 }){
-        super(obj);
-        this.parent = obj.parent;
-        this.text  = obj.text;
-        this.isTex = obj.isTex;
-        this.offset = obj.offset;
-
-        this.div   = document.createElement("div");
-        if(this.getEquation() != undefined){
-
-            this.div.className = "selectable_tex";
-            this.div.addEventListener("click", this.texClick.bind(this));
-        }
-        else{
-
-            this.div.className = "tex_div";
-        }
-        this.div.style.fontSize = "x-large";
-
-        this.setVisible(this.visible);
-
-        View.current.board.parentElement!.append(this.div);
-
-        if(this.getEquation() == undefined){
-
-            setCaptionEvent(this);
-        }
-
-        this.updateTextPosition();
-
-        textBlockEvent.setTextBlockEvent(this);
-    }
-
-    getEquation() : App | undefined {
-        if(isEquationTextBlock(this.parent)){
-            return (this.parent as EquationTextBlockClass).equation;
-        }
-
-        return undefined;
-    }
-
-    makeObj() : any {
-        let obj = Object.assign(super.makeObj(), {
-            text   : this.text,
-            isTex  : this.isTex,
-            offset : this.offset
-        });
-
-        return obj;
-    }
-
-    getProperties(){
-        return super.getProperties().concat([
-            "text", "isTex", "offset"
-        ]);
-    }
-
-    getClickedTermRect(x : number, y : number) : TermRect {
-        this.termRects.forEach(x => x.span.style.backgroundColor = "transparent");
-
-        const refvar_rects = this.termRects.filter(x => x.term instanceof RefVar);
-        for(const term_rect of refvar_rects){
-            const rect = term_rect.rect;
-            const span = term_rect.span;
-
-            if(rect.left <= x && x < rect.right && rect.top <= y && y < rect.bottom){
-                return term_rect;
-            }
-        }
-
-        throw new MyError();
-    }
-
-    async texClick(ev : MouseEvent){
-        ev.stopPropagation();
-
-        if(Builder.tool instanceof ExprTransformBuilder){
-            const srcTermRect = this.getClickedTermRect(ev.clientX, ev.clientY);
-
-            const dstTermRect = Builder.tool.getDstTermRect(this.termRects, srcTermRect);
-            const dstTerm = dstTermRect.term;
-            
-            if(!View.isPlayBack){
-                const path = dstTerm.getPath();
-
-                const operation = new ClickTerm(this.id, path.indexes);
-
-                View.current.addOperation(operation);
-            }
-
-            await Builder.tool.termClick(dstTerm, this);
-        }
-    }
-
-    updateTextDiv(){
-        let text = this.text;
-        if(text == "" && this.parent instanceof Shape){
-            text = this.parent.name;
-        }
-
-        if(this.isTex){
-
-            if(parser_ts.isGreek(text)){
-                text = `\\${text}`;
-            }
-
-            renderKatexSub(this.div, text);
-
-            if(this.getEquation() != undefined){
-                const terms = this.getEquation()!.allTerms();
-                const tex_spans = Array.from(this.div.getElementsByClassName("enclosing")) as HTMLSpanElement[];
-                this.termRects = [];
-
-                const id_offset = "tex-term-".length;
-                for(const span of tex_spans){
-                    const id = parseInt(span.id.substring(id_offset));
-                    const term = terms.find(x => x.id == id)!;
-                    assert(term != undefined);
-                    this.termRects.push(new TermRect(term, span));
-                }
-            }
-        }
-        else{
-
-            this.div.innerText = text;
-        }
-    }
-
-    setVisible(visible : boolean){
-        this.visible = visible;
-
-        if(this.visible){
-            this.div.style.color = "";
-            this.div.style.display = "";
-        }
-        else{
-            if(Plane.one.editMode){
-
-                this.div.style.color = "gray";
-            }
-            else{
-                this.div.style.display = "none";
-            }
-        }
-    }
-
-    show(){        
-        this.div.style.display = "";
-    }
-
-    hide(){        
-        this.div.style.display = "none";
-    }
-
-    setIsTex(is_tex : boolean){
-        this.isTex = is_tex;
-        this.updateTextDiv();
-    }
-
-    setTextPosition(x : number, y : number){
-        this.div.style.left = `${View.current.board.offsetLeft + toXPix(x + this.offset.x)}px`;
-        this.div.style.top  = `${View.current.board.offsetTop  + toYPix(y + this.offset.y)}px`;
-    }
-
-    updateTextPosition(){
-        this.div.style.left = `${View.current.board.offsetLeft + toXPix(this.offset.x)}px`;
-        this.div.style.top  = `${View.current.board.offsetTop  + toYPix(this.offset.y)}px`;
-    }
-
-    setRotation(degree : number){
-        this.div.style.transform = `rotate(${degree}deg)`;
-    }
-
-    getSize() : [number, number] {
-        return [ this.div.offsetWidth, this.div.offsetHeight ];
-    }
-
-    captionPointerdown(event : PointerEvent){
-        this.div.setPointerCapture(event.pointerId);
-        capturedShape = this;
-    }
-
-    captionPointermove(event : PointerEvent){
-        if(capturedShape != this){
-            return;
-        }
-
-        this.offset.x += fromXPixScale(event.movementX);
-        this.offset.y -= fromYPixScale(event.movementY);
-        
-        this.div.style.left = `${this.div.offsetLeft + event.movementX}px`;
-        this.div.style.top  = `${this.div.offsetTop  + event.movementY}px`;
-    }
-
-    captionPointerup(event : PointerEvent){
-        this.div.releasePointerCapture(event.pointerId);
-        capturedShape = undefined;
-    }
-
-    reading() : Reading {
-        // msg(`empty reading:${this.constructor.name}`);
-        return new Reading(this, "", []);
-    }
-
-    delete(deleted : Set<number>){
-        if(deleted.has(this.id)){
-            return;
-        }
-        super.delete(deleted);
-
-        this.div.remove();
-    }
-}
+import { TT, areSetsEqual, permutation, Vec2, Reading, token, MyError, assert, range } from "@i18n";
+import { fgColor } from "@layout"
+
+import { LineKind, ShapeMode } from "./enums";
+import { pointOnLines, pointOnCircleArcs, congruentTriangles, similarTriangles, defaultLineWidth, OverLineWidth, GlobalState, AppServices } from "./inference";
+import { MathEntity, fromXPixScale, fromYPixScale, registerEntity, TextBlock } from "./json";
+import { addCenterOfCircleArcs, addEqualCircleArcs, addParallelLines, addPointOnCircleArcs, addPointOnLines, Arc__getAngles, calcFootOfPerpendicular, distanceFromLine, getCircleArcsByPoint, getCommonLineOfPoints, getCommonPointOfLines, getLinesByPoint, getModeColor, isBetweenAngles, isParallelogramPoints, modePointRadius, Point__zero } from "./all_functions";
+
+import type { Constraint } from "./constraint";
+import type { LengthSymbol, Angle } from "./dimension_symbol";
 
 export abstract class Shape extends MathEntity {
     name      : string = "";
@@ -520,7 +100,7 @@ export abstract class Shape extends MathEntity {
             this.caption!.updateTextDiv();
         }
 
-        View.current.dirty = true;
+        GlobalState.View__current!.dirty = true;
     }
 
     getProperties(){
@@ -534,7 +114,7 @@ export abstract class Shape extends MathEntity {
     }
 
     modeColor() : string {
-        if(this.mode == Mode.none){
+        if(this.mode == ShapeMode.none){
             return this.color;            
         }
         else{
@@ -564,7 +144,7 @@ export abstract class Shape extends MathEntity {
 
     reading() : Reading {
         const name = (this.name != "" ? this.name : this.constructor.name);
-        return new Reading(this, i18n_ts.token(name), []);
+        return new Reading(this, token(name), []);
     }
 
     show(){        
@@ -598,24 +178,12 @@ export abstract class Shape extends MathEntity {
 }
 
 export class Point extends Shape {
-    static tempPoints : Point[] = [];
-
-    static radiusPix = 4;
-    static radius : number;
 
     position! : Vec2;
     positionSave : Vec2 | undefined;
     bound : AbstractLine | CircleArc | undefined;
 
     origin : Point | undefined;
-
-    static zero() : Point {
-        return Point.fromArgs(Vec2.zero());
-    }
-
-    static fromArgs(position : Vec2){
-        return new Point( { position } );
-    }
 
     constructor(obj : { position : Vec2, bound? : AbstractLine | CircleArc }){
         super(obj);
@@ -633,11 +201,11 @@ export class Point extends Shape {
             this.setPosition(obj.position);
         }
 
-        Point.tempPoints.push(this);
+        GlobalState.Point__tempPoints.push(this);
     }
 
     copy() : Point {
-        return Point.fromArgs(this.position.copy());
+        return AppServices.Point__fromArgs(this.position.copy());
     }
 
     makeObj() : any {
@@ -657,8 +225,8 @@ export class Point extends Shape {
 
         this.updateCaption();
 
-        View.current.changed.add(this);
-        View.current.dirty = true;
+        GlobalState.View__current!.changed.add(this);
+        GlobalState.View__current!.dirty = true;
     }
 
     getBounds() : (AbstractLine | CircleArc)[] {
@@ -690,7 +258,7 @@ export class Point extends Shape {
     }
 
     isNear(position : Vec2) : boolean {
-        return View.current.isNear(position.distance(this.position));
+        return GlobalState.View__current!.isNear(position.distance(this.position));
     }
 
     draw() : void {
@@ -699,16 +267,16 @@ export class Point extends Shape {
         const radius = modePointRadius(this.mode);
         if(this.visible){
 
-            View.current.canvas.drawCircleRaw(this.position, radius, color);
+            GlobalState.View__current!.drawCircleRaw(this.position, radius, color);
         }
         else{
 
-            View.current.canvas.drawCircleRaw(this.position, radius, color, defaultLineWidth);
+            GlobalState.View__current!.drawCircleRaw(this.position, radius, color, defaultLineWidth);
         }
         
         if(this.isOver){
 
-            View.current.canvas.drawCircleRaw(this.position, 3 * Point.radius, "gray", defaultLineWidth);
+            GlobalState.View__current!.drawCircleRaw(this.position, 3 * GlobalState.Point__radius!, "gray", defaultLineWidth);
         }
     }
 
@@ -806,12 +374,8 @@ export class Point extends Shape {
     }
 }
 
-export enum LineKind {
-    line = 0,
-    ray  = 1,
-    ray_reverse = 2,
-    line_segment = 3
-}
+registerEntity(Point.name, (obj: any) => new Point(obj));
+
 
 export abstract class AbstractLine extends Shape {
     lineKind : number;
@@ -858,26 +422,26 @@ export abstract class AbstractLine extends Shape {
 
     isNear(position : Vec2) : boolean {
         const distance = distanceFromLine(this.normal(), this.pointA.position, position);
-        return View.current.isNear(distance);
+        return GlobalState.View__current!.isNear(distance);
     }
 
     draw() : void {
-        const l = View.current.max.distance(View.current.min);
+        const l = GlobalState.View__current!.max.distance(GlobalState.View__current!.min);
         const p_minus = this.pointA.position.add(this.e.mul(-l));
         const p_plus  = this.pointA.position.add(this.e.mul( l));
         
         switch(this.lineKind){
         case LineKind.line_segment:
         case LineKind.line:
-            View.current.canvas.drawLine(this, p_minus, p_plus); 
+            GlobalState.View__current!.drawLine(this, p_minus, p_plus); 
             break;
 
         case LineKind.ray:
-            View.current.canvas.drawLine(this, this.pointA.position, p_plus); 
+            GlobalState.View__current!.drawLine(this, this.pointA.position, p_plus); 
             break;
 
         case LineKind.ray_reverse:
-            View.current.canvas.drawLine(this, this.pointA.position, p_minus); 
+            GlobalState.View__current!.drawLine(this, this.pointA.position, p_minus); 
             break;
         }
     }
@@ -975,7 +539,7 @@ export class LineByPoints extends AbstractLine {
     }
 
     draw() : void {
-        View.current.canvas.drawLineWith2Points(this, this.pointB);
+        GlobalState.View__current!.drawLineWith2Points(this, this.pointB);
     }
 
     reading(): Reading {
@@ -1002,13 +566,8 @@ export class LineByPoints extends AbstractLine {
     }
 }
 
-export function makeLineSegment(pointA: Point, pointB: Point){
-    return new LineByPoints({ lineKind : LineKind.line_segment, pointA, pointB });
-}
+registerEntity(LineByPoints.name, (obj: any) => new LineByPoints(obj));
 
-export function makeRay(pointA: Point, pointB: Point){
-    return new LineByPoints({ lineKind : LineKind.ray, pointA, pointB });
-}
 
 
 export class ParallelLine extends AbstractLine {   
@@ -1052,6 +611,8 @@ export class ParallelLine extends AbstractLine {
         addParallelLines(this, this.line);
     }
 }
+
+registerEntity(ParallelLine.name, (obj: any) => new ParallelLine(obj));
 
 export abstract class CircleArcEllipse extends Shape {
     center : Point;
@@ -1116,13 +677,13 @@ export abstract class Circle extends CircleArc {
 
     isNear(position : Vec2) : boolean {
         const r = position.distance(this.center.position);
-        return View.current.isNear( Math.abs(r - this.radius()) );
+        return GlobalState.View__current!.isNear( Math.abs(r - this.radius()) );
     }
 
     draw() : void {
         const stroke_color = this.modeColor();
         const line_width = this.modeLineWidth();
-        View.current.canvas.drawCircle(this, this.center.position, this.radius());
+        GlobalState.View__current!.drawCircle(this, this.center.position, this.radius());
     }
 }
 
@@ -1169,6 +730,8 @@ export class CircleByPoint extends Circle {
     }
 }
 
+registerEntity(CircleByPoint.name, (obj: any) => new CircleByPoint(obj));
+
 export class CircleByRadius extends Circle {
     lengthSymbol : LengthSymbol;
 
@@ -1205,6 +768,8 @@ export class CircleByRadius extends Circle {
     }
 }
 
+registerEntity(CircleByRadius.name, (obj: any) => new CircleByRadius(obj));
+
 export class Ellipse extends CircleArcEllipse {
     xPoint  : Point;
     radiusY : number;
@@ -1226,7 +791,7 @@ export class Ellipse extends CircleArcEllipse {
 
     setRadiusY(radiusY : number){
         this.radiusY = radiusY;
-        View.current.dirty = true;
+        GlobalState.View__current!.dirty = true;
     }
 
     getAllShapes(shapes : MathEntity[]){
@@ -1245,20 +810,15 @@ export class Ellipse extends CircleArcEllipse {
         const rotation = Math.atan2(- center_to_x.y, center_to_x.x);
 
         const color = this.modeColor();
-        const line_width = (this.isOver || this.mode != Mode.none ? 3 : 1);
+        const line_width = (this.isOver || this.mode != ShapeMode.none ? 3 : 1);
 
-        View.current.canvas.drawEllipse(this.center.position, radius_x, this.radiusY, rotation, color, line_width);
+        GlobalState.View__current!.drawEllipse(this.center.position, radius_x, this.radiusY, rotation, color, line_width);
     }
 }
 
-export abstract class Arc extends CircleArc {
-    static getAngles(center : Point | Vec2, pointA : Point | Vec2, pointB : Point | Vec2) : [number, number] {
-        const center_pos = (center instanceof Point ? center.position : center);
-        const pointA_pos = (pointA instanceof Point ? pointA.position : pointA);
-        const pointB_pos = (pointB instanceof Point ? pointB.position : pointB);
+registerEntity(Ellipse.name, (obj: any) => new Ellipse(obj));
 
-        return [pointA_pos, pointB_pos].map(p => p.sub(center_pos)).map(v => Math.atan2(v.y, v.x)) as [number, number];
-    }
+export abstract class Arc extends CircleArc {
 }
 
 export class ArcByPoint extends Arc {
@@ -1295,12 +855,12 @@ export class ArcByPoint extends Arc {
 
     isNear(position : Vec2) : boolean {
         const r = position.distance(this.center.position);
-        if(View.current.isNear( Math.abs(r - this.radius()) )){
+        if(GlobalState.View__current!.isNear( Math.abs(r - this.radius()) )){
 
             const v = position.sub(this.center.position);
             let theta = Math.atan2(v.y, v.x);
 
-            const [startAngle, endAngle] = Arc.getAngles(this.center, this.pointA, this.pointB);
+            const [startAngle, endAngle] = Arc__getAngles(this.center, this.pointA, this.pointB);
 
             return isBetweenAngles(startAngle, theta, endAngle);
         }
@@ -1309,8 +869,8 @@ export class ArcByPoint extends Arc {
     }
 
     draw(): void {
-        const [startAngle, endAngle] = Arc.getAngles(this.center, this.pointA, this.pointB);
-        View.current.canvas.drawArc(this, this.center.position, this.radius(), startAngle, endAngle);
+        const [startAngle, endAngle] = Arc__getAngles(this.center, this.pointA, this.pointB);
+        GlobalState.View__current!.drawArc(this, this.center.position, this.radius(), startAngle, endAngle);
     }
 
     radius() : number {
@@ -1329,6 +889,8 @@ export class ArcByPoint extends Arc {
     }
 }
 
+registerEntity(ArcByPoint.name, (obj: any) => new ArcByPoint(obj));
+
 
 export abstract class ArcByRadius extends Arc {
     startAngle : number;
@@ -1341,8 +903,8 @@ export abstract class ArcByRadius extends Arc {
         this.startAngle   = obj.startAngle;
         this.endAngle     = obj.endAngle;
 
-        this.pointA = Point.zero();
-        this.pointB = Point.zero();
+        this.pointA = Point__zero();
+        this.pointB = Point__zero();
 
         this.pointA.visible = false;
         this.pointB.visible = false;
@@ -1362,12 +924,12 @@ export abstract class ArcByRadius extends Arc {
 
 
     setOrder(){
-        if(MathEntity.orderSet.has(this)){
+        if(GlobalState.MathEntity__orderSet.has(this)){
             return;
         }
 
-        this.order = MathEntity.orderSet.size;
-        MathEntity.orderSet.add(this);
+        this.order = GlobalState.MathEntity__orderSet.size;
+        GlobalState.MathEntity__orderSet.add(this);
 
         this.pointA.setOrder();
         this.pointB.setOrder();
@@ -1405,7 +967,7 @@ export abstract class ArcByRadius extends Arc {
 
     isNear(position : Vec2) : boolean {
         const r = position.distance(this.center.position);
-        if(View.current.isNear( Math.abs(r - this.radius()) )){
+        if(GlobalState.View__current!.isNear( Math.abs(r - this.radius()) )){
 
             const v = position.sub(this.center.position);
             const th = Math.atan2(v.y, v.x);
@@ -1427,7 +989,7 @@ export abstract class ArcByRadius extends Arc {
     }
 
     draw(): void {
-        View.current.canvas.drawArc(this, this.center.position, this.radius(), this.startAngle, this.endAngle);
+        GlobalState.View__current!.drawArc(this, this.center.position, this.radius(), this.startAngle, this.endAngle);
     }
 
     reading(): Reading {
@@ -1441,6 +1003,8 @@ export abstract class ArcByRadius extends Arc {
         addPointOnCircleArcs(this.pointB, this);        
     }
 }
+
+registerEntity(ArcByRadius.name, (obj: any) => new ArcByLengthSymbol(obj));
 
 export class ArcByLengthSymbol extends ArcByRadius {
     lengthSymbol : LengthSymbol;
@@ -1480,6 +1044,9 @@ export class ArcByLengthSymbol extends ArcByRadius {
     }
 }
 
+registerEntity(ArcByLengthSymbol.name, (obj: any) => new ArcByLengthSymbol(obj));
+
+
 export class ArcByCircle extends ArcByRadius {
     circle : CircleArc;
 
@@ -1515,9 +1082,10 @@ export class ArcByCircle extends ArcByRadius {
     }
 }
 
+registerEntity(ArcByCircle.name, (obj: any) => new ArcByCircle(obj));
+
 
 export class Polygon extends Shape {
-    static colorIndex : number = 0;
     points : Point[];
     lines  : AbstractLine[];
 
@@ -1552,7 +1120,7 @@ export class Polygon extends Shape {
         for(const position of positions){
             const v = position.sub(center);
             const len = v.len();
-            const diff = View.current.fromXPixScale(1 * OverLineWidth);
+            const diff = GlobalState.View__current!.fromXPixScale(1 * OverLineWidth);
             const shrinked_v = v.unit().mul(len - diff);
             const new_position = center.add(shrinked_v);
             shrinked_positions.push(new_position);
@@ -1564,17 +1132,17 @@ export class Polygon extends Shape {
     draw(): void {
         const color = this.modeColor();
 
-        if([Mode.target1, Mode.target2].includes(this.mode)){
+        if([ShapeMode.target1, ShapeMode.target2].includes(this.mode)){
             const positions = this.points.map(x => x.position);
-            View.current.canvas.drawPolygonRaw(positions, color, NaN, true);
+            GlobalState.View__current!.drawPolygonRaw(positions, color, NaN, true);
 
             return;
         }
 
-        const radius = (this.mode == Mode.none ? 1 : 2) * Point.radius;
+        const radius = (this.mode == ShapeMode.none ? 1 : 2) * GlobalState.Point__radius!;
 
         let positions : Vec2[];
-        if(this.mode == Mode.none){
+        if(this.mode == ShapeMode.none){
             positions = this.points.map(x => x.position);
         }
         else{
@@ -1582,11 +1150,11 @@ export class Polygon extends Shape {
         }
 
         for(const position of positions){
-            View.current.canvas.drawCircleRaw(position, radius, color);
+            GlobalState.View__current!.drawCircleRaw(position, radius, color);
         }
 
-        const line_width = (this.mode == Mode.none ? defaultLineWidth : OverLineWidth);
-        View.current.canvas.drawPolygonRaw(positions, color, line_width, false);
+        const line_width = (this.mode == ShapeMode.none ? defaultLineWidth : OverLineWidth);
+        GlobalState.View__current!.drawPolygonRaw(positions, color, line_width, false);
     }
 
     getAllShapes(shapes : MathEntity[]){
@@ -1629,16 +1197,10 @@ export class Polygon extends Shape {
     }
 }
 
+registerEntity(Polygon.name, (obj: any) => new Polygon(obj));
+
+
 export class Triangle extends Polygon {  
-    static fromPoints(points : Point[]) : Triangle {
-        const lines = range(3).map(i => getCommonLineOfPoints(points[i], points[(i + 1) % 3])) as AbstractLine[];
-        if(lines.some(x => x == undefined)){
-            throw new MyError();
-        }
-    
-        const triangle = new Triangle({points, lines});
-        return triangle;
-    }
 
     angleIndex(angle : Angle) : number {
         const idx = this.points.indexOf(angle.intersection);
@@ -1698,6 +1260,8 @@ export class Triangle extends Polygon {
 
 }
 
+registerEntity(Triangle.name, (obj: any) => new Triangle(obj));
+
 export class Quadrilateral extends Polygon {
     isParallelogram() : boolean {
         return isParallelogramPoints(this.points);
@@ -1714,4 +1278,7 @@ export class Quadrilateral extends Polygon {
     }
 }
 
-}
+registerEntity(Quadrilateral.name, (obj: any) => new Quadrilateral(obj));
+
+
+console.log(`Loaded: shape`);

@@ -1,5 +1,5 @@
-namespace plane_ts {
-//
+import { range, msg, Vec2 } from "@i18n";
+
 export class Mat {
     dt: (number[])[];
 
@@ -111,4 +111,5 @@ export class Mat2 extends Mat {
     }
 }
 
-}
+
+console.log(`Loaded: matrix`);

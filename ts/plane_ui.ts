@@ -1,17 +1,8 @@
-namespace plane_ts {
-//
-type Block = layout_ts.Block;
+import { setOnSpeak } from "@i18n";
+import { $anchor, $block, $button, $checkbox, $flex, $grid, $textbox, Block, CheckBox, Grid, TextBox, fgColor } from "@layout";
 
-const $flex = layout_ts.$flex;
-const $grid = layout_ts.$grid;
-const $block = layout_ts.$block;
-const $button = layout_ts.$button;
-const $popup = layout_ts.$popup;
-const $textarea = layout_ts.$textarea;
-const $label = layout_ts.$label;
-const $input_number = layout_ts.$input_number;
-type CheckBox = layout_ts.CheckBox;
-const $checkbox = layout_ts.$checkbox;
+import { GlobalState, setUrlOriginParams, urlBase, urlParams } from "./inference";
+import { makeToolButtons, saveJson } from "./all_functions";
 
 export class Plane {
     menu_block : Block;
@@ -20,69 +11,65 @@ export class Plane {
     canvas_block : Block;
     property_block : Grid;
     shapes_block : Block;
-    narration_box : layout_ts.TextBox;
+    narration_box : TextBox;
     editMode : boolean;
 
     show_axis! : CheckBox;
     show_grid! : CheckBox;
     snap_to_grid! : CheckBox;
 
-    static one : Plane;
-
     constructor(){
-        Plane.one = this;
+        GlobalState.Plane__one = this;
         
-        let params : Map<string, string>;
-
-        [ urlOrigin, , params] = i18n_ts.parseURL();
-        this.editMode = (params.get("mode") == "edit");
+        setUrlOriginParams();
+        this.editMode = (urlParams.get("mode") == "edit");
         
         const tool_buttons = makeToolButtons();
         
-        Plane.one.show_axis = $checkbox({
+        GlobalState.Plane__one.show_axis = $checkbox({
             text : "Axis",
             change : async (ev : Event)=>{
-                View.current.dirty = true;
+                GlobalState.View__current!.dirty = true;
             }
         });
 
-        Plane.one.show_grid = $checkbox({
+        GlobalState.Plane__one.show_grid = $checkbox({
             text : "Grid",
             change : async (ev : Event)=>{
-                View.current.dirty = true;                
+                GlobalState.View__current!.dirty = true;                
             }
         });
 
-        Plane.one.snap_to_grid = $checkbox({
+        GlobalState.Plane__one.snap_to_grid = $checkbox({
             text : "Snap to Grid",
         });
 
-        const save_anchor = layout_ts.$anchor({
+        const save_anchor = $anchor({
         });
         
         this.menu_block = $flex({
             children : [
-                Plane.one.show_axis
+                GlobalState.Plane__one.show_axis
                 ,
-                Plane.one.show_grid
+                GlobalState.Plane__one.show_grid
                 ,
-                Plane.one.snap_to_grid
+                GlobalState.Plane__one.snap_to_grid
                 ,
                 $button({
                     width : "24px",
                     height : "24px",
-                    url : `${urlOrigin}/lib/plane/img/undo.png`,
+                    url : `${urlBase}/lib/plane/img/undo.png`,
                     click : async(ev : MouseEvent)=>{
-                        await View.current.undo();
+                        await GlobalState.View__current!.undo();
                     }
                 })
                 ,
                 $button({
                     width : "24px",
                     height : "24px",
-                    url : `${urlOrigin}/lib/plane/img/redo.png`,
+                    url : `${urlBase}/lib/plane/img/redo.png`,
                     click : async(ev : MouseEvent)=>{
-                        await View.current.redo();
+                        await GlobalState.View__current!.redo();
                     }
                 })
                 ,
@@ -126,7 +113,7 @@ export class Plane {
             children : [],
         });       
         
-        this.narration_box = layout_ts.$textbox({
+        this.narration_box = $textbox({
             id : "narration-box",
             text : "",
             color : fgColor,
@@ -135,120 +122,15 @@ export class Plane {
             fontSize : "48px",
         });
 
-        i18n_ts.onSpeak = (text : string)=>{
+        setOnSpeak( (text : string)=>{
             this.narration_box.setText(text);
-        }
+        });
     }
 
-    clearPlane(){
-        // for(const class_name of ["tex_div"]){
-        //     const tex_divs = Array.from(this.canvas_block.div.getElementsByClassName(class_name)) as HTMLDivElement[];
-        //     tex_divs.forEach(x => x.remove());
-        // }
-    
+    clearPlane(){    
         this.text_block.div.innerHTML = "";
         this.narration_box.div.innerHTML = "";
     }
 }
 
-export function makeCanvas(div : HTMLElement) : HTMLCanvasElement {
-    const canvas = document.createElement("canvas");
-    canvas.id = "main-canvas";
-    canvas.style.width  = "100%";
-    canvas.style.height = "100%";
-
-    div.append(canvas);
-
-    return canvas;
-}
-
-export function makeCssClass(){
-    const styles = [
-`.tex_div {
-    position: absolute;
-    display: inline-block;
-    background-color: transparent;
-    cursor: move;
-    user-select: none;
-}`
-    ,
-`.selectable_tex {
-    position: absolute;
-    display: inline-block;
-    background-color: transparent;
-    cursor: pointer;
-    user-select: none;
-}`
-    ];
-
-    for(const style of styles){
-        const tex_style = document.createElement('style');
-        tex_style.innerHTML = style;
-
-        document.getElementsByTagName('head')[0].appendChild(tex_style);
-    }
-}
-
-export function fromXPixScale(pix : number) : number {
-    return View.current.fromXPixScale(pix);
-}
-
-export function fromYPixScale(pix : number) : number {
-    return View.current.fromYPixScale(pix);
-}
-
-export function toXPix(n : number) : number {
-    return View.current.toXPix(n);
-}
-
-export function toYPix(n : number) : number {
-    return View.current.toYPix(n);
-}
-
-export function toXPixScale(n : number) : number {
-    return View.current.toXPixScale(n);
-}
-
-export function toYPixScale(n : number) : number {
-    return View.current.toYPixScale(n);
-}
-
-export function drawLine(shape : Shape, p1 : Vec2, p2 : Vec2){
-    View.current.canvas.drawLine(shape, p1, p2);
-}
-
-export function makeGrid(plane : Plane){
-    const root = $grid({
-        rows     : "25px 100% 25px 80px",
-        children:[
-            $grid({
-                children: [
-                    plane.menu_block
-                ]
-            })
-            ,
-            $grid({
-                columns  : "50px 50% 50% 300px",
-
-                children : [
-                    plane.tool_block
-                    ,
-                    plane.text_block
-                    ,
-                    plane.canvas_block
-                    ,
-                    plane.property_block
-                ]
-            })
-            ,
-            plane.shapes_block
-            ,
-            plane.narration_box
-        ]
-    });
-
-    return root;    
-}
-
-
-}
+console.log(`Loaded: plane-ui`);

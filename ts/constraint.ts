@@ -1,18 +1,16 @@
 ///<reference path="shape.ts" />
 ///<reference path="statement.ts" />
 
-namespace plane_ts {
-//
+import { MyError, Reading, TT, assert, Vec2 } from "@i18n";
+import { App, parseMath } from "@parser";
 
-export function sortShape<T>(shapes : T[]) : T[] {
-    return shapes.slice().sort((a:T, b:T) => (a as Shape).order - (b as Shape).order);
-}
+import { AppServices } from "./inference";
+import { MathEntity, TextBlock, registerEntity } from "./json"
+import { addEqualAngles, addEqualLengths, addParallelLines, addPerpendicularPairs, Angle__setEqualAngleMarks, lastShape, LengthSymbol__setEqualLengthKinds, sortShape } from "./all_functions";
 
-function lastShape<T>(shapes : T[]) : T {
-    const sorted_shapes = sortShape<T>(shapes);
-
-    return last(sorted_shapes);
-}
+import { Shape, Point, AbstractLine, LineByPoints } from "./shape";
+import { LengthSymbol, Angle } from "./dimension_symbol";
+import { Statement } from "./statement";
 
 export abstract class Constraint extends Statement {
     textBlock : TextBlock | undefined;
@@ -54,7 +52,7 @@ export class LengthEqualityConstraint extends Constraint {
 
         this.calc();
 
-        LengthSymbol.setEqualLengthKinds(this.selectedShapes as LengthSymbol[]);
+        LengthSymbol__setEqualLengthKinds(this.selectedShapes as LengthSymbol[]);
     }
 
     makeObj() : any {
@@ -112,6 +110,8 @@ export class LengthEqualityConstraint extends Constraint {
     }
 }
 
+registerEntity(LengthEqualityConstraint.name, (obj: any) => new LengthEqualityConstraint(obj));
+
 export class AngleEqualityConstraint extends Constraint {
     equation : App | undefined;
 
@@ -122,13 +122,13 @@ export class AngleEqualityConstraint extends Constraint {
         if(angles.every(x => x.name != "")){
             assert(angles.length == 2);
             const text = `${angles[0].name} == ${angles[1].name}`;
-            this.equation = parser_ts.parseMath(text) as App;
+            this.equation = parseMath(text) as App;
             
-            this.textBlock = makeEquationTextBlock(this, this.equation);
+            this.textBlock = AppServices.makeEquationTextBlock(this, this.equation);
         }
         else{
 
-            Angle.setEqualAngleMarks(angles);
+            Angle__setEqualAngleMarks(angles);
         }
     }
 
@@ -145,6 +145,8 @@ export class AngleEqualityConstraint extends Constraint {
         return new Reading(this, "", []);
     }
 }
+
+registerEntity(AngleEqualityConstraint.name, (obj: any) => new AngleEqualityConstraint(obj));
 
 abstract class LineConstraint extends Constraint {
     lineA : AbstractLine;
@@ -206,6 +208,8 @@ export class ParallelConstraint extends ParallelPerpendicularConstraint {
     }
 }
 
+registerEntity(ParallelConstraint.name, (obj: any) => new ParallelConstraint(obj));
+
 export class PerpendicularConstraint extends ParallelPerpendicularConstraint {
     setRelations(){
         super.setRelations();
@@ -213,4 +217,6 @@ export class PerpendicularConstraint extends ParallelPerpendicularConstraint {
     }
 }
 
-}
+registerEntity(PerpendicularConstraint.name, (obj: any) => new PerpendicularConstraint(obj));
+
+console.log(`Loaded: constraint`);

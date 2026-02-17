@@ -1,37 +1,10 @@
-namespace plane_ts {
-//
-export function makeTriangleSimilarity(A : Triangle, B : Triangle) : TriangleSimilarity | undefined {
+import { Reading, TT } from "@i18n";
 
-    const equal_angle_pairs : Angle[] = [];
+import { MathEntity, registerEntity } from "../json";
+import { addSimilarTriangles } from "../all_functions";
 
-    for(const idx of range(3)){
-
-        const angle_pointsA = [ A.points[idx], A.points[(idx + 1) % 3], A.points[(idx + 2) % 3] ];
-        const angle_pointsB = [ B.points[idx], B.points[(idx + 1) % 3], B.points[(idx + 2) % 3] ];
-
-        const angleA = findAngle(angle_pointsA);
-        if(angleA != undefined){
-            const angleB = findAngle(angle_pointsB);
-            if(angleB != undefined){
-                    
-                if(isEqualAngle(angleA, angleB)){
-                    equal_angle_pairs.push(angleA, angleB);
-                }                
-            }
-        }
-    }
-
-    if(equal_angle_pairs.length == 4){
-
-        return new TriangleSimilarity({
-            reason : TriangleSimilarityReason.two_equal_angle_pairs,
-            shapes : [A, B], 
-            auxiliaryShapes : equal_angle_pairs
-        })
-    }
-
-    return undefined;
-}
+import { Triangle } from "../shape";
+import { Statement } from "../statement";
 
 export class TriangleSimilarity extends Statement {
     constructor(obj : { reason? : number, shapes : MathEntity[], auxiliaryShapes? : MathEntity[] }){
@@ -49,4 +22,6 @@ export class TriangleSimilarity extends Statement {
     }
 }
 
-}
+registerEntity(TriangleSimilarity.name, (obj: any) => new TriangleSimilarity(obj));
+
+console.log(`Loaded: triangle-similarity`);

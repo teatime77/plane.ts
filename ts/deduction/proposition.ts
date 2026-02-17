@@ -1,5 +1,10 @@
-namespace plane_ts {
-//
+import { assert } from "@i18n";
+import { App } from "@parser";
+import { propositions } from "../inference";
+import { MathEntity, TextBlock } from "../json";
+import { Statement } from "../statement";
+import { EquationTextBlock } from "./shape_equation";
+
 export abstract class Proposition extends Statement {
     constructor(obj : { reason? : number, auxiliaryShapes? : MathEntity[], shapes : MathEntity[] }){
         super(obj);
@@ -28,25 +33,4 @@ export class EquationProposition extends Statement implements EquationTextBlock 
     }
 }
 
-export function makeShapeProposition(reason : PropositionReason, shapes: (Angle | LengthSymbol)[]) : ShapeProposition {
-    return new ShapeProposition({
-        reason,
-        auxiliaryShapes : [],
-        shapes,
-    });
-}
-
-
-export function makeEquationProposition(reason : PropositionReason, mathText : string) : EquationProposition | undefined {
-    const equation = parser_ts.parseMath(mathText) as App;
-    assert(equation.isRootEq());
-
-    return new EquationProposition({
-        reason,
-        auxiliaryShapes : [],
-        shapes : [],
-        equation
-    });
-}
-
-}
+console.log(`Loaded: proposition`);
