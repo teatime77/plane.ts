@@ -1,0 +1,6 @@
+{
+  "name": "@stem/plane",
+  "scripts": {
+    "build": "tsc -b && vite build"
+  }
+}
