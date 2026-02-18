@@ -13,7 +13,7 @@ export default defineConfig(
         fileName: 'plane',
         formats: ['es']
       },
-      outDir: '../dist'
+      outDir: '../dist/plane/assets'
     }
   })
 );
