@@ -1,6 +1,6 @@
 {
   "name": "@stem/plane",
   "scripts": {
-    "build": "tsc -b && vite build"
+    "build": "tsc -b && node ../scripts/smart-build.js"
   }
 }
