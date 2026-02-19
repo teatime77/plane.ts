@@ -228,7 +228,7 @@ export class ImgSelectionProperty extends Property {
     constructor(widgets : Widget[], name : string, value : number, img_names : string[]){
         super(widgets, name);
 
-        const img_urls = img_names.map(x => `${urlBase}/lib/plane/img/${x}.png`) as string[];
+        const img_urls = img_names.map(x => `${urlBase}/../plane/images/${x}.png`) as string[];
         const buttons : RadioButton[] = [];
         for(const [idx, url] of img_urls.entries()){
             const radio = $radio({

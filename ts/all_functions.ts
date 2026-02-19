@@ -1576,7 +1576,7 @@ export async function makeSelectionDlg(){
                 const img = $img({
                     id     : `${span_id_prefixes[idx]}-${key}`,
                     className : enumSelectionClassName,
-                    imgUrl : `./lib/plane/img/${img_name}.png`,
+                    imgUrl : `../plane/images/${img_name}.png`,
                     width  : "64px",
                     height : "64px",
                     borderWidth : 5,
@@ -1676,7 +1676,7 @@ export function makeShapeButton(shape : MathEntity, in_shape_history : boolean) 
     }
 
     const button = $button({
-        url    : `${urlBase}/lib/plane/img/${shape_img_name}.png`,
+        url    : `${urlBase}/../plane/images/${shape_img_name}.png`,
         width  : "20px",
         height : "20px",
     });
@@ -1734,7 +1734,7 @@ export function makeToolButtons() : RadioButton[] {
             id,
             value : tool.name,
             title : title,
-            url   : `${urlBase}/lib/plane/img/${img_name}.png`,
+            url   : `${urlBase}/../plane/images/${img_name}.png`,
             width : "36px",
             height : "36px",
         });

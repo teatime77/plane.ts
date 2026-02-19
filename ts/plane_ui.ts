@@ -58,7 +58,7 @@ export class Plane {
                 $button({
                     width : "24px",
                     height : "24px",
-                    url : `${urlBase}/lib/plane/img/undo.png`,
+                    url : `${urlBase}/../plane/images/undo.png`,
                     click : async(ev : MouseEvent)=>{
                         await GlobalState.View__current!.undo();
                     }
@@ -67,7 +67,7 @@ export class Plane {
                 $button({
                     width : "24px",
                     height : "24px",
-                    url : `${urlBase}/lib/plane/img/redo.png`,
+                    url : `${urlBase}/../plane/images/redo.png`,
                     click : async(ev : MouseEvent)=>{
                         await GlobalState.View__current!.redo();
                     }
