@@ -17,3 +17,4 @@ vite.config.js
 public/lib/tsconfig.tsbuildinfo
 dist
 tsconfig.tsbuildinfo
+lib
