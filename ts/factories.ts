@@ -66,10 +66,11 @@ export async function loadOperationsText(data : any) : Promise<Operation[]> {
         case "click":{
                 const x = parseFloat(items[1]);
                 const y = parseFloat(items[2]);
-                let shapeId = NaN;
+                let shapeId = undefined;
                 if(4 <= items.length){
-                    shapeId = parseInt(items[3]);
-                    assert(! isNaN(shapeId));
+                    const n = parseInt(items[3]);
+                    assert(! isNaN(n));
+                    shapeId = `${n}`;
                 }
 
                 operation = new ClickShape(new Vec2(x, y), shapeId);
@@ -77,7 +78,7 @@ export async function loadOperationsText(data : any) : Promise<Operation[]> {
             break;
 
         case "term":{
-                const textBlock_id = parseInt(items[1]);
+                const textBlock_id = `${parseInt(items[1])}`;
                 let indexes : number[];
                 if(items.length == 2){
                     indexes = [];
@@ -133,7 +134,7 @@ export async function loadOperationsText(data : any) : Promise<Operation[]> {
                 else{
                     value = parseFloat(value_str);
                 }
-                operation = new PropertySetting(parseInt(id), name, value);
+                operation = new PropertySetting(`${parseInt(id)}`, name, value);
             }
             break;
 

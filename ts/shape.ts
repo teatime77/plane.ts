@@ -87,7 +87,7 @@ export abstract class Shape extends MathEntity {
         if(this.name == ""){
 
             if(this.caption != undefined){
-                this.caption.delete(new Set<number>());
+                this.caption.delete(new Set<string>());
                 this.caption = undefined;
             }
         }
@@ -159,7 +159,7 @@ export abstract class Shape extends MathEntity {
         }
     }
 
-    delete(deleted : Set<number>){        
+    delete(deleted : Set<string>){        
         if(deleted.has(this.id)){
             return;
         }

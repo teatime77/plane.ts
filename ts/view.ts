@@ -2,7 +2,7 @@ import { msg, getPlayMode, PlayMode, Vec2, unique } from "@i18n";
 import { bgColor, fgColor } from "@layout";
 
 import { LineKind, ShapeMode } from "./enums";
-import { Angle__radius1Pix, defaultLineWidth, equalLengths, GlobalState, idMap, Point__radiusPix, RelationLog, supplementaryAngles } from "./inference";
+import { Angle__radius1Pix, classCounters, defaultLineWidth, equalLengths, GlobalState, idMap, Point__radiusPix, RelationLog, supplementaryAngles } from "./inference";
 import { Widget, MathEntity, TextBlock } from "./json";
 import { addToShapeHistory, clearShapeList, getModeColor, getParallelLines, getPerpendicularLines, getPointsFromLine, initRelations, linear, modeLineWidth, modePointRadius, popShapeList, pushShapeList, recalc, removeDiv } from "./all_functions";
 
@@ -95,8 +95,10 @@ export class View extends Widget {
 
         removeDiv();
     
-        GlobalState.Widget__maxId = this.id;
+        classCounters.clear();
+        GlobalState.Widget__maxId = parseInt(this.id);
         idMap.clear();
+        // this.id = this.calcId();
         idMap.set(this.id, this);
 
         this.operations = [];
@@ -275,7 +277,7 @@ export class View extends Widget {
             await GlobalState.Builder__tool.click(this, position, shape);
         }
         else{
-            this.addOperation(new ClickShape(position, (shape != undefined ? shape.id : NaN)));
+            this.addOperation(new ClickShape(position, (shape != undefined ? shape.id : undefined)));
 
             if(GlobalState.Builder__tool instanceof StatementBuilder){
 

@@ -28,10 +28,10 @@ export abstract class Operation {
 
 export class ClickShape extends Operation {
     position : Vec2;
-    shapeId : number;
+    shapeId : string | undefined;
     createdPoint? : Point;
 
-    constructor(position : Vec2, shapeId : number){
+    constructor(position : Vec2, shapeId : string | undefined){
         super();
         this.position = position;
         this.shapeId    = shapeId;
@@ -40,7 +40,7 @@ export class ClickShape extends Operation {
     toString() : string {
         let shape_str = "";
 
-        if(! isNaN(this.shapeId)){
+        if(this.shapeId != undefined){
             const shape = idMap.get(this.shapeId) as Shape;
             assert( isShape(shape));
             shape_str = `${this.shapeId} ${shape.constructor.name}`;
@@ -65,10 +65,10 @@ export class ClickShape extends Operation {
 }
 
 export class ClickTerm extends Operation {
-    textBlock_id : number;
+    textBlock_id : string;
     indexes : number[];
 
-    constructor(textBlock_id : number, indexes : number[]){
+    constructor(textBlock_id : string, indexes : number[]){
         super();
         this.textBlock_id = textBlock_id;
         this.indexes = indexes.slice();
@@ -101,7 +101,7 @@ export class ClickTerm extends Operation {
     }
 }
 
-export function makeClickTerm(textBlock_id : number, indexes : number[]) : ClickTerm {
+export function makeClickTerm(textBlock_id : string, indexes : number[]) : ClickTerm {
     return new ClickTerm(textBlock_id, indexes);
 }
 
@@ -158,11 +158,11 @@ export class TextPrompt extends Operation {
 }
 
 export class PropertySetting extends Operation {
-    id    : number;
+    id    : string;
     name  : string;
     value : string | number;
 
-    constructor(id : number, name : string, value : string | number){
+    constructor(id : string, name : string, value : string | number){
         super();
         this.id    = id;
         this.name  = name;
@@ -250,7 +250,7 @@ export class PlayBack {
             if(operation instanceof ClickShape){
                 await movePointer(operation.position);
                 let shape : Shape | undefined;
-                if(! isNaN(operation.shapeId)){
+                if(operation.shapeId != undefined){
                     shape = idMap.get(operation.shapeId) as Shape;
                     if( isTextBlock(shape)){
                         shape = undefined;

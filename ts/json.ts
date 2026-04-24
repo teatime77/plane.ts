@@ -3,7 +3,7 @@ import { App, Highlightable, isGreek, operator, RefVar, renderKatexSub, Term } f
 import { transpose } from "@algebra";
 
 import { ShapeMode } from "./enums";
-import { AppServices, capturedShape, GlobalState, idMap, setCapturedShape, Widget__processed } from "./inference";
+import { AppServices, capturedShape, classCounters, GlobalState, idMap, setCapturedShape, Widget__processed } from "./inference";
 
 // Actionを生成する関数の型定義
 type entityCreator = (obj: any) => any;
@@ -61,23 +61,32 @@ function getTermFromPointerEvent(ev : PointerEvent, app : App) : Term | undefine
 }
 
 export abstract class Widget {
-    id : number;
+    id : string;
     order : number = NaN;
 
     constructor(obj : any){        
         if(obj.id != undefined){
 
-            this.id = obj.id;
-            GlobalState.Widget__maxId = Math.max(GlobalState.Widget__maxId, this.id);
+            this.id = `${obj.id}`;
+            GlobalState.Widget__maxId = Math.max(GlobalState.Widget__maxId, obj.id);
 
             GlobalState.Widget__refMap.set(obj.id, this);
         }
         else{
-
-            this.id = ++GlobalState.Widget__maxId;
+            this.id = `${++GlobalState.Widget__maxId}`;
+            // this.id = this.calcId();
         }
-        assert(this.id <= GlobalState.Widget__maxId && !idMap.has(this.id));
+        assert(!idMap.has(this.id));
         idMap.set(this.id, this);
+    }
+
+    calcId() : string {
+        // 新規作成時はクラス名から自動採番 (例: "Point_1")
+        const className = this.constructor.name;
+        const count = (classCounters.get(className) || 0) + 1;
+        classCounters.set(className, count);
+        
+        return `${className}_${count}`;
     }
 
     getProperties(){
@@ -197,7 +206,7 @@ export abstract class MathEntity extends Widget implements Readable, Highlightab
         GlobalState.View__current!.dirty = true;
     }
 
-    delete(deleted : Set<number>){
+    delete(deleted : Set<string>){
         if(deleted.has(this.id)){
             return;
         }
@@ -567,7 +576,7 @@ export class TextBlock extends MathEntity {
         return new Reading(this, "", []);
     }
 
-    delete(deleted : Set<number>){
+    delete(deleted : Set<string>){
         if(deleted.has(this.id)){
             return;
         }

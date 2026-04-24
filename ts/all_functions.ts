@@ -4,7 +4,7 @@ import { AbstractSpeech, AppMode, appMode, areSetsEqual, check, getPlayMode, int
 import { App, makeNodeTextByApp, parseMath, RefVar, showFlow, Term } from "@parser";
 import { $button, $dialog, $grid, $img, $label, $latex, $radio, Anchor, bgColor, Button, fgColor, Grid, Layout, Log, RadioButton, saveBlob, UI } from "@layout";
 import { AngleEqualityReason, ExprTransformReason, IsoscelesTriangleReason, LengthEqualityReason, ParallelogramReason, ParallelReason, PropositionReason, RhombusReason, ShapeEquationReason, ShapeMode, ShapeType, TriangleCongruenceReason, TriangleSimilarityReason } from "./enums";
-import { RelationLog, MyArray, MyMap, MySet, angleMap, centerOfCircleArcs, congruentTriangles, defaultLineWidth, enumSelectionClassName, equalLengths, GlobalState, idMap, isoscelesTriangle, menuDialogs, modeColorMap, OverLineWidth, parallelogramClassifiers, pointOnCircleArcs, pointOnLines, pointsToLengthSymbol, propositions, rightAngles, similarTriangles, supplementaryAngles, urlOrigin, urlBase, enumToImgName, AppServices, toolList, editToolList } from "./inference";
+import { RelationLog, MyArray, MyMap, MySet, angleMap, centerOfCircleArcs, congruentTriangles, defaultLineWidth, enumSelectionClassName, equalLengths, GlobalState, idMap, isoscelesTriangle, menuDialogs, modeColorMap, OverLineWidth, parallelogramClassifiers, pointOnCircleArcs, pointOnLines, pointsToLengthSymbol, propositions, rightAngles, similarTriangles, supplementaryAngles, urlOrigin, urlBase, enumToImgName, AppServices, toolList, editToolList, classCounters } from "./inference";
 import { Mat2 } from "./matrix";
 import { Widget, MathEntity, TextBlock, entityRegistry } from "./json";
 
@@ -588,6 +588,7 @@ export function loadData(obj : any){
     GlobalState.Plane__one!.clearPlane();
 
     GlobalState.Widget__maxId  = -1;
+    classCounters.clear();
     idMap.clear();
     GlobalState.Widget__refMap = new Map<number, any>();
     GlobalState.MathEntity__orderSet.clear();
@@ -776,7 +777,7 @@ export function deleteShapeEvent(shape : MathEntity, button : HTMLButtonElement)
             GlobalState.Plane__one!.shapes_block.removeChild(button);
 
             remove(GlobalState.View__current!.shapes, shape);
-            shape.delete(new Set<number>());
+            shape.delete(new Set<string>());
             GlobalState.View__current!.dirty = true;
         }
     });

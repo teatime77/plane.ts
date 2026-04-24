@@ -283,7 +283,10 @@ export const reasonToDoc = new Map<number, number>([
 
 export const usedReasons = new Set<number>();
 
-export const idMap = new Map<number, Widget>();
+export const idMap = new Map<string, Widget>();
+
+// クラスごとの通し番号を管理するグローバルなマップをファイル上部に追加
+export const classCounters = new Map<string, number>();
 
 export const lineKindImgNames = [ "line", "half_line_1", "half_line_2", "line_segment" ];
 export const propertySettingText = new Map<string, string>([
@@ -328,7 +331,7 @@ export let Angle__radius1Pix = 20;
 export let Angle__numMarks = 5;
 export let Angle__outerAngleScale = 2;
 
-export let Widget__processed : Set<number>;
+export let Widget__processed : Set<string>;
 
 export let Point__radiusPix = 4;
 
@@ -454,7 +457,7 @@ interface AppServicesType {
     texClickOfTextBlock : (self : TextBlock, ev : MouseEvent) => Promise<void>,
     getTextOfTextBlock : (self : TextBlock) => string,
     addSupplementaryAngles : (angle1 : Angle, angle2 : Angle) => void,
-    makeClickTerm : (textBlock_id : number, indexes : number[]) => ClickTerm,
+    makeClickTerm : (textBlock_id : string, indexes : number[]) => ClickTerm,
     isAngle : (obj : any) => obj is Angle,
     isAngleEqualityConstraint : (obj : any) => obj is AngleEqualityConstraint,
     isAssumption : (obj : any) => obj is Assumption,

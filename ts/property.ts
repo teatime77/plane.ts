@@ -74,7 +74,7 @@ export abstract class InputProperty extends Property {
         super(widgets, name);
     }
 
-    valueChanged(widget_id : number, name : string, new_value : string | number) : void {
+    valueChanged(widget_id : string, name : string, new_value : string | number) : void {
         this.setValue(new_value);
 
         const operation = GlobalState.View__current!.operations.find(x => x instanceof PropertySetting && x.id == widget_id && x.name == name) as PropertySetting;
