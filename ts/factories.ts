@@ -150,6 +150,65 @@ export async function loadOperationsText(data : any) : Promise<Operation[]> {
     return operations;
 }
 
+export async function loadOperationsJSON(data: any): Promise<Operation[]> {
+    const view = GlobalState.View__current!;
+    view.clearView();
+
+    let operations: Operation[] = [];
+
+    for (const opData of data.operations) {
+        let operation: Operation;
+
+        switch (opData.op) {
+            case "click": {
+                const position = new Vec2(opData.x, opData.y);
+                operation = new ClickShape(position, opData.shapeId);
+                break;
+            }
+
+            case "term": {
+                operation = AppServices.makeClickTerm(opData.textBlock_id, opData.indexes);
+                break;
+            }
+
+            case "tool": {
+                operation = new ToolSelection(opData.name);
+                break;
+            }
+
+            case "finish": {
+                operation = new ToolFinish(opData.name);
+                break;
+            }
+
+            case "enum": {
+                operation = new EnumSelection(opData.value);
+                break;
+            }
+
+            case "text": {
+                operation = new TextPrompt(opData.text);
+                break;
+            }
+
+            case "property": {
+                operation = new PropertySetting(opData.id, opData.name, opData.value);
+                break;
+            }
+
+            default:
+                throw new MyError(`Unknown operation op: ${opData.op}`);
+        }
+
+        operations.push(operation);
+    }
+
+    // 既存の変換・後処理があれば通す（必要に応じて）
+    // operations = convertOperations(data.version, operations);
+
+    return operations;
+}
+
 
 export function inputTextPrompt(message : string) : string | null {
     let text : string | null;

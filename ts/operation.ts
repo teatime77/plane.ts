@@ -16,6 +16,7 @@ export abstract class Operation {
     relationLogsLength = NaN;
 
     abstract toString() : string;
+    abstract toJson() : any;
 
     constructor(){
         this.operationId = GlobalState.Operation__maxId++;
@@ -52,6 +53,20 @@ export class ClickShape extends Operation {
         const y = fnc(this.position.y);
 
         return `click ${x} ${y} ${shape_str}`;
+    }
+
+    toJson() : any {
+        const result: any = {
+            op: "click",
+            x: Number(this.position.x.toFixed(2)),
+            y: Number(this.position.y.toFixed(2)),
+        };
+
+        if(this.shapeId != undefined){
+            result.shapeId = this.shapeId;
+        }
+
+        return result;
     }
 
     dump() : string {
@@ -99,6 +114,16 @@ export class ClickTerm extends Operation {
         }
         return `term ${this.textBlock_id}  ${this.indexes.join(":")}`;
     }
+
+    toJson() : any {
+        const result: any = {
+            op: "term",
+            textBlock_id: this.textBlock_id,
+            indexes: this.indexes.slice()
+        };
+
+        return result;
+    }
 }
 
 export function makeClickTerm(textBlock_id : string, indexes : number[]) : ClickTerm {
@@ -116,6 +141,10 @@ export class ToolSelection extends Operation {
     toString() : string {
         return `tool  ${this.toolName}`;
     }
+
+    toJson() : any {
+        return { op: "tool", name: this.toolName };
+    }
 }
 
 export class ToolFinish extends Operation {
@@ -128,6 +157,10 @@ export class ToolFinish extends Operation {
 
     toString() : string {
         return `finish  ${this.toolName}`;
+    }
+
+    toJson() : any {
+        return { op: "finish", name: this.toolName };
     }
 }
 
@@ -142,6 +175,10 @@ export class EnumSelection extends Operation {
     toString() : string {
         return `enum  ${this.value}`;
     }
+
+    toJson() : any {
+        return { op: "enum", value: this.value };
+    }
 }
 
 export class TextPrompt extends Operation {
@@ -154,6 +191,10 @@ export class TextPrompt extends Operation {
 
     toString() : string {
         return `text  '${this.text}'`;
+    }
+
+    toJson() : any {
+        return { op: "text", text: this.text };
     }
 }
 
@@ -179,6 +220,17 @@ export class PropertySetting extends Operation {
 
             return `property ${this.id} ${this.name} ${this.value}`;
         }
+    }
+
+    toJson() : any {
+        const result: any = {
+            op: "property",
+            id: this.id,
+            name: this.name,
+            value: this.value
+        };
+
+        return result;
     }
 }
 
@@ -288,7 +340,11 @@ export class PlayBack {
             }
             else if(operation instanceof PropertySetting){
                 const shape = view.allShapes().find(x => x.id == operation.id)!;
-                assert(shape != undefined);
+                if(shape == undefined){
+                    msg(`no shape for Property-Setting:${operation.id}`);
+                    throw new MyError();
+                }
+
                 if([ "name", "lineKind", "angleMark" ].includes(operation.name)){
                     await AppServices.showPropertyDlg(shape, operation);
                 }
