@@ -42,7 +42,7 @@ export async function loadOperationsText(data : any) : Promise<Operation[]> {
     }
 
     const view = GlobalState.View__current!;
-    view.clearView();
+    view.clearCanvas();
 
     let operations : Operation[] = [];
 
@@ -152,7 +152,7 @@ export async function loadOperationsText(data : any) : Promise<Operation[]> {
 
 export async function loadOperationsJSON(data: any): Promise<Operation[]> {
     const view = GlobalState.View__current!;
-    view.clearView();
+    view.clearCanvas();
 
     let operations: Operation[] = [];
 
@@ -241,7 +241,7 @@ export async function playBack(play_mode : PlayMode){
 
     const operations_copy = view.operations.slice();
     view.restoreView();
-    view.clearView();
+    view.clearCanvas();
 
     if(!isNaN(GlobalState.PlayBack__startIndex)){
         play_mode = PlayMode.fastForward;
@@ -284,9 +284,6 @@ export async function initPlane(plane : Plane, root : Grid){
 }
 
 export function viewEvent(view : View){
-    view.canvas.addEventListener("pointerdown", view.pointerdown.bind(view));
-    view.canvas.addEventListener('pointermove', view.pointermove.bind(view));
-    view.canvas.addEventListener("pointerup"  , view.pointerup.bind(view));   
     view.canvas.addEventListener("click"      , async (ev : MouseEvent)=>{
         await view.click(ev);
     }); 
@@ -300,7 +297,7 @@ export function viewEvent(view : View){
         ev.stopPropagation();
         ev.preventDefault();
 
-        const position = view.eventPosition(ev);
+        const position = view.getPositionInCanvas(ev);
         const shape = view.getShape(position);
         if(shape != undefined){
             await showPropertyDlg(shape, undefined);
@@ -332,7 +329,7 @@ export function viewEvent(view : View){
         }
     });    
 
-    window.addEventListener("resize", view.resizeView.bind(view));
+    window.addEventListener("resize", view.resizeCanvas.bind(view));
 
     // Passive event listeners
     // https://github.com/WICG/EventListenerOptions/blob/gh-pages/explainer.md

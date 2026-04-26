@@ -103,7 +103,7 @@ export class Statement extends Shape {
             parent : GlobalState.Plane__one!.text_block,
             text : "",
             click : async (ev : MouseEvent)=>{
-                const position = GlobalState.View__current!.eventPosition(ev);
+                const position = GlobalState.View__current!.getPositionInCanvas(ev);
                 await (GlobalState.Builder__tool as StatementBuilder).clickWithMouseEvent(ev, GlobalState.View__current!, position, this);
             }
         });

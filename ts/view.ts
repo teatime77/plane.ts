@@ -14,11 +14,41 @@ import { SelectionTool, StatementBuilder } from "./tool";
 
 import type { UndoData } from "./plane_util";
 
-export class View {
+export abstract class AbstractCanvas {
+    canvas : HTMLCanvasElement;
+    ctx : CanvasRenderingContext2D;
+    downPos : Vec2 = Vec2.zero();
+    movePos : Vec2 = Vec2.zero();
+    uiOrgPos : Vec2 = Vec2.zero();
+    pointerId : number = NaN;
+    moved : boolean = false;
+
+    constructor(canvas_html : HTMLCanvasElement){
+        this.canvas = canvas_html;
+        this.ctx = this.canvas.getContext('2d')!; // Or 'webgl', 'webgl2'
+        if (!this.ctx) {
+            console.error("Canvas context not supported!");
+        }
+
+        this.canvas.addEventListener("pointerdown",  this.pointerdown.bind(this));
+        this.canvas.addEventListener("pointermove",  this.pointermove.bind(this));
+        this.canvas.addEventListener("pointerup"  , async (ev:PointerEvent)=>{
+            await this.pointerup(ev);
+        });
+    }
+
+    abstract getPositionInCanvas(event : MouseEvent) : Vec2;
+    abstract pointerdown(ev:PointerEvent) : void;
+    abstract pointermove(ev:PointerEvent) : void;
+    abstract pointerup(ev:PointerEvent) : Promise<void>;
+    abstract resizeCanvas() : void;
+    abstract repaint() : void;
+    abstract clearCanvas() : void;
+}
+
+export class View extends AbstractCanvas {
 
     name  : string = "";
-    canvas : HTMLCanvasElement;
-    ctx    : CanvasRenderingContext2D;
     grid : CanvasGrid;
 
     operations : Operation[] = [];
@@ -28,9 +58,6 @@ export class View {
     undoStack : UndoData[] = [];
 
     changed : Set<MathEntity> = new Set<MathEntity>();
-
-    downPosition : Vec2 | undefined;
-    movePosition : Vec2 | undefined;
 
     min! : Vec2;
     max! : Vec2;
@@ -46,11 +73,11 @@ export class View {
     }
 
     constructor(canvas : HTMLCanvasElement){
-        this.canvas = canvas;
+        super(canvas);
         this.canvas.innerHTML = "";
-        
-        this.ctx = canvas.getContext("2d")!;
 
+        this.movePos = Vec2.fromXY(NaN, NaN);
+        
         this.grid   = new CanvasGrid(this);
 
         this.canvas.width  = this.canvas.clientWidth;
@@ -73,10 +100,10 @@ export class View {
 
         GlobalState.View__current = this;
 
-        this.resizeView();
+        this.resizeCanvas();
     }
 
-    clearView(){
+    clearCanvas() : void {
         const all_shapes = this.allShapes();
         all_shapes.forEach(x => x.hide());
 
@@ -106,7 +133,7 @@ export class View {
         GlobalState.Angle__radius1 = this.fromXPixScale(Angle__radius1Pix);
     }
 
-    eventPosition(event : MouseEvent) : Vec2 {
+    getPositionInCanvas(event : MouseEvent) : Vec2 {
         const flipped_y = this.canvas.clientHeight - event.offsetY;
 
         const x = linear(0, event.offsetX, this.canvas.clientWidth , this.min.x, this.max.x);
@@ -210,7 +237,7 @@ export class View {
 
             // msg("redraw");
 
-            this.clear();
+            this.repaint();
             GlobalState.Polygon__colorIndex = 0;
 
             this.grid.showGrid(GlobalState.Plane__one!.show_axis.checked(), GlobalState.Plane__one!.show_grid.checked());
@@ -241,7 +268,7 @@ export class View {
 
     async click(event : MouseEvent){
         msg("click");
-        let position = this.eventPosition(event);
+        let position = this.getPositionInCanvas(event);
         if(GlobalState.Plane__one!.snap_to_grid.checked()){
             position = this.grid.snap(position);
         }
@@ -279,7 +306,7 @@ export class View {
     }
 
     async dblclick(event : MouseEvent){
-        let position = this.eventPosition(event);
+        let position = this.getPositionInCanvas(event);
         const shape = this.getShape(position);
         if(shape == undefined){
             return;
@@ -325,29 +352,27 @@ export class View {
     }
 
 
-    pointerdown(event : PointerEvent){
+    pointerdown(event : PointerEvent) : void {
         if(event.button != 0){
             msg(`pointerdown:${event.button.toString(2)}`);
             return;
         }
 
-        let position = this.eventPosition(event);
+        let position = this.getPositionInCanvas(event);
         if(GlobalState.Plane__one!.snap_to_grid.checked()){
             position = this.grid.snap(position);
         }
-
-        this.downPosition = position;
 
         const shape = this.getShape(position);
 
         GlobalState.Builder__tool!.pointerdown(event, this, position, shape);
     }
 
-    pointermove(event : PointerEvent){
+    pointermove(event : PointerEvent) : void {
         // タッチによる画面スクロールを止める
         event.preventDefault(); 
 
-        let position = this.eventPosition(event);
+        let position = this.getPositionInCanvas(event);
         if(GlobalState.Plane__one!.snap_to_grid.checked()){
             position = this.grid.snap(position);
         }
@@ -373,7 +398,7 @@ export class View {
         const shape = this.getShape(position);
         GlobalState.Builder__tool!.pointermove(event, this, position, shape);
 
-        this.movePosition = position;
+        this.movePos = position;
 
         if(GlobalState.Plane__one!.snap_to_grid.checked()){
             const prev_snap_position = this.grid.snapPosition;
@@ -384,28 +409,25 @@ export class View {
         }
     }
 
-    pointerup(event : PointerEvent){
+    async pointerup(event : PointerEvent) : Promise<void> {
         if(event.button != 0){
             msg(`pointerup:${event.button.toString(2)}`);
             return;
         }
         
-        let position = this.eventPosition(event);
+        let position = this.getPositionInCanvas(event);
         if(GlobalState.Plane__one!.snap_to_grid.checked()){
             position = this.grid.snap(position);
         }
 
         const shape = this.getShape(position);
         GlobalState.Builder__tool!.pointerup(event, this, position, shape);
-
-
-        this.downPosition = undefined;
     }
 
     wheel(event : WheelEvent){
         event.preventDefault();
 
-        let position = this.eventPosition(event);
+        let position = this.getPositionInCanvas(event);
         if(GlobalState.Plane__one!.snap_to_grid.checked()){
             position = this.grid.snap(position);
         }
@@ -424,7 +446,7 @@ export class View {
         GlobalState.View__current!.dirty = true;
     }
 
-    resizeView(){
+    resizeCanvas() : void {
         this.canvas.width  = this.canvas.clientWidth;
         this.canvas.height = this.canvas.clientHeight;
 
@@ -604,7 +626,7 @@ export class View {
         return [color, line_width];
     }
 
-    clear(){
+    repaint() : void {
         const rc = this.canvas.getBoundingClientRect();
         this.ctx.fillStyle = bgColor;
         this.ctx.fillRect(0, 0, rc.width, rc.height);
@@ -944,11 +966,11 @@ class CanvasGrid {
     }
 
     setSnapPosition(){
-        if(this.view.movePosition == undefined || this.subSpanX == undefined || this.subSpanY == undefined){
+        if(isNaN(this.view.movePos.x) || this.subSpanX == undefined || this.subSpanY == undefined){
             return;
         }
 
-        this.snapPosition = this.snap(this.view.movePosition);
+        this.snapPosition = this.snap(this.view.movePos);
     }
 
     showPointer(){

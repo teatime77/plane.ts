@@ -21,6 +21,7 @@ import { isAngle, isAngleEqualityConstraint, isAssumption, isEnumSelection, isEx
 import { addSupplementaryAngles } from "./tool.js";
 
 export { playBack, initPlane, loadOperationsText } from "./factories.js"
+export { AbstractCanvas } from "./view.js";
 
 setAppServices({
     Builder__setToolByName          : Builder__setToolByName,
