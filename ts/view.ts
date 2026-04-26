@@ -14,7 +14,7 @@ import { SelectionTool, StatementBuilder } from "./tool";
 
 import type { UndoData } from "./plane_util";
 
-export class View extends Widget {
+export class View {
 
     name  : string = "";
     canvas : HTMLCanvasElement;
@@ -40,25 +40,12 @@ export class View extends Widget {
 
     dirty : boolean = false;
 
-    makeObj() : any {
-        let obj = Object.assign(super.makeObj(), {
-            name   : this.name,
-            scale  : this.canvas.clientWidth / (this.max.x - this.min.x),
-            min    : this.min,
-            max    : this.max,
-            shapes : this.shapes.map(x => x.toObj())
-        });
-
-        return obj;
-    }
-
     isNear(real_distance : number) : boolean {
         const pix_distance = this.toXPixScale(real_distance);
         return pix_distance < GlobalState.View__nearThreshold;
     }
 
     constructor(canvas : HTMLCanvasElement){
-        super({});
         this.canvas = canvas;
         this.canvas.innerHTML = "";
         
@@ -96,10 +83,9 @@ export class View extends Widget {
         removeDiv();
     
         classCounters.clear();
-        GlobalState.Widget__maxId = parseInt(this.id);
+        GlobalState.Widget__maxId = 1;
         idMap.clear();
         // this.id = this.calcId();
-        idMap.set(this.id, this);
 
         this.operations = [];
         this.shapes = [];
